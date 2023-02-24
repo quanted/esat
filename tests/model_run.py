@@ -17,17 +17,18 @@ if __name__ == "__main__":
     drop_max = True
     drop_min = False
 
-    epochs = 10
+    epochs = 20
     n_components = 4
     max_iterations = 20000
     seed = 42
     use_original_convergence = False
 
-    lr_initial = 1e-1
-    lr_decay_steps = 250
-    lr_decay_rate = 0.95
-    converge_diff = 0.01
-    converge_iter = 50
+    lr_initial = 1e-0
+    lr_decay_steps = 300
+    lr_decay_rate = 0.9
+    # lr_decay_rate = 0.8
+    converge_diff = 0.5
+    converge_iter = 10
 
     index_col = "Date"
 

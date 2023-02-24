@@ -1,4 +1,5 @@
 import os
+import sys
 import logging
 import copy
 import pandas as pd
@@ -8,7 +9,7 @@ import tensorflow as tf
 logging.basicConfig(format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S', level=logging.DEBUG)
 logger = logging.getLogger()
 
-EPSILON = 1e-12
+EPSILON = sys.float_info.min
 
 
 class DataHandler:
@@ -31,6 +32,8 @@ class DataHandler:
 
         self.input_data = None
         self.uncertainty_data = None
+
+        self.metrics = None
 
         self.input_data_processed = None
         self.uncertainty_data_processed = None
@@ -115,6 +118,26 @@ class DataHandler:
         self.min_values = _input_data.min(axis=0)
         self.max_values = _input_data.max(axis=0)
 
+        c_df = _input_data.copy()
+        u_df = _uncertainty_data.copy()
+
+        min_con = c_df.min()
+        p25 = c_df.quantile(q=0.25, numeric_only=True)
+        median_con = c_df.median(numeric_only=True)
+        p75 = c_df.quantile(q=0.75, numeric_only=True)
+        max_con = c_df.max()
+
+        d = (c_df - u_df).divide(u_df, axis=0)
+        mask = c_df <= u_df
+        d.mask(mask, 0, inplace=True)
+        sn = (1 / d.shape[0]) * d.sum(axis=0)
+
+        categories = ["Strong"] * d.shape[1]
+
+        self.metrics = pd.DataFrame(
+            data={"Category": categories, "S/N": sn, "Min": min_con, "25th": p25, "50th": median_con, "75th": p75,
+                  "Max": max_con})
+
     def remove_outliers(self, quantile: float = 0.8, drop_min: bool = True, drop_max: bool = False):
         """
         Remove outliers from the input dataset
@@ -146,10 +169,11 @@ class DataHandler:
         temp_data = temp_data.dropna(axis=0)
         temp_uncertainty = temp_uncertainty.dropna(axis=0)
         self._set_dataset(temp_data, temp_uncertainty)
-        # self.min_values = temp_data.min(axis=0).combine(temp_uncertainty.min(axis=0), min)
-        # self.max_values = temp_data.max(axis=0).combine(temp_uncertainty.max(axis=0), max)
-        self.min_values = temp_data.min(axis=0)
-        self.max_values = temp_data.max(axis=0)
+        self.min_values = temp_data.min(axis=0).combine(temp_uncertainty.min(axis=0), min)
+        self.max_values = temp_data.max(axis=0).combine(temp_uncertainty.max(axis=0), max)
+        self.min_values[self.min_values <= 0] = 0.0
+        # self.min_values = temp_data.min(axis=0)
+        # self.max_values = temp_data.max(axis=0)
         logger.info(f"Removed outliers for quantile: {quantile}, min values: {drop_min}, max values: {drop_max}")
         logger.info(f"Original row count: {self.input_data.shape[0]}, Updated row count: {temp_data.shape[0]}")
 
@@ -167,3 +191,12 @@ class DataHandler:
             self._set_dataset(scaled_data, scaled_uncertainty)
         else:
             return scaled_data
+
+    def remove_noisy(self, max_sn=1.0):
+        _input_data = self.input_data.copy()
+        _uncertainty_data = self.uncertainty_data.copy()
+        for k, sn in self.metrics["S/N"].items():
+            if sn < max_sn:
+                _input_data = _input_data.drop(k, axis=1)
+                _uncertainty_data = _uncertainty_data.drop(k, axis=1)
+        self._set_dataset(_input_data, _uncertainty_data)

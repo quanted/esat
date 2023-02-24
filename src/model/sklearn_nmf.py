@@ -1,10 +1,5 @@
 """ Non-negative matrix factorization.
 """
-# Author: Vlad Niculae
-#         Lars Buitinck
-#         Mathieu Blondel <mathieu@mblondel.org>
-#         Tom Dupre la Tour
-# License: BSD 3 clause
 
 import numbers
 import numpy as np
@@ -78,7 +73,7 @@ def _q_divergence(X, U, W, H):
     WH = np.dot(W, H)
     residual = X - WH
     diff = np.divide(residual, U)
-    diff_sq = np.abs(diff)
+    diff_sq = np.square(diff)
     Q = np.sum(diff_sq)
     return Q
 

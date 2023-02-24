@@ -30,8 +30,10 @@ class NMFModel:
                  lr_initial: float = 1e-0,
                  lr_decay_steps: int = 100,
                  lr_decay_rate: float = 0.98,
-                 converge_diff: int = 100,
+                 converge_diff: float = 100,
                  converge_iter: int = 100,
+                 initial_H: list = None,
+                 initial_W: list = None,
                  quiet: bool = False,
                  ):
 
@@ -43,6 +45,13 @@ class NMFModel:
         self.max_iterations = max_iterations
         self.use_original_convergence = use_original_convergence
 
+        self.lr_initial = lr_initial
+        self.lr_decay_steps = lr_decay_steps
+        self.lr_decay_rate = lr_decay_rate
+
+        self.initial_H = initial_H
+        self.initial_W = initial_W
+
         self.learning_schedule = keras.optimizers.schedules.ExponentialDecay(
             initial_learning_rate=lr_initial,
             decay_steps=lr_decay_steps,
@@ -53,13 +62,23 @@ class NMFModel:
         # self.optimizer = keras.optimizers.Adam(learning_rate=self.learning_schedule)        # Avg R2 = 0.986
         # self.optimizer = keras.optimizers.Adam(learning_rate=1.0)
         self.optimizer = keras.optimizers.RMSprop(learning_rate=self.learning_schedule)   # Avg R2 = 0.988 (best of 100)
-        # self.optimizer = keras.optimizers.RMSprop(learning_rate=1.0)   # Avg R2 = 0.988 (best of 100)
 
         self.convergence_critera = {
             "difference_threshold": converge_diff,
             "iterations_threshold": converge_iter
         }
-        self.nmf = NMF(seed=seed, n_components=self.n_components)
+        if self.initial_H is not None:
+            self.initial_H = np.array(self.initial_H)
+            i_H = self.initial_H[0]
+        else:
+            i_H = None
+        if self.initial_W is not None:
+            self.initial_W = np.array(self.initial_W)
+            i_W = self.initial_W[0]
+        else:
+            i_W = None
+
+        self.nmf = NMF(seed=seed, H=i_H, W=i_W, n_components=self.n_components)
         self.results = None
         self.quiet = quiet
         if not quiet:
@@ -71,6 +90,8 @@ class NMFModel:
         logger.info(f"Epochs: {self.epochs}, N Components: {self.n_components}, Seed: {self.seed}")
         logger.info(f"Max Iterations: {self.max_iterations}, Feature Count: {len(self.dh.features)}, "
                     f"Sample Count: {self.dh.input_dataset[0].shape[0]}")
+        logger.info(f"Learning Rate, Initial: {self.lr_initial}, Decay Rate: {self.lr_decay_rate}, "
+                    f"Decay Step: {self.lr_decay_steps}")
         logger.info(f"Convergence Difference Threshold {self.convergence_critera['difference_threshold']}, "
                     f"Convergence Iterations Threshold: {self.convergence_critera['iterations_threshold']}")
         logger.info(f"Number of GPU's available: {len(tf.config.list_physical_devices('GPU'))}")
@@ -88,7 +109,17 @@ class NMFModel:
             if epoch > 0:
                 keras.backend.clear_session()
                 self.loss_metric.reset_state()
-                self.nmf = NMF(seed=e_seed, n_components=self.n_components)
+                if self.initial_H is not None:
+                    _i_H = epoch % len(self.initial_H)
+                    i_H = self.initial_H[_i_H]
+                else:
+                    i_H = None
+                if self.initial_W is not None:
+                    _i_W = epoch % len(self.initial_W)
+                    i_W = self.initial_W[_i_W]
+                else:
+                    i_W = None
+                self.nmf = NMF(seed=e_seed, H=i_H, W=i_W, n_components=self.n_components)
                 for var in self.optimizer.variables():
                     var.assign(tf.zeros_like(var))
 
@@ -101,8 +132,6 @@ class NMFModel:
             p_loss = []
             q_loss_n = self.convergence_critera["iterations_threshold"]
             q_diff = self.convergence_critera["difference_threshold"]
-            # convergence_i = 0
-            # convergence_0 = None
 
             # Epoch training loop
             t_iter = trange(self.max_iterations, desc=f"Epoch {epoch + 1} fit: Q = NA", leave=True, disable=silent)
