@@ -3,15 +3,20 @@ import json
 import numpy as np
 import pandas as pd
 from itertools import permutations
+import multiprocessing as mp
+from tqdm import tqdm
 
 
 class FactorComp:
 
-    def __init__(self, nmf_output, pmf_output, factors, species):
+    def __init__(self, nmf_output, pmf_output, factors, species, residuals_path=None):
         self.nmf_output = nmf_output
         self.pmf_output = pmf_output
         self.factors = factors
         self.species = species
+
+        self.pmf_residuals_path = residuals_path
+        self.pmf_residuals = None
 
         self.factor_columns = None
 
@@ -21,7 +26,12 @@ class FactorComp:
         self._parse_pmf_output()
 
         self.nmf_epochs_dfs = {}
+        self.nmf_Q = {}
         self._parse_nmf_output()
+        self.factor_map = None
+        self.best_model = None
+        self.best_factor_r = None
+        self.best_avg_r = None
 
     def _parse_pmf_output(self):
         if not os.path.exists(self.pmf_output):
@@ -71,6 +81,24 @@ class FactorComp:
         self.pmf_profile_p_df = pmf_profile_p_df.astype(factor_types)
         self.pmf_profile_t_df = pmf_profile_t_df.astype(factor_types)
 
+        if self.pmf_residuals_path:
+            if os.path.exists(self.pmf_residuals_path):
+                with open(self.pmf_residuals_path) as pmf_file:
+                    file_lines = pmf_file.read().split("\n")
+                    header = file_lines[3].split("\t")
+                    data = []
+                    for i in range(4, len(file_lines)):
+                        if file_lines[i] == "":
+                            break
+                        data.append(file_lines[i].split("\t"))
+                    self.pmf_residuals = pd.DataFrame(data, columns=header)
+                    self.pmf_residuals.drop('Base_Run', axis=1, inplace=True)
+                    self.pmf_residuals = self.pmf_residuals.set_index("Date_Time")
+                    column_types = {}
+                    for k in list(self.pmf_residuals.columns):
+                        column_types[k] = np.float32
+                    self.pmf_residuals = self.pmf_residuals.astype(column_types)
+
     def _parse_nmf_output(self):
         if not os.path.exists(self.nmf_output):
             print(f"No nmf output found at: {self.nmf_output}")
@@ -93,8 +121,9 @@ class FactorComp:
                 nmf_wh_df = pd.DataFrame(nmf_wh_data.T, columns=species_columns)
 
                 self.nmf_epochs_dfs[i] = {"WH": nmf_wh_df, "W": nmf_w_df, "H": nmf_h_df}
+                self.nmf_Q[i] = json_data[i]["Q"]
 
-    def compare(self):
+    def compare(self, PMF_Q=None, verbose: bool = True):
         factor_permutations = list(permutations(self.factor_columns, len(self.factor_columns)))
 
         all_r2 = {}
@@ -104,28 +133,64 @@ class FactorComp:
         best_model = None
         best_factor_r = None
 
-        for e in range(len(self.nmf_epochs_dfs)):
+        pool = mp.Pool()
+
+        for e in tqdm(range(len(self.nmf_epochs_dfs)), desc="Checking permuations from each epoch"):
             # e = str(e)
             nmf_h = self.nmf_epochs_dfs[e]["H"]
             all_r = []
-            for perm in factor_permutations:
-                values = []
-                for i in range(len(self.factor_columns)):
-                    pmf_i = self.pmf_profiles_df[self.factor_columns[i]].astype(float)
-                    nmf_i = nmf_h.loc[perm[i]].astype(float)
-                    corr_matrix = np.corrcoef(nmf_i, pmf_i)
-                    corr = corr_matrix[0, 1]
-                    r_sq = corr ** 2
-                    values.append(r_sq)
-                r_avg = np.mean(values)
-                r_max = np.max(values)
-                r_min = np.min(values)
+
+            p_inputs = []
+            for p in factor_permutations:
+                p_inputs.append((p, nmf_h))
+
+            for p_result in pool.starmap(self.analyze_permutation, p_inputs):
+                perm, r_avg, values = p_result
                 if r_avg > best_r:
                     best_r = r_avg
                     best_permutation_r = perm
                     best_model = e
                     best_factor_r = values
-                all_r.append((perm, r_avg))
+
+            # for perm in factor_permutations:
+            # for i in tqdm(range(len(factor_permutations)), desc=f"Checking all factor permutations - Epoch {e}"):
+            #     perm = factor_permutations[i]
+            #     values = []
+            #     for i in range(len(self.factor_columns)):
+            #         pmf_i = self.pmf_profiles_df[self.factor_columns[i]].astype(float)
+            #         nmf_i = nmf_h.loc[perm[i]].astype(float)
+            #         corr_matrix = np.corrcoef(nmf_i, pmf_i)
+            #         corr = corr_matrix[0, 1]
+            #         r_sq = corr ** 2
+            #         values.append(r_sq)
+            #     r_avg = np.mean(values)
+            #     r_max = np.max(values)
+            #     r_min = np.min(values)
+            #     if r_avg > best_r:
+            #         best_r = r_avg
+            #         best_permutation_r = perm
+            #         best_model = e
+            #         best_factor_r = values
+            #     all_r.append((perm, r_avg))
+
             all_r2[e] = all_r
-        print(f"R2 - Model: {best_model}, Best permutations: {list(best_permutation_r)}, Average: {best_r}, "
-              f"Factors: {best_factor_r}")
+        self.best_model = best_model
+        self.best_factor_r = best_factor_r
+        self.best_avg_r = best_r
+        self.factor_map = list(best_permutation_r)
+        if verbose:
+            print(f"R2 - Model: {best_model}, Best permutations: {list(best_permutation_r)}, Average: {best_r}, "
+                  f"Factors: {best_factor_r}")
+            print(f"PMF5 Q(true): {PMF_Q}, NMF-PY Model {best_model} Q(true): {self.nmf_Q[best_model]}")
+
+    def analyze_permutation(self, permutation, nmf_h):
+        values = []
+        for i in range(len(self.factor_columns)):
+            pmf_i = self.pmf_profiles_df[self.factor_columns[i]].astype(float)
+            nmf_i = nmf_h.loc[permutation[i]].astype(float)
+            corr_matrix = np.corrcoef(nmf_i, pmf_i)
+            corr = corr_matrix[0, 1]
+            r_sq = corr ** 2
+            values.append(r_sq)
+        r_avg = np.mean(values)
+        return permutation, r_avg, values

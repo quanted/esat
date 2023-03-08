@@ -82,3 +82,6 @@ def nonzeros(m, row):
     for index in range(m.indptr[row], m.indptr[row + 1]):
         yield m.indices[index], m.data[index]
 
+
+def calculate_Q(residuals, uncertainty):
+    return np.sum(np.sum(np.square(np.divide(residuals, uncertainty))))

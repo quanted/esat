@@ -86,7 +86,7 @@ class NMFModel:
 
     def print(self):
         # logger.info("")
-        logger.info("--------------------------------NMF-EPA Model Details ------------------------------------------")
+        logger.info("-------------------------------- NMF-EPA Model Details -----------------------------------------")
         logger.info(f"Epochs: {self.epochs}, N Components: {self.n_components}, Seed: {self.seed}")
         logger.info(f"Max Iterations: {self.max_iterations}, Feature Count: {len(self.dh.features)}, "
                     f"Sample Count: {self.dh.input_dataset[0].shape[0]}")

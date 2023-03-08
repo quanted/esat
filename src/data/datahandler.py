@@ -64,12 +64,13 @@ class DataHandler:
         if not os.path.exists(self.uncertainty_path):
             self.error = True
             self.error_list.append(f"Uncertainty file not found at {self.uncertainty_path}")
-        if not os.path.exists(self.output_path):
-            try:
-                os.mkdir(self.output_path)
-            except FileNotFoundError:
-                self.error = True
-                self.error_list.append(f"Unable to find or create output directory at {self.output_path}")
+        if self.output_path is not None:
+            if not os.path.exists(self.output_path):
+                try:
+                    os.mkdir(self.output_path)
+                except FileNotFoundError:
+                    self.error = True
+                    self.error_list.append(f"Unable to find or create output directory at {self.output_path}")
         if self.error:
             logger.error("File Errors: " + ", ".join(self.error_list))
             exit()
@@ -89,6 +90,22 @@ class DataHandler:
         self.uncertainty_data_processed = uncertainty.astype("float32")
         self.input_dataset = (tf.constant(self.input_data_processed), tf.constant(self.uncertainty_data_processed))
 
+    def __read_data(self, filepath, index_col=None):
+        if ".csv" in filepath:
+            if index_col:
+                data = pd.read_csv(filepath, index_col=index_col)
+            else:
+                data = pd.read_csv(filepath)
+        elif ".txt" in filepath:
+            if index_col:
+                data = pd.read_table(filepath, index_col=index_col, sep="\t+")
+            else:
+                data = pd.read_table(filepath, sep="\t+")
+        else:
+            logger.warn("Unknown file type provided.")
+            sys.exit()
+        return data
+
     def _load_data(self):
         """
         Loads the input and uncertainty data
@@ -97,12 +114,8 @@ class DataHandler:
         if self.error:
             logger.warn("Unable to load data because of setup errors.")
             return
-        if self.index_col is None:
-            self.input_data = pd.read_csv(self.input_path)
-            self.uncertainty_data = pd.read_csv(self.uncertainty_path)
-        else:
-            self.input_data = pd.read_csv(self.input_path, index_col=self.index_col)
-            self.uncertainty_data = pd.read_csv(self.uncertainty_path, index_col=self.index_col)
+        self.input_data = self.__read_data(filepath=self.input_path, index_col=self.index_col)
+        self.uncertainty_data = self.__read_data(filepath=self.uncertainty_path, index_col=self.index_col)
         self.features = list(self.input_data.columns) if self.features is None else self.features
 
         if self.drop_col is not None:
@@ -111,6 +124,12 @@ class DataHandler:
         else:
             _input_data = self.input_data
             _uncertainty_data = self.uncertainty_data
+
+        for f in self.features:
+            _input_data[f] = pd.to_numeric(_input_data[f])
+            _uncertainty_data[f] = pd.to_numeric(_uncertainty_data[f])
+
+        input_nans = _input_data.isna()
         self._set_dataset(_input_data, _uncertainty_data)
 
         # self.min_values = self.input_data.min(axis=0).combine(self.uncertainty_data.min(axis=0), min)

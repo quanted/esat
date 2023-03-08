@@ -6,12 +6,13 @@ import os
 import copy
 from tqdm import trange, tqdm
 import numpy as np
+import multiprocessing as mp
 from scipy.sparse import csr_matrix, csc_matrix
-from src.utils import nonzeros
+from src.utils import nonzeros, calculate_Q
 
 
 logger = logging.getLogger("baseNMF")
-logger.setLevel(logging.WARNING)
+logger.setLevel(logging.DEBUG)
 
 EPSILON = 1e-15
 
@@ -76,7 +77,7 @@ class BaseNMF:
             self.H = V_avg * self.rng.standard_normal(size=(self.n_components, self.n)).astype(self.V.dtype, copy=False)
             self.H = np.abs(self.H)
 
-    def __update(self, learning_rate: float = 0.0001):
+    def __update(self, update_weight: float = 1.0):
         if "gd" in self.method:
             _V = csr_matrix(self.V)
             _U = csr_matrix(self.Ur)
@@ -94,84 +95,113 @@ class BaseNMF:
         elif "cg" in self.method:
             self.__conjugate_gradient_update()
         elif "euc" in self.method:
-            self.__multiplicative_update_euclidean()
-        elif "is" in self.method:
             # LS-NMF Uncertainty Multiplicative Update
-            self.__multiplicative_update_is_divergence()
+            self.__multiplicative_update_euclidean(update_weight=update_weight)
+        elif "is" in self.method:
+            self.__multiplicative_update_is2_divergence()
         else:
-            self.__multiplicative_update_kl_divergence()
+            self.__multiplicative_update_kl_divergence(update_weight=update_weight)
 
-    def __multiplicative_update_euclidean(self):
+    def __multiplicative_update_euclidean(self, update_weight: float = 1.0):
         # Multiplicative Update (Lee and Seung) ls-nmf
 
-        wV = self.V * self.Ur
+        wV = np.multiply(self.V, self.Ur)
+
         WH = np.matmul(self.W, self.H)
-        wWH = WH * self.Ur
-        H_num = np.matmul(self.W.T, wV)
-        H_den = np.matmul(self.W.T, wWH)
-        H = self.H * H_num / (H_den + EPSILON)
-
-        WH = np.matmul(self.W, H)
-        wWH = WH * self.Ur
-        W_num = np.matmul(wV, H.T)
-        W_den = np.matmul(wWH, H.T)
-        W = self.W * W_num / (W_den + EPSILON)
+        wWH = np.multiply(WH, self.Ur)
+        W_num = np.matmul(wV, self.H.T)
+        W_den = np.matmul(wWH, self.H.T)
+        W_delta = np.multiply(update_weight, np.divide(W_num, W_den + EPSILON))
+        W = np.multiply(self.W, W_delta)
 
         W_columns = np.sum(W, axis=0)
-        _W = np.divide(W, W_columns)
+        W = np.divide(W, W_columns)
 
-        self.H = H
-        self.W = _W
+        WH = np.matmul(W, self.H)
+        wWH = np.multiply(WH, self.Ur)
+        H_num = np.matmul(W.T, wV)
+        H_den = np.matmul(W.T, wWH)
+        H_delta = np.multiply(update_weight, np.divide(H_num, H_den + EPSILON))
+        H = np.multiply(self.H, H_delta)
 
-    def __multiplicative_update_kl_divergence(self):
+        self.H = np.abs(H)
+        self.W = np.abs(W)
+
+    def __multiplicative_update_kl_divergence(self, update_weight: float = 1.0):
         # Multiplicative Update (Kullback-Leibler)
-        H_1 = np.matmul(self.W.T, np.divide(np.multiply(self.Ur, self.V), np.matmul(self.W, self.H))) + EPSILON
-        H = np.multiply(np.divide(self.H, np.matmul(self.W.T, self.Ur)), H_1)
-
-        W_1 = np.matmul(np.divide(np.multiply(self.Ur, self.V), np.matmul(self.W, H)), H.T) + EPSILON
-        W = np.multiply(np.divide(self.W, np.matmul(self.Ur, H.T)), W_1)
+        W_1 = np.matmul(np.divide(np.multiply(self.Ur, self.V), np.matmul(self.W, self.H)), self.H.T) + EPSILON
+        W = np.multiply(np.divide(self.W, np.matmul(self.Ur, self.H.T)), np.multiply(update_weight, W_1))
 
         W_columns = np.sum(W, axis=0)
-        _W = np.divide(W, W_columns)
+        W = np.divide(W, W_columns)
 
-        self.H = H
-        self.W = _W
+        H_1 = np.matmul(W.T, np.divide(np.multiply(self.Ur, self.V), np.matmul(W, self.H)) + EPSILON)
+        H = np.multiply(np.divide(self.H, np.matmul(W.T, self.Ur)), np.multiply(update_weight, H_1))
 
-    def __multiplicative_update_is_divergence(self):
+        self.H = np.abs(H)
+        self.W = np.abs(W)
+
+    def __multiplicative_update_is_divergence(self, update_weight: float = 1.0):
+
         wh = np.matmul(self.W, self.H)
-        wh[wh <= 0] = EPSILON
         _wh = copy.deepcopy(wh)
         _wh = 1 / _wh
         _wh = _wh ** 2
-        _wh *= np.multiply(self.V, self.Ur)
-        numerator = np.matmul(_wh, self.H.T)
+        _wh *= self.V
+        numerator = np.matmul(self.W.T, _wh)
         wh = wh ** (-1)
-        denominator = np.matmul(np.multiply(self.Ur, wh), self.H.T)
-        denominator[denominator <= 0] = EPSILON
+        # denominator = np.matmul(W.T, wh)
+        denominator = np.matmul(self.W.T, wh)
+        denominator[denominator == 0] = EPSILON
+        delta_H = numerator / denominator
+        H = self.H * np.multiply(update_weight, delta_H)
+        H[H < 0] = 0
+
+        wh = np.matmul(self.W, H)
+        _wh = copy.deepcopy(wh)
+        _wh = 1 / _wh
+        _wh = _wh ** 2
+        _wh *= self.V
+        numerator = np.matmul(_wh, H.T)
+        wh = wh ** (-1)
+        # denominator = np.matmul(wh, self.H.T)
+        denominator = np.matmul(wh, H.T)
+        denominator[denominator == 0] = EPSILON
         delta_W = numerator / denominator
-        W = self.W * delta_W
+        W = self.W * np.multiply(update_weight, delta_W)
+        W[W < 0.0] = 0.0
+
+        # W_columns = np.sum(W, axis=0)
+        # W = np.divide(W, W_columns)
+
+        self.H = H
+        self.W = W
+
+    def __multiplicative_update_is2_divergence(self):
+        wh = np.matmul(self.W, self.H)
+        wh2 = (1/wh)**2
+        wh2vh = np.matmul(np.multiply(wh2, self.V), self.H.T)
+        wtwh = np.matmul(1/wh, self.H.T)
+        w_delta = np.divide(wh2vh, wtwh)
+        W = np.multiply(self.W, w_delta)
+        W[W <= 0] = EPSILON
+
+        # W_columns = np.sum(W, axis=0)
+        # W = np.divide(W, W_columns)
 
         wh = np.matmul(W, self.H)
-        wh[wh <= 0] = EPSILON
-        _wh = copy.deepcopy(wh)
-        _wh = 1 / _wh
-        _wh = _wh ** 2
-        _wh *= np.multiply(self.V, self.Ur)
-        numerator = np.matmul(W.T, _wh)
-        wh = wh ** (-1)
-        denominator = np.matmul(W.T, np.multiply(self.Ur, wh))
-        denominator[denominator <= 0] = EPSILON
-        delta_H = numerator / denominator
-        H = self.H * delta_H
+        wh2 = (1/wh)**2
+        wtwhv = np.matmul(W.T, np.multiply(wh2, self.V))
+        wtwh = np.matmul(W.T, (1/wh))
+        h_delta = np.divide(wtwhv, wtwh)
+        H = np.multiply(self.H, h_delta)
+        H[H <= 0] = EPSILON
 
-        W_columns = np.sum(W, axis=0)
-        _W = np.divide(W, W_columns)
-        #
-        # W_columns = np.sum(W, axis=1)
-        # _W = np.divide(W.T, W_columns).T
+        # H_columns = np.sum(H, axis=1).reshape(H.shape[0], 1)
+        # H = np.divide(H, H_columns)
 
         self.H = H
-        self.W = _W
+        self.W = W
 
     def __conjugate_gradient_update(self, iterations: int = 20, regularization: float = 1e+0):
         _V = csr_matrix(self.V)
@@ -201,7 +231,7 @@ class BaseNMF:
         self.H = Y.T
         self.W = X
 
-    def __cgm(self, Cui, Uui, X, Y, regularization, cg_steps=20):
+    def __cgm(self, Cui, Uui, X, Y, regularization, cg_steps=3):
         users, factors = X.shape
         YtY = Y.T.dot(Y) + regularization * np.eye(factors)
 
@@ -212,7 +242,7 @@ class BaseNMF:
             # calculate residual r = (YtCuPu - (YtCuY.dot(Xu), without computing YtCuY
             r = -YtY.dot(x)
             for i, confidence in nonzeros(Cui, u):
-                r += (confidence - (confidence - 1) * (Y[i].dot(x)) * Y[i])
+                r += (confidence - (confidence - 1) * (Y[i].dot(x)) * Y[i]) * Uui[u][i]
 
             p = r.copy()
             rsold = r.dot(r)
@@ -226,7 +256,7 @@ class BaseNMF:
                 # calculate Ap = YtCuYp - without actually calculating YtCuY
                 Ap = YtY.dot(p)
                 for i, confidence in nonzeros(Cui, u):
-                    Ap += ((confidence - 1) * Y[i].dot(p) * Y[i])
+                    Ap += ((confidence - 1) * Y[i].dot(p) * Y[i]) * Uui[u][i]
 
                 # standard CG update
                 alpha = rsold / p.dot(Ap)
@@ -281,7 +311,7 @@ class BaseNMF:
             X[u] = x
         return X
 
-    def __gradient_descent(self, R, U, P, Q, K, steps=100, alpha=0.0001, beta=1e-8):
+    def __gradient_descent(self, R, U, P, Q, K, steps=20, alpha=0.001, beta=1e-2):
         '''
         R: rating matrix
         P: |U| * K (User features matrix)
@@ -301,8 +331,8 @@ class BaseNMF:
                 for j in range(len(R[i])):
                     if R[i][j] > 0:
                         # calculate error
-                        eij = (R[i][j] - np.dot(P[i, :], Q[:, j]))
-                        # eij = R[i][j] - np.dot(P[i, :], Q[:, j]) * U[i][j]
+                        # eij = (R[i][j] - np.dot(P[i, :], Q[:, j]))
+                        eij = (R[i][j] - np.dot(P[i, :], Q[:, j])) * U[i][j]
                         if eij > 0:
                             eij = min(eij, max_e)
                         else:
@@ -357,34 +387,39 @@ class BaseNMF:
         #     Q = self.__q_loss(f, O)
         #     J1 = (Y - yi1) / (f - )
 
-    def __q_loss(self, W=None, H=None):
+    def __q_loss(self, W=None, H=None, update: bool = True):
         if W is not None and H is not None:
             _wh = np.matmul(W, H)
         else:
             _wh = np.matmul(self.W, self.H)
         residuals = np.subtract(self.V, _wh)
-        self.WH = _wh
-        self.residuals = residuals
+        if update:
+            self.WH = _wh
+            self.residuals = residuals
         residuals_u = np.multiply(residuals, self.Ur)
-        _q = np.sum(np.multiply(residuals, residuals))
-        # _q = np.sum(np.multiply(residuals_u, residuals_u))
+        # _q = np.sum(np.multiply(residuals, residuals))
+        _q = np.sum(np.multiply(residuals_u, residuals_u))
         return _q
 
-    def train(self, epoch: int = 0, max_iterations: int = 10000, converge_delta: float = 0.01, converge_n: int = 20, learning_rate: float = 0.001):
+    def train(self, epoch: int = 0, max_iterations: int = 10000, converge_delta: float = 0.01, converge_n: int = 20):
         converge_delta = converge_delta
         converge_n = converge_n
         converged = False
 
         prior_q = []
         _q = None
-        lr_decay = 0.9
-        lr_steps = int(max_iterations / 1000)
+
+        best_q = float("inf")
+        best_results = self
+        reset_i = 0
+        reset_max_i = 500
+        update_weight = 1.0
+        step_change_max = 20
+        step_changes = 0
 
         t_iter = trange(max_iterations, desc=f"Epoch: {epoch}, Seed: {self.seed} Q(true): NA", leave=True)
         for i in t_iter:
-            # if i % lr_steps == 0:
-            #     learning_rate = learning_rate * lr_decay
-            self.__update(learning_rate=learning_rate)
+            self.__update(update_weight=update_weight)
             _q = self.__q_loss()
 
             prior_q.append(_q)
@@ -394,14 +429,32 @@ class BaseNMF:
                 delta_q_max = max(prior_q)
                 if (delta_q_max - delta_q_min) < converge_delta:
                     converged = True
-            t_iter.set_description(f"Epoch: {epoch}, Seed: {self.seed}, Q(true): {round(_q, 2)}")
+            t_iter.set_description(f"Epoch: {epoch}, Seed: {self.seed}, Best Q(true): {best_q}, Q(true): {round(_q, 2)}")
             t_iter.refresh()
             self.converge_steps += 1
 
-            if converged:
+            if best_q > _q:
+                reset_i = 0
+                best_q = _q
+                best_results = copy.copy(self)
+            else:
+                reset_i += 1
+
+            if converged or step_changes == step_change_max:
                 self.converged = True
                 break
-        self.Qtrue = _q
+            if reset_i >= reset_max_i:
+                self.H = best_results.H
+                self.W = best_results.W
+                update_weight *= 0.98
+                reset_i = 0
+                step_changes += 1
+
+        self.H = best_results.H
+        self.W = best_results.W
+        self.WH = best_results.WH
+        self.residuals = best_results.residuals
+        self.Qtrue = best_q
 
 
 class BaseSearch:
@@ -439,6 +492,59 @@ class BaseSearch:
 
         self.results = []
         self.best_epoch = None
+
+    def parallel_train(self):
+        t0 = time.time()
+        pool = mp.Pool()
+
+        input_parameters = []
+        for i in range(epochs):
+            _seed = self.rng.integers(low=0, high=1e5)
+            input_parameters.append((i, _seed))
+
+        results = []
+        for result in pool.starmap(self.p_train_task, input_parameters):
+            results.append(result)
+
+        best_epoch = -1
+        best_q = float("inf")
+        ordered_results = [None for i in range(len(results))]
+        for result in results:
+            epoch = int(result["epoch"])
+            ordered_results[epoch] = result
+            if result["Q"] < best_q:
+                best_q = result["Q"]
+                best_epoch = epoch
+        self.results = ordered_results
+        pool.close()
+        t1 = time.time()
+        logger.info(f"Results - Best Model: {best_epoch}, Converged: {self.results[best_epoch]['converged']}, "
+                     f"Q: {self.results[best_epoch]['Q']}")
+        logger.info(f"Runtime: {round((t1-t0)/60, 2)} min(s)")
+        self.best_epoch = best_epoch
+
+    def p_train_task(self, epoch, seed):
+        _nmf = BaseNMF(
+            n_components=self.n_components,
+            method=self.method,
+            V=self.V,
+            U=self.U,
+            H=self.H,
+            W=self.W,
+            seed=seed
+        )
+        _nmf.train(epoch=epoch, max_iterations=self.max_iterations, converge_delta=self.converge_delta,
+                   converge_n=self.converge_n)
+        return {
+            "epoch": epoch,
+            "Q": float(_nmf.Qtrue),
+            "steps": _nmf.converge_steps,
+            "converged": _nmf.converged,
+            "H": _nmf.H,
+            "W": _nmf.W,
+            "wh": _nmf.WH,
+            "seed": int(seed)
+        }
 
     def train(self):
         best_Q = float("inf")
@@ -515,6 +621,14 @@ if __name__ == "__main__":
     uncertainty_file = os.path.join("D:\\", "projects", "nmf_py", "data", "Dataset-BatonRouge-unc.csv")
     output_path = os.path.join("D:\\", "projects", "nmf_py", "output", "BatonRouge")
 
+    # input_file = os.path.join("D:\\", "projects", "nmf_py", "data", "Dataset-StLouis-con.csv")
+    # uncertainty_file = os.path.join("D:\\", "projects", "nmf_py", "data", "Dataset-StLouis-unc.csv")
+    # output_path = os.path.join("D:\\", "projects", "nmf_py", "output", "StLouis")
+
+    # input_file = os.path.join("D:\\", "projects", "nmf_py", "data", "Dataset-Baltimore_con.txt")
+    # uncertainty_file = os.path.join("D:\\", "projects", "nmf_py", "data", "Dataset-Baltimore_unc.txt")
+    # output_path = os.path.join("D:\\", "projects", "nmf_py", "output", "Baltimore")
+
     index_col = "Date"
 
     dh = DataHandler(
@@ -526,26 +640,38 @@ if __name__ == "__main__":
     # dh.scale()
     # dh.remove_outliers(quantile=0.9, drop_min=False, drop_max=True)
 
-    n_components = 4
-    method = "cg"
+    n_components = 9
+    method = "mu"
     V = dh.input_data_processed
     U = dh.uncertainty_data_processed
     seed = 42
-    epochs = 3
-    max_iterations = 1
+    epochs = 10
+    max_iterations = 40000
     converge_delta = 0.1
     converge_n = 100
 
     bs = BaseSearch(n_components=n_components, method=method, V=V, U=U, seed=seed, epochs=epochs, max_iterations=max_iterations,
                     converge_delta=converge_delta, converge_n=converge_n)
     bs.train()
+    # bs.parallel_train()
+
 
     full_output_path = "test-base-save-01.json"
     bs.save(output_name=full_output_path)
 
-    pmf_file = os.path.join("D:\\", "projects", "nmf_py", "data", f"baton-rouge_{n_components}f_profiles.txt")
-    profile_comparison = FactorComp(nmf_output=full_output_path, pmf_output=pmf_file, factors=n_components, species=41)
-    profile_comparison.compare()
+    # pmf_file = os.path.join("D:\\", "projects", "nmf_py", "data", f"baltimore_{n_components}f_profiles.txt")
+    # pmf_residuals_file = os.path.join("D:\\", "projects", "nmf_py", "data", f"baltimore_{n_components}f_residuals.txt")
+    # pmf_file = os.path.join("D:\\", "projects", "nmf_py", "data", f"baton-rouge_{n_components}f_profiles.txt")
+    # pmf_residuals_file = os.path.join("D:\\", "projects", "nmf_py", "data", f"baton-rouge_{n_components}f_residuals.txt")
+    pmf_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test", f"br{n_components}f_profiles.txt")
+    pmf_residuals_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test",
+                                      f"br{n_components}f_residuals.txt")
+    # pmf_file = os.path.join("D:\\", "projects", "nmf_py", "data", f"stlouis_{n_components}f_profiles.txt")
+    # pmf_residuals_file = os.path.join("D:\\", "projects", "nmf_py", "data", f"stlouis_{n_components}f_residuals.txt")
+    profile_comparison = FactorComp(nmf_output=full_output_path, pmf_output=pmf_file, factors=n_components,
+                                    species=len(dh.features), residuals_path=pmf_residuals_file)
+    pmf_q = calculate_Q(profile_comparison.pmf_residuals.values, dh.uncertainty_data_processed)
+    profile_comparison.compare(PMF_Q=pmf_q)
 
     t1 = time.time()
     print(f"Runtime: {round((t1-t0)/60, 2)} min(s)")
