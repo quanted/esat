@@ -28,15 +28,15 @@ if __name__ == "__main__":
     # Base model paramters
 
     min_components = 2  # min number of factors to compare
-    max_components = 12
+    max_components = 9
     method1 = "mu"  # minimization algorithm: 'mu' multiplicative update - Kullback-Leibler, 'euc' multiplicative update - frobenius, 'is' multiplicative update - itakura-saito, 'gd' gradient descent, 'cg' conjugate descent
     seed = 42  # randomization seed
-    epochs = 10  # number of models to create
+    epochs = 50  # number of models to create
     max_iterations = 20000  # max number of iterations to run for multiplicative update models
-    converge_delta = 0.1  # the amount of change between iterations for a multiplicative model considered converged
-    converge_n = 10  # the number of iterations required with a loss change of less than converge_delta for the model to be considered converged
+    converge_delta = 0.01  # the amount of change between iterations for a multiplicative model considered converged
+    converge_n = 100  # the number of iterations required with a loss change of less than converge_delta for the model to be considered converged
 
-    run_all = False
+    run_all = True
     V = dh.input_data_processed
     U = dh.uncertainty_data_processed
 
@@ -56,7 +56,7 @@ if __name__ == "__main__":
 
     results = []
 
-    for n_component in range(min_components, max_components):
+    for n_component in range(min_components, max_components+1):
         nmf_file = f"nmf-br{n_component}-output.json"
         nmf_output_file = os.path.join(output_path, nmf_file)
         pmf_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test", f"br{n_component}f_profiles.txt")

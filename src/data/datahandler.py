@@ -5,6 +5,7 @@ import copy
 import pandas as pd
 import numpy as np
 import tensorflow as tf
+from datetime import datetime, timedelta
 
 logging.basicConfig(format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S', level=logging.DEBUG)
 logger = logging.getLogger()
@@ -17,13 +18,15 @@ class DataHandler:
 
     """
     def __init__(self, input_path: str, uncertainty_path: str, output_path: str, features: list = None,
-                 index_col: str = None, drop_col: list = None):
+                 index_col: str = None, drop_col: list = None, generate_data: bool = False):
         """
         Check, load and prep the input and output data paths/files.
         :param input_path: The path to the concentration data file
         :param uncertainty_path: The path to the uncertainty data file
         :param output_path: The path to the directory where the output files are written to
         """
+        self.generate_data = generate_data
+
         self.input_path = input_path
         self.uncertainty_path = uncertainty_path
         self.output_path = output_path
@@ -50,8 +53,9 @@ class DataHandler:
         self.features = None
         self.metadata = {}
 
-        self._check_paths()
-        self._load_data()
+        if not self.generate_data:
+            self._check_paths()
+            self._load_data()
 
     def _check_paths(self):
         """
@@ -106,7 +110,48 @@ class DataHandler:
             sys.exit()
         return data
 
-    def _load_data(self):
+    def create_data(self, sample_count: int, species_count: int, value_min: float = 0.1, value_max: float = 10.0,
+                      uncertainty_min_p: float = 0.02, uncertainty_max_p: float = 0.06, seed: int = 42):
+        """
+        Generate random data for testing.
+        :param sample_count: Total number of samples to generate (timesteps) (N)
+        :param species_count: Total number of species/features to generate (M)
+        :param value_min: The minimum value of a sample
+        :param value_max: The maximum value of a sample
+        :param uncertainty_min_p: The minimum percentage of a sample value to assign uncertainty
+        :param uncertainty_max_p: The maximum percentage of a sample value to assign uncertainty
+        :param seed: The random generator seed.
+        :return:
+        """
+        rng = np.random.default_rng(seed)
+
+        data = rng.uniform(low=value_min, high=value_max, size=(sample_count, species_count))
+
+        labels = [f"species_{i+1}" for i in range(0, species_count)]
+
+        i_date = datetime.now()
+        dates = [(i_date - timedelta(hours=i)).strftime("%m/%d/%Y %H") for i in range(sample_count, 0, -1)]
+
+        uncertainty_p = rng.uniform(low=uncertainty_min_p, high=uncertainty_max_p, size=(sample_count, species_count))
+        uncertainty = np.multiply(data, uncertainty_p)
+
+        data_df = pd.DataFrame(data=data, columns=labels)
+        data_df["Date"] = dates
+        data_df.set_index("Date", inplace=True)
+
+        uncertainty_df = pd.DataFrame(data=uncertainty, columns=labels)
+        uncertainty_df["Date"] = dates
+        uncertainty_df.set_index("Date", inplace=True)
+
+        self.features = labels
+        self.input_data = data_df
+        self.uncertainty_data = uncertainty_df
+        self.input_data.to_csv(self.input_path)
+        self.uncertainty_data.to_csv(self.uncertainty_path)
+
+        self._load_data(existing_data=True)
+
+    def _load_data(self, existing_data: bool = False):
         """
         Loads the input and uncertainty data
         :return: None
@@ -114,9 +159,10 @@ class DataHandler:
         if self.error:
             logger.warn("Unable to load data because of setup errors.")
             return
-        self.input_data = self.__read_data(filepath=self.input_path, index_col=self.index_col)
-        self.uncertainty_data = self.__read_data(filepath=self.uncertainty_path, index_col=self.index_col)
-        self.features = list(self.input_data.columns) if self.features is None else self.features
+        if not existing_data:
+            self.input_data = self.__read_data(filepath=self.input_path, index_col=self.index_col)
+            self.uncertainty_data = self.__read_data(filepath=self.uncertainty_path, index_col=self.index_col)
+            self.features = list(self.input_data.columns) if self.features is None else self.features
 
         if self.drop_col is not None:
             _input_data = self.input_data.drop(self.drop_col, axis=1)
