@@ -1,4 +1,5 @@
 from src.model.model import NMFModel
+from src.model.base_nmf import BaseSearch
 from src.data.datahandler import DataHandler
 
 
@@ -19,8 +20,16 @@ class ComponentSearch:
         self.min_n = min_component
         self.max_n = max_component
         for n in range(min_component, max_component):
-            model = NMFModel(dh=self.datahandler, epochs=epochs, n_components=n, max_iterations=max_iterations,
-                             seed=self.seed, converge_diff=converge_diff, converge_iter=converge_iter)
-            model.fit()
+            model = BaseSearch(n_components=n,
+                               V=self.datahandler.input_data_processed,
+                               U=self.datahandler.uncertainty_data_processed,
+                               method="kl",
+                               seed=self.seed,
+                               epochs=epochs,
+                               max_iterations=max_iterations,
+                               converge_delta=converge_diff,
+                               converge_n=converge_iter
+                               )
+            model.parallel_train()
             self.results[n] = model.results[0]
             self.Q.append(model.results[0]["Q"])

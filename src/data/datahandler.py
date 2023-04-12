@@ -18,7 +18,7 @@ class DataHandler:
 
     """
     def __init__(self, input_path: str, uncertainty_path: str, output_path: str, features: list = None,
-                 index_col: str = None, drop_col: list = None, generate_data: bool = False):
+                 index_col: str = None, drop_col: list = None, generate_data: bool = False, sn_threshold: float = 2.0):
         """
         Check, load and prep the input and output data paths/files.
         :param input_path: The path to the concentration data file
@@ -35,6 +35,9 @@ class DataHandler:
 
         self.input_data = None
         self.uncertainty_data = None
+
+        self.sn_mask = None
+        self.sn_threshold = sn_threshold
 
         self.metrics = None
 
@@ -82,6 +85,12 @@ class DataHandler:
             logger.info("Input and output configured successfully")
 
     def _set_dataset(self, data, uncertainty):
+        if isinstance(data, pd.DataFrame) and isinstance(uncertainty, pd.DataFrame):
+            sn = data/uncertainty
+            data_mask = data.mask(sn < self.sn_threshold, 0.5)
+            data_mask = data_mask.mask(sn >= self.sn_threshold, 1.0)
+            self.sn_mask = data_mask.to_numpy()
+
         if isinstance(data, pd.DataFrame) or isinstance(data, pd.Series):
             data = data.to_numpy()
         if isinstance(uncertainty, pd.DataFrame) or isinstance(uncertainty, pd.Series):

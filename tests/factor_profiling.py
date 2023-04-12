@@ -27,16 +27,16 @@ if __name__ == "__main__":
 
     # Base model paramters
 
-    min_components = 2  # min number of factors to compare
-    max_components = 9
+    min_components = 11  # min number of factors to compare
+    max_components = 12
     method1 = "mu"  # minimization algorithm: 'mu' multiplicative update - Kullback-Leibler, 'euc' multiplicative update - frobenius, 'is' multiplicative update - itakura-saito, 'gd' gradient descent, 'cg' conjugate descent
     seed = 42  # randomization seed
-    epochs = 50  # number of models to create
+    epochs = 20  # number of models to create
     max_iterations = 20000  # max number of iterations to run for multiplicative update models
     converge_delta = 0.01  # the amount of change between iterations for a multiplicative model considered converged
     converge_n = 100  # the number of iterations required with a loss change of less than converge_delta for the model to be considered converged
 
-    run_all = True
+    run_all = False
     V = dh.input_data_processed
     U = dh.uncertainty_data_processed
 
@@ -65,8 +65,8 @@ if __name__ == "__main__":
         profile_comparison = FactorComp(nmf_output=nmf_output_file, pmf_output=pmf_file, factors=n_component,
                                         species=len(dh.features), residuals_path=pmf_residuals_file)
         pmf_q = calculate_Q(profile_comparison.pmf_residuals.values, dh.uncertainty_data_processed)
-        profile_comparison.compare(PMF_Q=pmf_q)
 
+        profile_comparison.compare(PMF_Q=pmf_q)
         best_model = profile_comparison.best_model
 
         results = {

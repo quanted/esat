@@ -110,7 +110,6 @@ class FactorComp:
             json_data = json.load(json_file)
             species_columns = np.array(self.pmf_profiles_df["species"])
             for i in range(len(json_data)):
-                # i = str(i)
                 nmf_h_data = np.array(json_data[i]["H"])
                 nmf_w_data = np.array(json_data[i]["W"])
                 nmf_wh_data = np.array(json_data[i]["wh"])
@@ -123,74 +122,76 @@ class FactorComp:
                 self.nmf_epochs_dfs[i] = {"WH": nmf_wh_df, "W": nmf_w_df, "H": nmf_h_df}
                 self.nmf_Q[i] = json_data[i]["Q"]
 
-    def compare(self, PMF_Q=None, verbose: bool = True):
+    def compare(self, PMF_Q=None, verbose: bool = True, parallel: bool = True):
+        correlation_results = {}
+        for m in tqdm(range(len(self.nmf_epochs_dfs)), desc="Calculating correlation between factors from each epoch"):
+            correlation_results[m] = {}
+            nmf_m = self.nmf_epochs_dfs[m]["H"]
+            for i in self.factor_columns:
+                pmf_i = self.pmf_profiles_df[i].astype(float)
+                for j in self.factor_columns:
+                    nmf_j = nmf_m.loc[j].astype(float)
+                    r2 = self.calculate_correlation(pmf_factor=pmf_i, nmf_factor=nmf_j)
+                    correlation_results[m][f"pmf-{i}_nmf-{j}"] = r2
+
         factor_permutations = list(permutations(self.factor_columns, len(self.factor_columns)))
-
-        all_r2 = {}
-
-        best_permutation_r = None
-        best_r = float("-inf")
+        # TODO: factor_permutations is too large at 12 factors: 479,001,600 permutations
+        #  (need alternative way of managing the permutation list)
+        print(f"Number of permutations for {self.factors} factors: {len(factor_permutations)}")
+        best_r = 0.0
+        best_perm = None
         best_model = None
         best_factor_r = None
 
         pool = mp.Pool()
 
-        for e in tqdm(range(len(self.nmf_epochs_dfs)), desc="Checking permuations from each epoch"):
-            # e = str(e)
-            nmf_h = self.nmf_epochs_dfs[e]["H"]
-            all_r = []
-
-            p_inputs = []
-            for p in factor_permutations:
-                p_inputs.append((p, nmf_h))
-
-            for p_result in pool.starmap(self.analyze_permutation, p_inputs):
-                perm, r_avg, values = p_result
-                if r_avg > best_r:
-                    best_r = r_avg
-                    best_permutation_r = perm
-                    best_model = e
-                    best_factor_r = values
-
-            # for perm in factor_permutations:
-            # for i in tqdm(range(len(factor_permutations)), desc=f"Checking all factor permutations - Epoch {e}"):
-            #     perm = factor_permutations[i]
-            #     values = []
-            #     for i in range(len(self.factor_columns)):
-            #         pmf_i = self.pmf_profiles_df[self.factor_columns[i]].astype(float)
-            #         nmf_i = nmf_h.loc[perm[i]].astype(float)
-            #         corr_matrix = np.corrcoef(nmf_i, pmf_i)
-            #         corr = corr_matrix[0, 1]
-            #         r_sq = corr ** 2
-            #         values.append(r_sq)
-            #     r_avg = np.mean(values)
-            #     r_max = np.max(values)
-            #     r_min = np.min(values)
-            #     if r_avg > best_r:
-            #         best_r = r_avg
-            #         best_permutation_r = perm
-            #         best_model = e
-            #         best_factor_r = values
-            #     all_r.append((perm, r_avg))
-
-            all_r2[e] = all_r
+        for m in tqdm(range(len(self.nmf_epochs_dfs)), desc="Calculating average correlation for all permutations for each epoch"):
+            # Each Model
+            permutation_results = {}
+            if parallel:
+                pool_inputs = [(factor, correlation_results[m]) for factor in factor_permutations]
+                for pool_results in pool.starmap(self.combine_factors, pool_inputs):
+                    factor, r_avg, r_values = pool_results
+                    permutation_results[factor] = (r_avg, r_values)
+                    if r_avg > best_r:
+                        best_r = r_avg
+                        best_perm = factor
+                        best_model = m
+                        best_factor_r = r_values
+            else:
+                for n in range(len(factor_permutations)):
+                    r_values = []
+                    for i, f in enumerate(factor_permutations[n]):
+                        r2 = correlation_results[m][f"pmf-{self.factor_columns[i]}_nmf-{f}"]
+                        r_values.append(r2)
+                    r_avg = np.mean(r_values)
+                    permutation_results[n] = (r_avg, r_values)
+                    if r_avg > best_r:
+                        best_r = r_avg
+                        best_perm = factor_permutations[n]
+                        best_model = m
+                        best_factor_r = r_values
         self.best_model = best_model
         self.best_factor_r = best_factor_r
         self.best_avg_r = best_r
-        self.factor_map = list(best_permutation_r)
+        self.factor_map = list(best_perm)
         if verbose:
-            print(f"R2 - Model: {best_model}, Best permutations: {list(best_permutation_r)}, Average: {best_r}, "
+            print(f"R2 - Model: {best_model}, Best permutations: {list(best_perm)}, Average: {best_r}, "
                   f"Factors: {best_factor_r}")
             print(f"PMF5 Q(true): {PMF_Q}, NMF-PY Model {best_model} Q(true): {self.nmf_Q[best_model]}")
 
-    def analyze_permutation(self, permutation, nmf_h):
-        values = []
-        for i in range(len(self.factor_columns)):
-            pmf_i = self.pmf_profiles_df[self.factor_columns[i]].astype(float)
-            nmf_i = nmf_h.loc[permutation[i]].astype(float)
-            corr_matrix = np.corrcoef(nmf_i, pmf_i)
-            corr = corr_matrix[0, 1]
-            r_sq = corr ** 2
-            values.append(r_sq)
-        r_avg = np.mean(values)
-        return permutation, r_avg, values
+    def calculate_correlation(self, pmf_factor, nmf_factor):
+        pmf_f = pmf_factor.astype(float)
+        nmf_f = nmf_factor.astype(float)
+        corr_matrix = np.corrcoef(nmf_f, pmf_f)
+        corr = corr_matrix[0, 1]
+        r_sq = corr ** 2
+        return r_sq
+
+    def combine_factors(self, factors, model_correlation):
+        r_values = []
+        for i, f in enumerate(factors):
+            r2 = model_correlation[f"pmf-{self.factor_columns[i]}_nmf-{f}"]
+            r_values.append(r2)
+        r_avg = np.mean(r_values)
+        return (factors, r_avg, r_values)
