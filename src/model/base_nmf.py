@@ -236,22 +236,15 @@ class BaseNMF:
         # Multiplicative Update (Kullback-Leibler)
         # https://perso.uclouvain.be/paul.vandooren/publications/BlondelHV07.pdf Theorem 5
 
-        # wV = np.multiply(self.Ur, self.V)
-
-        # WH = np.matmul(self.W, self.H)
-        # H1 = np.multiply(update_weight, np.matmul(self.W.T, np.divide(wV, WH)))
-        # H = np.multiply(np.divide(self.H, np.matmul(self.W.T, self.Ur)), H1)
-        #
-        # WH = np.matmul(self.W, H)
-        # W1 = np.multiply(update_weight, np.matmul(np.divide(wV, WH), H.T))
-        # W = np.multiply(np.divide(self.W, np.matmul(self.Ur, H.T)), W1)
-
         wV = np.multiply(self.Ur, self.V)
         WH = np.matmul(self.W, self.H)
         H1 = np.matmul(self.W.T, np.divide(wV, WH))
         H2 = 1.0 / (np.matmul(self.W.T, self.Ur))
         H_delta = np.multiply(update_weight, np.multiply(H2, H1))
         H = np.multiply(self.H, H_delta)
+
+        # H = (H - H.min(axis=0)) / (H.max(axis=0) - H.min(axis=0))
+        # H[H < 0] = 0
 
         WH = np.matmul(self.W, H)
         W1 = np.matmul(np.divide(wV, WH), H.T)
@@ -801,7 +794,7 @@ class BaseSearch:
         logger.info(f"Runtime: {round((t1-t0)/60, 2)} min(s)")
         self.best_epoch = best_epoch
 
-    def optimized_train(self):
+    def optimized_train(self, parallel: bool = True):
         best_Q = float("inf")
         best_epoch = None
 
@@ -809,44 +802,99 @@ class BaseSearch:
         t_iter = trange(self.epochs, desc=f"Epoch: 0, Seed: {self.seed} Q(true): NA")
         V = self.V.astype(np.float64)
         U = self.U.astype(np.float64)
-        update_weight = 2.5
+        update_weight = 1.0
 
-        for i in t_iter:
-            _seed = self.rng.integers(low=0, high=1e5)
-            _nmf = BaseNMF(
-                n_components=self.n_components,
-                method=self.method,
-                V=self.V,
-                U=self.U,
-                H=self.H,
-                W=self.W,
-                seed=_seed
-            )
-            _results = nmf_pyr.nmf_kl(V, U, _nmf.W, _nmf.H, update_weight, self.max_iterations, self.converge_delta,
-                                      self.converge_n)[0]
-            W, H, q, converged, i_steps, q_list = _results
-            # test_q1 = calculate_Q((_nmf.V - np.matmul(W, H)), _nmf.U)
-            t_iter.set_description(f"Epoch: {i}, Seed: {self.seed}, Q(true): {round(q, 2)}")
-            t_iter.refresh()
-            if q < best_Q:
-                best_Q = q
-                best_epoch = i
-            WH = np.matmul(W, H)
-            self.results.append({
-                "epoch": i,
-                "Q": float(q),
-                "steps": i_steps,
-                "converged": converged,
-                "H": H,
-                "W": W,
-                "wh": WH,
-                "seed": int(_seed)
-            })
-        t1 = time.time()
-        logger.info(f"Results - Best Model: {best_epoch}, Converged: {self.results[best_epoch]['converged']}, "
-                     f"Q: {self.results[best_epoch]['Q']}")
-        logger.info(f"Runtime: {round((t1-t0)/60, 2)} min(s)")
-        self.best_epoch = best_epoch
+        if parallel:
+            p_inputs = []
+            for i in range(self.epochs):
+                _seed = self.rng.integers(low=0, high=1e5)
+                _nmf = BaseNMF(
+                    n_components=self.n_components,
+                    method=self.method,
+                    V=self.V,
+                    U=self.U,
+                    H=self.H,
+                    W=self.W,
+                    seed=_seed
+                )
+                p_inputs.append(
+                    (i, _seed, V, U, _nmf.W, _nmf.H, update_weight)
+                )
+            pool = mp.Pool()
+            results = []
+            for result in pool.starmap(self.kl_opt_p, p_inputs):
+                results.append(result)
+
+            best_epoch = -1
+            best_q = float("inf")
+            ordered_results = [None for i in range(len(results))]
+            for result in results:
+                epoch = int(result["epoch"])
+                ordered_results[epoch] = result
+                logger.info(f"Epoch: {epoch}, Seed: {result['seed']}, Q(true): {result['Q']}, Steps: {result['steps']}/{self.max_iterations}")
+                if result["Q"] < best_q:
+                    best_q = result["Q"]
+                    best_epoch = epoch
+            self.results = ordered_results
+            pool.close()
+            t1 = time.time()
+            logger.info(f"Results - Best Model: {best_epoch}, Converged: {self.results[best_epoch]['converged']}, "
+                         f"Q: {self.results[best_epoch]['Q']}")
+            logger.info(f"Runtime: {round((t1-t0)/60, 2)} min(s)")
+            self.best_epoch = best_epoch
+        else:
+            for i in t_iter:
+                _seed = self.rng.integers(low=0, high=1e5)
+                _nmf = BaseNMF(
+                    n_components=self.n_components,
+                    method=self.method,
+                    V=self.V,
+                    U=self.U,
+                    H=self.H,
+                    W=self.W,
+                    seed=_seed
+                )
+                _results = nmf_pyr.nmf_kl(V, U, _nmf.W, _nmf.H, update_weight, self.max_iterations, self.converge_delta,
+                                          self.converge_n)[0]
+                W, H, q, converged, i_steps, q_list = _results
+                # test_q1 = calculate_Q((_nmf.V - np.matmul(W, H)), _nmf.U)
+                t_iter.set_description(f"Epoch: {i}, Seed: {self.seed}, Q(true): {round(q, 2)}")
+                t_iter.refresh()
+                if q < best_Q:
+                    best_Q = q
+                    best_epoch = i
+                WH = np.matmul(W, H)
+                self.results.append({
+                    "epoch": i,
+                    "Q": float(q),
+                    "steps": i_steps,
+                    "converged": converged,
+                    "H": H,
+                    "W": W,
+                    "wh": WH,
+                    "seed": int(_seed),
+                })
+            t1 = time.time()
+            logger.info(f"Results - Best Model: {best_epoch}, Converged: {self.results[best_epoch]['converged']}, "
+                         f"Q: {self.results[best_epoch]['Q']}")
+            logger.info(f"Runtime: {round((t1-t0)/60, 2)} min(s)")
+            self.best_epoch = best_epoch
+
+    def kl_opt_p(self, epoch, seed, V, U, W, H, update_weight):
+        _results = nmf_pyr.nmf_kl(V, U, W, H, update_weight, self.max_iterations, self.converge_delta,
+                                  self.converge_n)[0]
+        W, H, q, converged, i_steps, q_list = _results
+        WH = np.matmul(W, H)
+        return {
+            "epoch": epoch,
+            "Q": float(q),
+            "steps": i_steps,
+            "converged": converged,
+            "H": H,
+            "W": W,
+            "wh": WH,
+            "seed": int(seed)
+        }
 
     def save(self, output_name: str = None, output_path: str = None):
         if output_name is None:
@@ -906,13 +954,13 @@ if __name__ == "__main__":
     # dh.scale()
     # dh.remove_outliers(quantile=0.9, drop_min=False, drop_max=True)
 
-    n_components = 7
-    method = "mu"                   # "kl", "ls-nmf", "is", "euc", "gd"
+    n_components = 8
+    method = "kl-opt"                   # "kl", "ls-nmf", "is", "euc", "gd"
     V = dh.input_data_processed
     U = dh.uncertainty_data_processed
-    seed = 42
-    epochs = 10
-    max_iterations = 20000
+    seed = 4
+    epochs = 50
+    max_iterations = 40000
     converge_delta = 0.01
     converge_n = 500
 
@@ -921,21 +969,24 @@ if __name__ == "__main__":
     bs = BaseSearch(n_components=n_components, method=method, V=V, U=U, seed=seed, epochs=epochs, max_iterations=max_iterations,
                     converge_delta=converge_delta, converge_n=converge_n, data_mask=data_mask)
     # bs.train()
-    bs.parallel_train()
+    bs.optimized_train()
+    # bs.parallel_train()
 
-    full_output_path = "test-base-save-01.json"
+    full_output_path = f"nmf-output-f{n_components}"
     bs.save(output_name=full_output_path)
 
     # pmf_file = os.path.join("D:\\", "projects", "nmf_py", "data", f"baltimore_{n_components}f_profiles.txt")
     # pmf_residuals_file = os.path.join("D:\\", "projects", "nmf_py", "data", f"baltimore_{n_components}f_residuals.txt")
     # pmf_file = os.path.join("D:\\", "projects", "nmf_py", "data", f"baton-rouge_{n_components}f_profiles.txt")
     # pmf_residuals_file = os.path.join("D:\\", "projects", "nmf_py", "data", f"baton-rouge_{n_components}f_residuals.txt")
-    pmf_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test", f"br{n_components}f_profiles.txt")
+    pmf_profile_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test", f"br{n_components}f_profiles.txt")
+    pmf_contribution_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test", f"br{n_components}f_contributions.txt")
     pmf_residuals_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test",
                                       f"br{n_components}f_residuals.txt")
     # pmf_file = os.path.join("D:\\", "projects", "nmf_py", "data", f"stlouis_{n_components}f_profiles.txt")
     # pmf_residuals_file = os.path.join("D:\\", "projects", "nmf_py", "data", f"stlouis_{n_components}f_residuals.txt")
-    profile_comparison = FactorComp(nmf_output=full_output_path, pmf_output=pmf_file, factors=n_components,
+    profile_comparison = FactorComp(nmf_output_file=full_output_path, pmf_profile_file=pmf_profile_file,
+                                    pmf_contribution_file=pmf_contribution_file, factors=n_components,
                                     species=len(dh.features), residuals_path=pmf_residuals_file)
     pmf_q = calculate_Q(profile_comparison.pmf_residuals.values, dh.uncertainty_data_processed)
     profile_comparison.compare(PMF_Q=pmf_q)

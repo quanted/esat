@@ -1,10 +1,11 @@
 extern crate core;
 
-use std::collections::VecDeque;
+use rayon::prelude::*;
+use std::collections::vec_deque::VecDeque;
 use pyo3::{prelude::*, types::PyTuple};
 use numpy::pyo3::Python;
 use numpy::{PyReadonlyArrayDyn, ToPyArray, PyArrayDyn};
-use nalgebra::{DMatrix, OMatrix, Dyn};
+use nalgebra::{dmatrix, DMatrix, OMatrix, Dyn, Matrix};
 
 
 /// NMF-PY Rust module
@@ -73,9 +74,9 @@ fn nmf_pyr(py: Python<'_>, m: &PyModule) -> PyResult<()> {
             }
             q_list.push_back(q_new.clone());
             if (q_list.len() as i32) >= converge_i {
-                let q_min =  q_list.clone().into_iter().reduce(f64::min).unwrap();
-                let q_max =  q_list.clone().into_iter().reduce(f64::max).unwrap();
-                if (q_max - q_min) < converge_delta {
+                let q_sum: f64 = q_list.iter().sum();
+                let q_avg: f64 = q_sum / q_list.len() as f64;
+                if (q_avg - q_new).abs() < converge_delta {
                     if update_weight < 0.01 {
                         converged = true;
                         break

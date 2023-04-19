@@ -27,7 +27,7 @@ if __name__ == "__main__":
 
     # Base model paramters
 
-    min_components = 11  # min number of factors to compare
+    min_components = 2  # min number of factors to compare
     max_components = 12
     method1 = "mu"  # minimization algorithm: 'mu' multiplicative update - Kullback-Leibler, 'euc' multiplicative update - frobenius, 'is' multiplicative update - itakura-saito, 'gd' gradient descent, 'cg' conjugate descent
     seed = 42  # randomization seed
@@ -36,7 +36,7 @@ if __name__ == "__main__":
     converge_delta = 0.01  # the amount of change between iterations for a multiplicative model considered converged
     converge_n = 100  # the number of iterations required with a loss change of less than converge_delta for the model to be considered converged
 
-    run_all = False
+    run_all = True
     V = dh.input_data_processed
     U = dh.uncertainty_data_processed
 
@@ -47,7 +47,7 @@ if __name__ == "__main__":
         for n_component in range(min_components, max_components + 1):
             base = BaseSearch(n_components=n_component, method=method1, V=V, U=U, seed=seed, epochs=epochs,
                               max_iterations=max_iterations, converge_delta=converge_delta, converge_n=converge_n)
-            base.train()
+            base.optimized_train()
             output_file = f"nmf-br{n_component}-output.json"
             base.save(output_name=output_file, output_path=output_path)
 
@@ -59,10 +59,12 @@ if __name__ == "__main__":
     for n_component in range(min_components, max_components+1):
         nmf_file = f"nmf-br{n_component}-output.json"
         nmf_output_file = os.path.join(output_path, nmf_file)
-        pmf_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test", f"br{n_component}f_profiles.txt")
+        pmf_profile_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test", f"br{n_component}f_profiles.txt")
+        pmf_contribution_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test", f"br{n_component}f_contributions.txt")
         pmf_residuals_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test",
                                           f"br{n_component}f_residuals.txt")
-        profile_comparison = FactorComp(nmf_output=nmf_output_file, pmf_output=pmf_file, factors=n_component,
+        profile_comparison = FactorComp(nmf_output_file=nmf_output_file, pmf_profile_file=pmf_profile_file,
+                                        pmf_contribution_file=pmf_contribution_file, factors=n_component,
                                         species=len(dh.features), residuals_path=pmf_residuals_file)
         pmf_q = calculate_Q(profile_comparison.pmf_residuals.values, dh.uncertainty_data_processed)
 

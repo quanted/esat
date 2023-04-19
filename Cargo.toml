@@ -10,6 +10,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 pyo3 = "0.18.1"
+rayon = "1.7.0"
 numpy = "0.18.0"
 nalgebra = "0.32.2"
 ndarray = "0.15.6"
