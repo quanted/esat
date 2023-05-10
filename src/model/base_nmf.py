@@ -7,6 +7,8 @@ import os
 from tqdm import trange, tqdm
 import numpy as np
 import multiprocessing as mp
+from scipy.cluster.vq import kmeans2, whiten, vq, kmeans
+from fcmeans import FCM
 from scipy.sparse import csr_matrix, csc_matrix
 from src.utils import nonzeros, calculate_Q
 from nmf_pyr import nmf_pyr
@@ -28,7 +30,9 @@ class BaseNMF:
                  W: np.ndarray = None,
                  data_mask: np.ndarray = None,
                  seed: int = None,
-                 method: str = "mu"
+                 method: str = "mu",
+                 init_kmeans: bool = True,
+                 init_norm: bool = False,
                  ):
         self.n_components = n_components
         self.method = method
@@ -51,7 +55,7 @@ class BaseNMF:
             logger.warn(f"V and U matrix shapes are not equal, V: {V.shape}, U: {U.shape}")
         self.m, self.n = self.V.shape
 
-        self.V = self.V + EPSILON
+        # self.V = self.V + EPSILON
         self.U = self.U + EPSILON
 
         self.Ur = np.divide(1, self.U)     # Convert uncertainty to weight for multiplication operations
@@ -72,12 +76,27 @@ class BaseNMF:
                 logger.warn(f"The provided data mask is not the correct shape")
                 self.data_mask = None
 
+        self.init_kmeans = init_kmeans
+        self.init_norm = init_norm
         self.seed = 42 if seed is None else seed
         self.rng = np.random.default_rng(self.seed)
         self.verbose = True
         self.__build()
 
     def __build(self):
+        if self.W is None and self.H is None and self.init_kmeans is True:
+            # centroids are assigned to the factor contribution matrix
+            obs = self.V
+            if self.init_norm:
+                obs = whiten(obs=self.V)
+
+            fcm = FCM(n_clusters=self.n_components, m=5, random_state=self.seed)
+            fcm.fit(obs)
+            centroids = fcm.centers
+            contributions = fcm.u
+
+            self.W = contributions
+            self.H = centroids
         if self.W is None:
             V_avg = np.sqrt(np.mean(self.V, axis=1) / self.n_components)
             V_avg = V_avg.reshape(len(V_avg), 1)
@@ -95,44 +114,15 @@ class BaseNMF:
         self.W = self.W.astype(self.V.dtype, copy=False)
         self.H = self.H.astype(self.V.dtype, copy=False)
 
-    def __update(self, max_iterations: int = 10000, converge_delta: float = 0.01, converge_n: int = 200,
+    def __update(self, it: int = 0, max_iterations: int = 10000, converge_delta: float = 0.01, converge_n: int = 200,
                  update_weight: float = 1.0, update_decay: float = 0.98, retries: int = 20):
         lowest_q = float("inf")
         best_W = self.W
         best_H = self.H
-
-        if "gd" in self.method:
-            _W = self.W.copy()
-            _H = self.H.copy()
-            max_iterations = 20000
-            q0 = self.__q_loss(W=_W, H=_H, update=False)
-            qs = [q0]
-
-            max_resets = 100
-            i_resets = max_resets
-            gamma = 1e-1
-            t_iter = trange(max_iterations, desc=f"PGD - Seed: {self.seed} Q(true): NA", position=0, leave=True)
-            for i in t_iter:
-                _H, qh = self.__optimal_gradient_descent(Wt=_W, Ht=_H, gamma=gamma)
-                _W, qi = self.__optimal_gradient_descent(Wt=_H.T, Ht=_W.T, gamma=gamma, switched=True)
-                _W = _W.T
-                if qi < lowest_q:
-                    best_W = _W
-                    best_H = _H
-                    lowest_q = qi
-                    i_resets = max_resets
-                else:
-                    i_resets = i_resets - 1
-                    gamma *= 0.1
-                if i_resets <= 0:
-                    break
-                qs.append(qi)
-                t_iter.set_description(f"PGD - Seed: {self.seed}, Best Q(true): {lowest_q}, Q(true): {round(qi, 2)}")
-                t_iter.refresh()
-            W = best_W
-            H = best_H
-        elif "cg" in self.method:
-            W, H = self.__conjugate_gradient_update()
+        if "semi-nmf" in self.method:
+            W, H = self.__semi_nmf(update_weight=100)
+        elif "ws-nmf" in self.method:
+            W, H = self.__weighted_semi_nmf(update_weight=100)
         elif "ls-nmf" in self.method:
             # LS-NMF Uncertainty Multiplicative Update
             update_weights = [
@@ -286,29 +276,104 @@ class BaseNMF:
 
         return W, H
 
-    def __multiplicative_update_is2_divergence(self, update_weight: float = 1.0):
+    def __semi_nmf(self, update_weight: float = 1.0):
+        '''
+        Reference: Semi-NMF algorithm as described in https://people.eecs.berkeley.edu/~jordan/papers/ding-li-jordan-pami.pdf
+        Unweighted, unprojected algorithm
+        H = G, F = W
+        :return:
+        '''
+        # test1 = self.__q_loss(W=self.W, H=self.H, update=False)
+        # (S1): F=XG(G^T G)^-1 => W=VH(H^T H)^-1
+        q1 = self.__q_loss(W=self.W, H=self.H, uncertainty=False)
 
-        Ur = self.Ur
+        w1 = np.matmul(self.V, self.H.T)
+        w2 = np.matmul(self.H, self.H.T) + EPSILON
+        w2i = 1.0 / w2
+        W = np.matmul(w1, w2i)
 
-        wh = np.matmul(self.W, self.H)
-        H_num = np.matmul(self.W.T, np.multiply((Ur*wh)**-2, Ur*self.V))
-        H_den = np.matmul(self.W.T, wh**-1)
-        delta_H = update_weight * np.divide(H_num, H_den)
-        H = np.multiply(self.H, delta_H)
-        H[H <= 0] = EPSILON
+        W_n = (np.abs(W) - W) / 2.0
+        W_p = (np.abs(W) + W) / 2.0
 
-        # H_columns = np.sum(H, axis=0)
-        # H = np.divide(H, H_columns)
+        n1 = np.matmul(self.V.T, W_p)
+        d1 = np.matmul(self.V.T, W_n)
 
-        wh2 = np.matmul(self.W, H)
-        W_num = np.matmul(np.multiply((Ur*wh2)**-2, Ur*self.V), H.T)
-        W_den = np.matmul(wh2**-1, H.T)
-        delta_W = update_weight * np.divide(W_num, W_den)
-        W = np.multiply(self.W, delta_W)
-        W[W <= 0] = EPSILON
+        n2a = np.matmul(W_n.T, W_n)
+        n2b = np.matmul(self.H.T, n2a)
+        d2a = np.matmul(W_p.T, W_p)
+        d2b = np.matmul(self.H.T, d2a)
+        _n = n1 + n2b
+        _d = (d1 + d2b) + EPSILON
+        _di = 1.0 / _d
+        h_delta = np.multiply(update_weight, np.sqrt(np.multiply(_n, _di)))
+        H = np.multiply(self.H.T, h_delta).T
 
-        self.H = H
-        self.W = W
+        q2 = self.__q_loss(W=W, H=H, uncertainty=False)
+        delta_q = q1 - q2
+        return W, H
+
+    def __weighted_semi_nmf(self, update_weight: float = 1.0):
+        '''
+        Reference: Semi-NMF algorithm as described in https://people.eecs.berkeley.edu/~jordan/papers/ding-li-jordan-pami.pdf
+        and https://www2.dc.ufscar.br/~marcela/anaisKDMiLe2014/artigos/FULL/kdmile2014_Artigo15.pdf
+        Weighted, unprojected algorithm
+        H = G, F = W
+        :return:
+        '''
+        # (S1): F=XG(G^T G)^-1 => W=VH(H^T H)^-1
+        q1 = self.__q_loss(W=self.W, H=self.H, uncertainty=True)
+
+        _W = []
+        for i in range(self.V.shape[0]):
+            ui = self.U[i]
+            ui_d = np.diagflat(ui)
+            vi = self.V[i].reshape(len(ui), 1)
+            uvi = np.matmul(ui_d, vi)
+
+            _w_n = np.matmul(self.H, uvi).flatten()
+
+            uh = np.matmul(ui_d, self.H.T)
+            _w_d = np.matmul(self.H, uh)
+            _w_di = 1.0 / _w_d
+            _w = np.matmul(_w_n, _w_di)
+            _W.append(_w)
+        W = np.array(_W)
+
+        # (S2)
+        W_n = (np.abs(W) - W) / 2.0
+        W_p = (np.abs(W) + W) / 2.0
+
+        _H = []
+        for j in range(self.V.shape[1]):
+            uj = self.U[:, j]
+            uj_d = np.diagflat(uj)
+            vi = self.V[:, j].reshape(len(uj), 1)
+
+            uj_v = np.matmul(uj_d, vi)
+
+            n1 = np.matmul(uj_v.T, W_p)[0]
+            d1 = np.matmul(uj_v.T, W_n)[0]
+
+            n2a = np.matmul(W_n.T, uj_d)
+            n2b = np.matmul(n2a, W_n)
+            d2a = np.matmul(W_p.T, uj_d)
+            d2b = np.matmul(d2a, W_p)
+
+            n2 = np.matmul(self.H.T[j], n2b)
+            d2 = np.matmul(self.H.T[j], d2b)
+            _n = n1 + n2
+            _d = d1 + d2
+            _di = 1.0 / (_d + EPSILON)
+            h_delta = np.multiply(update_weight, np.sqrt(np.multiply(_n.T, _di)))
+            hj = self.H.T[j]
+            _h = np.multiply(hj, h_delta)
+            _H.append(_h)
+
+        H = np.array(_H).T
+
+        q2 = self.__q_loss(W=W, H=H, uncertainty=True)
+        delta_q = q1 - q2
+        return W, H
 
     def __conjugate_gradient_update(self, iterations: int = 20, regularization: float = 1e+0):
         _V = csr_matrix(self.V)
@@ -603,7 +668,8 @@ class BaseNMF:
             _q = np.sum(np.multiply(residuals, residuals))
         return _q
 
-    def train(self, epoch: int = 0, max_iterations: int = 10000, converge_delta: float = 0.01, converge_n: int = 20, min_steps: int = 100):
+    def train(self, epoch: int = 0, max_iterations: int = 10000, converge_delta: float = 0.01, converge_n: int = 20,
+              min_steps: int = 100, update_weight: float = 1.0, update_decay: float = 0.99):
         converge_delta = converge_delta
         converge_n = converge_n
         converged = False
@@ -615,16 +681,13 @@ class BaseNMF:
         best_results = self
         reset_i = 0
         reset_max_i = 100
-        update_weight = 1.0
         step_change_max = 10
         step_changes = 0
-        update_decay = 0.99
 
         t_iter = trange(max_iterations, desc=f"Epoch: {epoch}, Seed: {self.seed} Q(true): NA", position=0, leave=True)
         for i in t_iter:
-            self.__update(update_weight=update_weight, update_decay=update_decay)
+            self.__update(it=i, update_weight=update_weight, update_decay=update_decay)
             _q = self.__q_loss()
-
             if i > min_steps:
                 prior_q.append(_q)
                 if len(prior_q) == converge_n + 1:
@@ -677,7 +740,9 @@ class BaseSearch:
                  max_iterations: int = 10000,
                  converge_delta: float = 0.01,
                  converge_n: int = 20,
-                 method: str = "mu"
+                 method: str = "mu",
+                 init_kmeans: bool = True,
+                 init_norm: bool = True,
                  ):
         self.n_components = n_components
         self.method = method
@@ -699,6 +764,8 @@ class BaseSearch:
 
         self.seed = 42 if seed is None else seed
         self.rng = np.random.default_rng(self.seed)
+        self.init_kmeans = init_kmeans
+        self.init_norm = init_norm
 
         self.results = []
         self.best_epoch = None
@@ -756,7 +823,7 @@ class BaseSearch:
             "seed": int(seed)
         }
 
-    def train(self):
+    def train(self, min_steps: int = 100, update_weight: float = 1.0):
         best_Q = float("inf")
         best_epoch = None
 
@@ -770,10 +837,13 @@ class BaseSearch:
                 U=self.U,
                 H=self.H,
                 W=self.W,
-                seed=_seed
+                seed=_seed,
+                init_kmeans=self.init_kmeans,
+                init_norm=self.init_norm
             )
             _nmf.train(epoch=i, max_iterations=self.max_iterations,
-                       converge_delta=self.converge_delta, converge_n=self.converge_n
+                       converge_delta=self.converge_delta, converge_n=self.converge_n,
+                       update_weight=update_weight
                        )
             if _nmf.Qtrue < best_Q:
                 best_Q = _nmf.Qtrue
@@ -954,25 +1024,25 @@ if __name__ == "__main__":
     # dh.scale()
     # dh.remove_outliers(quantile=0.9, drop_min=False, drop_max=True)
 
-    n_components = 8
-    method = "kl-opt"                   # "kl", "ls-nmf", "is", "euc", "gd"
+    n_components = 4
+    method = "semi-nmf"                   # "kl", "ls-nmf", "is", "euc"
     V = dh.input_data_processed
     U = dh.uncertainty_data_processed
-    seed = 4
-    epochs = 50
+    seed = 42
+    epochs = 10
     max_iterations = 40000
-    converge_delta = 0.01
-    converge_n = 500
+    converge_delta = 0.001
+    converge_n = 100
 
     data_mask = dh.sn_mask
 
     bs = BaseSearch(n_components=n_components, method=method, V=V, U=U, seed=seed, epochs=epochs, max_iterations=max_iterations,
-                    converge_delta=converge_delta, converge_n=converge_n, data_mask=data_mask)
-    # bs.train()
-    bs.optimized_train()
+                    converge_delta=converge_delta, converge_n=converge_n, data_mask=data_mask, init_kmeans=False, init_norm=True)
+    bs.train(update_weight=100.0)
+    # bs.optimized_train()
     # bs.parallel_train()
 
-    full_output_path = f"nmf-output-f{n_components}"
+    full_output_path = f"nmf-output-f{n_components}.json"
     bs.save(output_name=full_output_path)
 
     # pmf_file = os.path.join("D:\\", "projects", "nmf_py", "data", f"baltimore_{n_components}f_profiles.txt")
