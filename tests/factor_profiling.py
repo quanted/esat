@@ -27,16 +27,16 @@ if __name__ == "__main__":
 
     # Base model paramters
 
-    min_components = 2  # min number of factors to compare
+    min_components = 11  # min number of factors to compare
     max_components = 12
-    method1 = "mu"  # minimization algorithm: 'mu' multiplicative update - Kullback-Leibler, 'euc' multiplicative update - frobenius, 'is' multiplicative update - itakura-saito, 'gd' gradient descent, 'cg' conjugate descent
+    method1 = "ls-nmf"  # minimization algorithm: 'euc' multiplicative update - frobenius, 'ls-nmf' least squares NMF, 'ws-nmf' weighted semi-nmf
     seed = 42  # randomization seed
     epochs = 20  # number of models to create
     max_iterations = 20000  # max number of iterations to run for multiplicative update models
     converge_delta = 0.01  # the amount of change between iterations for a multiplicative model considered converged
     converge_n = 100  # the number of iterations required with a loss change of less than converge_delta for the model to be considered converged
 
-    run_all = True
+    run_all = False
     V = dh.input_data_processed
     U = dh.uncertainty_data_processed
 
@@ -47,7 +47,7 @@ if __name__ == "__main__":
         for n_component in range(min_components, max_components + 1):
             base = BaseSearch(n_components=n_component, method=method1, V=V, U=U, seed=seed, epochs=epochs,
                               max_iterations=max_iterations, converge_delta=converge_delta, converge_n=converge_n)
-            base.optimized_train()
+            base.parallel_train()
             output_file = f"nmf-br{n_component}-output.json"
             base.save(output_name=output_file, output_path=output_path)
 

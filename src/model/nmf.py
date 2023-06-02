@@ -1,92 +1,345 @@
-from tensorflow.keras import layers
-from tensorflow import keras
-import tensorflow as tf
+from src.model.ls_nmf import LSNMF
+from src.model.ws_nmf import WSNMF
+from src.utils import q_loss
+from scipy.cluster.vq import kmeans2, whiten
+from fcmeans import FCM
+from tqdm import trange
+from datetime import datetime
 import numpy as np
 import logging
-import os
-
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-tf.get_logger().setLevel('INFO')
-logging.getLogger("tensorflow").setLevel(logging.WARNING)
+import time
 
 
-class NMFLayer(layers.Layer):
-    def __init__(self, n_components, H: np.ndarray = None, W: np.ndarray = None, seed: int = None, **kwargs):
-        """
-        V ~= WH, constraints are factor contribution and factor concentration must be non-negative
-        AND the sum of predicted concentrations must be less than or equal to total measured mass
-        :param n_components:
-        :param max_values:
-        :param kwargs:
-        """
-        super(NMFLayer, self).__init__(**kwargs)
-        self.n_components = n_components        # number of factors
-        self.V = None                           # input data
-        self.W = W                              # factor profile (constrained to 0:1)
-        self.H = H                              # factor concentration
+logger = logging.getLogger("NMF")
+logger.setLevel(logging.DEBUG)
+
+
+class NMF:
+    """
+    The Non-negative matrix factorization python package primary class for creating new models.
+    """
+    def __init__(self,
+                 V: np.ndarray,
+                 U: np.ndarray,
+                 factors: int,
+                 method: str = "ls-nmf",
+                 seed: int = 42,
+                 optimized: bool = False,
+                 verbose: bool = False
+                 ):
+
+        self.V = V.astype(np.float64)
+        self.U = U.astype(np.float64)
+        self.We = np.divide(1, self.U**2).astype(np.float64)
+
+        self.m, self.n = self.V.shape
+
+        self.factors = factors
+
+        self.H = None
+        self.W = None
+
+        self.method = method.lower()
+
         self.seed = 42 if seed is None else seed
+        self.rng = np.random.default_rng(self.seed)
 
-    def build(self, input_shape):
-        m, n = input_shape
-        self.V = keras.Input(shape=(m, n), dtype=tf.float32)
+        self.Qrobust = None
+        self.Qtrue = None
+        self.WH = None
 
-        if self.W is not None:
-            if self.W.shape == (m, self.n_components):
-                self.W = tf.Variable(initial_value=self.W, name="W", dtype=tf.float32, trainable=True,
-                                     constraint=keras.constraints.NonNeg())
-            else:
-                self.W = None
-        if self.W is None:
-            w_init = tf.random_uniform_initializer(minval=0.1, maxval=1.0, seed=self.seed)
-            self.W = tf.Variable(initial_value=w_init(shape=(m, self.n_components)), name="W",
-                                 shape=(m, self.n_components), dtype=tf.float32, trainable=True,
-                                 constraint=keras.constraints.NonNeg())
+        self.epoch = -1
+        self.metadata = {
+            "creation_date": datetime.utcnow().strftime("%m/%d/%Y, %H:%M:%S %Z")
+        }
+        self.converged = False
+        self.converge_steps = 0
 
-        if self.H is not None:
-            if self.H.shape == (self.n_components, n):
-                self.H = tf.Variable(initial_value=self.H, name="H", dtype=tf.float32, trainable=True,
-                                     constraint=keras.constraints.NonNeg())
-            else:
-                self.H = None
-        if self.H is None:
-            h_init = tf.random_uniform_initializer(minval=0.1, maxval=1.0, seed=self.seed)
-            self.H = tf.Variable(initial_value=h_init(shape=(self.n_components, n)), name="H", shape=(self.n_components, n),
-                                 dtype=tf.float32, trainable=True, constraint=keras.constraints.NonNeg())
+        self.verbose = verbose
+        self.__has_neg = False
 
-    @tf.function
-    def call(self, data, uncertainty):
+        self.__validate()
+        self.__validated = False
+        self.__initialized = False
+
+        self.update_step = WSNMF.update
+        if self.method == "ls-nmf" and not self.__has_neg:
+            self.update_step = LSNMF.update
+
+        self.optimized = optimized
+        if self.optimized:
+            # Attempt to load rust code for optimized model train
+            from nmf_pyr import nmf_pyr
+            self.optimized_update = nmf_pyr.ls_nmf if self.method == "ls-nmf" and not self.__has_neg else nmf_pyr.ws_nmf
+
+    def __validate(self):
         """
-        H and W matrices are updated according to the Lee and Seung's multiplicative update rule.
-        https://en.wikipedia.org/wiki/Non-negative_matrix_factorization
-        :param data:
+        Validate the matrices used in NMF.
+        Validation Criteria:
+        V - Must be a numpy array, containing all numeric and no missing/NAN values.
+        U - Must be a numpy array, containing all positive numeric and no missing/NAN values,
+        and have the same dimensions of V.
+        H - Must be a numpy array, containing all positive numeric and no missing/NAN values,
+        and have dimensions (factors, N)
+        W - Must be a numpy array, containing all numeric and no missing/NAN values, and have dimensions (M, factors)
         :return:
         """
-        wt = tf.transpose(self.W)
-        new_h = tf.math.multiply(self.H,
-                                 tf.math.divide_no_nan(
-                                     tf.matmul(wt, tf.math.divide_no_nan(data, uncertainty)),
-                                     tf.matmul(wt, tf.math.divide_no_nan(tf.matmul(self.W, self.H), uncertainty))
-                                 ))
-        ht = tf.transpose(new_h)
-        new_w = tf.math.multiply(self.W,
-                                 tf.math.divide_no_nan(
-                                     tf.matmul(tf.math.divide_no_nan(data, uncertainty), ht),
-                                     tf.matmul(tf.math.divide_no_nan(tf.matmul(self.W, new_h), uncertainty), ht)
-                                 ))
-        return new_h, new_w
+        has_neg = False
+        validated = True
+        if type(self.V) != np.ndarray:
+            logger.error(f"Input dataset V is not a numpy array. Current type: {type(self.V)}")
+            validated = False
+        else:
+            if np.any(np.isnan(self.V)):
+                logger.error("Input dataset V contains missing or invalid values.")
+                validated = False
+            if self.V.min() < 0.0:
+                has_neg = True
+        if type(self.U) != np.ndarray:
+            logger.error(f"Uncertainty dataset U is not a numpy array. Current type: {type(self.U)}")
+            validated = False
+        else:
+            if np.any(np.isnan(self.U)):
+                logger.error("Uncertainty dataset U contains missing or invalid values.")
+                validated = False
+            if self.U.min() < 0.0:
+                logger.error("Uncertainty dataset U contains negative values, matrix can only contain positive values.")
+                validated = False
+        if type(self.V) == np.ndarray and type(self.U) == np.ndarray:
+            if self.V.shape != self.U.shape:
+                logger.error(f"The input and uncertainty datasets must have the same dimensions. "
+                             f"Current V: {self.V.shape}, U: {self.U.shape}.")
+                validated = False
+        if self.H is not None:
+            if type(self.H) != np.ndarray:
+                logger.error(f"Factor profile matrix H is not a numpy array. Current type: {type(self.H)}")
+                validated = False
+            else:
+                if self.H.shape != (self.factors, self.n):
+                    logger.error(f"Factor profile matrix H must have dimensions of ({self.factors}, {self.n})."
+                                 f" Current dimensions {self.H.shape}")
+                    validated = False
+                if np.any(np.isnan(self.H)):
+                    logger.error("Factor profile matrix H contains missing or invalid values.")
+                    validated = False
+                if self.H.min() < 0.0:
+                    logger.error(
+                        "Factor profile matrix H contains negative values, matrix can only contain positive values.")
+                    validated = False
+        else:
+            validated = False
+        if self.W is not None:
+            if type(self.W) != np.ndarray:
+                logger.error(f"Factor contribution matrix W is not a numpy array. Current type: {type(self.W)}")
+                validated = False
+            else:
+                if self.W.shape != (self.m, self.factors):
+                    logger.error(f"Factor contribution matrix W must have dimensions of ({self.m}, "
+                                 f"{self.factors}). Current dimensions {self.W.shape}")
+                    validated = False
+                if np.any(np.isnan(self.W)):
+                    logger.error("Factor contribution matrix W contains missing or invalid values.")
+                    validated = False
+                if self.W.min() < 0.0:
+                    has_neg = True
+        else:
+            validated = False
 
+        if validated and self.verbose:
+            logger.debug("All inputs and initialized matrices have been validated.")
+        self.__validated = validated
+        self.__has_neg = has_neg
 
-class NMF(keras.Model):
-    def __init__(self, n_components, H: np.ndarray = None, W: np.ndarray = None, seed: int = 42, name="NMF", **kwargs):
-        super(NMF, self).__init__(name=name, **kwargs)
-        self.n_components = n_components
-        self.layer = NMFLayer(seed=seed, H=H, W=W, n_components=n_components)
+    def initialize(self,
+                   H: np.ndarray = None,
+                   W: np.ndarray = None,
+                   init_method: str = "column_mean",
+                   init_norm: bool = True,
+                   fuzziness: float = 5.0
+                   ):
 
-    @tf.function
-    def call(self, inputs):
-        data, uncertainty = inputs
-        h, w = self.layer(data=data, uncertainty=uncertainty)
+        self.metadata["init_method"] = init_method
+        obs = self.V
+        if init_norm:
+            obs = whiten(obs=self.V)
 
-        # calculate modelled output
-        wh = tf.matmul(w, h)
-        return wh, h, w
+        if "kmeans" in init_method.lower():
+            self.metadata["init_norm"] = init_norm
+            centroids, clusters = kmeans2(data=obs, k=self.factors, seed=self.seed)
+            contributions = np.zeros(shape=(len(clusters), self.factors)) + (1.0 / self.factors)
+            for i, c in enumerate(clusters):
+                contributions[i, c] = 1.0
+            W = contributions
+            H = centroids
+            if self.verbose:
+                logger.debug(f"Factor profile and contribution matrices initialized using k-means clustering. "
+                             f"The observations were {'not' if not init_norm else ''} normalized.")
+        elif "cmeans" in init_method.lower():
+            self.metadata["init_norm"] = init_norm
+            self.metadata["init_cmeans_fuzziness"] = fuzziness
+            fcm = FCM(n_clusters=self.factors, m=fuzziness, random_state=self.seed)
+            fcm.fit(obs)
+            H = fcm.centers
+            W = fcm.u
+            if self.verbose:
+                logger.debug(f"Factor profile and contribution matrices initialized using fuzzy c-means clustering. "
+                             f"The observations were {'not' if not init_norm else ''} normalized.")
+        else:
+            if H is None:
+                V_avg = np.sqrt(np.mean(self.V, axis=0) / self.factors)
+                H = V_avg * self.rng.standard_normal(size=(self.factors, self.n)).astype(self.V.dtype, copy=False)
+                H = np.abs(H)
+            if W is None:
+                V_avg = np.sqrt(np.mean(self.V, axis=1) / self.factors)
+                V_avg = V_avg.reshape(len(V_avg), 1)
+                W = np.multiply(V_avg, self.rng.standard_normal(size=(self.m, self.factors)).astype(self.V.dtype,
+                                                                                                    copy=False))
+                if self.method == "ls-nmf":
+                    W = np.abs(W)
+            if self.verbose:
+                logger.debug(f"Factor profile and contribution matrices initialized using random selection from a "
+                             f"normal distribution with a mean determined from the column mean divided by the number "
+                             f"of factors.")
+        self.H = H
+        self.W = W
+        self.init_method = init_method
+        self.__initialized = True
+        if self.verbose:
+            logger.debug("Completed initializing the factor profile and contribution matrices.")
+        self.__validate()
+
+    def summary(self):
+        logger.info("-------------------------------- NMF-EPA Model Details -----------------------------------------")
+        # TODO: Add detailed summary of the model parameters
+        logger.info("------------------------------------------------------------------------------------------------")
+
+    def train(self,
+              max_iter: int = 2000,
+              converge_delta: float = 0.1,
+              converge_n: int = 100,
+              epoch: int = -1
+              ):
+        if not self.__initialized:
+            logger.warn("Model is not initialized, initializing with default parameters")
+            self.initialize()
+        if not self.__validated:
+            logger.error("Current model inputs and parameters are not valid.")
+            return -1
+
+        V = self.V
+        U = self.U
+        W = self.W
+        H = self.H
+        We = self.We
+
+        if self.optimized:
+            t0 = time.time()
+            _results = self.optimized_update(V, U, We, W, H, max_iter, converge_delta, converge_n)[0]
+            W, H, q, self.converged, self.converge_steps, q_list = _results
+            t1 = time.time()
+            if self.verbose:
+                logger.info(f"Epoch: {epoch}, Seed: {self.seed}, Q(true): {round(q, 4)}, "
+                      f"Steps: {self.converge_steps}/{max_iter}, Converged: {self.converged}, "
+                      f"Runtime: {round(t1-t0, 2)} sec")
+        else:
+            q = None
+            converged = False
+            prior_q = []
+            t_iter = trange(max_iter, desc=f"Epoch: {epoch}, Seed: {self.seed}, Q(true): NA", position=0, leave=True)
+            for i in t_iter:
+                W, H = self.update_step(V=V, We=We, W=W, H=H)
+                q = q_loss(V=V, U=U, W=W, H=H)
+                prior_q.append(q)
+                if len(prior_q) > converge_n:
+                    prior_q.pop(0)
+                    delta_q_min = min(prior_q)
+                    delta_q_max = max(prior_q)
+                    delta_q = delta_q_max - delta_q_min
+                    if delta_q < converge_delta:
+                        converged = True
+                t_iter.set_description(f"Epoch: {epoch}, Seed: {self.seed}, Q(true): {round(q, 2)}")
+                t_iter.refresh()
+                self.converge_steps += 1
+
+                if converged:
+                    self.converged = True
+                    break
+
+        self.epoch = epoch
+        self.H = H
+        self.W = W
+        self.WH = np.matmul(W, H)
+        self.Qtrue = q
+        self.metadata["completion_date"] = datetime.utcnow().strftime("%m/%d/%Y, %H:%M:%S %Z")
+
+    def results(self):
+        return {
+            "epoch": self.epoch,
+            "Q": float(self.Qtrue),
+            "steps": self.converge_steps,
+            "converged": self.converged,
+            "H": self.H,
+            "W": self.W,
+            "wh": self.WH,
+            "seed": int(self.seed),
+            "metadata": self.metadata
+        }
+
+if __name__ == "__main__":
+    import time
+    import os
+    from src.data.datahandler import DataHandler
+
+    logging.getLogger('matplotlib.font_manager').setLevel(logging.ERROR)
+    logging.getLogger('matplotlib').setLevel(logging.ERROR)
+
+    factors = 8
+    method = "ls-nmf"                   # "ls-nmf", "euc", "ws-nmf"
+    init_method = "col_means"           # default is column means, "kmeans", "cmeans"
+    init_norm = True
+    seed = 42
+    max_iterations = 10000
+    converge_delta = 0.001
+    converge_n = 10
+    dataset = "br"          # "br": Baton Rouge, "b": Baltimore, "sl": St Louis
+
+    if dataset == "br":
+        input_file = os.path.join("D:\\", "projects", "nmf_py", "data", "Dataset-BatonRouge-con.csv")
+        uncertainty_file = os.path.join("D:\\", "projects", "nmf_py", "data", "Dataset-BatonRouge-unc.csv")
+        output_path = os.path.join("D:\\", "projects", "nmf_py", "output", "BatonRouge")
+    elif dataset == "b":
+        input_file = os.path.join("D:\\", "projects", "nmf_py", "data", "Dataset-Baltimore_con.txt")
+        uncertainty_file = os.path.join("D:\\", "projects", "nmf_py", "data", "Dataset-Baltimore_unc.txt")
+        output_path = os.path.join("D:\\", "projects", "nmf_py", "output", "Baltimore")
+    elif dataset == "sl":
+        input_file = os.path.join("D:\\", "projects", "nmf_py", "data", "Dataset-StLouis-con.csv")
+        uncertainty_file = os.path.join("D:\\", "projects", "nmf_py", "data", "Dataset-StLouis-unc.csv")
+        output_path = os.path.join("D:\\", "projects", "nmf_py", "output", "StLouis")
+
+    index_col = "Date"
+    sn_threshold = 2.0
+
+    dh = DataHandler(
+        input_path=input_file,
+        uncertainty_path=uncertainty_file,
+        index_col=index_col,
+        sn_threshold=sn_threshold
+    )
+    V = dh.input_data_processed
+    U = dh.uncertainty_data_processed
+
+    t0 = time.time()
+    print("Running python code")
+    nmf = NMF(V=V, U=U, factors=factors, method=method, seed=seed, optimized=False)
+    nmf.initialize(init_method=init_method, init_norm=init_norm, fuzziness=5.0)
+    nmf.train(max_iter=max_iterations, converge_delta=converge_delta, converge_n=converge_n)
+    t1 = time.time()
+    print(f"Runtime: {round((t1-t0)/60, 2)} min(s)")
+
+    print("Running rust code")
+    nmf = NMF(V=V, U=U, factors=factors, method=method, seed=seed, optimized=True)
+    nmf.initialize(init_method=init_method, init_norm=init_norm, fuzziness=5.0)
+    nmf.train(max_iter=max_iterations, converge_delta=converge_delta, converge_n=converge_n)
+
+    t2 = time.time()
+    print(f"Runtime: {round((t2-t1)/60, 2)} min(s)")

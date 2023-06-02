@@ -1,190 +1,153 @@
-import os
 import logging
+import time
 import datetime
 import json
 import numpy as np
-
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-
-import tensorflow as tf
-from tensorflow import keras
-from tqdm import trange
+import multiprocessing as mp
+from src.utils import calculate_Q
 from src.model.nmf import NMF
-from src.data.datahandler import DataHandler
-
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-tf.get_logger().setLevel('INFO')
-
-logging.basicConfig(format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S', level=logging.DEBUG)
-logger = logging.getLogger()
 
 
-class NMFModel:
+logger = logging.getLogger("baseNMF")
+logger.setLevel(logging.DEBUG)
+
+
+class BatchNMF:
     def __init__(self,
-                 dh: DataHandler,
-                 epochs: int = 50,
-                 n_components: int = 4,
-                 max_iterations: int = 10000,
+                 V: np.ndarray,
+                 U: np.ndarray,
+                 factors: int,
+                 epochs: int = 20,
+                 method: str = "ls-nmf",
                  seed: int = 42,
-                 use_original_convergence: bool = False,
-                 lr_initial: float = 1e-0,
-                 lr_decay_steps: int = 100,
-                 lr_decay_rate: float = 0.98,
-                 converge_diff: float = 100,
-                 converge_iter: int = 100,
-                 initial_H: list = None,
-                 initial_W: list = None,
-                 quiet: bool = False,
+                 init_method: str = "column_mean",
+                 init_norm: bool = True,
+                 fuzziness: float = 5.0,
+                 max_iter: int = 2000,
+                 converge_delta: float = 0.1,
+                 converge_n: int = 100,
+                 parallel: bool = True,
+                 optimized: bool = False,
+                 verbose: bool = True
                  ):
 
-        self.dh = dh
-        self.epochs = epochs
-        self.n_components = n_components
+        self.factors = factors
+        self.method = method
+
+        self.V = V
+        self.U = U
+
         self.seed = seed
+
+        self.epochs = epochs
+        self.max_iter = max_iter
+        self.converge_delta = converge_delta
+        self.converge_n = converge_n
+
+        self.seed = 42 if seed is None else seed
         self.rng = np.random.default_rng(self.seed)
-        self.max_iterations = max_iterations
-        self.use_original_convergence = use_original_convergence
+        self.init_method = init_method
+        self.init_norm = init_norm
+        self.fuzziness = fuzziness
 
-        self.lr_initial = lr_initial
-        self.lr_decay_steps = lr_decay_steps
-        self.lr_decay_rate = lr_decay_rate
+        self.parallel = parallel
+        self.optimized = optimized
+        self.verbose = verbose
 
-        self.initial_H = initial_H
-        self.initial_W = initial_W
+        self.results = []
+        self.best_epoch = None
 
-        self.learning_schedule = keras.optimizers.schedules.ExponentialDecay(
-            initial_learning_rate=lr_initial,
-            decay_steps=lr_decay_steps,
-            decay_rate=lr_decay_rate
-        )
+    def train(self):
+        t0 = time.time()
+        if self.parallel:
+            # TODO: Add batch processing for large datasets and large number of epochs to reduce memory requirements.
+            pool = mp.Pool()
 
-        self.loss_metric = tf.keras.metrics.MeanAbsoluteError()
-        # self.optimizer = keras.optimizers.Adam(learning_rate=self.learning_schedule)        # Avg R2 = 0.986
-        # self.optimizer = keras.optimizers.Adam(learning_rate=1.0)
-        self.optimizer = keras.optimizers.RMSprop(learning_rate=self.learning_schedule)   # Avg R2 = 0.988 (best of 100)
+            input_parameters = []
+            for i in range(self.epochs):
+                _seed = self.rng.integers(low=0, high=1e5)
+                _nmf = NMF(
+                    factors=self.factors,
+                    method=self.method,
+                    V=self.V,
+                    U=self.U,
+                    seed=_seed,
+                    optimized=optimized
+                )
+                _nmf.initialize(init_method=self.init_method, init_norm=self.init_norm, fuzziness=self.fuzziness)
+                input_parameters.append((_nmf, i))
 
-        self.convergence_critera = {
-            "difference_threshold": converge_diff,
-            "iterations_threshold": converge_iter
-        }
-        if self.initial_H is not None:
-            self.initial_H = np.array(self.initial_H)
-            i_H = self.initial_H[0]
-        else:
-            i_H = None
-        if self.initial_W is not None:
-            self.initial_W = np.array(self.initial_W)
-            i_W = self.initial_W[0]
-        else:
-            i_W = None
+            results = pool.starmap(self._train_task, input_parameters)
 
-        self.nmf = NMF(seed=seed, H=i_H, W=i_W, n_components=self.n_components)
-        self.results = None
-        self.quiet = quiet
-        if not quiet:
-            self.print()
-
-    def print(self):
-        # logger.info("")
-        logger.info("-------------------------------- NMF-EPA Model Details -----------------------------------------")
-        logger.info(f"Epochs: {self.epochs}, N Components: {self.n_components}, Seed: {self.seed}")
-        logger.info(f"Max Iterations: {self.max_iterations}, Feature Count: {len(self.dh.features)}, "
-                    f"Sample Count: {self.dh.input_dataset[0].shape[0]}")
-        logger.info(f"Learning Rate, Initial: {self.lr_initial}, Decay Rate: {self.lr_decay_rate}, "
-                    f"Decay Step: {self.lr_decay_steps}")
-        logger.info(f"Convergence Difference Threshold {self.convergence_critera['difference_threshold']}, "
-                    f"Convergence Iterations Threshold: {self.convergence_critera['iterations_threshold']}")
-        logger.info(f"Number of GPU's available: {len(tf.config.list_physical_devices('GPU'))}")
-        logger.info("------------------------------------------------------------------------------------------------")
-
-    def fit(self):
-        results = []
-        silent = self.quiet
-
-        for epoch in range(self.epochs):
-            e_seed = self.rng.integers(low=0, high=1e5)
-            tf.random.set_seed(e_seed)
-
-            i_step = 0
-            if epoch > 0:
-                keras.backend.clear_session()
-                self.loss_metric.reset_state()
-                if self.initial_H is not None:
-                    _i_H = epoch % len(self.initial_H)
-                    i_H = self.initial_H[_i_H]
-                else:
-                    i_H = None
-                if self.initial_W is not None:
-                    _i_W = epoch % len(self.initial_W)
-                    i_W = self.initial_W[_i_W]
-                else:
-                    i_W = None
-                self.nmf = NMF(seed=e_seed, H=i_H, W=i_W, n_components=self.n_components)
-                for var in self.optimizer.variables():
-                    var.assign(tf.zeros_like(var))
-
-            converged = False
+            best_epoch = -1
             best_q = float("inf")
-            best_H = None
-            best_W = None
-            best_WH = None
+            ordered_results = [None for i in range(len(results))]
+            for result in results:
+                epoch = int(result["epoch"])
+                ordered_results[epoch] = result
+                if result["Q"] < best_q:
+                    best_q = result["Q"]
+                    best_epoch = epoch
+            self.results = ordered_results
+            pool.close()
+        else:
+            self.results = []
+            best_Q = float("inf")
+            best_epoch = None
+            for epoch in range(self.epochs):
+                _seed = self.rng.integers(low=0, high=1e5)
+                _nmf = NMF(
+                    factors=self.factors,
+                    method=self.method,
+                    V=self.V,
+                    U=self.U,
+                    seed=_seed
+                )
+                _nmf.initialize(init_method=self.init_method, init_norm=self.init_norm, fuzziness=self.fuzziness)
+                run = _nmf.train(max_iter=self.max_iter, converge_delta=self.converge_delta, converge_n=self.converge_n,
+                                 epoch=epoch)
+                if run == -1:
+                    logger.error("Unable to execute batch run of NMF models.")
+                    pass
+                if _nmf.Qtrue < best_Q:
+                    best_Q = _nmf.Qtrue
+                    best_epoch = epoch
+                self.results.append(
+                    {
+                        "epoch": epoch,
+                        "Q": float(_nmf.Qtrue),
+                        "steps": _nmf.converge_steps,
+                        "converged": _nmf.converged,
+                        "H": _nmf.H,
+                        "W": _nmf.W,
+                        "wh": _nmf.WH,
+                        "seed": int(_seed)
+                    }
+                )
+        t1 = time.time()
+        logger.info(f"Results - Best Model: {best_epoch}, Converged: {self.results[best_epoch]['converged']}, "
+                    f"Q: {self.results[best_epoch]['Q']}")
+        logger.info(f"Runtime: {round((t1 - t0) / 60, 2)} min(s)")
+        self.best_epoch = best_epoch
 
-            p_loss = []
-            q_loss_n = self.convergence_critera["iterations_threshold"]
-            q_diff = self.convergence_critera["difference_threshold"]
-
-            # Epoch training loop
-            t_iter = trange(self.max_iterations, desc=f"Epoch {epoch + 1} fit: Q = NA", leave=True, disable=silent)
-            for i_step in t_iter:
-
-                with tf.GradientTape() as tape:
-                    wh, h, w = self.nmf(self.dh.input_dataset)
-                    q_loss = tf.math.reduce_sum(
-                        tf.math.square(
-                            tf.math.divide(tf.math.subtract(self.dh.input_dataset[0], wh),
-                                           self.dh.input_dataset[1])
-                        )
-                    )
-                grads = tape.gradient(q_loss, self.nmf.trainable_weights)
-                self.optimizer.apply_gradients(zip(grads, self.nmf.trainable_weights))
-                self.loss_metric(self.dh.input_dataset[0], wh)
-
-                t_iter.set_description(f"Epoch {epoch + 1} fit: Q = {round(q_loss.numpy(), 2)}")
-                t_iter.refresh()
-
-                # Convergence check
-                p_loss.append(q_loss.numpy())
-                if len(p_loss) > q_loss_n:
-                    p_loss.pop(0)
-                if int(len(p_loss)) == q_loss_n:
-                    q_min = min(p_loss)
-                    q_max = max(p_loss)
-                    if q_max - q_min <= q_diff:
-                        converged = True
-
-                if best_q > q_loss:
-                    best_q = q_loss.numpy()
-                    best_H = h.numpy()
-                    best_W = w.numpy()
-                    best_WH = wh
-                if converged:
-                    break
-
-            if not self.quiet:
-                logger.info(f"\rEpoch: {epoch + 1}, Best SUM(Q): {round(best_q, 2)}, "
-                            f"Steps Run: {i_step + 1}, Converged: {converged}, Seed: {e_seed}")
-            results.append(
-                {
-                    "epoch": epoch,
-                    "Q": best_q.astype(float),
-                    "steps": i_step,
-                    "converged": converged,
-                    "H": best_H.astype(float),
-                    "W": best_W.astype(float),
-                    "wh": best_WH.numpy().astype(float)
-                }
-            )
-        self.results = results
+    def _train_task(self, nmf, epoch):
+        t0 = time.time()
+        nmf.train(max_iter=self.max_iter, converge_delta=self.converge_delta, converge_n=self.converge_n, epoch=epoch)
+        t1 = time.time()
+        if self.verbose:
+            print(f"Epoch: {epoch}, Seed: {nmf.seed}, Q(true): {round(nmf.Qtrue, 4)}, "
+                        f"Steps: {nmf.converge_steps}/{self.max_iter}, Converged: {nmf.converged}, "
+                        f"Runtime: {round(t1 - t0, 2)} sec")
+        return {
+            "epoch": epoch,
+            "Q": float(nmf.Qtrue),
+            "steps": nmf.converge_steps,
+            "converged": nmf.converged,
+            "H": nmf.H,
+            "W": nmf.W,
+            "wh": nmf.WH,
+            "seed": int(nmf.seed)
+        }
 
     def save(self, output_name: str = None, output_path: str = None):
         if output_name is None:
@@ -206,27 +169,82 @@ class NMFModel:
             json.dump(processed_results, json_file)
             logger.info(f"Results saved to: {full_output_path}")
 
-    def print_results(self):
-        logger.info("Results")
-        best_q = float("inf")
-        best_epoch = -1
-        for i, result in enumerate(self.results):
-            if result['Q'] < best_q:
-                best_q = result['Q']
-                best_epoch = i
-        for i, result in enumerate(self.results):
-            if i == best_epoch:
-                result_string = f"Best Model - Epoch: {result['epoch'] + 1}, Q: {round(result['Q'], 2)}, " \
-                                f"Converged: {result['converged']}"
-            else:
-                result_string = f"Epoch: {result['epoch'] + 1}, Q: {round(result['Q'], 2)}, " \
-                                f"Converged: {result['converged']}"
-            logger.info(result_string)
 
-    @staticmethod
-    def load(nmf_path):
-        if not os.path.exists(nmf_path):
-            logger.error(f"File to existing NMF model not found at: {nmf_path}")
-            exit()
-        # TODO: Implement load model from saved file
+if __name__ == "__main__":
 
+    import os
+    from src.data.datahandler import DataHandler
+    from tests.factor_comparison import FactorComp
+
+    logging.getLogger('matplotlib.font_manager').setLevel(logging.ERROR)
+    logging.getLogger('matplotlib').setLevel(logging.ERROR)
+
+    t0 = time.time()
+
+    factors = 4
+    method = "ls-nmf"                   # "ls-nmf", "ws-nmf"
+    init_method = "col_means"           # default is column means, "kmeans", "cmeans"
+    init_norm = True
+    seed = 42
+    epochs = 100
+    max_iterations = 20000
+    converge_delta = 0.0001
+    converge_n = 10
+    parallel = True
+    optimized = True
+    dataset = "br"          # "br": Baton Rouge, "b": Baltimore, "sl": St Louis
+
+    if dataset == "br":
+        input_file = os.path.join("D:\\", "projects", "nmf_py", "data", "Dataset-BatonRouge-con.csv")
+        uncertainty_file = os.path.join("D:\\", "projects", "nmf_py", "data", "Dataset-BatonRouge-unc.csv")
+        output_path = os.path.join("D:\\", "projects", "nmf_py", "output", "BatonRouge")
+        pmf_profile_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test", f"br{factors}f_profiles.txt")
+        pmf_contribution_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test", f"br{factors}f_contributions.txt")
+        pmf_residuals_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test",
+                                          f"br{factors}f_residuals.txt")
+    elif dataset == "b":
+        input_file = os.path.join("D:\\", "projects", "nmf_py", "data", "Dataset-Baltimore_con.txt")
+        uncertainty_file = os.path.join("D:\\", "projects", "nmf_py", "data", "Dataset-Baltimore_unc.txt")
+        output_path = os.path.join("D:\\", "projects", "nmf_py", "output", "Baltimore")
+        pmf_profile_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test", f"b{factors}f_profiles.txt")
+        pmf_contribution_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test", f"b{factors}f_contributions.txt")
+        pmf_residuals_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test",
+                                          f"b{factors}f_residuals.txt")
+    elif dataset == "sl":
+        input_file = os.path.join("D:\\", "projects", "nmf_py", "data", "Dataset-StLouis-con.csv")
+        uncertainty_file = os.path.join("D:\\", "projects", "nmf_py", "data", "Dataset-StLouis-unc.csv")
+        output_path = os.path.join("D:\\", "projects", "nmf_py", "output", "StLouis")
+        pmf_profile_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test", f"sl{factors}f_profiles.txt")
+        pmf_contribution_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test", f"sl{factors}f_contributions.txt")
+        pmf_residuals_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test",
+                                          f"sl{factors}f_residuals.txt")
+
+    index_col = "Date"
+    sn_threshold = 2.0
+
+    dh = DataHandler(
+        input_path=input_file,
+        uncertainty_path=uncertainty_file,
+        index_col=index_col,
+        sn_threshold=sn_threshold
+    )
+    V = dh.input_data_processed
+    U = dh.uncertainty_data_processed
+
+    batch_nmf = BatchNMF(V=V, U=U, factors=factors, epochs=epochs, method=method, seed=seed, init_method=init_method,
+                         init_norm=init_norm, fuzziness=5.0, max_iter=max_iterations, converge_delta=converge_delta,
+                         converge_n=converge_n, parallel=parallel, optimized=optimized)
+
+    batch_nmf.train()
+
+    full_output_path = f"nmf-output-f{factors}.json"
+    batch_nmf.save(output_name=full_output_path)
+
+    profile_comparison = FactorComp(nmf_output_file=full_output_path, pmf_profile_file=pmf_profile_file,
+                                    pmf_contribution_file=pmf_contribution_file, factors=factors,
+                                    species=len(dh.features), residuals_path=pmf_residuals_file)
+    pmf_q = calculate_Q(profile_comparison.pmf_residuals.values, dh.uncertainty_data_processed)
+    profile_comparison.compare(PMF_Q=pmf_q)
+    os.remove(path=full_output_path)
+    t1 = time.time()
+    print(f"Runtime: {round((t1-t0)/60, 2)} min(s)")

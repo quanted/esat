@@ -4,7 +4,6 @@ import logging
 import copy
 import pandas as pd
 import numpy as np
-import tensorflow as tf
 from datetime import datetime, timedelta
 
 logging.basicConfig(format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S', level=logging.DEBUG)
@@ -17,19 +16,17 @@ class DataHandler:
     """
 
     """
-    def __init__(self, input_path: str, uncertainty_path: str, output_path: str, features: list = None,
+    def __init__(self, input_path: str, uncertainty_path: str, features: list = None,
                  index_col: str = None, drop_col: list = None, generate_data: bool = False, sn_threshold: float = 2.0):
         """
         Check, load and prep the input and output data paths/files.
         :param input_path: The path to the concentration data file
         :param uncertainty_path: The path to the uncertainty data file
-        :param output_path: The path to the directory where the output files are written to
         """
         self.generate_data = generate_data
 
         self.input_path = input_path
         self.uncertainty_path = uncertainty_path
-        self.output_path = output_path
         self.error = False
         self.error_list = []
 
@@ -51,8 +48,6 @@ class DataHandler:
         self.min_values = None
         self.max_values = None
 
-        self.input_dataset = None
-
         self.features = None
         self.metadata = {}
 
@@ -71,13 +66,6 @@ class DataHandler:
         if not os.path.exists(self.uncertainty_path):
             self.error = True
             self.error_list.append(f"Uncertainty file not found at {self.uncertainty_path}")
-        if self.output_path is not None:
-            if not os.path.exists(self.output_path):
-                try:
-                    os.mkdir(self.output_path)
-                except FileNotFoundError:
-                    self.error = True
-                    self.error_list.append(f"Unable to find or create output directory at {self.output_path}")
         if self.error:
             logger.error("File Errors: " + ", ".join(self.error_list))
             exit()
@@ -101,7 +89,6 @@ class DataHandler:
 
         self.input_data_processed = data.astype("float32")
         self.uncertainty_data_processed = uncertainty.astype("float32")
-        self.input_dataset = (tf.constant(self.input_data_processed), tf.constant(self.uncertainty_data_processed))
 
     def __read_data(self, filepath, index_col=None):
         if ".csv" in filepath:

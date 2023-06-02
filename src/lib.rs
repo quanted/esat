@@ -1,16 +1,151 @@
 extern crate core;
 
-use rayon::prelude::*;
 use std::collections::vec_deque::VecDeque;
 use pyo3::{prelude::*, types::PyTuple};
 use numpy::pyo3::Python;
 use numpy::{PyReadonlyArrayDyn, ToPyArray, PyArrayDyn};
-use nalgebra::{dmatrix, DMatrix, OMatrix, Dyn, Matrix};
+use nalgebra::{dmatrix, DMatrix, OMatrix, Dyn, Matrix, DVector, Vector, OVector, RawStorage};
 
 
 /// NMF-PY Rust module
 #[pymodule]
 fn nmf_pyr(py: Python<'_>, m: &PyModule) -> PyResult<()> {
+
+    // NMF - Least-Squares Algorithm (LS-NMF)
+    // Returns (W, H, Q, converged)
+    #[pyfn(m)]
+    fn ls_nmf<'py>(
+        py: Python<'py>,
+        v: PyReadonlyArrayDyn<'py, f64>,
+        u: PyReadonlyArrayDyn<'py, f64>,
+        we: PyReadonlyArrayDyn<'py, f64>,
+        w: PyReadonlyArrayDyn<'py, f64>,
+        h: PyReadonlyArrayDyn<'py, f64>,
+        max_iter: i32,
+        converge_delta: f64,
+        converge_n: i32
+    ) -> Result<&'py PyTuple, PyErr> {
+
+        let v = OMatrix::<f64, Dyn, Dyn>::from_vec(v.dims()[0], v.dims()[1], v.to_vec().unwrap().to_owned());
+        let u = OMatrix::<f64, Dyn, Dyn>::from_vec(u.dims()[0], u.dims()[1], u.to_vec().unwrap().to_owned());
+        let we = OMatrix::<f64, Dyn, Dyn>::from_vec(we.dims()[0], we.dims()[1], we.to_vec().unwrap().to_owned());
+
+        let mut new_w = OMatrix::<f64, Dyn, Dyn>::from_vec(w.dims()[1], w.dims()[0], w.to_vec().unwrap().to_owned()).transpose();
+        let mut new_h = OMatrix::<f64, Dyn, Dyn>::from_vec(h.dims()[1], h.dims()[0], h.to_vec().unwrap().to_owned()).transpose();
+
+        let mut q: f64 = calculate_q(&v, &u, &new_w, &new_h);
+        let mut converged: bool = false;
+        let mut converge_i: i32 = 0;
+        let mut q_new = q.clone();
+        let mut q_list: VecDeque<f64> = VecDeque::new();
+
+        let mut wh: DMatrix<f64>;
+        let mut h_num: DMatrix<f64>;
+        let mut h_den: DMatrix<f64>;
+        let mut w_num: DMatrix<f64>;
+        let mut w_den: DMatrix<f64>;
+
+        let wev = &we.component_mul(&v);
+
+        for i in 0..max_iter{
+            wh = &new_w * &new_h;
+            h_num = new_w.transpose() * wev;
+            h_den = &new_w.transpose() * &we.component_mul(&wh);
+            new_h = new_h.component_mul(&h_num.component_div(&h_den));
+
+            wh = &new_w * &new_h;
+            w_num = wev * new_h.transpose();
+            w_den = &we.component_mul(&wh) * &new_h.transpose();
+            new_w = new_w.component_mul(&w_num.component_div(&w_den));
+
+            q_new = calculate_q(&v, &u, &new_w, &new_h);
+            q_list.push_back(q_new.clone());
+            converge_i = i;
+            if (q_list.len() as i32) >= converge_n {
+                if q_list.front().unwrap() - q_list.back().unwrap() < converge_delta {
+                        converged = true;
+                        break
+                }
+                q_list.pop_front();
+            }
+            q = q_new;
+        }
+        new_w = new_w.transpose();
+        new_h = new_h.transpose();
+        let w_matrix = Vec::from(new_w.data.as_vec().to_owned());
+        let h_matrix = Vec::from(new_h.data.as_vec().to_owned());
+        let final_w = w_matrix.to_pyarray(py).reshape(w.dims()).unwrap().to_dyn();
+        let final_h = h_matrix.to_pyarray(py).reshape(h.dims()).unwrap().to_dyn();
+
+        let values: PyObject = (final_w, final_h, q, converged, converge_i, Vec::from(q_list)).into_py(py);
+        let results: &PyTuple = PyTuple::new(py, values.downcast::<PyTuple>(py).iter());
+        PyResult::Ok(results)
+    }
+
+    // NMF - Weight Semi-NMF algorithm
+    // Returns (W, H, Q, converged)
+    #[pyfn(m)]
+    fn ws_nmf<'py>(
+        py: Python<'py>,
+        v: PyReadonlyArrayDyn<'py, f64>,
+        u: PyReadonlyArrayDyn<'py, f64>,
+        we: PyReadonlyArrayDyn<'py, f64>,
+        w: PyReadonlyArrayDyn<'py, f64>,
+        h: PyReadonlyArrayDyn<'py, f64>,
+        max_iter: i32,
+        converge_delta: f64,
+        converge_n: i32
+    ) -> Result<&'py PyTuple, PyErr> {
+
+        let v = OMatrix::<f64, Dyn, Dyn>::from_vec(v.dims()[0], v.dims()[1], v.to_vec().unwrap().to_owned());
+        let u = OMatrix::<f64, Dyn, Dyn>::from_vec(u.dims()[0], u.dims()[1], u.to_vec().unwrap().to_owned());
+        let we = OMatrix::<f64, Dyn, Dyn>::from_vec(we.dims()[0], we.dims()[1], we.to_vec().unwrap().to_owned());
+
+        let mut new_w = OMatrix::<f64, Dyn, Dyn>::from_vec(w.dims()[1], w.dims()[0], w.to_vec().unwrap().to_owned()).transpose();
+        let mut new_h = OMatrix::<f64, Dyn, Dyn>::from_vec(h.dims()[1], h.dims()[0], h.to_vec().unwrap().to_owned()).transpose();
+
+        let mut q: f64 = calculate_q(&v, &u, &new_w, &new_h);
+        let mut converged: bool = false;
+        let mut converge_i: i32 = 0;
+        let mut q_new = q.clone();
+        let mut q_list: VecDeque<f64> = VecDeque::new();
+
+        let wev = &we.component_mul(&v);
+
+        let n = v.nrows() as i32;
+        let m = v.ncols() as i32;
+        let mut we_j_diag: DMatrix<f64>;
+
+        for i in 0..max_iter{
+
+            for (j, we_j) in we.column_iter().enumerate(){
+                we_j.
+                we_j_diag = DMatrix::from_diagonal(&DVector::from_row_slice(&we_j.data.as_slice_unchecked()));
+            }
+
+            q_new = calculate_q(&v, &u, &new_w, &new_h);
+            q_list.push_back(q_new.clone());
+            converge_i = i;
+            if (q_list.len() as i32) >= converge_n {
+                if q_list.front().unwrap() - q_list.back().unwrap() < converge_delta {
+                        converged = true;
+                        break
+                }
+                q_list.pop_front();
+            }
+            q = q_new;
+        }
+        new_w = new_w.transpose();
+        new_h = new_h.transpose();
+        let w_matrix = Vec::from(new_w.data.as_vec().to_owned());
+        let h_matrix = Vec::from(new_h.data.as_vec().to_owned());
+        let final_w = w_matrix.to_pyarray(py).reshape(w.dims()).unwrap().to_dyn();
+        let final_h = h_matrix.to_pyarray(py).reshape(h.dims()).unwrap().to_dyn();
+
+        let values: PyObject = (final_w, final_h, q, converged, converge_i, Vec::from(q_list)).into_py(py);
+        let results: &PyTuple = PyTuple::new(py, values.downcast::<PyTuple>(py).iter());
+        PyResult::Ok(results)
+    }
 
     /// NMF - Multiplicative-Update (Kullback-Leibler)
     /// Returns (W, H, Q, converged)

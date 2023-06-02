@@ -14,8 +14,10 @@ class ComponentSearch:
         self.max_n = 0
 
     def search(self, min_component: int = 2, max_component: int = 10,
-               max_iterations: int = 1000, epochs: int = 1,
-               converge_diff: int = 10, converge_iter=100):
+               method: str = 'ls-nmf',
+               max_iterations: int = 1000, epochs: int = 10,
+               converge_diff: int = 0.1, converge_iter=10):
+        # TODO: Check for total sum column, if present show difference between total feature mass and total sum column.
         self.results = {}
         self.min_n = min_component
         self.max_n = max_component
@@ -23,7 +25,7 @@ class ComponentSearch:
             model = BaseSearch(n_components=n,
                                V=self.datahandler.input_data_processed,
                                U=self.datahandler.uncertainty_data_processed,
-                               method="kl",
+                               method=method,
                                seed=self.seed,
                                epochs=epochs,
                                max_iterations=max_iterations,
