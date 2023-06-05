@@ -4,12 +4,15 @@ use std::collections::vec_deque::VecDeque;
 use pyo3::{prelude::*, types::PyTuple};
 use numpy::pyo3::Python;
 use numpy::{PyReadonlyArrayDyn, ToPyArray, PyArrayDyn};
-use nalgebra::{dmatrix, DMatrix, OMatrix, Dyn, Matrix, DVector, Vector, OVector, RawStorage};
+use nalgebra::*;
+use rayon::prelude::*;
 
 
 /// NMF-PY Rust module
 #[pymodule]
 fn nmf_pyr(py: Python<'_>, m: &PyModule) -> PyResult<()> {
+
+    const EPSILON: f64 = 1e-15;
 
     // NMF - Least-Squares Algorithm (LS-NMF)
     // Returns (W, H, Q, converged)
@@ -96,13 +99,16 @@ fn nmf_pyr(py: Python<'_>, m: &PyModule) -> PyResult<()> {
         converge_delta: f64,
         converge_n: i32
     ) -> Result<&'py PyTuple, PyErr> {
-
         let v = OMatrix::<f64, Dyn, Dyn>::from_vec(v.dims()[0], v.dims()[1], v.to_vec().unwrap().to_owned());
         let u = OMatrix::<f64, Dyn, Dyn>::from_vec(u.dims()[0], u.dims()[1], u.to_vec().unwrap().to_owned());
         let we = OMatrix::<f64, Dyn, Dyn>::from_vec(we.dims()[0], we.dims()[1], we.to_vec().unwrap().to_owned());
+        // println!("Shape of V matrix: ({}, {})", v.shape().0, v.shape().1);
+        // println!("Shape of U matrix: ({}, {})", u.shape().0, u.shape().1);
 
         let mut new_w = OMatrix::<f64, Dyn, Dyn>::from_vec(w.dims()[1], w.dims()[0], w.to_vec().unwrap().to_owned()).transpose();
         let mut new_h = OMatrix::<f64, Dyn, Dyn>::from_vec(h.dims()[1], h.dims()[0], h.to_vec().unwrap().to_owned()).transpose();
+        // println!("Shape of new_w matrix: ({}, {})", new_w.shape().0, new_w.shape().1);
+        // println!("Shape of new_h matrix: ({}, {})", new_h.shape().0, new_h.shape().1);
 
         let mut q: f64 = calculate_q(&v, &u, &new_w, &new_h);
         let mut converged: bool = false;
@@ -112,17 +118,55 @@ fn nmf_pyr(py: Python<'_>, m: &PyModule) -> PyResult<()> {
 
         let wev = &we.component_mul(&v);
 
-        let n = v.nrows() as i32;
-        let m = v.ncols() as i32;
         let mut we_j_diag: DMatrix<f64>;
+        let mut v_j;
 
         for i in 0..max_iter{
+            // TODO: Test parallelization of this loop as each iteration is independent.
+            for (j, we_j) in we.row_iter().enumerate(){
+                we_j_diag = DMatrix::from_diagonal(&DVector::from_row_slice(we_j.transpose().as_slice()));
+                v_j = DVector::from_row_slice(&wev.row(j).transpose().as_slice());
 
-            for (j, we_j) in we.column_iter().enumerate(){
-                we_j.
-                we_j_diag = DMatrix::from_diagonal(&DVector::from_row_slice(&we_j.data.as_slice_unchecked()));
+                let w_n = (&new_h * v_j).transpose();
+                let uh = &we_j_diag * &new_h.transpose();
+                let w_d = &new_h * &uh;
+                let w_d_det = w_d.determinant();
+                let w_d_inv;
+                if w_d_det == 0.0 {
+                    w_d_inv = w_d.pseudo_inverse(1e-15).unwrap();
+                }
+                else{
+                    w_d_inv = w_d.try_inverse().unwrap();
+                }
+                let _w = w_n * w_d_inv;
+                let _w_row = DVector::from_column_slice(&_w.as_slice());
+                let w_row = &_w_row.column(0).transpose();
+                new_w.set_row(j, &w_row);
             }
+            let w_neg = (Matrix::abs(&new_w) - &new_w) / 2.0;
+            let w_pos = (Matrix::abs(&new_w) + &new_w) / 2.0;
+            for (j, we_j) in we.column_iter().enumerate(){
+                we_j_diag = DMatrix::from_diagonal(&DVector::from_column_slice(&we_j.as_slice()));
+                v_j = DVector::from_row_slice(&wev.column(j).as_slice());
 
+                let n1 = v_j.transpose() * &w_pos;
+                let d1 = v_j.transpose() * &w_neg;
+
+                let n2a = w_neg.transpose() * &we_j_diag;
+                let n2b = &n2a * &w_neg;
+                let d2a = w_pos.transpose() * &we_j_diag;
+                let d2b = &d2a * &w_pos;
+
+                let h_j = new_h.column(j).transpose();
+                let n2 = &h_j * &n2b;
+                let d2 = &h_j * &d2b;
+                let _n = (n1 + n2).add_scalar(EPSILON);
+                let _d = (d1 + d2).add_scalar(EPSILON);
+                let h_delta = _n.component_div(&_d);
+                let _h = h_j.component_mul(&h_delta);
+                let h_row = DVector::from_row_slice(&_h.as_slice());
+                new_h.set_column(j, &h_row);
+            }
             q_new = calculate_q(&v, &u, &new_w, &new_h);
             q_list.push_back(q_new.clone());
             converge_i = i;

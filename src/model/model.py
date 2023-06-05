@@ -182,13 +182,13 @@ if __name__ == "__main__":
     t0 = time.time()
 
     factors = 4
-    method = "ls-nmf"                   # "ls-nmf", "ws-nmf"
+    method = "ws-nmf"                   # "ls-nmf", "ws-nmf"
     init_method = "col_means"           # default is column means, "kmeans", "cmeans"
     init_norm = True
     seed = 42
-    epochs = 100
+    epochs = 10
     max_iterations = 20000
-    converge_delta = 0.0001
+    converge_delta = 0.01
     converge_n = 10
     parallel = True
     optimized = True

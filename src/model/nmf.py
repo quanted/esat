@@ -11,7 +11,7 @@ import time
 
 
 logger = logging.getLogger("NMF")
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 
 class NMF:
@@ -293,15 +293,16 @@ if __name__ == "__main__":
     logging.getLogger('matplotlib.font_manager').setLevel(logging.ERROR)
     logging.getLogger('matplotlib').setLevel(logging.ERROR)
 
-    factors = 8
-    method = "ls-nmf"                   # "ls-nmf", "euc", "ws-nmf"
-    init_method = "col_means"           # default is column means, "kmeans", "cmeans"
+    factors = 4
+    method = "ws-nmf"                   # "ls-nmf", "euc", "ws-nmf"
+    init_method = "cmeans"           # default is column means, "kmeans", "cmeans"
     init_norm = True
     seed = 42
     max_iterations = 10000
-    converge_delta = 0.001
+    converge_delta = 0.1
     converge_n = 10
     dataset = "br"          # "br": Baton Rouge, "b": Baltimore, "sl": St Louis
+    verbose = True
 
     if dataset == "br":
         input_file = os.path.join("D:\\", "projects", "nmf_py", "data", "Dataset-BatonRouge-con.csv")
@@ -330,16 +331,16 @@ if __name__ == "__main__":
 
     t0 = time.time()
     print("Running python code")
-    nmf = NMF(V=V, U=U, factors=factors, method=method, seed=seed, optimized=False)
+    nmf = NMF(V=V, U=U, factors=factors, method=method, seed=seed, optimized=False, verbose=verbose)
     nmf.initialize(init_method=init_method, init_norm=init_norm, fuzziness=5.0)
     nmf.train(max_iter=max_iterations, converge_delta=converge_delta, converge_n=converge_n)
     t1 = time.time()
     print(f"Runtime: {round((t1-t0)/60, 2)} min(s)")
 
     print("Running rust code")
-    nmf = NMF(V=V, U=U, factors=factors, method=method, seed=seed, optimized=True)
-    nmf.initialize(init_method=init_method, init_norm=init_norm, fuzziness=5.0)
-    nmf.train(max_iter=max_iterations, converge_delta=converge_delta, converge_n=converge_n)
+    nmf2 = NMF(V=V, U=U, factors=factors, method=method, seed=seed, optimized=True, verbose=verbose)
+    nmf2.initialize(init_method=init_method, init_norm=init_norm, fuzziness=5.0)
+    nmf2.train(max_iter=max_iterations, converge_delta=converge_delta, converge_n=converge_n)
 
     t2 = time.time()
     print(f"Runtime: {round((t2-t1)/60, 2)} min(s)")

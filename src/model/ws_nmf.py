@@ -72,7 +72,6 @@ class WSNMF:
             _n = (n1 + n2) + EPSILON
             _d = (d1 + d2) + EPSILON
             h_delta = np.sqrt(_n/_d)
-            hj = H.T[j]
             _h = np.multiply(hj, h_delta)
             _H.append(_h)
 
