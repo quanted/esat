@@ -2,6 +2,7 @@ import logging
 import time
 import datetime
 import json
+import os
 import numpy as np
 import multiprocessing as mp
 from src.utils import calculate_Q
@@ -17,7 +18,7 @@ class BatchNMF:
                  V: np.ndarray,
                  U: np.ndarray,
                  factors: int,
-                 epochs: int = 20,
+                 models: int = 20,
                  method: str = "ls-nmf",
                  seed: int = 42,
                  init_method: str = "column_mean",
@@ -39,7 +40,7 @@ class BatchNMF:
 
         self.seed = seed
 
-        self.epochs = epochs
+        self.models = models
         self.max_iter = max_iter
         self.converge_delta = converge_delta
         self.converge_n = converge_n
@@ -64,7 +65,7 @@ class BatchNMF:
             pool = mp.Pool()
 
             input_parameters = []
-            for i in range(self.epochs):
+            for i in range(self.models):
                 _seed = self.rng.integers(low=0, high=1e5)
                 _nmf = NMF(
                     factors=self.factors,
@@ -72,7 +73,7 @@ class BatchNMF:
                     V=self.V,
                     U=self.U,
                     seed=_seed,
-                    optimized=optimized
+                    optimized=self.optimized
                 )
                 _nmf.initialize(init_method=self.init_method, init_norm=self.init_norm, fuzziness=self.fuzziness)
                 input_parameters.append((_nmf, i))
@@ -94,7 +95,7 @@ class BatchNMF:
             self.results = []
             best_Q = float("inf")
             best_epoch = None
-            for epoch in range(self.epochs):
+            for epoch in range(self.models):
                 _seed = self.rng.integers(low=0, high=1e5)
                 _nmf = NMF(
                     factors=self.factors,
@@ -135,7 +136,7 @@ class BatchNMF:
         nmf.train(max_iter=self.max_iter, converge_delta=self.converge_delta, converge_n=self.converge_n, epoch=epoch)
         t1 = time.time()
         if self.verbose:
-            print(f"Epoch: {epoch}, Seed: {nmf.seed}, Q(true): {round(nmf.Qtrue, 4)}, "
+            print(f"Model: {epoch}, Seed: {nmf.seed}, Q(true): {round(nmf.Qtrue, 4)}, "
                         f"Steps: {nmf.converge_steps}/{self.max_iter}, Converged: {nmf.converged}, "
                         f"Runtime: {round(t1 - t0, 2)} sec")
         return {
@@ -183,12 +184,12 @@ if __name__ == "__main__":
 
     factors = 4
     method = "ws-nmf"                   # "ls-nmf", "ws-nmf"
-    init_method = "col_means"           # default is column means, "kmeans", "cmeans"
+    init_method = "column_means"           # default is column means, "kmeans", "cmeans"
     init_norm = True
     seed = 42
-    epochs = 10
+    models = 200
     max_iterations = 20000
-    converge_delta = 0.01
+    converge_delta = 0.001
     converge_n = 10
     parallel = True
     optimized = True
@@ -231,7 +232,7 @@ if __name__ == "__main__":
     V = dh.input_data_processed
     U = dh.uncertainty_data_processed
 
-    batch_nmf = BatchNMF(V=V, U=U, factors=factors, epochs=epochs, method=method, seed=seed, init_method=init_method,
+    batch_nmf = BatchNMF(V=V, U=U, factors=factors, models=models, method=method, seed=seed, init_method=init_method,
                          init_norm=init_norm, fuzziness=5.0, max_iter=max_iterations, converge_delta=converge_delta,
                          converge_n=converge_n, parallel=parallel, optimized=optimized)
 
@@ -245,6 +246,6 @@ if __name__ == "__main__":
                                     species=len(dh.features), residuals_path=pmf_residuals_file)
     pmf_q = calculate_Q(profile_comparison.pmf_residuals.values, dh.uncertainty_data_processed)
     profile_comparison.compare(PMF_Q=pmf_q)
-    os.remove(path=full_output_path)
+    # os.remove(path=full_output_path)
     t1 = time.time()
     print(f"Runtime: {round((t1-t0)/60, 2)} min(s)")

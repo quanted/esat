@@ -55,10 +55,10 @@ class WSNMF:
             wej_d = np.diagflat(wej)
 
             uv_j = uV[:, j]
-            uv_jd = uv_j.reshape(len(uv_j), 1)
+            uv_j = uv_j.reshape(len(uv_j), 1)
 
-            n1 = np.matmul(uv_jd.T, W_p)[0]
-            d1 = np.matmul(uv_jd.T, W_n)[0]
+            n1 = np.matmul(uv_j.T, W_p)[0]
+            d1 = np.matmul(uv_j.T, W_n)[0]
 
             n2a = np.matmul(W_n.T, wej_d)
             n2b = np.matmul(n2a, W_n)

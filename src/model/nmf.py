@@ -70,7 +70,7 @@ class NMF:
         if self.optimized:
             # Attempt to load rust code for optimized model train
             from nmf_pyr import nmf_pyr
-            self.optimized_update = nmf_pyr.ls_nmf if self.method == "ls-nmf" and not self.__has_neg else nmf_pyr.ws_nmf
+            self.optimized_update = nmf_pyr.ls_nmf if self.method == "ls-nmf" and not self.__has_neg else nmf_pyr.ws_nmf_p
 
     def __validate(self):
         """
@@ -231,33 +231,34 @@ class NMF:
         W = self.W
         H = self.H
         We = self.We
+        verbose = self.verbose
 
         if self.optimized:
             t0 = time.time()
-            _results = self.optimized_update(V, U, We, W, H, max_iter, converge_delta, converge_n)[0]
+            _results = self.optimized_update(V, U, We, W, H, max_iter, converge_delta, converge_n, verbose)[0]
             W, H, q, self.converged, self.converge_steps, q_list = _results
             t1 = time.time()
             if self.verbose:
-                logger.info(f"Epoch: {epoch}, Seed: {self.seed}, Q(true): {round(q, 4)}, "
+                logger.info(f"Model: {epoch}, Seed: {self.seed}, Q(true): {round(q, 4)}, "
                       f"Steps: {self.converge_steps}/{max_iter}, Converged: {self.converged}, "
                       f"Runtime: {round(t1-t0, 2)} sec")
         else:
             q = None
             converged = False
             prior_q = []
-            t_iter = trange(max_iter, desc=f"Epoch: {epoch}, Seed: {self.seed}, Q(true): NA", position=0, leave=True)
+            t_iter = trange(max_iter, desc=f"Model: {epoch}, Seed: {self.seed}, Q(true): NA", position=0, leave=True)
             for i in t_iter:
                 W, H = self.update_step(V=V, We=We, W=W, H=H)
                 q = q_loss(V=V, U=U, W=W, H=H)
                 prior_q.append(q)
                 if len(prior_q) > converge_n:
                     prior_q.pop(0)
-                    delta_q_min = min(prior_q)
-                    delta_q_max = max(prior_q)
-                    delta_q = delta_q_max - delta_q_min
+                    delta_q_first = prior_q[0]
+                    delta_q_last = prior_q[-1]
+                    delta_q = delta_q_first - delta_q_last
                     if delta_q < converge_delta:
                         converged = True
-                t_iter.set_description(f"Epoch: {epoch}, Seed: {self.seed}, Q(true): {round(q, 2)}")
+                t_iter.set_description(f"Model: {epoch}, Seed: {self.seed}, Q(true): {round(q, 2)}")
                 t_iter.refresh()
                 self.converge_steps += 1
 
@@ -294,11 +295,12 @@ if __name__ == "__main__":
     logging.getLogger('matplotlib').setLevel(logging.ERROR)
 
     factors = 4
-    method = "ws-nmf"                   # "ls-nmf", "euc", "ws-nmf"
-    init_method = "cmeans"           # default is column means, "kmeans", "cmeans"
+    method = "ws-nmf"                   # "ls-nmf", "ws-nmf"
+    init_method = "col_means"           # default is column means, "kmeans", "cmeans"
     init_norm = True
     seed = 42
-    max_iterations = 10000
+    # seed = 26586        #most comparable model to PMF5
+    max_iterations = 20000
     converge_delta = 0.1
     converge_n = 10
     dataset = "br"          # "br": Baton Rouge, "b": Baltimore, "sl": St Louis
