@@ -98,9 +98,10 @@ class DataHandler:
                 data = pd.read_csv(filepath)
         elif ".txt" in filepath:
             if index_col:
-                data = pd.read_table(filepath, index_col=index_col, sep="\t+")
+                data = pd.read_table(filepath, index_col=index_col, sep="\t")
             else:
-                data = pd.read_table(filepath, sep="\t+")
+                data = pd.read_table(filepath, sep="\t")
+            data.dropna(inplace=True)
         else:
             logger.warn("Unknown file type provided.")
             sys.exit()

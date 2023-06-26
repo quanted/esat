@@ -1,3 +1,8 @@
+import sys
+import os
+module_path = os.path.abspath(os.path.join('..', "nmf_py"))
+sys.path.append(module_path)
+
 import logging
 import time
 import datetime
@@ -5,7 +10,6 @@ import json
 import os
 import numpy as np
 import multiprocessing as mp
-from src.utils import calculate_Q
 from src.model.nmf import NMF
 
 
@@ -175,77 +179,122 @@ if __name__ == "__main__":
 
     import os
     from src.data.datahandler import DataHandler
+    from src.utils import calculate_Q
     from tests.factor_comparison import FactorComp
 
     logging.getLogger('matplotlib.font_manager').setLevel(logging.ERROR)
     logging.getLogger('matplotlib').setLevel(logging.ERROR)
 
     t0 = time.time()
+    for dataset in ["b", "sl", "br"]:           # "br", "sl", "b", "w"
+        for method in ["ls-nmf"]:     # "ls-nmf", "ws-nmf"
+            for factors in range(3, 13):
+                # factors = 4
+                # method = "ls-nmf"                   # "ls-nmf", "ws-nmf"
+                init_method = "col_means"           # default is column means, "kmeans", "cmeans"
+                init_norm = True
+                seed = 40
+                models = 20
+                if method == "ws-nmf":
+                    converge_delta = 1.0 if dataset == "b" else 0.1
+                    max_iterations = 2000
+                    converge_n = 5
+                else:
+                    max_iterations = 50000
+                    converge_delta = 0.001
+                    converge_n = 10
+                parallel = True
+                optimized = True
+                # dataset = "br"          # "br": Baton Rouge, "b": Baltimore, "sl": St Louis
+                index_col = "Date"
 
-    factors = 4
-    method = "ws-nmf"                   # "ls-nmf", "ws-nmf"
-    init_method = "column_means"           # default is column means, "kmeans", "cmeans"
-    init_norm = True
-    seed = 42
-    models = 200
-    max_iterations = 20000
-    converge_delta = 0.001
-    converge_n = 10
-    parallel = True
-    optimized = True
-    dataset = "br"          # "br": Baton Rouge, "b": Baltimore, "sl": St Louis
+                if dataset == "br":
+                    input_file = os.path.join("D:\\", "projects", "nmf_py", "data", "Dataset-BatonRouge-con.csv")
+                    uncertainty_file = os.path.join("D:\\", "projects", "nmf_py", "data", "Dataset-BatonRouge-unc.csv")
+                    output_path = os.path.join("D:\\", "projects", "nmf_py", "output", "BatonRouge")
+                    pmf_profile_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test", f"br{factors}f_profiles.txt")
+                    pmf_contribution_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test", f"br{factors}f_contributions.txt")
+                    pmf_residuals_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test",
+                                                      f"br{factors}f_residuals.txt")
+                elif dataset == "b":
+                    input_file = os.path.join("D:\\", "projects", "nmf_py", "data", "Dataset-Baltimore_con.txt")
+                    uncertainty_file = os.path.join("D:\\", "projects", "nmf_py", "data", "Dataset-Baltimore_unc.txt")
+                    output_path = os.path.join("D:\\", "projects", "nmf_py", "output", "Baltimore")
+                    pmf_profile_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test", f"b{factors}f_profiles.txt")
+                    pmf_contribution_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test", f"b{factors}f_contributions.txt")
+                    pmf_residuals_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test",
+                                                      f"b{factors}f_residuals.txt")
+                elif dataset == "sl":
+                    input_file = os.path.join("D:\\", "projects", "nmf_py", "data", "Dataset-StLouis-con.csv")
+                    uncertainty_file = os.path.join("D:\\", "projects", "nmf_py", "data", "Dataset-StLouis-unc.csv")
+                    output_path = os.path.join("D:\\", "projects", "nmf_py", "output", "StLouis")
+                    pmf_profile_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test", f"sl{factors}f_profiles.txt")
+                    pmf_contribution_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test", f"sl{factors}f_contributions.txt")
+                    pmf_residuals_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test",
+                                                      f"sl{factors}f_residuals.txt")
+                elif dataset == "w":
+                    input_file = os.path.join("D:\\", "projects", "nmf_py", "user_data", "wash_con_cleaned.csv")
+                    uncertainty_file = os.path.join("D:\\", "projects", "nmf_py", "user_data", "wash_unc_cleaned.csv")
+                    output_path = os.path.join("D:\\", "projects", "nmf_py", "output", "Washington")
+                    pmf_profile_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test", f"w{factors}f_profiles.txt")
+                    pmf_contribution_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test", f"w{factors}f_contributions.txt")
+                    pmf_residuals_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test",
+                                                      f"w{factors}f_residuals.txt")
+                    index_col = "obs_date"
 
-    if dataset == "br":
-        input_file = os.path.join("D:\\", "projects", "nmf_py", "data", "Dataset-BatonRouge-con.csv")
-        uncertainty_file = os.path.join("D:\\", "projects", "nmf_py", "data", "Dataset-BatonRouge-unc.csv")
-        output_path = os.path.join("D:\\", "projects", "nmf_py", "output", "BatonRouge")
-        pmf_profile_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test", f"br{factors}f_profiles.txt")
-        pmf_contribution_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test", f"br{factors}f_contributions.txt")
-        pmf_residuals_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test",
-                                          f"br{factors}f_residuals.txt")
-    elif dataset == "b":
-        input_file = os.path.join("D:\\", "projects", "nmf_py", "data", "Dataset-Baltimore_con.txt")
-        uncertainty_file = os.path.join("D:\\", "projects", "nmf_py", "data", "Dataset-Baltimore_unc.txt")
-        output_path = os.path.join("D:\\", "projects", "nmf_py", "output", "Baltimore")
-        pmf_profile_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test", f"b{factors}f_profiles.txt")
-        pmf_contribution_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test", f"b{factors}f_contributions.txt")
-        pmf_residuals_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test",
-                                          f"b{factors}f_residuals.txt")
-    elif dataset == "sl":
-        input_file = os.path.join("D:\\", "projects", "nmf_py", "data", "Dataset-StLouis-con.csv")
-        uncertainty_file = os.path.join("D:\\", "projects", "nmf_py", "data", "Dataset-StLouis-unc.csv")
-        output_path = os.path.join("D:\\", "projects", "nmf_py", "output", "StLouis")
-        pmf_profile_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test", f"sl{factors}f_profiles.txt")
-        pmf_contribution_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test", f"sl{factors}f_contributions.txt")
-        pmf_residuals_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test",
-                                          f"sl{factors}f_residuals.txt")
+                sn_threshold = 2.0
 
-    index_col = "Date"
-    sn_threshold = 2.0
+                dh = DataHandler(
+                    input_path=input_file,
+                    uncertainty_path=uncertainty_file,
+                    index_col=index_col,
+                    sn_threshold=sn_threshold
+                )
+                V = dh.input_data_processed
+                U = dh.uncertainty_data_processed
 
-    dh = DataHandler(
-        input_path=input_file,
-        uncertainty_path=uncertainty_file,
-        index_col=index_col,
-        sn_threshold=sn_threshold
-    )
-    V = dh.input_data_processed
-    U = dh.uncertainty_data_processed
+                batch_nmf = BatchNMF(V=V, U=U, factors=factors, models=models, method=method, seed=seed, init_method=init_method,
+                                     init_norm=init_norm, fuzziness=5.0, max_iter=max_iterations, converge_delta=converge_delta,
+                                     converge_n=converge_n, parallel=parallel, optimized=optimized)
+                t0 = time.time()
+                batch_nmf.train()
 
-    batch_nmf = BatchNMF(V=V, U=U, factors=factors, models=models, method=method, seed=seed, init_method=init_method,
-                         init_norm=init_norm, fuzziness=5.0, max_iter=max_iterations, converge_delta=converge_delta,
-                         converge_n=converge_n, parallel=parallel, optimized=optimized)
+                t1 = time.time()
+                # full_output_path = f"{dataset}-nmf-output-f{factors}.json"
+                # batch_nmf.save(output_name=full_output_path)
+                #
+                # profile_comparison = FactorComp(nmf_output_file=full_output_path, pmf_profile_file=pmf_profile_file,
+                #                                 pmf_contribution_file=pmf_contribution_file, factors=factors,
+                #                                 species=len(dh.features), residuals_path=pmf_residuals_file)
+                # pmf_q = calculate_Q(profile_comparison.pmf_residuals.values, dh.uncertainty_data_processed)
+                # profile_comparison.compare(PMF_Q=pmf_q)
+                # os.remove(path=full_output_path)
+                runtime = round(t1-t0, 2)
+                print(f"Runtime: {round((t1-t0)/60, 2)} min(s)")
 
-    batch_nmf.train()
-
-    full_output_path = f"nmf-output-f{factors}.json"
-    batch_nmf.save(output_name=full_output_path)
-
-    profile_comparison = FactorComp(nmf_output_file=full_output_path, pmf_profile_file=pmf_profile_file,
-                                    pmf_contribution_file=pmf_contribution_file, factors=factors,
-                                    species=len(dh.features), residuals_path=pmf_residuals_file)
-    pmf_q = calculate_Q(profile_comparison.pmf_residuals.values, dh.uncertainty_data_processed)
-    profile_comparison.compare(PMF_Q=pmf_q)
-    # os.remove(path=full_output_path)
-    t1 = time.time()
-    print(f"Runtime: {round((t1-t0)/60, 2)} min(s)")
+                run_key = f"{dataset}-{factors}"
+                analysis_results = {
+                    run_key:
+                        {
+                            "dataset": dataset,
+                            "factors": factors,
+                            f"{method}-runtime": runtime,
+                            f"{method}-Q": float(batch_nmf.results[batch_nmf.best_epoch]["Q"])
+                        }
+                }
+                current_results = {}
+                analysis_file = "runtime_analysis.json"
+                if os.path.exists(analysis_file):
+                    with open(analysis_file, 'r') as json_file:
+                        current_results = json.load(json_file)
+                        if run_key in current_results.keys():
+                            for k, v in analysis_results[run_key].items():
+                                current_results[run_key].update({k: v})
+                        else:
+                            current_results[run_key] = analysis_results[run_key]
+                else:
+                    current_results = analysis_results
+                with open(analysis_file, 'w') as json_file:
+                    current_results = dict(sorted(current_results.items()))
+                    json.dump(current_results, json_file)
+                logger.info(f"Completed method: {method}, factors: {factors}, dataset: {dataset}")

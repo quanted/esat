@@ -1,18 +1,16 @@
 extern crate core;
 
 use std::collections::vec_deque::VecDeque;
-use std::io::Write;
 use pyo3::{prelude::*, types::PyTuple};
 use numpy::pyo3::Python;
 use numpy::{PyReadonlyArrayDyn, ToPyArray, PyArrayDyn};
 use nalgebra::*;
 use rayon::prelude::*;
-use std::time::{Duration, Instant};
 
 
 /// NMF-PY Rust module
 #[pymodule]
-fn nmf_pyr(py: Python<'_>, m: &PyModule) -> PyResult<()> {
+fn nmf_pyr(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
 
     const EPSILON: f64 = 1e-15;
 
@@ -28,8 +26,7 @@ fn nmf_pyr(py: Python<'_>, m: &PyModule) -> PyResult<()> {
         h: PyReadonlyArrayDyn<'py, f64>,
         max_iter: i32,
         converge_delta: f64,
-        converge_n: i32,
-        verbose: bool
+        converge_n: i32
     ) -> Result<&'py PyTuple, PyErr> {
 
         let v = OMatrix::<f64, Dyn, Dyn>::from_vec(v.dims()[0], v.dims()[1], v.to_vec().unwrap().to_owned());
@@ -42,7 +39,6 @@ fn nmf_pyr(py: Python<'_>, m: &PyModule) -> PyResult<()> {
         let mut q: f64 = calculate_q(&v, &u, &new_w, &new_h);
         let mut converged: bool = false;
         let mut converge_i: i32 = 0;
-        let mut q_new = q.clone();
         let mut q_list: VecDeque<f64> = VecDeque::new();
 
         let mut wh: DMatrix<f64>;
@@ -52,9 +48,7 @@ fn nmf_pyr(py: Python<'_>, m: &PyModule) -> PyResult<()> {
         let mut w_den: DMatrix<f64>;
 
         let wev = &we.component_mul(&v);
-        let t0 = Instant::now();
         for i in 0..max_iter{
-            let t1 = Instant::now();
             wh = &new_w * &new_h;
             h_num = new_w.transpose() * wev;
             h_den = &new_w.transpose() * &we.component_mul(&wh);
@@ -65,8 +59,8 @@ fn nmf_pyr(py: Python<'_>, m: &PyModule) -> PyResult<()> {
             w_den = &we.component_mul(&wh) * &new_h.transpose();
             new_w = new_w.component_mul(&w_num.component_div(&w_den));
 
-            q_new = calculate_q(&v, &u, &new_w, &new_h);
-            q_list.push_back(q_new.clone());
+            q = calculate_q(&v, &u, &new_w, &new_h);
+            q_list.push_back(q);
             converge_i = i;
             if (q_list.len() as i32) >= converge_n {
                 if q_list.front().unwrap() - q_list.back().unwrap() < converge_delta {
@@ -75,17 +69,6 @@ fn nmf_pyr(py: Python<'_>, m: &PyModule) -> PyResult<()> {
                 }
                 q_list.pop_front();
             }
-            if verbose {
-                let d0 = t0.elapsed();
-                let d1 = t1.elapsed();
-                print!("\rQ(true): {:.4}, Step: {}/{}, Runtime - total: {:?}, {:?} iter/s             ", q_new, i, max_iter, d0, d1);
-                std::io::stdout().flush();
-            }
-
-            q = q_new;
-        }
-        if verbose {
-            print!("\n");
         }
         new_w = new_w.transpose();
         new_h = new_h.transpose();
@@ -111,24 +94,17 @@ fn nmf_pyr(py: Python<'_>, m: &PyModule) -> PyResult<()> {
         h: PyReadonlyArrayDyn<'py, f64>,
         max_iter: i32,
         converge_delta: f64,
-        converge_n: i32,
-        verbose: bool
+        converge_n: i32
     ) -> Result<&'py PyTuple, PyErr> {
-        let v = OMatrix::<f64, Dyn, Dyn>::from_vec(v.dims()[0], v.dims()[1], v.to_vec().unwrap().to_owned());
-        let u = OMatrix::<f64, Dyn, Dyn>::from_vec(u.dims()[0], u.dims()[1], u.to_vec().unwrap().to_owned());
-        let we = OMatrix::<f64, Dyn, Dyn>::from_vec(we.dims()[0], we.dims()[1], we.to_vec().unwrap().to_owned());
-        // println!("Shape of V matrix: ({}, {})", v.shape().0, v.shape().1);
-        // println!("Shape of U matrix: ({}, {})", u.shape().0, u.shape().1);
+        let v = OMatrix::<f64, Dyn, Dyn>::from_vec(v.dims()[0], v.dims()[1], v.to_vec().unwrap());
+        let u = OMatrix::<f64, Dyn, Dyn>::from_vec(u.dims()[0], u.dims()[1], u.to_vec().unwrap());
+        let we = OMatrix::<f64, Dyn, Dyn>::from_vec(we.dims()[0], we.dims()[1], we.to_vec().unwrap());
 
-        let mut new_w = OMatrix::<f64, Dyn, Dyn>::from_vec(w.dims()[1], w.dims()[0], w.to_vec().unwrap().to_owned()).transpose();
-        let mut new_h = OMatrix::<f64, Dyn, Dyn>::from_vec(h.dims()[1], h.dims()[0], h.to_vec().unwrap().to_owned()).transpose();
-        // println!("Shape of new_w matrix: ({}, {})", new_w.shape().0, new_w.shape().1);
-        // println!("Shape of new_h matrix: ({}, {})", new_h.shape().0, new_h.shape().1);
-
+        let mut new_w = OMatrix::<f64, Dyn, Dyn>::from_vec(w.dims()[1], w.dims()[0], w.to_vec().unwrap()).transpose();
+        let mut new_h = OMatrix::<f64, Dyn, Dyn>::from_vec(h.dims()[1], h.dims()[0], h.to_vec().unwrap()).transpose();
         let mut q: f64 = calculate_q(&v, &u, &new_w, &new_h);
         let mut converged: bool = false;
         let mut converge_i: i32 = 0;
-        let mut q_new = q.clone();
         let mut q_list: VecDeque<f64> = VecDeque::new();
 
         let wev = &we.component_mul(&v);
@@ -136,34 +112,31 @@ fn nmf_pyr(py: Python<'_>, m: &PyModule) -> PyResult<()> {
         let mut we_j_diag: DMatrix<f64>;
         let mut v_j;
 
-        let t0 = Instant::now();
         for i in 0..max_iter{
-            let t1 = Instant::now();
             for (j, we_j) in we.row_iter().enumerate(){
                 we_j_diag = DMatrix::from_diagonal(&DVector::from_row_slice(we_j.transpose().as_slice()));
-                v_j = DVector::from_row_slice(&wev.row(j).transpose().as_slice());
+                v_j = DVector::from_row_slice(wev.row(j).transpose().as_slice());
 
                 let w_n = (&new_h * v_j).transpose();
                 let uh = &we_j_diag * &new_h.transpose();
                 let w_d = &new_h * &uh;
                 let w_d_det = w_d.determinant();
-                let w_d_inv;
-                if w_d_det == 0.0 {
-                    w_d_inv = w_d.pseudo_inverse(1e-15).unwrap();
+                let w_d_inv: DMatrix<f64> = if w_d_det == 0.0 {
+                    w_d.pseudo_inverse(1e-15).unwrap()
                 }
                 else{
-                    w_d_inv = w_d.try_inverse().unwrap();
-                }
+                    w_d.try_inverse().unwrap()
+                };
                 let _w = w_n * w_d_inv;
-                let _w_row = DVector::from_column_slice(&_w.as_slice());
+                let _w_row = DVector::from_column_slice(_w.as_slice());
                 let w_row = &_w_row.column(0).transpose();
                 new_w.set_row(j, &w_row);
             }
             let w_neg = (Matrix::abs(&new_w) - &new_w) / 2.0;
             let w_pos = (Matrix::abs(&new_w) + &new_w) / 2.0;
             for (j, we_j) in we.column_iter().enumerate(){
-                we_j_diag = DMatrix::from_diagonal(&DVector::from_column_slice(&we_j.as_slice()));
-                v_j = DVector::from_row_slice(&wev.column(j).as_slice());
+                we_j_diag = DMatrix::from_diagonal(&DVector::from_column_slice(we_j.as_slice()));
+                v_j = DVector::from_row_slice(wev.column(j).as_slice());
 
                 let n1 = v_j.transpose() * &w_pos;
                 let d1 = v_j.transpose() * &w_neg;
@@ -181,11 +154,11 @@ fn nmf_pyr(py: Python<'_>, m: &PyModule) -> PyResult<()> {
                 let mut h_delta = _n.component_div(&_d);
                 h_delta = h_delta.map(|x| x.sqrt());
                 let _h = h_j.component_mul(&h_delta);
-                let h_row = DVector::from_row_slice(&_h.as_slice());
+                let h_row = DVector::from_row_slice(_h.as_slice());
                 new_h.set_column(j, &h_row);
             }
-            q_new = calculate_q(&v, &u, &new_w, &new_h);
-            q_list.push_back(q_new.clone());
+            q = calculate_q(&v, &u, &new_w, &new_h);
+            q_list.push_back(q);
             converge_i = i;
             if (q_list.len() as i32) >= converge_n {
                 if q_list.front().unwrap() - q_list.back().unwrap() < converge_delta {
@@ -194,21 +167,11 @@ fn nmf_pyr(py: Python<'_>, m: &PyModule) -> PyResult<()> {
                 }
                 q_list.pop_front();
             }
-            if verbose {
-                let d0 = t0.elapsed();
-                let d1 = t1.elapsed();
-                print!("\rQ(true): {:.4}, Step: {}/{}, Runtime - total: {:?}, {:?} iter/s             ", q_new, i, max_iter, d0, d1);
-                std::io::stdout().flush();
-            }
-            q = q_new;
-        }
-        if verbose {
-            print!("\n");
         }
         new_w = new_w.transpose();
         new_h = new_h.transpose();
-        let w_matrix = Vec::from(new_w.data.as_vec().to_owned());
-        let h_matrix = Vec::from(new_h.data.as_vec().to_owned());
+        let w_matrix = new_w.data.as_vec().to_owned();
+        let h_matrix = new_h.data.as_vec().to_owned();
         let final_w = w_matrix.to_pyarray(py).reshape(w.dims()).unwrap().to_dyn();
         let final_h = h_matrix.to_pyarray(py).reshape(h.dims()).unwrap().to_dyn();
 
@@ -229,24 +192,18 @@ fn nmf_pyr(py: Python<'_>, m: &PyModule) -> PyResult<()> {
         h: PyReadonlyArrayDyn<'py, f64>,
         max_iter: i32,
         converge_delta: f64,
-        converge_n: i32,
-        verbose: bool
+        converge_n: i32
     ) -> Result<&'py PyTuple, PyErr> {
-        let v = OMatrix::<f64, Dyn, Dyn>::from_vec(v.dims()[0], v.dims()[1], v.to_vec().unwrap().to_owned());
-        let u = OMatrix::<f64, Dyn, Dyn>::from_vec(u.dims()[0], u.dims()[1], u.to_vec().unwrap().to_owned());
-        let we = OMatrix::<f64, Dyn, Dyn>::from_vec(we.dims()[0], we.dims()[1], we.to_vec().unwrap().to_owned());
-        // println!("Shape of V matrix: ({}, {})", v.shape().0, v.shape().1);
-        // println!("Shape of U matrix: ({}, {})", u.shape().0, u.shape().1);
+        let v = OMatrix::<f64, Dyn, Dyn>::from_vec(v.dims()[0], v.dims()[1], v.to_vec().unwrap());
+        let u = OMatrix::<f64, Dyn, Dyn>::from_vec(u.dims()[0], u.dims()[1], u.to_vec().unwrap());
+        let we = OMatrix::<f64, Dyn, Dyn>::from_vec(we.dims()[0], we.dims()[1], we.to_vec().unwrap());
 
-        let mut new_w = OMatrix::<f64, Dyn, Dyn>::from_vec(w.dims()[1], w.dims()[0], w.to_vec().unwrap().to_owned()).transpose();
-        let mut new_h = OMatrix::<f64, Dyn, Dyn>::from_vec(h.dims()[1], h.dims()[0], h.to_vec().unwrap().to_owned()).transpose();
-        // println!("Shape of new_w matrix: ({}, {})", new_w.shape().0, new_w.shape().1);
-        // println!("Shape of new_h matrix: ({}, {})", new_h.shape().0, new_h.shape().1);
+        let mut new_w = OMatrix::<f64, Dyn, Dyn>::from_vec(w.dims()[1], w.dims()[0], w.to_vec().unwrap()).transpose();
+        let mut new_h = OMatrix::<f64, Dyn, Dyn>::from_vec(h.dims()[1], h.dims()[0], h.to_vec().unwrap()).transpose();
 
         let mut q: f64 = calculate_q(&v, &u, &new_w, &new_h);
         let mut converged: bool = false;
         let mut converge_i: i32 = 0;
-        let mut q_new = q.clone();
         let mut q_list: VecDeque<f64> = VecDeque::new();
 
         let wev = &we.component_mul(&v);
@@ -256,26 +213,23 @@ fn nmf_pyr(py: Python<'_>, m: &PyModule) -> PyResult<()> {
         let mut w_prime: OMatrix<f64, Dyn, Dyn> = new_w.clone().transpose();
         let mut h_prime: OMatrix<f64, Dyn, Dyn> = new_h.clone();
 
-        let t0 = Instant::now();
         for i in 0..max_iter{
-            let t1 = Instant::now();
             w_prime.par_column_iter_mut().zip(0..m).for_each(|(mut w_col, j)| {
                 let we_j_diag = DMatrix::from_diagonal(&DVector::from_row_slice(we.row(j).transpose().as_slice()));
-                let v_j = DVector::from_row_slice(&wev.row(j).transpose().as_slice());
+                let v_j = DVector::from_row_slice(wev.row(j).transpose().as_slice());
 
                 let w_n = (&new_h * v_j).transpose();
                 let uh = &we_j_diag * &new_h.transpose();
                 let w_d = &new_h * &uh;
                 let w_d_det = w_d.determinant();
-                let w_d_inv;
-                if w_d_det == 0.0 {
-                    w_d_inv = w_d.pseudo_inverse(1e-15).unwrap();
+                let w_d_inv: DMatrix<f64> = if w_d_det == 0.0 {
+                    w_d.pseudo_inverse(1e-15).unwrap()
                 }
                 else{
-                    w_d_inv = w_d.try_inverse().unwrap();
-                }
+                    w_d.try_inverse().unwrap()
+                };
                 let _w = w_n * w_d_inv;
-                let _j_w_row = DVector::from_column_slice(&_w.as_slice());
+                let _j_w_row = DVector::from_column_slice(_w.as_slice());
                 let j_w_row = _j_w_row.column(0);
                 for k in 0..w_col.shape().0{
                     w_col[k] = j_w_row[k];
@@ -287,8 +241,8 @@ fn nmf_pyr(py: Python<'_>, m: &PyModule) -> PyResult<()> {
             let w_pos = (Matrix::abs(&new_w) + &new_w) / 2.0;
 
             h_prime.par_column_iter_mut().zip(0..n).for_each(|(mut h_col, j)| {
-                let we_j_diag = DMatrix::from_diagonal(&DVector::from_column_slice(&we.column(j).as_slice()));
-                let v_j = DVector::from_row_slice(&wev.column(j).as_slice());
+                let we_j_diag = DMatrix::from_diagonal(&DVector::from_column_slice(we.column(j).as_slice()));
+                let v_j = DVector::from_row_slice(wev.column(j).as_slice());
 
                 let n1 = v_j.transpose() * &w_pos;
                 let d1 = v_j.transpose() * &w_neg;
@@ -306,15 +260,15 @@ fn nmf_pyr(py: Python<'_>, m: &PyModule) -> PyResult<()> {
                 let mut h_delta = _n.component_div(&_d);
                 h_delta = h_delta.map(|x| x.sqrt());
                 let _h = h_j.component_mul(&h_delta);
-                let j_h_row = DVector::from_column_slice(&_h.as_slice());
+                let j_h_row = DVector::from_column_slice(_h.as_slice());
                 for k in 0..h_col.shape().0{
                     h_col[k] = j_h_row[k];
                 }
             });
             new_h = h_prime.to_owned();
 
-            q_new = calculate_q(&v, &u, &new_w, &new_h);
-            q_list.push_back(q_new.clone());
+            q = calculate_q(&v, &u, &new_w, &new_h);
+            q_list.push_back(q);
             converge_i = i;
             if (q_list.len() as i32) >= converge_n {
                 if q_list.front().unwrap() - q_list.back().unwrap() < converge_delta {
@@ -323,21 +277,11 @@ fn nmf_pyr(py: Python<'_>, m: &PyModule) -> PyResult<()> {
                 }
                 q_list.pop_front();
             }
-            if verbose {
-                let d0 = t0.elapsed();
-                let d1 = t1.elapsed();
-                print!("\rQ(true): {:.4}, Step: {}/{}, Runtime - total: {:?}, {:?} iter/s", q_new, i, max_iter, d0, d1);
-                std::io::stdout().flush();
-            }
-            q = q_new;
-        }
-        if verbose {
-            print!("\n");
         }
         new_w = new_w.transpose();
         new_h = new_h.transpose();
-        let w_matrix = Vec::from(new_w.data.as_vec().to_owned());
-        let h_matrix = Vec::from(new_h.data.as_vec().to_owned());
+        let w_matrix = new_w.data.as_vec().to_owned();
+        let h_matrix = new_h.data.as_vec().to_owned();
         let final_w = w_matrix.to_pyarray(py).reshape(w.dims()).unwrap().to_dyn();
         let final_h = h_matrix.to_pyarray(py).reshape(h.dims()).unwrap().to_dyn();
 
@@ -357,10 +301,10 @@ fn nmf_pyr(py: Python<'_>, m: &PyModule) -> PyResult<()> {
         max_i: i32, converge_delta: f64, converge_i: i32
     ) -> Result<&'py PyTuple, PyErr> {
 
-        let v = OMatrix::<f64, Dyn, Dyn>::from_vec(v.dims()[0], v.dims()[1], v.to_vec().unwrap().to_owned());
-        let u = OMatrix::<f64, Dyn, Dyn>::from_vec(u.dims()[0], u.dims()[1], u.to_vec().unwrap().to_owned());
-        let mut new_w = OMatrix::<f64, Dyn, Dyn>::from_vec(w.dims()[1], w.dims()[0], w.to_vec().unwrap().to_owned()).transpose();
-        let mut new_h = OMatrix::<f64, Dyn, Dyn>::from_vec(h.dims()[1], h.dims()[0], h.to_vec().unwrap().to_owned()).transpose();
+        let v = OMatrix::<f64, Dyn, Dyn>::from_vec(v.dims()[0], v.dims()[1], v.to_vec().unwrap());
+        let u = OMatrix::<f64, Dyn, Dyn>::from_vec(u.dims()[0], u.dims()[1], u.to_vec().unwrap());
+        let mut new_w = OMatrix::<f64, Dyn, Dyn>::from_vec(w.dims()[1], w.dims()[0], w.to_vec().unwrap()).transpose();
+        let mut new_h = OMatrix::<f64, Dyn, Dyn>::from_vec(h.dims()[1], h.dims()[0], h.to_vec().unwrap()).transpose();
 
         let mut q: f64 = calculate_q(&v, &u, &new_w, &new_h);
         let mut converged: bool = false;
@@ -368,7 +312,7 @@ fn nmf_pyr(py: Python<'_>, m: &PyModule) -> PyResult<()> {
         let uv = v.component_div(&u);
         let ur = matrix_reciprocal(&u);
 
-        let mut best_q: f64 = q.clone();
+        let mut best_q: f64 = q;
         let mut best_h = new_h.clone();
         let mut best_w = new_w.clone();
         let mut q_list: VecDeque<f64> = VecDeque::new();
@@ -378,10 +322,9 @@ fn nmf_pyr(py: Python<'_>, m: &PyModule) -> PyResult<()> {
         let mut h2: DMatrix<f64>;
         let mut w1: DMatrix<f64>;
         let mut w2: DMatrix<f64>;
-        let mut q_new = q.clone();
         let mut best_i = 0;
 
-        let mut update_weight = update_weight.clone();
+        let mut update_weight = update_weight;
 
         let mut h_delta: DMatrix<f64>;
         let mut w_delta: DMatrix<f64>;
@@ -399,18 +342,18 @@ fn nmf_pyr(py: Python<'_>, m: &PyModule) -> PyResult<()> {
             w_delta = update_weight * w2.component_mul(&w1);
             new_w = new_w.component_mul(&w_delta);
 
-            q_new = calculate_q(&v, &u, &new_w, &new_h);
+            q = calculate_q(&v, &u, &new_w, &new_h);
             best_i = i;
-            if q_new < best_q {
-                best_q = q_new.clone();
+            if q < best_q {
+                best_q = q;
                 best_w = new_w.clone();
                 best_h = new_h.clone();
             }
-            q_list.push_back(q_new.clone());
+            q_list.push_back(q);
             if (q_list.len() as i32) >= converge_i {
                 let q_sum: f64 = q_list.iter().sum();
                 let q_avg: f64 = q_sum / q_list.len() as f64;
-                if (q_avg - q_new).abs() < converge_delta {
+                if (q_avg - q).abs() < converge_delta {
                     if update_weight < 0.01 {
                         converged = true;
                         break
@@ -430,13 +373,12 @@ fn nmf_pyr(py: Python<'_>, m: &PyModule) -> PyResult<()> {
                 }
                 q_list.pop_front();
             }
-            q = q_new;
         }
 
         best_w = best_w.transpose();
         best_h = best_h.transpose();
-        let w_matrix = Vec::from(best_w.data.as_vec().to_owned());
-        let h_matrix = Vec::from(best_h.data.as_vec().to_owned());
+        let w_matrix = best_w.data.as_vec().to_owned();
+        let h_matrix = best_h.data.as_vec().to_owned();
         let final_w = w_matrix.to_pyarray(py).reshape(w.dims()).unwrap().to_dyn();
         let final_h = h_matrix.to_pyarray(py).reshape(h.dims()).unwrap().to_dyn();
 
@@ -451,33 +393,32 @@ fn nmf_pyr(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     ) -> f64 {
         let wh = w * h;
         let residuals = v - &wh;
-        let weighted_residuals = residuals.component_div(&u).transpose();
+        let weighted_residuals = residuals.component_div(u).transpose();
         let wr2 = weighted_residuals.component_mul(&weighted_residuals);
         let q: f64 = wr2.sum();
-        return q
+        q
     }
 
     fn matrix_reciprocal(m: &DMatrix<f64>) -> DMatrix<f64> {
         let vec_result: Vec<f64> = m.iter().map(|&i1| (1.0/i1)).collect();
         let result: DMatrix<f64> = DMatrix::from_vec(m.nrows(), m.ncols(), vec_result);
-        return result
+        result
     }
 
     fn matrix_multiply(m1: &DMatrix<f64>, m2: &DMatrix<f64>) -> DMatrix<f64> {
         let vec_result = m1.iter().zip(m2.iter()).map(|(&i1, &i2)| (i1 * i2)).collect();
         let result: DMatrix<f64> = DMatrix::from_vec(m1.nrows(), m1.ncols(), vec_result);
-        return result
+        result
     }
 
     fn matrix_subtract(m1: &DMatrix<f64>, m2: &DMatrix<f64>) -> DMatrix<f64> {
         let vec_result = m1.iter().zip(m2.iter()).map(|(&i1, &i2)| (i1 - i2)).collect();
         let result: DMatrix<f64> = DMatrix::from_vec(m1.nrows(), m1.ncols(), vec_result);
-        return result
+        result
     }
 
     fn matrix_mul(m1: &DMatrix<f64>, m2: &DMatrix<f64>) -> DMatrix<f64> {
-        let mat_result = m1 * m2;
-        return mat_result
+        m1 * m2
     }
 
     fn matrix_mul2(m1: &DMatrix<f64>, m2: &DMatrix<f64>) -> DMatrix<f64> {
@@ -489,48 +430,46 @@ fn nmf_pyr(py: Python<'_>, m: &PyModule) -> PyResult<()> {
                 matrix3[(i, j)] = (x * y).sum();
             }
         }
-        return matrix3
+        matrix3
     }
 
     fn matrix_division(m1: &DMatrix<f64>, m2: &DMatrix<f64>) -> DMatrix<f64> {
-        let div_results = m1.component_div(&m2);
-        return div_results;
+        m1.component_div(m2)
     }
 
     #[pyfn(m)]
-    fn py_matrix_sum<'py>(py: Python<'py>, m: &'py PyArrayDyn<f64>) -> f64 {
-        let mut new_matrix = OMatrix::<f64, Dyn, Dyn>::from_vec(m.dims()[0], m.dims()[1], m.to_vec().unwrap().to_owned()).transpose();
-        let result = new_matrix.sum();
-        return result
+    fn py_matrix_sum<'py>(_py: Python<'py>, m: &'py PyArrayDyn<f64>) -> f64 {
+        let new_matrix = OMatrix::<f64, Dyn, Dyn>::from_vec(m.dims()[0], m.dims()[1], m.to_vec().unwrap()).transpose();
+        new_matrix.sum()
     }
 
     #[pyfn(m)]
     fn py_matrix_reciprocal<'py>(py: Python<'py>, m: &'py PyArrayDyn<f64>) -> &'py PyArrayDyn<f64> {
-        let mut new_matrix = OMatrix::<f64, Dyn, Dyn>::from_vec(m.dims()[0], m.dims()[1], m.to_vec().unwrap().to_owned()).transpose();
+        let mut new_matrix = OMatrix::<f64, Dyn, Dyn>::from_vec(m.dims()[0], m.dims()[1], m.to_vec().unwrap()).transpose();
         new_matrix = matrix_reciprocal(&new_matrix);
-        let result_matrix = Vec::from(new_matrix.data.as_vec().to_owned());
+        let result_matrix = new_matrix.data.as_vec().to_owned();
         let result = result_matrix.to_pyarray(py).reshape((m.dims()[0], m.dims()[1])).unwrap().to_dyn();
-        return result
+        result
     }
 
     #[pyfn(m)]
     fn py_matrix_subtract<'py>(py: Python<'py>, m1: &'py PyArrayDyn<f64>, m2: &'py PyArrayDyn<f64>) -> &'py PyArrayDyn<f64> {
-        let new_matrix1 = OMatrix::<f64, Dyn, Dyn>::from_vec(m1.dims()[0], m1.dims()[1], m1.to_vec().unwrap().to_owned()).transpose();
-        let new_matrix2 = OMatrix::<f64, Dyn, Dyn>::from_vec(m2.dims()[0], m2.dims()[1], m2.to_vec().unwrap().to_owned()).transpose();
+        let new_matrix1 = OMatrix::<f64, Dyn, Dyn>::from_vec(m1.dims()[0], m1.dims()[1], m1.to_vec().unwrap()).transpose();
+        let new_matrix2 = OMatrix::<f64, Dyn, Dyn>::from_vec(m2.dims()[0], m2.dims()[1], m2.to_vec().unwrap()).transpose();
         let new_matrix = new_matrix1 - new_matrix2;
-        let result_matrix = Vec::from(new_matrix.data.as_vec().to_owned());
+        let result_matrix = new_matrix.data.as_vec().to_owned();
         let result = result_matrix.to_pyarray(py).reshape(m1.dims()).unwrap().to_dyn();
-        return result
+        result
     }
 
     #[pyfn(m)]
     fn py_matrix_multiply<'py>(py: Python<'py>, m1: &'py PyArrayDyn<f64>, m2: &'py PyArrayDyn<f64>) -> &'py PyArrayDyn<f64> {
-        let new_matrix1 = OMatrix::<f64, Dyn, Dyn>::from_vec(m1.dims()[0], m1.dims()[1], m1.to_vec().unwrap().to_owned()).transpose();
-        let new_matrix2 = OMatrix::<f64, Dyn, Dyn>::from_vec(m2.dims()[0], m2.dims()[1], m2.to_vec().unwrap().to_owned()).transpose();
+        let new_matrix1 = OMatrix::<f64, Dyn, Dyn>::from_vec(m1.dims()[0], m1.dims()[1], m1.to_vec().unwrap()).transpose();
+        let new_matrix2 = OMatrix::<f64, Dyn, Dyn>::from_vec(m2.dims()[0], m2.dims()[1], m2.to_vec().unwrap()).transpose();
         let new_matrix = new_matrix1.component_mul(&new_matrix2);
-        let result_matrix = Vec::from(new_matrix.data.as_vec().to_owned());
+        let result_matrix = new_matrix.data.as_vec().to_owned();
         let result = result_matrix.to_pyarray(py).reshape(m1.dims()).unwrap().to_dyn();
-        return result
+        result
     }
 
     #[pyfn(m)]
@@ -538,31 +477,30 @@ fn nmf_pyr(py: Python<'_>, m: &PyModule) -> PyResult<()> {
         let matrix1 = OMatrix::<f64, Dyn, Dyn>::from_row_iterator(m1.dims()[0], m1.dims()[1], m1.to_owned_array().into_iter());
         let matrix2 = OMatrix::<f64, Dyn, Dyn>::from_row_iterator(m2.dims()[0], m2.dims()[1], m2.to_owned_array().into_iter());
         let new_matrix = matrix_mul(&matrix1, &matrix2).transpose();
-        let result_matrix = Vec::from(new_matrix.data.as_vec().to_owned());
+        let result_matrix = new_matrix.data.as_vec().to_owned();
         let result = result_matrix.to_pyarray(py).reshape((m1.dims()[0], m2.dims()[1])).unwrap().to_dyn();
-        return result
+        result
     }
 
     #[pyfn(m)]
     fn py_matrix_division<'py>(py: Python<'py>, m1: &'py PyArrayDyn<f64>, m2: &'py PyArrayDyn<f64>) -> &'py PyArrayDyn<f64> {
-        let matrix1 = OMatrix::<f64, Dyn, Dyn>::from_vec(m1.dims()[0], m1.dims()[1], m1.to_vec().unwrap().to_owned()).transpose();
-        let matrix2 = OMatrix::<f64, Dyn, Dyn>::from_vec(m2.dims()[0], m2.dims()[1], m2.to_vec().unwrap().to_owned()).transpose();
+        let matrix1 = OMatrix::<f64, Dyn, Dyn>::from_vec(m1.dims()[0], m1.dims()[1], m1.to_vec().unwrap()).transpose();
+        let matrix2 = OMatrix::<f64, Dyn, Dyn>::from_vec(m2.dims()[0], m2.dims()[1], m2.to_vec().unwrap()).transpose();
         let new_matrix = matrix_division(&matrix1, &matrix2);
-        let result_matrix = Vec::from(new_matrix.data.as_vec().to_owned());
+        let result_matrix = new_matrix.data.as_vec().to_owned();
         let result = result_matrix.to_pyarray(py).reshape(m1.dims()).unwrap().to_dyn();
-        return result
+        result
     }
 
     #[pyfn(m)]
     fn py_calculate_q<'py>(py: Python<'py>,
                            v: &'py PyArrayDyn<f64>, u: &'py PyArrayDyn<f64>,
                            w: &'py PyArrayDyn<f64>, h: &'py PyArrayDyn<f64>) -> f64 {
-        let matrix_v = OMatrix::<f64, Dyn, Dyn>::from_vec(v.dims()[0], v.dims()[1], v.to_vec().unwrap().to_owned());
-        let matrix_u = OMatrix::<f64, Dyn, Dyn>::from_vec(u.dims()[0], u.dims()[1], u.to_vec().unwrap().to_owned());
-        let matrix_w = OMatrix::<f64, Dyn, Dyn>::from_vec(w.dims()[1], w.dims()[0], w.to_vec().unwrap().to_owned()).transpose();
-        let matrix_h = OMatrix::<f64, Dyn, Dyn>::from_vec(h.dims()[1], h.dims()[0], h.to_vec().unwrap().to_owned()).transpose();
-        let q = calculate_q(&matrix_v, &matrix_u, &matrix_w, &matrix_h);
-        return q
+        let matrix_v = OMatrix::<f64, Dyn, Dyn>::from_vec(v.dims()[0], v.dims()[1], v.to_vec().unwrap());
+        let matrix_u = OMatrix::<f64, Dyn, Dyn>::from_vec(u.dims()[0], u.dims()[1], u.to_vec().unwrap());
+        let matrix_w = OMatrix::<f64, Dyn, Dyn>::from_vec(w.dims()[1], w.dims()[0], w.to_vec().unwrap()).transpose();
+        let matrix_h = OMatrix::<f64, Dyn, Dyn>::from_vec(h.dims()[1], h.dims()[0], h.to_vec().unwrap()).transpose();
+        calculate_q(&matrix_v, &matrix_u, &matrix_w, &matrix_h)
     }
     Ok(())
 }

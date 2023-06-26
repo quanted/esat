@@ -1,3 +1,8 @@
+import sys
+import os
+module_path = os.path.abspath(os.path.join('..', "nmf_py"))
+sys.path.append(module_path)
+
 from src.model.ls_nmf import LSNMF
 from src.model.ws_nmf import WSNMF
 from src.utils import q_loss
@@ -25,11 +30,12 @@ class NMF:
                  method: str = "ls-nmf",
                  seed: int = 42,
                  optimized: bool = False,
+                 parallelized: bool = True,
                  verbose: bool = False
                  ):
 
         self.V = V.astype(np.float64)
-        self.U = U.astype(np.float64)
+        self.U = U.astype(np.float64) + 1e-15
         self.We = np.divide(1, self.U**2).astype(np.float64)
 
         self.m, self.n = self.V.shape
@@ -55,6 +61,7 @@ class NMF:
         self.converged = False
         self.converge_steps = 0
 
+        self.parallelized = parallelized
         self.verbose = verbose
         self.__has_neg = False
 
@@ -70,7 +77,13 @@ class NMF:
         if self.optimized:
             # Attempt to load rust code for optimized model train
             from nmf_pyr import nmf_pyr
-            self.optimized_update = nmf_pyr.ls_nmf if self.method == "ls-nmf" and not self.__has_neg else nmf_pyr.ws_nmf_p
+            if self.method == "ls-nmf"and not self.__has_neg:
+                self.optimized_update = nmf_pyr.ls_nmf
+            else:
+                if self.parallelized:
+                    self.optimized_update = nmf_pyr.ws_nmf_p
+                else:
+                    self.optimized_update = nmf_pyr.ws_nmf
 
     def __validate(self):
         """
@@ -170,7 +183,7 @@ class NMF:
             for i, c in enumerate(clusters):
                 contributions[i, c] = 1.0
             W = contributions
-            H = centroids
+            H = np.abs(centroids)
             if self.verbose:
                 logger.debug(f"Factor profile and contribution matrices initialized using k-means clustering. "
                              f"The observations were {'not' if not init_norm else ''} normalized.")
@@ -179,7 +192,7 @@ class NMF:
             self.metadata["init_cmeans_fuzziness"] = fuzziness
             fcm = FCM(n_clusters=self.factors, m=fuzziness, random_state=self.seed)
             fcm.fit(obs)
-            H = fcm.centers
+            H = np.abs(fcm.centers)
             W = fcm.u
             if self.verbose:
                 logger.debug(f"Factor profile and contribution matrices initialized using fuzzy c-means clustering. "
@@ -231,11 +244,10 @@ class NMF:
         W = self.W
         H = self.H
         We = self.We
-        verbose = self.verbose
 
         if self.optimized:
             t0 = time.time()
-            _results = self.optimized_update(V, U, We, W, H, max_iter, converge_delta, converge_n, verbose)[0]
+            _results = self.optimized_update(V, U, We, W, H, max_iter, converge_delta, converge_n)[0]
             W, H, q, self.converged, self.converge_steps, q_list = _results
             t1 = time.time()
             if self.verbose:
@@ -346,3 +358,5 @@ if __name__ == "__main__":
 
     t2 = time.time()
     print(f"Runtime: {round((t2-t1)/60, 2)} min(s)")
+
+

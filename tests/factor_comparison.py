@@ -10,7 +10,7 @@ from tqdm import tqdm
 
 class FactorComp:
 
-    def __init__(self, nmf_output_file, pmf_profile_file, pmf_contribution_file, factors, species, residuals_path=None, method="all"):
+    def __init__(self, pmf_profile_file, pmf_contribution_file, factors, species, nmf_output_file=None, residuals_path=None, method="all"):
         self.nmf_output_file = nmf_output_file
         self.pmf_profile_file = pmf_profile_file
         self.pmf_contribution_file = pmf_contribution_file
@@ -32,7 +32,8 @@ class FactorComp:
 
         self.nmf_epochs_dfs = {}
         self.nmf_Q = {}
-        self._parse_nmf_output()
+        if nmf_output_file is not None:
+            self._parse_nmf_output()
         self.factor_map = None
         self.best_model = None
         self.best_factor_r = None
