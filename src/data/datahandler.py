@@ -234,8 +234,7 @@ class DataHandler:
         self.min_values = temp_data.min(axis=0).combine(temp_uncertainty.min(axis=0), min)
         self.max_values = temp_data.max(axis=0).combine(temp_uncertainty.max(axis=0), max)
         self.min_values[self.min_values <= 0] = 0.0
-        # self.min_values = temp_data.min(axis=0)
-        # self.max_values = temp_data.max(axis=0)
+
         logger.info(f"Removed outliers for quantile: {quantile}, min values: {drop_min}, max values: {drop_max}")
         logger.info(f"Original row count: {self.input_data.shape[0]}, Updated row count: {temp_data.shape[0]}")
 
