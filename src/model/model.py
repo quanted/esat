@@ -13,7 +13,7 @@ import multiprocessing as mp
 from src.model.nmf import NMF
 
 
-logger = logging.getLogger("baseNMF")
+logger = logging.getLogger("NMF")
 logger.setLevel(logging.DEBUG)
 
 
@@ -32,7 +32,7 @@ class BatchNMF:
                  converge_delta: float = 0.1,
                  converge_n: int = 100,
                  parallel: bool = True,
-                 optimized: bool = False,
+                 optimized: bool = True,
                  verbose: bool = True
                  ):
 
