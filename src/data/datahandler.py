@@ -4,12 +4,15 @@ import logging
 import copy
 import pandas as pd
 import numpy as np
+import plotly.graph_objects as go
+import plotly.figure_factory as ff
 from datetime import datetime, timedelta
 
 logging.basicConfig(format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S', level=logging.DEBUG)
 logger = logging.getLogger()
 
 EPSILON = sys.float_info.min
+ROOT_DIR = os.path.join(os.path.abspath(__file__), "..", "..", "..")
 
 
 class DataHandler:
@@ -60,6 +63,11 @@ class DataHandler:
         Check all data paths for errors
         :return: None
         """
+        if not os.path.isabs(self.input_path):
+            self.input_path = os.path.join(ROOT_DIR, self.input_path)
+        if not os.path.isabs(self.uncertainty_path):
+            self.uncertainty_path = os.path.join(ROOT_DIR, self.uncertainty_path)
+
         if not os.path.exists(self.input_path):
             self.error = True
             self.error_list.append(f"Input file not found at {self.input_path}")
@@ -68,7 +76,7 @@ class DataHandler:
             self.error_list.append(f"Uncertainty file not found at {self.uncertainty_path}")
         if self.error:
             logger.error("File Errors: " + ", ".join(self.error_list))
-            exit()
+            sys.exit()
         else:
             logger.info("Input and output configured successfully")
 
@@ -261,3 +269,71 @@ class DataHandler:
                 _input_data = _input_data.drop(k, axis=1)
                 _uncertainty_data = _uncertainty_data.drop(k, axis=1)
         self._set_dataset(_input_data, _uncertainty_data)
+
+    def data_uncertainty_plot(self, feature_selection):
+        if type(feature_selection) is int:
+            feature_selection = feature_selection % self.input_data.shape[0]
+            feature_label = self.input_data.columns[feature_selection]
+        else:
+            feature_label = feature_selection
+        feature_data = self.input_data[feature_label]
+        feature_uncertainty = self.uncertainty_data[feature_label]
+
+        du_plot = go.Figure(data=go.Scatter(x=feature_data, y=feature_uncertainty, mode='markers', name=feature_label))
+        du_plot.update_layout(title=f"Concentration/Uncertainty Scatter Plot - {feature_label}", width=800, height=600)
+        du_plot.show()
+
+    def feature_data_plot(self, x_id, y_id):
+        if type(x_id) is int:
+            x_id = x_id % self.input_data.shape[0]
+            x_label = self.input_data.columns[x_id]
+        else:
+            x_label = x_id
+        if type(y_id) is int:
+            y_id = y_id % self.input_data.shape[0]
+            y_label = self.input_data.columns[y_id]
+        else:
+            y_label = y_id
+        x_data = self.input_data[x_label]
+        y_data = self.input_data[y_label]
+
+        A = np.vstack([x_data.values, np.ones(len(x_data.values))]).T
+        m, c = np.linalg.lstsq(A, y_data.values, rcond=None)[0]
+
+        m1, c1 = np.linalg.lstsq(A, x_data.values, rcond=None)[0]
+
+        xy_plot = go.Figure()
+        xy_plot.add_trace(go.Scatter(x=x_data, y=y_data, mode='markers', name="Data"))
+        xy_plot.add_trace(go.Scatter(x=x_data, y=(m*x_data.values + c), line=dict(color='red', dash='dash', width=1), name='Regression'))
+        xy_plot.add_trace(go.Scatter(x=x_data, y=(m1*x_data.values + c1), line=dict(color='blue', width=1), name='One-to-One'))
+        xy_plot.update_layout(title=f"{y_label}/{x_label}", width=800, height=600,
+                              xaxis_title=f"{x_label}", yaxis_title=f"{y_label}",
+                              )
+        xy_plot.update_xaxes(range=[0, x_data.max() + 0.5])
+        xy_plot.update_yaxes(range=[0, y_data.max() + 0.5])
+        xy_plot.show()
+
+    def feature_timeseries_plot(self, feature_selection):
+        if type(feature_selection) is int:
+            feature_selection = feature_selection % self.input_data.shape[0]
+            feature_selection = self.input_data.columns[feature_selection]
+            feature_label = [feature_selection]
+        else:
+            if type(feature_selection) is list:
+                feature_label = self.input_data.columns[feature_selection]
+            else:
+                feature_label = [feature_selection]
+        data_df = copy.copy(self.input_data)
+        data_df.index = pd.to_datetime(data_df.index)
+        data_df = data_df.sort_index()
+        data_df = data_df.resample('D').mean()
+        x = list(data_df.index)
+        ts_plot = go.Figure()
+        for feature_i in feature_label:
+            y0 = data_df[feature_i]
+            y = y0[x]
+            ts_plot.add_trace(go.Scatter(x=x, y=y, line=dict(width=1), mode='lines+markers', name=feature_i))
+        ts_plot.update_layout(title=f"Concentration Timeseries", width=800, height=600)
+        if len(feature_label) == 1:
+            ts_plot.update_layout(showlegend=True)
+        ts_plot.show()

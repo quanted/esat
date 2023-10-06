@@ -28,7 +28,7 @@ class BatchNMF:
                  init_method: str = "column_mean",
                  init_norm: bool = True,
                  fuzziness: float = 5.0,
-                 max_iter: int = 2000,
+                 max_iter: int = 20000,
                  converge_delta: float = 0.1,
                  converge_n: int = 100,
                  parallel: bool = True,
@@ -60,7 +60,7 @@ class BatchNMF:
         self.verbose = verbose
 
         self.results = []
-        self.best_epoch = None
+        self.best_model = None
 
     def train(self):
         t0 = time.time()
@@ -93,6 +93,10 @@ class BatchNMF:
                 if result["Q"] < best_q:
                     best_q = result["Q"]
                     best_epoch = epoch
+            if self.verbose:
+                for result in ordered_results:
+                    logger.info(f"Model: {result['epoch']}, Q: {round(result['Q'], 4)}, Seed: {result['seed']}, "
+                                f"Converged: {result['converged']}, Steps: {result['steps']}/{self.max_iter}")
             self.results = ordered_results
             pool.close()
         else:
@@ -130,10 +134,9 @@ class BatchNMF:
                     }
                 )
         t1 = time.time()
-        logger.info(f"Results - Best Model: {best_epoch}, Converged: {self.results[best_epoch]['converged']}, "
-                    f"Q: {self.results[best_epoch]['Q']}")
+        logger.info(f"Results - Best Model: {best_epoch}, Q: {self.results[best_epoch]['Q']}, Converged: {self.results[best_epoch]['converged']}")
         logger.info(f"Runtime: {round((t1 - t0) / 60, 2)} min(s)")
-        self.best_epoch = best_epoch
+        self.best_model = best_epoch
 
     def _train_task(self, nmf, epoch):
         t0 = time.time()
