@@ -270,12 +270,12 @@ class DataHandler:
                 _uncertainty_data = _uncertainty_data.drop(k, axis=1)
         self._set_dataset(_input_data, _uncertainty_data)
 
-    def data_uncertainty_plot(self, feature_selection):
-        if type(feature_selection) is int:
-            feature_selection = feature_selection % self.input_data.shape[0]
-            feature_label = self.input_data.columns[feature_selection]
-        else:
-            feature_label = feature_selection
+    def data_uncertainty_plot(self, feature_idx):
+        if feature_idx > self.input_data.shape[1] - 1 or feature_idx < 0:
+            print(f"Invalid feature index provided, must be between 0 and {self.input_data.shape[1]}")
+            return
+        feature_label = self.input_data.columns[feature_idx]
+
         feature_data = self.input_data[feature_label]
         feature_uncertainty = self.uncertainty_data[feature_label]
 
@@ -283,17 +283,16 @@ class DataHandler:
         du_plot.update_layout(title=f"Concentration/Uncertainty Scatter Plot - {feature_label}", width=800, height=600)
         du_plot.show()
 
-    def feature_data_plot(self, x_id, y_id):
-        if type(x_id) is int:
-            x_id = x_id % self.input_data.shape[0]
-            x_label = self.input_data.columns[x_id]
-        else:
-            x_label = x_id
-        if type(y_id) is int:
-            y_id = y_id % self.input_data.shape[0]
-            y_label = self.input_data.columns[y_id]
-        else:
-            y_label = y_id
+    def feature_data_plot(self, x_idx, y_idx):
+        if x_idx > self.input_data.shape[1] - 1 or x_idx < 0:
+            print(f"Invalid x feature index provided, must be between 0 and {self.input_data.shape[1]}")
+            return
+        x_label = self.input_data.columns[x_idx]
+        if y_idx > self.input_data.shape[1] - 1 or y_idx < 0:
+            print(f"Invalid y feature index provided, must be between 0 and {self.input_data.shape[1]}")
+            return
+        y_label = self.input_data.columns[y_idx]
+
         x_data = self.input_data[x_label]
         y_data = self.input_data[y_label]
 

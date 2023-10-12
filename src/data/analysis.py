@@ -439,6 +439,7 @@ class ModelAnalysis:
         factor_matrix = np.matmul(factor_contribution.reshape(len(factor_contribution), 1), [factors_data])
 
         factor_conc_sums = factor_matrix.sum(axis=0)
+        factor_conc_sums[factor_conc_sums == 0.0] = 1e-12
 
         norm_profile = 100 * (factors_data / factors_sum)
 
@@ -455,7 +456,8 @@ class ModelAnalysis:
         profile_plot.add_trace(go.Bar(x=self.dh.features, y=factor_conc_sums, marker_color='rgb(158,202,225)',
                                         marker_line_color='rgb(8,48,107)', marker_line_width=1.5, opacity=0.6, name='Conc. of Features'), secondary_y=False, row=1, col=1)
         profile_plot.update_yaxes(title_text="Conc. of Features", secondary_y=False, row=1, col=1,
-                                  type="log"
+                                  type="log",
+                                  range=[0, np.log10(factor_conc_sums).max()]
                                   )
         profile_plot.update_yaxes(title_text="% of Features", secondary_y=True, row=1, col=1, range=[0, 100])
         profile_plot.update_layout(title=f"Factor Profile - Model {self.selected_model} - Factor {factor_idx}", width=1200, height=600)
@@ -478,7 +480,7 @@ class ModelAnalysis:
             fig.add_trace(go.Bar(name=f"Factor {idx}", x=self.dh.features, y=normalized_factors_data[idx]))
         fig.update_layout(title=f"Factor Fingerprints - Model {self.selected_model}",
                           width=1200, height=800, barmode='stack')
-        fig.update_yaxes(title_text="% Feature Concentration")
+        fig.update_yaxes(title_text="% Feature Concentration", range=[0, 100])
         fig.show()
 
     def plot_g_space(self, factor_1: int, factor_2: int):
