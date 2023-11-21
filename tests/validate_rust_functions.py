@@ -2,10 +2,11 @@ import os
 import time
 import logging
 import numpy as np
-from src.model.base_nmf import BaseSearch, BaseNMF
+from src.model.nmf import NMF
+from src.model.batch_nmf import BatchNMF
 from src.data.datahandler import DataHandler
 from tests.factor_comparison import FactorComp
-from src.utils import calculate_Q, q_loss
+from src.utils import calculate_Q, q_loss, qr_loss
 from nmf_pyr import nmf_pyr
 
 
@@ -18,19 +19,17 @@ if __name__ == "__main__":
     t0 = time.time()
     input_file = os.path.join("D:\\", "projects", "nmf_py", "data", "Dataset-BatonRouge-con.csv")
     uncertainty_file = os.path.join("D:\\", "projects", "nmf_py", "data", "Dataset-BatonRouge-unc.csv")
-    output_path = os.path.join("D:\\", "projects", "nmf_py", "output", "BatonRouge")
 
     index_col = "Date"
 
     dh = DataHandler(
         input_path=input_file,
         uncertainty_path=uncertainty_file,
-        output_path=output_path,
         index_col=index_col
     )
 
     n_components = 7
-    method = "mu"                   # "kl", "ls-nmf", "is", "euc", "gd"
+    method = "ls-nmf"
     V = dh.input_data_processed.astype(np.float64)
     U = dh.uncertainty_data_processed.astype(np.float64)
     seed = 42
@@ -39,7 +38,8 @@ if __name__ == "__main__":
     converge_delta = 0.01
     converge_n = 100
 
-    nmf = BaseNMF(n_components=n_components, V=V, U=U, seed=seed, method=method)
+    nmf = NMF(factors=n_components, V=V, U=U, seed=seed, method=method)
+    nmf.initialize()
 
     UR = np.divide(1.0, U).astype(np.float64)
     test_u1 = nmf_pyr.py_matrix_reciprocal(U)
@@ -88,12 +88,19 @@ if __name__ == "__main__":
     test_result5 = test_q1 - test_q2
     print(f"Calcualte Q Test - Sum Difference: {np.sum(np.abs(test_result5))}")
 
+    test_qr1, un1 = nmf_pyr.py_calculate_q_robust(V, U, nmf.W, nmf.H, 4.0)
+    test_qr2, un2 = qr_loss(V=V, U=U, W=nmf.W, H=nmf.H, alpha=4.0)
+    test_result6 = test_qr1 - test_qr2
+    test_results7 = un1 - un2
+    print(f"Calcualte Q(robust) Test - Sum Difference: {np.sum(np.abs(test_result6))}, "
+          f"Uncertainty difference: {np.sum(test_results7)}")
+
     _H = nmf.H
     _W = nmf.W
     nmf_results2 = nmf_pyr.nmf_kl(V, U, _W, _H, 1.0, 50, 0.1, 10)[0]
     W2, H2, q2, converged2, i_steps2, q_list = nmf_results2
 
-    nmf.train(epoch=1, max_iterations=50, converge_delta=0.01, converge_n=10)
+    nmf.train(epoch=1, max_iter=50, converge_delta=0.01, converge_n=10)
     W1 = nmf.W
     H1 = nmf.H
     q1 = q_loss(V=V, U=U, W=W1, H=H1)

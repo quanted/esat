@@ -1,4 +1,4 @@
-from src.model.model import NMFModel
+from src.model.batch_nmf import NMFModel
 from src.data.datahandler import DataHandler
 from tests.factor_comparison import FactorComp
 import os

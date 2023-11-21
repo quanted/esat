@@ -1,5 +1,5 @@
 import logging
-from src.model.model import BatchNMF
+from src.model.batch_nmf import BatchNMF
 
 logger = logging.getLogger("NMF")
 logger.setLevel(logging.DEBUG)

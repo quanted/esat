@@ -3,7 +3,7 @@ import time
 import json
 import logging
 from src.data.datahandler import DataHandler
-from src.model.model import BatchNMF
+from src.model.batch_nmf import BatchNMF
 from tests.factor_comparison import FactorComp
 from src.utils import calculate_Q
 

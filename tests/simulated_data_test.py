@@ -8,7 +8,7 @@ module_path = os.path.abspath(os.path.join('..'))
 if module_path not in sys.path:
     sys.path.append(module_path)
 
-from src.model.model import BatchNMF
+from src.model.batch_nmf import BatchNMF
 
 if __name__ == "__main__":
 

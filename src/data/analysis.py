@@ -7,7 +7,7 @@ import plotly.graph_objects as go
 import plotly.express as px
 import plotly.figure_factory as ff
 from src.data.datahandler import DataHandler
-from src.model.model import BatchNMF
+from src.model.batch_nmf import BatchNMF
 
 
 class CompareAnalyzer:

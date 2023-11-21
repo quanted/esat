@@ -26,7 +26,10 @@ fn nmf_pyr(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         h: PyReadonlyArrayDyn<'py, f64>,
         max_iter: i32,
         converge_delta: f64,
-        converge_n: i32
+        converge_n: i32,
+        robust_mode: bool,
+        robust_n: i32,
+        robust_alpha: f64
     ) -> Result<&'py PyTuple, PyErr> {
 
         let v = OMatrix::<f64, Dyn, Dyn>::from_vec(v.dims()[0], v.dims()[1], v.to_vec().unwrap().to_owned());
@@ -36,7 +39,11 @@ fn nmf_pyr(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         let mut new_w = OMatrix::<f64, Dyn, Dyn>::from_vec(w.dims()[1], w.dims()[0], w.to_vec().unwrap().to_owned()).transpose();
         let mut new_h = OMatrix::<f64, Dyn, Dyn>::from_vec(h.dims()[1], h.dims()[0], h.to_vec().unwrap().to_owned()).transpose();
 
-        let mut q: f64 = calculate_q(&v, &u, &new_w, &new_h);
+        let mut new_we = we.clone();
+        let mut q = 0.0;
+        let mut qtrue: f64 = calculate_q(&v, &u, &new_w, &new_h);
+        let mut qrobust: f64 = 0.0;
+
         let mut converged: bool = false;
         let mut converge_i: i32 = 0;
         let mut q_list: VecDeque<f64> = VecDeque::new();
@@ -46,20 +53,33 @@ fn nmf_pyr(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         let mut h_den: DMatrix<f64>;
         let mut w_num: DMatrix<f64>;
         let mut w_den: DMatrix<f64>;
+        let mut wev: DMatrix<f64>;
 
-        let wev = &we.component_mul(&v);
         for i in 0..max_iter{
+            wev = new_we.component_mul(&v);
             wh = &new_w * &new_h;
-            h_num = new_w.transpose() * wev;
-            h_den = &new_w.transpose() * &we.component_mul(&wh);
+            h_num = new_w.transpose() * &wev;
+            h_den = &new_w.transpose() * &new_we.component_mul(&wh);
             new_h = new_h.component_mul(&h_num.component_div(&h_den));
 
             wh = &new_w * &new_h;
-            w_num = wev * new_h.transpose();
-            w_den = &we.component_mul(&wh) * &new_h.transpose();
+            w_num = &wev * new_h.transpose();
+            w_den = &new_we.component_mul(&wh) * &new_h.transpose();
             new_w = new_w.component_mul(&w_num.component_div(&w_den));
 
-            q = calculate_q(&v, &u, &new_w, &new_h);
+            qtrue = calculate_q(&v, &u, &new_w, &new_h);
+            let robust_results = calculate_q_robust(&v, &u, &new_w, &new_h, robust_alpha);
+            qrobust = robust_results.0;
+            q = qtrue;
+
+            if robust_mode {
+                if i > robust_n {
+                    q = qrobust;
+                    let updated_uncertainty = robust_results.1;
+                    new_we = updated_uncertainty.map(|x| (1.0/x).powi(2));
+                }
+            }
+
             q_list.push_back(q);
             converge_i = i;
             if (q_list.len() as i32) >= converge_n {
@@ -94,7 +114,10 @@ fn nmf_pyr(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         h: PyReadonlyArrayDyn<'py, f64>,
         max_iter: i32,
         converge_delta: f64,
-        converge_n: i32
+        converge_n: i32,
+        robust_mode: bool,
+        robust_n: i32,
+        robust_alpha: f64
     ) -> Result<&'py PyTuple, PyErr> {
         let v = OMatrix::<f64, Dyn, Dyn>::from_vec(v.dims()[0], v.dims()[1], v.to_vec().unwrap());
         let u = OMatrix::<f64, Dyn, Dyn>::from_vec(u.dims()[0], u.dims()[1], u.to_vec().unwrap());
@@ -102,18 +125,21 @@ fn nmf_pyr(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
 
         let mut new_w = OMatrix::<f64, Dyn, Dyn>::from_vec(w.dims()[1], w.dims()[0], w.to_vec().unwrap()).transpose();
         let mut new_h = OMatrix::<f64, Dyn, Dyn>::from_vec(h.dims()[1], h.dims()[0], h.to_vec().unwrap()).transpose();
-        let mut q: f64 = calculate_q(&v, &u, &new_w, &new_h);
+        let mut new_we = we.clone();
+
+        let mut qtrue: f64 = calculate_q(&v, &u, &new_w, &new_h);
+        let mut qrobust: f64 = 0.0;
+        let mut q = qtrue.clone();
         let mut converged: bool = false;
         let mut converge_i: i32 = 0;
         let mut q_list: VecDeque<f64> = VecDeque::new();
-
-        let wev = &we.component_mul(&v);
 
         let mut we_j_diag: DMatrix<f64>;
         let mut v_j;
 
         for i in 0..max_iter{
-            for (j, we_j) in we.row_iter().enumerate(){
+            let wev = &new_we.component_mul(&v);
+            for (j, we_j) in new_we.row_iter().enumerate(){
                 we_j_diag = DMatrix::from_diagonal(&DVector::from_row_slice(we_j.transpose().as_slice()));
                 v_j = DVector::from_row_slice(wev.row(j).transpose().as_slice());
 
@@ -134,7 +160,7 @@ fn nmf_pyr(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
             }
             let w_neg = (Matrix::abs(&new_w) - &new_w) / 2.0;
             let w_pos = (Matrix::abs(&new_w) + &new_w) / 2.0;
-            for (j, we_j) in we.column_iter().enumerate(){
+            for (j, we_j) in new_we.column_iter().enumerate(){
                 we_j_diag = DMatrix::from_diagonal(&DVector::from_column_slice(we_j.as_slice()));
                 v_j = DVector::from_row_slice(wev.column(j).as_slice());
 
@@ -157,7 +183,17 @@ fn nmf_pyr(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
                 let h_row = DVector::from_row_slice(_h.as_slice());
                 new_h.set_column(j, &h_row);
             }
-            q = calculate_q(&v, &u, &new_w, &new_h);
+            qtrue = calculate_q(&v, &u, &new_w, &new_h);
+            let robust_results = calculate_q_robust(&v, &u, &new_w, &new_h, robust_alpha);
+            qrobust = robust_results.0;
+            q = qtrue;
+            if robust_mode {
+                if i > robust_n {
+                    q = qrobust;
+                    let updated_uncertainty = robust_results.1;
+                    new_we = updated_uncertainty.map(|x| (1.0/x).powi(2));
+                }
+            }
             q_list.push_back(q);
             converge_i = i;
             if (q_list.len() as i32) >= converge_n {
@@ -192,7 +228,10 @@ fn nmf_pyr(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         h: PyReadonlyArrayDyn<'py, f64>,
         max_iter: i32,
         converge_delta: f64,
-        converge_n: i32
+        converge_n: i32,
+        robust_mode: bool,
+        robust_n: i32,
+        robust_alpha: f64
     ) -> Result<&'py PyTuple, PyErr> {
         let v = OMatrix::<f64, Dyn, Dyn>::from_vec(v.dims()[0], v.dims()[1], v.to_vec().unwrap());
         let u = OMatrix::<f64, Dyn, Dyn>::from_vec(u.dims()[0], u.dims()[1], u.to_vec().unwrap());
@@ -200,13 +239,15 @@ fn nmf_pyr(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
 
         let mut new_w = OMatrix::<f64, Dyn, Dyn>::from_vec(w.dims()[1], w.dims()[0], w.to_vec().unwrap()).transpose();
         let mut new_h = OMatrix::<f64, Dyn, Dyn>::from_vec(h.dims()[1], h.dims()[0], h.to_vec().unwrap()).transpose();
+        let mut new_we = we.clone();
 
-        let mut q: f64 = calculate_q(&v, &u, &new_w, &new_h);
+        let mut qtrue: f64 = calculate_q(&v, &u, &new_w, &new_h);
+        let mut qrobust: f64 = 0.0;
+        let mut q = qtrue.clone();
+
         let mut converged: bool = false;
         let mut converge_i: i32 = 0;
         let mut q_list: VecDeque<f64> = VecDeque::new();
-
-        let wev = &we.component_mul(&v);
 
         let m = v.nrows();
         let n = v.ncols();
@@ -214,8 +255,9 @@ fn nmf_pyr(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         let mut h_prime: OMatrix<f64, Dyn, Dyn> = new_h.clone();
 
         for i in 0..max_iter{
+            let wev = &new_we.component_mul(&v);
             w_prime.par_column_iter_mut().zip(0..m).for_each(|(mut w_col, j)| {
-                let we_j_diag = DMatrix::from_diagonal(&DVector::from_row_slice(we.row(j).transpose().as_slice()));
+                let we_j_diag = DMatrix::from_diagonal(&DVector::from_row_slice(new_we.row(j).transpose().as_slice()));
                 let v_j = DVector::from_row_slice(wev.row(j).transpose().as_slice());
 
                 let w_n = (&new_h * v_j).transpose();
@@ -241,7 +283,7 @@ fn nmf_pyr(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
             let w_pos = (Matrix::abs(&new_w) + &new_w) / 2.0;
 
             h_prime.par_column_iter_mut().zip(0..n).for_each(|(mut h_col, j)| {
-                let we_j_diag = DMatrix::from_diagonal(&DVector::from_column_slice(we.column(j).as_slice()));
+                let we_j_diag = DMatrix::from_diagonal(&DVector::from_column_slice(new_we.column(j).as_slice()));
                 let v_j = DVector::from_row_slice(wev.column(j).as_slice());
 
                 let n1 = v_j.transpose() * &w_pos;
@@ -267,7 +309,17 @@ fn nmf_pyr(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
             });
             new_h = h_prime.to_owned();
 
-            q = calculate_q(&v, &u, &new_w, &new_h);
+            qtrue = calculate_q(&v, &u, &new_w, &new_h);
+            let robust_results = calculate_q_robust(&v, &u, &new_w, &new_h, robust_alpha);
+            qrobust = robust_results.0;
+            q = qtrue.clone();
+            if robust_mode {
+                if i > robust_n {
+                    q = qrobust.clone();
+                    let updated_uncertainty = robust_results.1;
+                    new_we = updated_uncertainty.map(|x| (1.0/x).powi(2));
+                }
+            }
             q_list.push_back(q);
             converge_i = i;
             if (q_list.len() as i32) >= converge_n {
@@ -399,6 +451,45 @@ fn nmf_pyr(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         q
     }
 
+    fn calculate_q_robust(
+        v: &OMatrix<f64, Dyn, Dyn>, u: &OMatrix<f64, Dyn, Dyn>,
+        w: &OMatrix<f64, Dyn, Dyn>, h: &OMatrix<f64, Dyn, Dyn>,
+        robust_alpha: f64
+    ) -> (f64, DMatrix<f64>) {
+        let wh = w * h;
+        let residuals = v - &wh;
+        let scaled_residuals = residuals.component_div(u).abs();
+        let robust_uncertainty = (&scaled_residuals / robust_alpha).map(|x| x.sqrt()).component_mul(&u);
+        let robust_residuals = (residuals.component_div(&robust_uncertainty)).abs();
+        let new_scaled_residuals = &scaled_residuals.clone();
+        let merged_results = matrix_merge(&new_scaled_residuals, &robust_residuals, &u, &robust_uncertainty, robust_alpha);
+        let merged_residuals = merged_results.0;
+        let updated_uncertainty = merged_results.1;
+        let mr2 = merged_residuals.component_mul(&merged_residuals);
+        let q_robust = mr2.sum();
+        (q_robust, updated_uncertainty)
+    }
+
+    fn matrix_merge(
+        matrix1: &OMatrix<f64, Dyn, Dyn>, matrix2: &OMatrix<f64, Dyn, Dyn>, matrix4: &OMatrix<f64, Dyn, Dyn>,matrix5: &OMatrix<f64, Dyn, Dyn>, alpha: f64
+    ) -> (DMatrix<f64>, DMatrix<f64>) {
+        let mut matrix3 = DMatrix::<f64>::zeros(matrix1.shape().0, matrix1.shape().1);
+        let mut matrix6 = DMatrix::<f64>::zeros(matrix4.shape().0, matrix4.shape().1);
+        for (j, col) in matrix1.column_iter().enumerate(){
+            for (i, row) in matrix1.row_iter().enumerate(){
+                if matrix1[(i,j)] > alpha {
+                    matrix3[(i,j)] = matrix2[(i,j)];
+                    matrix6[(i,j)] = matrix5[(i,j)];
+                }
+                else{
+                    matrix3[(i,j)] = matrix1[(i,j)];
+                    matrix6[(i,j)] = matrix4[(i,j)];
+                }
+            }
+        }
+        (matrix3, matrix6)
+    }
+
     fn matrix_reciprocal(m: &DMatrix<f64>) -> DMatrix<f64> {
         let vec_result: Vec<f64> = m.iter().map(|&i1| (1.0/i1)).collect();
         let result: DMatrix<f64> = DMatrix::from_vec(m.nrows(), m.ncols(), vec_result);
@@ -501,6 +592,21 @@ fn nmf_pyr(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         let matrix_w = OMatrix::<f64, Dyn, Dyn>::from_vec(w.dims()[1], w.dims()[0], w.to_vec().unwrap()).transpose();
         let matrix_h = OMatrix::<f64, Dyn, Dyn>::from_vec(h.dims()[1], h.dims()[0], h.to_vec().unwrap()).transpose();
         calculate_q(&matrix_v, &matrix_u, &matrix_w, &matrix_h)
+    }
+
+    #[pyfn(m)]
+    fn py_calculate_q_robust<'py>(py: Python<'py>,
+                           v: &'py PyArrayDyn<f64>, u: &'py PyArrayDyn<f64>,
+                           w: &'py PyArrayDyn<f64>, h: &'py PyArrayDyn<f64>, robust_alpha: f64) -> (f64, &'py PyArrayDyn<f64>) {
+        let matrix_v = OMatrix::<f64, Dyn, Dyn>::from_vec(v.dims()[0], v.dims()[1], v.to_vec().unwrap());
+        let matrix_u = OMatrix::<f64, Dyn, Dyn>::from_vec(u.dims()[0], u.dims()[1], u.to_vec().unwrap());
+        let matrix_w = OMatrix::<f64, Dyn, Dyn>::from_vec(w.dims()[1], w.dims()[0], w.to_vec().unwrap()).transpose();
+        let matrix_h = OMatrix::<f64, Dyn, Dyn>::from_vec(h.dims()[1], h.dims()[0], h.to_vec().unwrap()).transpose();
+        let results = calculate_q_robust(&matrix_v, &matrix_u, &matrix_w, &matrix_h, robust_alpha);
+        let q_robust = results.0;
+        let results_uncertainty = results.1.transpose().data.as_vec().to_owned();
+        let updated_uncertainty = results_uncertainty.to_pyarray(py).reshape(u.dims()).unwrap().to_dyn();
+        (q_robust, updated_uncertainty)
     }
     Ok(())
 }

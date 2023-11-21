@@ -14,3 +14,9 @@ numpy = "0.18.0"
 nalgebra = {version="0.32.2", features = ["rayon"]}
 ndarray = "0.15.6"
 rayon = "1.7"
+
+[profile.dev]
+opt-level = 0
+
+[profile.release]
+opt-level = 2

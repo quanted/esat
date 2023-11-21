@@ -5,7 +5,7 @@ sys.path.append(module_path)
 
 from src.model.ls_nmf import LSNMF
 from src.model.ws_nmf import WSNMF
-from src.utils import q_loss
+from src.utils import q_loss, qr_loss
 from scipy.cluster.vq import kmeans2, whiten
 from fcmeans import FCM
 from tqdm import trange
@@ -13,6 +13,7 @@ from datetime import datetime
 import numpy as np
 import logging
 import time
+import copy
 
 
 logger = logging.getLogger("NMF")
@@ -209,7 +210,7 @@ class NMF:
                                                                                                     copy=False))
                 if self.method == "ls-nmf":
                     W = np.abs(W)
-            if self.verbose:
+            if self.verbose and (H is None and W is None):
                 logger.debug(f"Factor profile and contribution matrices initialized using random selection from a "
                              f"normal distribution with a mean determined from the column mean divided by the number "
                              f"of factors.")
@@ -230,7 +231,10 @@ class NMF:
               max_iter: int = 2000,
               converge_delta: float = 0.1,
               converge_n: int = 100,
-              epoch: int = -1
+              epoch: int = -1,
+              robust_mode: bool = False,
+              robust_n: int = 200,
+              robust_alpha: int = 4
               ):
         if not self.__initialized:
             logger.warn("Model is not initialized, initializing with default parameters")
@@ -244,24 +248,35 @@ class NMF:
         W = self.W
         H = self.H
         We = self.We
+        q = None
+        q_robust = None
+        converged = False
 
         if self.optimized:
             t0 = time.time()
-            _results = self.optimized_update(V, U, We, W, H, max_iter, converge_delta, converge_n)[0]
+            _results = self.optimized_update(V, U, We, W, H, max_iter, converge_delta, converge_n,
+                                             robust_mode, robust_n, robust_alpha)[0]
             W, H, q, self.converged, self.converge_steps, q_list = _results
+            q_true = q_loss(V=V, U=U, W=W, H=H)
+            q_robust, U_robust = qr_loss(V=V, U=U, W=W, H=H, alpha=robust_alpha)
             t1 = time.time()
             if self.verbose:
-                logger.info(f"Model: {epoch}, Seed: {self.seed}, Q(true): {round(q, 4)}, "
-                      f"Steps: {self.converge_steps}/{max_iter}, Converged: {self.converged}, "
-                      f"Runtime: {round(t1-t0, 2)} sec")
+                logger.info(f"Model: {epoch}, Seed: {self.seed}, Q(true): {round(q_true, 4)}, "
+                            f"Q(robust): {round(q_robust, 4)}, Steps: {self.converge_steps}/{max_iter}, "
+                            f"Converged: {self.converged}, Runtime: {round(t1-t0, 2)} sec")
         else:
-            q = None
-            converged = False
             prior_q = []
-            t_iter = trange(max_iter, desc=f"Model: {epoch}, Seed: {self.seed}, Q(true): NA", position=0, leave=True)
+            We_prime = copy.copy(self.We)
+            t_iter = trange(max_iter, desc=f"Model: {epoch}, Seed: {self.seed}, Q(true): NA, Q(robust): NA", position=0, leave=True)
             for i in t_iter:
-                W, H = self.update_step(V=V, We=We, W=W, H=H)
-                q = q_loss(V=V, U=U, W=W, H=H)
+                W, H = self.update_step(V=V, We=We_prime, W=W, H=H)
+                q_true = q_loss(V=V, U=U, W=W, H=H)
+                q_robust, U_robust = qr_loss(V=V, U=U, W=W, H=H, alpha=robust_alpha)
+                q = q_true
+                if robust_mode:
+                    if i > robust_n:
+                        q = q_robust
+                        We_prime = np.divide(1, U_robust ** 2).astype(np.float64)
                 prior_q.append(q)
                 if len(prior_q) > converge_n:
                     prior_q.pop(0)
@@ -270,7 +285,8 @@ class NMF:
                     delta_q = delta_q_first - delta_q_last
                     if delta_q < converge_delta:
                         converged = True
-                t_iter.set_description(f"Model: {epoch}, Seed: {self.seed}, Q(true): {round(q, 2)}")
+                t_iter.set_description(f"Model: {epoch}, Seed: {self.seed}, Q(true): {round(q_true, 2)}, "
+                                       f"Q(robust): {round(q_robust, 2)}")
                 t_iter.refresh()
                 self.converge_steps += 1
 
@@ -282,13 +298,15 @@ class NMF:
         self.H = H
         self.W = W
         self.WH = np.matmul(W, H)
-        self.Qtrue = q
+        self.Qtrue = q_loss(V=V, U=U, W=W, H=H)
+        self.Qrobust, _ = qr_loss(V=V, U=U, W=W, H=H, alpha=robust_alpha)
         self.metadata["completion_date"] = datetime.utcnow().strftime("%m/%d/%Y, %H:%M:%S %Z")
 
     def results(self):
         return {
             "epoch": self.epoch,
-            "Q": float(self.Qtrue),
+            "Q(true)": float(self.Qtrue),
+            "Q(robust": float(self.Qrobust),
             "steps": self.converge_steps,
             "converged": self.converged,
             "H": self.H,
@@ -298,6 +316,7 @@ class NMF:
             "metadata": self.metadata
         }
 
+
 if __name__ == "__main__":
     import time
     import os
@@ -306,7 +325,7 @@ if __name__ == "__main__":
     logging.getLogger('matplotlib.font_manager').setLevel(logging.ERROR)
     logging.getLogger('matplotlib').setLevel(logging.ERROR)
 
-    factors = 4
+    factors = 6
     method = "ws-nmf"                   # "ls-nmf", "ws-nmf"
     init_method = "col_means"           # default is column means, "kmeans", "cmeans"
     init_norm = True
@@ -317,6 +336,9 @@ if __name__ == "__main__":
     converge_n = 10
     dataset = "br"          # "br": Baton Rouge, "b": Baltimore, "sl": St Louis
     verbose = True
+    robust_mode = True
+    robust_n = 100
+    robust_alpha = 4
 
     if dataset == "br":
         input_file = os.path.join("D:\\", "projects", "nmf_py", "data", "Dataset-BatonRouge-con.csv")
@@ -347,16 +369,16 @@ if __name__ == "__main__":
     print("Running python code")
     nmf = NMF(V=V, U=U, factors=factors, method=method, seed=seed, optimized=False, verbose=verbose)
     nmf.initialize(init_method=init_method, init_norm=init_norm, fuzziness=5.0)
-    nmf.train(max_iter=max_iterations, converge_delta=converge_delta, converge_n=converge_n)
+    nmf.train(max_iter=max_iterations, converge_delta=converge_delta, converge_n=converge_n,
+              robust_alpha=robust_alpha, robust_n=robust_n, robust_mode=robust_mode)
     t1 = time.time()
     print(f"Runtime: {round((t1-t0)/60, 2)} min(s)")
 
     print("Running rust code")
     nmf2 = NMF(V=V, U=U, factors=factors, method=method, seed=seed, optimized=True, verbose=verbose)
     nmf2.initialize(init_method=init_method, init_norm=init_norm, fuzziness=5.0)
-    nmf2.train(max_iter=max_iterations, converge_delta=converge_delta, converge_n=converge_n)
+    nmf2.train(max_iter=max_iterations, converge_delta=converge_delta, converge_n=converge_n,
+               robust_alpha=robust_alpha, robust_n=robust_n, robust_mode=robust_mode)
 
     t2 = time.time()
     print(f"Runtime: {round((t2-t1)/60, 2)} min(s)")
-
-
