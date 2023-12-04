@@ -1,7 +1,9 @@
 import os
+import copy
 import time
 import logging
 import numpy as np
+import pandas as pd
 from src.model.nmf import NMF
 from src.model.batch_nmf import BatchNMF
 from src.data.datahandler import DataHandler
@@ -95,9 +97,14 @@ if __name__ == "__main__":
     print(f"Calcualte Q(robust) Test - Sum Difference: {np.sum(np.abs(test_result6))}, "
           f"Uncertainty difference: {np.sum(test_results7)}")
 
+    _index = list(range(0, V.shape[0]))
     _H = nmf.H
     _W = nmf.W
-    nmf_results2 = nmf_pyr.nmf_kl(V, U, _W, _H, 1.0, 50, 0.1, 10)[0]
+    _We = nmf.We
+    _V = V[_index].transpose().reshape(V.shape)
+    v0 = V - _V
+    _U = U[_index].transpose().reshape(V.shape)
+    nmf_results2 = nmf_pyr.ls_nmf(_V, _U, _We, _W, _H, 50, 0.1, 10, False, 100, 4)[0]
     W2, H2, q2, converged2, i_steps2, q_list = nmf_results2
 
     nmf.train(epoch=1, max_iter=50, converge_delta=0.01, converge_n=10)
@@ -105,6 +112,26 @@ if __name__ == "__main__":
     H1 = nmf.H
     q1 = q_loss(V=V, U=U, W=W1, H=H1)
     print(f"NMF KL 1 step - Q Difference: {round(np.abs(q1 - q2), 2)}, W Difference: {round(np.sum(np.abs(W1 - W2)), 2)}, H Difference: {round(np.sum(np.abs(H1 - H2)), 2)}")
+
+    _index = list(range(0, V.shape[0]))
+    _V = copy.deepcopy(V[_index])
+    _U = copy.deepcopy(U[_index])
+    for i in _index:
+        for j in range(0, V.shape[1]):
+            V[i,j] = _V[i, j]
+            U[i,j] = _U[i, j]
+    _H = nmf.H
+    _W = nmf.W
+    _We = nmf.We
+    # _V = pd.DataFrame(V[_index], columns=dh.features)
+    # _U = pd.DataFrame(U[_index], columns=dh.features)
+    # _V = copy.copy(V)
+    # _U = copy.copy(U)
+    nmf2 = NMF(factors=n_components, V=V, U=U, seed=seed, method=method, optimized=True)
+    nmf2.initialize()
+    nmf2.train(epoch=1, max_iter=50, converge_delta=0.01, converge_n=10)
+    H2b = nmf2.H
+    W2b = nmf2.W
 
     t1 = time.time()
     print(f"Runtime: {round((t1-t0)/60, 2)} min(s)")

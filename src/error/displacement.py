@@ -2,6 +2,7 @@ import logging
 import copy
 import numpy as np
 import pandas as pd
+import multiprocessing as mp
 import plotly.graph_objects as go
 from tqdm import tqdm
 from src.utils import q_loss, compare_all_factors
@@ -18,7 +19,7 @@ class Displacement:
 
     def __init__(self, batch_nmf, feature_labels, selected_model=None, max_search: int = 50, threshold_dQ: float = 0.1):
         self.batch_nmf = batch_nmf
-
+        #TODO: switch to passing in NMF object (trained model).
         self.selected_model = selected_model if selected_model is not None else self.batch_nmf.best_model
         self.V = batch_nmf.V
         self.U = batch_nmf.U
@@ -62,6 +63,10 @@ class Displacement:
         table_plot.show()
 
     def plot_results(self, factor: int, dQ: int = 4):
+        self.plot_profile(factor=factor, dQ=dQ)
+        self.plot_contribution(factor=factor, dQ=dQ)
+
+    def plot_profile(self, factor: int, dQ: int = 4):
         selected_data = self.compiled_results.loc[self.compiled_results["factor"] == factor].loc[
             self.compiled_results["dQ"] == dQ]
 
@@ -81,6 +86,10 @@ class Displacement:
         disp_profile.update_yaxes(title_text="Percentage", range=[0, 100])
         disp_profile.update_traces(selector=dict(type="bar"), hovertemplate='Max: %{value}<br>Min: %{base}')
         disp_profile.show()
+
+    def plot_contribution(self, factor: int, dQ: int = 4):
+        selected_data = self.compiled_results.loc[self.compiled_results["factor"] == factor].loc[
+            self.compiled_results["dQ"] == dQ]
 
         conc = selected_data["conc"]
         conc[conc < 1e-4] = 1e-4
@@ -102,6 +111,7 @@ class Displacement:
         disp_conc.show()
 
     def _increase_disp(self):
+        #TODO: Once NMF object available use those parameters for new model
         print("DISP - Testing increasing value changes to H")
         for factor_i in tqdm(range(self.H.shape[0]), desc=" Factors", position=0):
             factor_results = {}
@@ -172,6 +182,7 @@ class Displacement:
             self.increase_results[f"factor-{factor_i}"] = factor_results
 
     def _decrease_disp(self):
+        #TODO: Once NMF object available use those parameters for new model
         print("DISP - Testing decreasing value changes to H")
         for factor_i in tqdm(range(self.H.shape[0]), desc=" Factors", position=0):
             factor_results = {}

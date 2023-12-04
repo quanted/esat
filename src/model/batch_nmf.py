@@ -65,7 +65,7 @@ class BatchNMF:
         self.parallel = parallel
         self.optimized = optimized
         self.verbose = verbose
-
+        #TODO: Switch to saving NMF objects
         self.results = []
         self.best_model = None
 

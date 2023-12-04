@@ -76,9 +76,9 @@ class NMF:
 
         self.optimized = optimized
         if self.optimized:
-            # Attempt to load rust code for optimized model train
+            # Attempt to load rust code for optimized model training
             from nmf_pyr import nmf_pyr
-            if self.method == "ls-nmf"and not self.__has_neg:
+            if self.method == "ls-nmf" and not self.__has_neg:
                 self.optimized_update = nmf_pyr.ls_nmf
             else:
                 if self.parallelized:
@@ -248,8 +248,6 @@ class NMF:
         W = self.W
         H = self.H
         We = self.We
-        q = None
-        q_robust = None
         converged = False
 
         if self.optimized:

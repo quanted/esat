@@ -57,3 +57,18 @@ def compare_all_factors(matrix1, matrix2):
             if j_r2 > i_r2:
                 swap = True
     return swap
+
+def compare_all_factors(matrix1, matrix2):
+    matrix1 = matrix1.astype(float)
+    matrix2 = matrix2.astype(float)
+    swap = False
+    for i in range(matrix1.shape[0]):
+        m1_i = matrix1[i]
+        i_r2 = calculate_factor_correlation(m1_i, matrix2[i])
+        for j in range(matrix2.shape[0]):
+            if j == i:
+                pass
+            j_r2 = calculate_factor_correlation(m1_i, matrix2[j])
+            if j_r2 > i_r2:
+                swap = True
+    return swap
