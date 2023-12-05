@@ -265,7 +265,8 @@ class NMF:
         else:
             prior_q = []
             We_prime = copy.copy(self.We)
-            t_iter = trange(max_iter, desc=f"Model: {epoch}, Seed: {self.seed}, Q(true): NA, Q(robust): NA", position=0, leave=True)
+            t_iter = trange(max_iter, desc=f"Model: {epoch}, Seed: {self.seed}, Q(true): NA, Q(robust): NA",
+                            position=0, leave=True, disable=not self.verbose)
             for i in t_iter:
                 W, H = self.update_step(V=V, We=We_prime, W=W, H=H)
                 q_true = q_loss(V=V, U=U, W=W, H=H)

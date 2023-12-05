@@ -177,7 +177,7 @@ class FactorComp:
                     nmf_wh_e[factor] = nmf_WH_f
 
                 self.nmf_epochs_dfs[i] = {"WH": nmf_wh_df, "W": nmf_w_df, "H": nmf_h_df, 'WH-element': nmf_wh_e}
-                self.nmf_Q[i] = json_data[i]["Q"]
+                self.nmf_Q[i] = json_data[i]["Q(true)"]
 
     def compare(self, PMF_Q=None, verbose: bool = True):
         correlation_results = {}
