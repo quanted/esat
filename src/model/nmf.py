@@ -12,8 +12,9 @@ from tqdm import trange
 from datetime import datetime
 import numpy as np
 import logging
-import time
 import copy
+import pickle
+import json
 
 
 logger = logging.getLogger("NMF")
@@ -22,21 +23,63 @@ logger.setLevel(logging.INFO)
 
 class NMF:
     """
-    The Non-negative matrix factorization python package primary class for creating new models.
+    The primary Non-negative Matrix Factorization (NMF) model object which holds and manages the configuration, data,
+    and meta-data for executing and analyzing NMF output.
     """
     def __init__(self,
                  V: np.ndarray,
                  U: np.ndarray,
                  factors: int,
-                 method: str = "ls-nmf",
+                 method: str = "ws-nmf",
                  seed: int = 42,
                  optimized: bool = False,
                  parallelized: bool = True,
                  verbose: bool = False
                  ):
+        """
+        The NMF class object contains all the parameters and data required for executing one of the implemented NMF
+        algorithms.
+
+        The NMF class contains the core logic for managing all the steps in the NMF workflow. These include:
+
+        1) The initialization of the factor profile (H) and factor contribution matrices (W) where these matrices can
+        be set using passed in values, or randomly determined based upon the input data through mean distributions,
+        k-means, or fuzzy c-means clustering.
+
+        2) The executing of the specified NMF algorithm for updating the W and H matrices. The two currently implemented
+        algorithms are least-squares nmf (LS-NMF) and weighted-semi nmf (WS-NMF).
+
+        Parameters
+        ----------
+        V : np.ndarray
+            The input data matrix containing M samples (rows) by N features (columns).
+        U : np.ndarray
+            The uncertainty associated with the data points in the V matrix, of shape M x N.
+        factors : int
+            The number of factors, sources, NMF will create through the W and H matrices.
+        method : str
+            The NMF algorithm to be used for updating the W and H matrices. Options are: 'ls-nmf' and 'ws-nmf'.
+        seed : int
+            The random seed used for initializing the W and H matrices. Default is 42.
+        optimized : bool
+            The two update algorithms have also been written in Rust, which can be compiled with maturin, providing
+            an optimized implementation for rapid training of NMF models. Setting optimized to True will run the
+            compiled Rust functions.
+        parallelized : bool
+            The Rust implementation of 'ws-nmf' has a parallelized version for increased optimization. This parameter is
+            only used when method='ws-nmf' and optimized=True, then setting parallelized=True will run the parallel
+            version of the function.
+        verbose : bool
+            Allows for increased verbosity of the initialization and model training steps.
+        """
 
         self.V = V.astype(np.float64)
-        self.U = U.astype(np.float64) + 1e-15
+        self.U = U.astype(np.float64)
+
+        # The uncertainty matrix must not contain any zeros
+        self.U[self.U < 1e-12] = 1e-12
+
+        # Weights are calculated from the uncertainty matrix as 1/U^{2}
         self.We = np.divide(1, self.U**2).astype(np.float64)
 
         self.m, self.n = self.V.shape
@@ -46,7 +89,8 @@ class NMF:
         self.H = None
         self.W = None
 
-        self.method = method.lower()
+        # Default to ws-nmf if the method is not valid.
+        self.method = method.lower() if method.lower() in ('ls-nmf', 'ws-nmf') else 'ws-nmf'
 
         self.seed = 42 if seed is None else seed
         self.rng = np.random.default_rng(self.seed)
@@ -55,9 +99,14 @@ class NMF:
         self.Qtrue = None
         self.WH = None
 
-        self.epoch = -1
+        self.model_i = -1
         self.metadata = {
-            "creation_date": datetime.utcnow().strftime("%m/%d/%Y, %H:%M:%S %Z")
+            "creation_date": datetime.utcnow().strftime("%m/%d/%Y, %H:%M:%S %Z"),
+            "method": self.method,
+            "seed": self.seed,
+            "samples": self.m,
+            "features": self.n,
+            "factors": self.factors
         }
         self.converged = False
         self.converge_steps = 0
@@ -71,6 +120,8 @@ class NMF:
         self.__initialized = False
 
         self.update_step = WSNMF.update
+        # The ls-nmf algorithm is for matrices that only contain positive values, while ws-nmf allows for negative
+        # values in the V and W matices.
         if self.method == "ls-nmf" and not self.__has_neg:
             self.update_step = LSNMF.update
 
@@ -88,15 +139,16 @@ class NMF:
 
     def __validate(self):
         """
-        Validate the matrices used in NMF.
+        Validates the input data and uncertainty matrices, as well as W and H matrices when they are provided by the
+        user.
+
         Validation Criteria:
         V - Must be a numpy array, containing all numeric and no missing/NAN values.
         U - Must be a numpy array, containing all positive numeric and no missing/NAN values,
-        and have the same dimensions of V.
+        and have the same shape as V.
         H - Must be a numpy array, containing all positive numeric and no missing/NAN values,
-        and have dimensions (factors, N)
-        W - Must be a numpy array, containing all numeric and no missing/NAN values, and have dimensions (M, factors)
-        :return:
+        and have the shape (factors, N)
+        W - Must be a numpy array, containing all numeric and no missing/NAN values, and have the shape (M, factors)
         """
         has_neg = False
         validated = True
@@ -171,6 +223,34 @@ class NMF:
                    init_norm: bool = True,
                    fuzziness: float = 5.0
                    ):
+        """
+        Initialize the factor profile (H) and factor contribution matrices (W).
+
+        The W and H matrices can be created using several methods or be passed in by the user. The shapes of these
+        matrices are W: (M, factors) and H: (factors: N). There are three methods for initializing the W and H matrices:
+        1) K Means Clustering ('kmeans'), which will cluster the input dataset into the number of factors set, then assign
+        the contributions of to those factors, the H matrix is calculated from the centroids of those clusters.
+        2) Fuzzy C-Means Clustering ('ceamns'), which will cluster the input dataset in the same way as kmeans but sets
+        the contributions based upon the ratio of the distance to the clusters.
+        3) A random sampling based upon the square root of the mean of the features (columns), the default method.
+
+        Parameters
+        ----------
+        H : np.ndarray
+           The factor profile matrix of shape (factors, N), provided by the user when not using one of the three
+           initialization methods. H is always a non-negative matrix.
+        W : np.ndarray
+           The factor contribution matrix of shape (M, factors), provided by the user when not using one of the three
+           initialization methods. When using method=ws-nmf, the W matrix can contain negative values.
+        init_method : str
+           The default option is column means, though any option other than 'kmeans' or 'cmeans' will use the column
+           means initialization when W and/or H is not provided.
+        init_norm : bool
+           When using init_method either 'kmeans' or 'cmeans', this option allows for normalizing the input dataset
+           prior to clustering.
+        fuzziness : float
+           The amount of fuzziness to apply to fuzzy c-means clustering. Default is 5.
+        """
 
         self.metadata["init_method"] = init_method
         obs = self.V
@@ -223,19 +303,65 @@ class NMF:
         self.__validate()
 
     def summary(self):
-        logger.info("-------------------------------- NMF-EPA Model Details -----------------------------------------")
-        # TODO: Add detailed summary of the model parameters
-        logger.info("------------------------------------------------------------------------------------------------")
+        """
+        Provides a summary of the model configuration and results if completed.
+        """
+        logger.info("------\t\tNMF Model Details\t\t-----")
+        logger.info(f"Method: {self.method}\t\tNumber of Features: {self.n}\t\tNumber of Samples: {self.m}")
+        logger.info(f"Factors: {self.factors}\t\tRandom Seed: {self.seed}\t\tOptimized: {self.optimized}")
+        if self.WH is not None:
+            logger.info("------\t\tModel Results\t\t------")
+            logger.info(f"Q(true): {self.Qtrue}\t\tQ(robust): {self.Qrobust}\t\t")
+            logger.info(f"Converged: {self.converged}\t\tConverge Steps: {self.converge_steps}")
+        logger.info("-------------------------------------------------")
 
     def train(self,
               max_iter: int = 2000,
               converge_delta: float = 0.1,
               converge_n: int = 100,
-              epoch: int = -1,
+              model_i: int = -1,
               robust_mode: bool = False,
               robust_n: int = 200,
               robust_alpha: int = 4
               ):
+        """
+        Train the NMF model by iteratively updating the W and H matrices reducing the loss value Q until convergence.
+
+        The train method runs the update algorithm until the convergence criteria is met or the maximum number
+        of iterations is reached. The stopping conditions are specified by the input parameters to the train method. The
+        maximum number of iterations is set by the max_iter parameter, default is 2000, and the convergence criteria is
+        defined as a change in the loss value Q less than converge_delta, default is 0.1, over converge_n steps, default
+        is 100.
+
+        The loss function has an alternative mode, where the weights are modified to decrease the impact of data points
+        that have a high uncertainty-scaled residual, greater than 4. This is the same loss function that calculates the
+        Q(robust) value, turning robust_mode=True will switch to using the robust value for updating W and H. Robust_n
+        is the number of iterations to run in the default mode before switching to the robust mode, waiting for a
+        partial complete solution to be found before reducing the impact of those outlier residuals. Robust_alpha is
+        both the cut off value of the uncertainty scaled residuals and the square root of the scaled residuals over
+        robust_alpha is the adjustment made to the weights.
+
+        Parameters
+        ----------
+        max_iter : int
+           The maximum number of iterations to update W and H matrices. Default: 2000
+        converge_delta : float
+           The change in the loss value where the model will be considered converged. Default: 0.1
+        converge_n : int
+           The number of iterations where the change in the loss value is less than converge_delta for the model to be
+           considered converged. Default: 100
+        model_i : int
+           The model index, used for identifying models for parallelized processing.
+        robust_mode : bool
+           Used to turn on the robust mode, use the robust loss value in the update algorithm. Default: False
+        robust_n : int
+           When robust_mode=True, the number of iterations to use the default mode before turning on the robust mode to
+           prevent reducing the impact of non-outliers. Default: 200
+        robust_alpha : int
+           When robust_mode=True, the cutoff of the uncertainty scaled residuals to decrease the weights. Robust weights
+            are calculated as the uncertainty multiplied by the square root of the scaled residuals over robust_alpha.
+            Default: 4
+        """
         if not self.__initialized:
             logger.warn("Model is not initialized, initializing with default parameters")
             self.initialize()
@@ -259,13 +385,13 @@ class NMF:
             q_robust, U_robust = qr_loss(V=V, U=U, W=W, H=H, alpha=robust_alpha)
             t1 = time.time()
             if self.verbose:
-                logger.info(f"Model: {epoch}, Seed: {self.seed}, Q(true): {round(q_true, 4)}, "
+                logger.info(f"Model: {model_i}, Seed: {self.seed}, Q(true): {round(q_true, 4)}, "
                             f"Q(robust): {round(q_robust, 4)}, Steps: {self.converge_steps}/{max_iter}, "
                             f"Converged: {self.converged}, Runtime: {round(t1-t0, 2)} sec")
         else:
             prior_q = []
             We_prime = copy.copy(self.We)
-            t_iter = trange(max_iter, desc=f"Model: {epoch}, Seed: {self.seed}, Q(true): NA, Q(robust): NA",
+            t_iter = trange(max_iter, desc=f"Model: {model_i}, Seed: {self.seed}, Q(true): NA, Q(robust): NA",
                             position=0, leave=True, disable=not self.verbose)
             for i in t_iter:
                 W, H = self.update_step(V=V, We=We_prime, W=W, H=H)
@@ -284,7 +410,7 @@ class NMF:
                     delta_q = delta_q_first - delta_q_last
                     if delta_q < converge_delta:
                         converged = True
-                t_iter.set_description(f"Model: {epoch}, Seed: {self.seed}, Q(true): {round(q_true, 2)}, "
+                t_iter.set_description(f"Model: {model_i}, Seed: {self.seed}, Q(true): {round(q_true, 2)}, "
                                        f"Q(robust): {round(q_robust, 2)}")
                 t_iter.refresh()
                 self.converge_steps += 1
@@ -293,27 +419,72 @@ class NMF:
                     self.converged = True
                     break
 
-        self.epoch = epoch
+        self.model_i = model_i
         self.H = H
         self.W = W
         self.WH = np.matmul(W, H)
         self.Qtrue = q_loss(V=V, U=U, W=W, H=H)
         self.Qrobust, _ = qr_loss(V=V, U=U, W=W, H=H, alpha=robust_alpha)
         self.metadata["completion_date"] = datetime.utcnow().strftime("%m/%d/%Y, %H:%M:%S %Z")
+        self.metadata["max_iterations"] = max_iter
+        self.metadata["converge_delta"] = converge_delta
+        self.metadata["converge_n"] = converge_n
+        self.metadata["model_i"] = model_i
+        self.metadata["robust_mode"] = robust_mode
+        if robust_mode:
+            self.metadata["robust_n"] = robust_n
+            self.metadata["robust_alpha"] = robust_alpha
 
-    def results(self):
-        return {
-            "epoch": self.epoch,
-            "Q(true)": float(self.Qtrue),
-            "Q(robust": float(self.Qrobust),
-            "steps": self.converge_steps,
-            "converged": self.converged,
-            "H": self.H,
-            "W": self.W,
-            "wh": self.WH,
-            "seed": int(self.seed),
-            "metadata": self.metadata
-        }
+    def save(self, model_name: str, save_directory: str, pickle_model: bool = False):
+        """
+        Save the NMF model to file.
+
+        Two options are provided for saving the output of NMF to file, 1) saving the NMF to separate files (csv and
+        json) and 2) saving the NMF model to a binary pickle object. The files are written to the provided save_directory
+        path, if it exists, using the model_name for the file names.
+
+        Parameters
+        ----------
+        model_name : str
+           The name for the model save files.
+        save_directory : str
+           The path to save the files to, path must exist.
+        pickle_model : bool
+           Saving the model to a pickle file, default = False.
+
+        Returns
+        -------
+        bool
+           True if the model is written to file. False if the output directory does not exist.
+
+        """
+        if os.path.exists(save_directory):
+            if pickle_model:
+                file_path = os.path.join(save_directory, f"{model_name}.pkl")
+                with open(file_path, "wb") as save_file:
+                    pickle.dump(self, save_file)
+            else:
+                meta_file = os.path.join(save_directory, f"{model_name}-metadata.json")
+                with open(meta_file, "w") as mfile:
+                    json.dump(self.metadata, mfile)
+                profile_file = os.path.join(save_directory, f"{model_name}-profile.csv")
+                with open(profile_file, "w") as pfile:
+                    self.H.tofile(pfile, sep=',')
+                contribution_file = os.path.join(save_directory, f"{model_name}-contribution.csv")
+                with open(contribution_file, "w") as cfile:
+                    self.W.tofile(cfile, sep=',')
+                v_prime_file = os.path.join(save_directory, f"{model_name}-vprime.csv")
+                with open(v_prime_file, 'w') as vpfile:
+                    self.WH.tofile(vpfile, sep=',')
+                residual_file = os.path.join(save_directory, f"{model_name}-residuals.csv")
+                with open(residual_file, 'w') as rfile:
+                    residuals = self.V - self.WH
+                    residuals.tofile(rfile, sep=',')
+            return True
+
+        else:
+            logger.error(f"Output directory does not exist. Specified directory: {save_directory}")
+            return False
 
 
 if __name__ == "__main__":

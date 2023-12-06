@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>src.error package &mdash; NMF 12/06/2023 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=92fd9be5" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=1640ae22"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            NMF
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <!-- Local TOC -->
+              <div class="local-toc"><ul>
+<li><a class="reference internal" href="#">src.error package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#module-src.error.bootstrap">src.error.bootstrap module</a><ul>
+<li><a class="reference internal" href="#src.error.bootstrap.Bootstrap"><code class="docutils literal notranslate"><span class="pre">Bootstrap</span></code></a><ul>
+<li><a class="reference internal" href="#src.error.bootstrap.Bootstrap.block_resample"><code class="docutils literal notranslate"><span class="pre">Bootstrap.block_resample()</span></code></a></li>
+<li><a class="reference internal" href="#src.error.bootstrap.Bootstrap.map_contributions"><code class="docutils literal notranslate"><span class="pre">Bootstrap.map_contributions()</span></code></a></li>
+<li><a class="reference internal" href="#src.error.bootstrap.Bootstrap.map_factors"><code class="docutils literal notranslate"><span class="pre">Bootstrap.map_factors()</span></code></a></li>
+<li><a class="reference internal" href="#src.error.bootstrap.Bootstrap.plot_contribution"><code class="docutils literal notranslate"><span class="pre">Bootstrap.plot_contribution()</span></code></a></li>
+<li><a class="reference internal" href="#src.error.bootstrap.Bootstrap.plot_factor"><code class="docutils literal notranslate"><span class="pre">Bootstrap.plot_factor()</span></code></a></li>
+<li><a class="reference internal" href="#src.error.bootstrap.Bootstrap.plot_results"><code class="docutils literal notranslate"><span class="pre">Bootstrap.plot_results()</span></code></a></li>
+<li><a class="reference internal" href="#src.error.bootstrap.Bootstrap.resample"><code class="docutils literal notranslate"><span class="pre">Bootstrap.resample()</span></code></a></li>
+<li><a class="reference internal" href="#src.error.bootstrap.Bootstrap.run"><code class="docutils literal notranslate"><span class="pre">Bootstrap.run()</span></code></a></li>
+<li><a class="reference internal" href="#src.error.bootstrap.Bootstrap.show_factor_results"><code class="docutils literal notranslate"><span class="pre">Bootstrap.show_factor_results()</span></code></a></li>
+<li><a class="reference internal" href="#src.error.bootstrap.Bootstrap.show_mapping_table"><code class="docutils literal notranslate"><span class="pre">Bootstrap.show_mapping_table()</span></code></a></li>
+<li><a class="reference internal" href="#src.error.bootstrap.Bootstrap.show_q_table"><code class="docutils literal notranslate"><span class="pre">Bootstrap.show_q_table()</span></code></a></li>
+<li><a class="reference internal" href="#src.error.bootstrap.Bootstrap.summary"><code class="docutils literal notranslate"><span class="pre">Bootstrap.summary()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-src.error.displacement">src.error.displacement module</a><ul>
+<li><a class="reference internal" href="#src.error.displacement.Displacement"><code class="docutils literal notranslate"><span class="pre">Displacement</span></code></a><ul>
+<li><a class="reference internal" href="#src.error.displacement.Displacement.dQmax"><code class="docutils literal notranslate"><span class="pre">Displacement.dQmax</span></code></a></li>
+<li><a class="reference internal" href="#src.error.displacement.Displacement.plot_contribution"><code class="docutils literal notranslate"><span class="pre">Displacement.plot_contribution()</span></code></a></li>
+<li><a class="reference internal" href="#src.error.displacement.Displacement.plot_profile"><code class="docutils literal notranslate"><span class="pre">Displacement.plot_profile()</span></code></a></li>
+<li><a class="reference internal" href="#src.error.displacement.Displacement.plot_results"><code class="docutils literal notranslate"><span class="pre">Displacement.plot_results()</span></code></a></li>
+<li><a class="reference internal" href="#src.error.displacement.Displacement.run"><code class="docutils literal notranslate"><span class="pre">Displacement.run()</span></code></a></li>
+<li><a class="reference internal" href="#src.error.displacement.Displacement.summary"><code class="docutils literal notranslate"><span class="pre">Displacement.summary()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-src.error.error">src.error.error module</a><ul>
+<li><a class="reference internal" href="#src.error.error.Error"><code class="docutils literal notranslate"><span class="pre">Error</span></code></a><ul>
+<li><a class="reference internal" href="#src.error.error.Error.plot_summary"><code class="docutils literal notranslate"><span class="pre">Error.plot_summary()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-src.error">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">NMF</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">src.error package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/docs/src.error.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="src-error-package">
+<h1>src.error package<a class="headerlink" href="#src-error-package" title="Link to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+</section>
+<section id="module-src.error.bootstrap">
+<span id="src-error-bootstrap-module"></span><h2>src.error.bootstrap module<a class="headerlink" href="#module-src.error.bootstrap" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="src.error.bootstrap.Bootstrap">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.error.bootstrap.</span></span><span class="sig-name descname"><span class="pre">Bootstrap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uncertainty</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_selected</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nmf_results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimized</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bootstrap_n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">block_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.6</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.error.bootstrap.Bootstrap" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="src.error.bootstrap.Bootstrap.block_resample">
+<span class="sig-name descname"><span class="pre">block_resample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uncertainty</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">W</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overlapping</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.error.bootstrap.Bootstrap.block_resample" title="Link to this definition"></a></dt>
+<dd><p>Block resampling will resampled the set of data, uncertainty and W with the same resampling indices. The
+datasets are broken into block_size chunks and then randomly selected with replacement until the new bootstrap
+datasets are the same size as the original datasets. Blocks are constructed from consecutive samples in the
+datasets, i.e. [0, 1, 2, 3], [4, 5, 6, 7], etc…</p>
+<p>A block sized is reduced to fit the existing data, to prevent invalid indexing.</p>
+<p>The for loop assignment of the new indices is necessary due to a bug in the python package that passes the
+modified matrices to the Rust functions.
+:param data: The original input dataset.
+:param uncertainty: The original uncertainty dataset.
+:param W: The base model factor contribution matrix.
+:param overlapping: Specifies if blocks can overlap, i.e. have blocks [0, 1, 2, 3], [2, 3, 4, 5], etc…
+:return: The resampled data, uncertainty, and W matrices, and the resampled index matrix for validation.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.error.bootstrap.Bootstrap.map_contributions">
+<span class="sig-name descname"><span class="pre">map_contributions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">W1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">H1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">W2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">H2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.6</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.error.bootstrap.Bootstrap.map_contributions" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.error.bootstrap.Bootstrap.map_factors">
+<span class="sig-name descname"><span class="pre">map_factors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">H1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">H2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.6</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.error.bootstrap.Bootstrap.map_factors" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.error.bootstrap.Bootstrap.plot_contribution">
+<span class="sig-name descname"><span class="pre">plot_contribution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor_i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.error.bootstrap.Bootstrap.plot_contribution" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.error.bootstrap.Bootstrap.plot_factor">
+<span class="sig-name descname"><span class="pre">plot_factor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor_i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.error.bootstrap.Bootstrap.plot_factor" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.error.bootstrap.Bootstrap.plot_results">
+<span class="sig-name descname"><span class="pre">plot_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor_i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.error.bootstrap.Bootstrap.plot_results" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.error.bootstrap.Bootstrap.resample">
+<span class="sig-name descname"><span class="pre">resample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uncertainty</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">W</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.error.bootstrap.Bootstrap.resample" title="Link to this definition"></a></dt>
+<dd><p>Resamples the datasets with replacement, by single sample.
+:param data: The original input dataset.
+:param uncertainty: The original uncertainty dataset.
+:param W: The base model factor contribution matrix.
+:return: The resampled data, uncertainty, and W matrices and the resampled index matrix for validation.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.error.bootstrap.Bootstrap.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keep_H</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reuse_seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">block</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overlapping</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.error.bootstrap.Bootstrap.run" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.error.bootstrap.Bootstrap.show_factor_results">
+<span class="sig-name descname"><span class="pre">show_factor_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor_i</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.error.bootstrap.Bootstrap.show_factor_results" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.error.bootstrap.Bootstrap.show_mapping_table">
+<span class="sig-name descname"><span class="pre">show_mapping_table</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#src.error.bootstrap.Bootstrap.show_mapping_table" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.error.bootstrap.Bootstrap.show_q_table">
+<span class="sig-name descname"><span class="pre">show_q_table</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#src.error.bootstrap.Bootstrap.show_q_table" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.error.bootstrap.Bootstrap.summary">
+<span class="sig-name descname"><span class="pre">summary</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#src.error.bootstrap.Bootstrap.summary" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-src.error.displacement">
+<span id="src-error-displacement-module"></span><h2>src.error.displacement module<a class="headerlink" href="#module-src.error.displacement" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="src.error.displacement.Displacement">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.error.displacement.</span></span><span class="sig-name descname"><span class="pre">Displacement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_nmf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">selected_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_search</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_dQ</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.error.displacement.Displacement" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="src.error.displacement.Displacement.dQmax">
+<span class="sig-name descname"><span class="pre">dQmax</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[32,</span> <span class="pre">16,</span> <span class="pre">8,</span> <span class="pre">4]</span></em><a class="headerlink" href="#src.error.displacement.Displacement.dQmax" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.error.displacement.Displacement.plot_contribution">
+<span class="sig-name descname"><span class="pre">plot_contribution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dQ</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.error.displacement.Displacement.plot_contribution" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.error.displacement.Displacement.plot_profile">
+<span class="sig-name descname"><span class="pre">plot_profile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dQ</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.error.displacement.Displacement.plot_profile" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.error.displacement.Displacement.plot_results">
+<span class="sig-name descname"><span class="pre">plot_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dQ</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.error.displacement.Displacement.plot_results" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.error.displacement.Displacement.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#src.error.displacement.Displacement.run" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.error.displacement.Displacement.summary">
+<span class="sig-name descname"><span class="pre">summary</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#src.error.displacement.Displacement.summary" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-src.error.error">
+<span id="src-error-error-module"></span><h2>src.error.error module<a class="headerlink" href="#module-src.error.error" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="src.error.error.Error">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.error.error.</span></span><span class="sig-name descname"><span class="pre">Error</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#src.error.bootstrap.Bootstrap" title="src.error.bootstrap.Bootstrap"><span class="pre">Bootstrap</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">disp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#src.error.displacement.Displacement" title="src.error.displacement.Displacement"><span class="pre">Displacement</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.error.error.Error" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="src.error.error.Error.plot_summary">
+<span class="sig-name descname"><span class="pre">plot_summary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor_i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.error.error.Error.plot_summary" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-src.error">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-src.error" title="Link to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, EPA.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
