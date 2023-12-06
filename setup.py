@@ -1,7 +1,7 @@
 import setuptools
 
 setuptools.setup(
-    name="EPA - Non-Negative Matrix Factorization Python",
+    name="Non-Negative Matrix Factorization Python",
     version="0.0.1",
     author="Deron Smith",
     description="The Non-Negative Matrix Factorization Python (NMF-PY) Tool aims to provide all the functionality "

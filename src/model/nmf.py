@@ -1,5 +1,6 @@
 import sys
 import os
+
 module_path = os.path.abspath(os.path.join('..', "nmf_py"))
 sys.path.append(module_path)
 
@@ -10,12 +11,12 @@ from scipy.cluster.vq import kmeans2, whiten
 from fcmeans import FCM
 from tqdm import trange
 from datetime import datetime
+from pathlib import Path
 import numpy as np
 import logging
 import copy
 import pickle
 import json
-
 
 logger = logging.getLogger("NMF")
 logger.setLevel(logging.INFO)
@@ -26,6 +27,7 @@ class NMF:
     The primary Non-negative Matrix Factorization (NMF) model object which holds and manages the configuration, data,
     and meta-data for executing and analyzing NMF output.
     """
+
     def __init__(self,
                  V: np.ndarray,
                  U: np.ndarray,
@@ -80,7 +82,7 @@ class NMF:
         self.U[self.U < 1e-12] = 1e-12
 
         # Weights are calculated from the uncertainty matrix as 1/U^{2}
-        self.We = np.divide(1, self.U**2).astype(np.float64)
+        self.We = np.divide(1, self.U ** 2).astype(np.float64)
 
         self.m, self.n = self.V.shape
 
@@ -306,17 +308,19 @@ class NMF:
         """
         Provides a summary of the model configuration and results if completed.
         """
-        logger.info("------\t\tNMF Model Details\t\t-----")
-        logger.info(f"Method: {self.method}\t\tNumber of Features: {self.n}\t\tNumber of Samples: {self.m}")
-        logger.info(f"Factors: {self.factors}\t\tRandom Seed: {self.seed}\t\tOptimized: {self.optimized}")
+        logger.info("------------\t\tNMF Model Details\t\t-----------")
+        logger.info(f"\tMethod: {self.method}\t\t\t\tFactors: {self.factors}")
+        logger.info(f"\tNumber of Features: {self.n}\t\tNumber of Samples: {self.m}")
+        logger.info(f"\tRandom Seed: {self.seed}\t\t\t\tOptimized: {self.optimized}")
         if self.WH is not None:
-            logger.info("------\t\tModel Results\t\t------")
-            logger.info(f"Q(true): {self.Qtrue}\t\tQ(robust): {self.Qrobust}\t\t")
-            logger.info(f"Converged: {self.converged}\t\tConverge Steps: {self.converge_steps}")
-        logger.info("-------------------------------------------------")
+            logger.info("---------------\t\tModel Results\t\t--------------")
+            logger.info(f"\tQ(true): {round(self.Qtrue, 2)}\t\t\tQ(robust): {round(self.Qrobust, 2)}")
+            logger.info(f"\tConverged: {self.converged}\t\t\t\tConverge Steps: {self.converge_steps}")
+            logger.info(f"\tRobust Mode: {'Yes' if self.metadata['robust_mode'] else 'No'}")
+        logger.info("------------------------------------------------------")
 
     def train(self,
-              max_iter: int = 2000,
+              max_iter: int = 20000,
               converge_delta: float = 0.1,
               converge_n: int = 100,
               model_i: int = -1,
@@ -344,7 +348,7 @@ class NMF:
         Parameters
         ----------
         max_iter : int
-           The maximum number of iterations to update W and H matrices. Default: 2000
+           The maximum number of iterations to update W and H matrices. Default: 20000
         converge_delta : float
            The change in the loss value where the model will be considered converged. Default: 0.1
         converge_n : int
@@ -387,7 +391,7 @@ class NMF:
             if self.verbose:
                 logger.info(f"Model: {model_i}, Seed: {self.seed}, Q(true): {round(q_true, 4)}, "
                             f"Q(robust): {round(q_robust, 4)}, Steps: {self.converge_steps}/{max_iter}, "
-                            f"Converged: {self.converged}, Runtime: {round(t1-t0, 2)} sec")
+                            f"Converged: {self.converged}, Runtime: {round(t1 - t0, 2)} sec")
         else:
             prior_q = []
             We_prime = copy.copy(self.We)
@@ -435,22 +439,28 @@ class NMF:
             self.metadata["robust_n"] = robust_n
             self.metadata["robust_alpha"] = robust_alpha
 
-    def save(self, model_name: str, save_directory: str, pickle_model: bool = False):
+    def save(self,
+             model_name: str,
+             output_directory: str,
+             pickle_model: bool = False,
+             header: list = None):
         """
         Save the NMF model to file.
 
         Two options are provided for saving the output of NMF to file, 1) saving the NMF to separate files (csv and
-        json) and 2) saving the NMF model to a binary pickle object. The files are written to the provided save_directory
+        json) and 2) saving the NMF model to a binary pickle object. The files are written to the provided output_directory
         path, if it exists, using the model_name for the file names.
 
         Parameters
         ----------
         model_name : str
            The name for the model save files.
-        save_directory : str
+        output_directory : str
            The path to save the files to, path must exist.
         pickle_model : bool
            Saving the model to a pickle file, default = False.
+        header : list
+           A list of headers, feature names, to add to the top of the csv files. Default: None
 
         Returns
         -------
@@ -458,36 +468,82 @@ class NMF:
            True if the model is written to file. False if the output directory does not exist.
 
         """
-        if os.path.exists(save_directory):
+        factor_header = None
+        if header is not None:
+            factor_header = [f"Factor {i + 1}" for i in range(self.factors)]
+            factor_header = ",".join(factor_header)
+            header = ",".join(header)
+        output_directory = Path(output_directory)
+        if not output_directory.is_absolute():
+            current_directory = os.path.abspath(__file__)
+            output_directory = Path(os.path.join(current_directory, output_directory)).resolve()
+        if os.path.exists(output_directory):
             if pickle_model:
-                file_path = os.path.join(save_directory, f"{model_name}.pkl")
+                file_path = os.path.join(output_directory, f"{model_name}.pkl")
                 with open(file_path, "wb") as save_file:
                     pickle.dump(self, save_file)
             else:
-                meta_file = os.path.join(save_directory, f"{model_name}-metadata.json")
+                meta_file = os.path.join(output_directory, f"{model_name}-metadata.json")
                 with open(meta_file, "w") as mfile:
                     json.dump(self.metadata, mfile)
-                profile_file = os.path.join(save_directory, f"{model_name}-profile.csv")
+                profile_file = os.path.join(output_directory, f"{model_name}-profile.csv")
                 with open(profile_file, "w") as pfile:
-                    self.H.tofile(pfile, sep=',')
-                contribution_file = os.path.join(save_directory, f"{model_name}-contribution.csv")
+                    profile_comment = f"Factor Profile (H) Matrix\nMetadata File: {meta_file}\n\n"
+                    np.savetxt(pfile, self.H, delimiter=',', header=header, comments=profile_comment)
+                contribution_file = os.path.join(output_directory, f"{model_name}-contribution.csv")
                 with open(contribution_file, "w") as cfile:
-                    self.W.tofile(cfile, sep=',')
-                v_prime_file = os.path.join(save_directory, f"{model_name}-vprime.csv")
+                    contribution_comment = f"Factor Contribution (W) Matrix\nMetadata File: {meta_file}\n\n"
+                    np.savetxt(cfile, self.W, delimiter=',', header=factor_header, comments=contribution_comment)
+                v_prime_file = os.path.join(output_directory, f"{model_name}-vprime.csv")
                 with open(v_prime_file, 'w') as vpfile:
-                    self.WH.tofile(vpfile, sep=',')
-                residual_file = os.path.join(save_directory, f"{model_name}-residuals.csv")
+                    vp_comment = f"Estimated Data (WH=V') Matrix\nMetadata File: {meta_file}\n\n"
+                    np.savetxt(vpfile, self.WH, delimiter=',', header=header, comments=vp_comment)
+                residual_file = os.path.join(output_directory, f"{model_name}-residuals.csv")
                 with open(residual_file, 'w') as rfile:
+                    residual_comment = f"Residual Matrix (V-V')\nMetadata File: {meta_file}\n\n"
                     residuals = self.V - self.WH
-                    residuals.tofile(rfile, sep=',')
+                    np.savetxt(rfile, residuals, delimiter=',', header=header, comments=residual_comment)
             return True
 
         else:
-            logger.error(f"Output directory does not exist. Specified directory: {save_directory}")
+            logger.error(f"Output directory does not exist. Specified directory: {output_directory}")
             return False
+
+    @staticmethod
+    def load(file_path: str):
+        """
+        Load a previously saved NMF pickle file.
+
+        Parameters
+        ----------
+        file_path : str
+           File path to a previously saved NMF pickle file
+
+        Returns
+        -------
+        NMF
+           On successful load, will return a previous NMF object. Will return None on load fail.
+        """
+        file_path = Path(file_path)
+        if not file_path.is_absolute():
+            current_directory = os.path.abspath(__file__)
+            file_path = Path(os.path.join(current_directory, file_path)).resolve()
+        if os.path.exists(file_path):
+            try:
+                with open(file_path, "rb") as pfile:
+                    nmf = pickle.load(pfile)
+                    return nmf
+            except pickle.PickleError as p_error:
+                logger.error(f"Failed to load NMF pickle file {file_path}. \nError: {p_error}")
+                return None
+        else:
+            logger.error(f"NMF load file failed, specified pickle file does not exist. File Path: {file_path}")
+            return None
 
 
 if __name__ == "__main__":
+
+    # Test code for running a single NMF model, using both the python and Rust functions, includes model save and loads.
     import time
     import os
     from src.data.datahandler import DataHandler
@@ -500,11 +556,10 @@ if __name__ == "__main__":
     init_method = "col_means"           # default is column means, "kmeans", "cmeans"
     init_norm = True
     seed = 42
-    # seed = 26586        #most comparable model to PMF5
     max_iterations = 20000
     converge_delta = 0.1
     converge_n = 10
-    dataset = "br"          # "br": Baton Rouge, "b": Baltimore, "sl": St Louis
+    dataset = "br"                      # "br": Baton Rouge, "b": Baltimore, "sl": St Louis
     verbose = True
     robust_mode = True
     robust_n = 100
@@ -542,13 +597,18 @@ if __name__ == "__main__":
     nmf.train(max_iter=max_iterations, converge_delta=converge_delta, converge_n=converge_n,
               robust_alpha=robust_alpha, robust_n=robust_n, robust_mode=robust_mode)
     t1 = time.time()
-    print(f"Runtime: {round((t1-t0)/60, 2)} min(s)")
+    print(f"Runtime: {round((t1 - t0) / 60, 2)} min(s)")
 
     print("Running rust code")
     nmf2 = NMF(V=V, U=U, factors=factors, method=method, seed=seed, optimized=True, verbose=verbose)
     nmf2.initialize(init_method=init_method, init_norm=init_norm, fuzziness=5.0)
     nmf2.train(max_iter=max_iterations, converge_delta=converge_delta, converge_n=converge_n,
                robust_alpha=robust_alpha, robust_n=robust_n, robust_mode=robust_mode)
-
     t2 = time.time()
-    print(f"Runtime: {round((t2-t1)/60, 2)} min(s)")
+    print(f"Runtime: {round((t2 - t1) / 60, 2)} min(s)")
+
+    nmf2.save(model_name="test", output_directory="..\\..\\..\\data\\output\\", pickle_model=False,
+              header=list(dh.features))
+    nmf2.summary()
+
+    _nmf = NMF.load(file_path="..\\..\\..\\data\\output\\test.pkl")
