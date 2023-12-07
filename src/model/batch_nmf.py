@@ -5,10 +5,9 @@ sys.path.append(module_path)
 
 import logging
 import time
-import datetime
-import json
-import os
+import pickle
 import numpy as np
+from pathlib import Path
 import multiprocessing as mp
 from src.model.nmf import NMF
 
@@ -18,6 +17,10 @@ logger.setLevel(logging.DEBUG)
 
 
 class BatchNMF:
+    """
+    The batch NMF class is used to create multiple NMF models, using the same input configuration and different
+    random seeds for initialization of W and H matrices.
+    """
     def __init__(self,
                  V: np.ndarray,
                  U: np.ndarray,
@@ -31,14 +34,69 @@ class BatchNMF:
                  max_iter: int = 20000,
                  converge_delta: float = 0.1,
                  converge_n: int = 100,
+                 best_robust: bool = True,
                  robust_mode: bool = False,
                  robust_n: int = 200,
                  robust_alpha: float = 4.0,
                  parallel: bool = True,
-                 optimized: bool = True,
+                 optimized: bool = False,
                  verbose: bool = True
                  ):
+        """
+        The batch NMF class allows for the parallel execution of multiple NMF models.
 
+        The set of parameters for the batch include both the initialization parameters and the model run parameters.
+
+        Parameters
+        ----------
+        V : np.ndarray
+            The input data matrix containing M samples (rows) by N features (columns).
+        U : np.ndarray
+            The uncertainty associated with the data points in the V matrix, of shape M x N.
+        factors : int
+            The number of factors, sources, NMF will create through the W and H matrices.
+        models : int
+            The number of NMF models to create. Default = 20.
+        method : str
+            The NMF algorithm to be used for updating the W and H matrices. Options are: 'ls-nmf' and 'ws-nmf'.
+        seed : int
+            The random seed used for initializing the W and H matrices. Default is 42.
+        init_method : str
+           The default option is column means, though any option other than 'kmeans' or 'cmeans' will use the column
+           means initialization when W and/or H is not provided.
+        init_norm : bool
+           When using init_method either 'kmeans' or 'cmeans', this option allows for normalizing the input dataset
+           prior to clustering.
+        fuzziness : float
+           The amount of fuzziness to apply to fuzzy c-means clustering. Default is 5.
+        max_iter : int
+           The maximum number of iterations to update W and H matrices. Default: 20000
+        converge_delta:  float
+           The change in the loss value where the model will be considered converged. Default: 0.1
+        converge_n : int
+           The number of iterations where the change in the loss value is less than converge_delta for the model to be
+           considered converged. Default: 100
+        best_robust: bool
+           Use the Q(robust) loss value to determine which model is the best, instead of Q(true). Default = True.
+        robust_mode : bool
+           Used to turn on the robust mode, use the robust loss value in the update algorithm. Default: False
+        robust_n : int
+           When robust_mode=True, the number of iterations to use the default mode before turning on the robust mode to
+           prevent reducing the impact of non-outliers. Default: 200
+        robust_alpha : int
+           When robust_mode=True, the cutoff of the uncertainty scaled residuals to decrease the weights. Robust weights
+           are calculated as the uncertainty multiplied by the square root of the scaled residuals over robust_alpha.
+           Default: 4
+        parallel : bool
+            Run the individual models in parallel, not the same as the optimized parallelized option for an NMF ws-nmf
+            model. Default = True.
+        optimized: bool
+            The two update algorithms have also been written in Rust, which can be compiled with maturin, providing
+            an optimized implementation for rapid training of NMF models. Setting optimized to True will run the
+            compiled Rust functions.
+        verbose : bool
+            Allows for increased verbosity of the initialization and model training steps.
+        """
         self.factors = factors
         self.method = method
 
@@ -51,6 +109,7 @@ class BatchNMF:
         self.max_iter = max_iter
         self.converge_delta = converge_delta
         self.converge_n = converge_n
+        self.best_robust = best_robust
 
         self.seed = 42 if seed is None else seed
         self.rng = np.random.default_rng(self.seed)
@@ -65,16 +124,18 @@ class BatchNMF:
         self.parallel = parallel
         self.optimized = optimized
         self.verbose = verbose
-        #TODO: Switch to saving NMF objects
         self.results = []
         self.best_model = None
 
     def train(self):
+        """
+        Execute the training sequence for the batch of NMF models using the shared configuration parameters.
+        -------
+        """
         t0 = time.time()
         if self.parallel:
             # TODO: Add batch processing for large datasets and large number of epochs to reduce memory requirements.
             pool = mp.Pool()
-
             input_parameters = []
             for i in range(self.models):
                 _seed = self.rng.integers(low=0, high=1e5)
@@ -90,28 +151,28 @@ class BatchNMF:
                 input_parameters.append((_nmf, i))
 
             results = pool.starmap(self._train_task, input_parameters)
-
-            best_epoch = -1
+            best_model = -1
             best_q = float("inf")
             ordered_results = [None for i in range(len(results))]
             for result in results:
-                epoch = int(result["epoch"])
-                ordered_results[epoch] = result
-                if result["Q(true)"] < best_q:
-                    best_q = result["Q(true)"]
-                    best_epoch = epoch
+                model_i, _nmf = result
+                ordered_results[model_i] = _nmf
+                _nmf_q = _nmf.Qrobust if self.best_robust else _nmf.Qtrue
+                if _nmf_q < best_q:
+                    best_q = _nmf_q
+                    best_model = model_i
             if self.verbose:
-                for result in ordered_results:
-                    logger.info(f"Model: {result['epoch']}, Q(true): {round(result['Q(true)'], 4)}, "
-                                f"Q(robust): {round(result['Q(robust)'], 4)}, Seed: {result['seed']}, "
-                                f"Converged: {result['converged']}, Steps: {result['steps']}/{self.max_iter}")
+                for i, result in enumerate(ordered_results):
+                    logger.info(f"Model: {i}, Q(true): {round(result.Qtrue, 4)}, "
+                                f"Q(robust): {round(result.Qrobust, 4)}, Seed: {result.seed}, "
+                                f"Converged: {result.converged}, Steps: {result.converged_steps}/{self.max_iter}")
             self.results = ordered_results
             pool.close()
         else:
             self.results = []
             best_Q = float("inf")
-            best_epoch = None
-            for epoch in range(self.models):
+            best_model = -1
+            for model_i in range(self.models):
                 _seed = self.rng.integers(low=0, high=1e5)
                 _nmf = NMF(
                     factors=self.factors,
@@ -122,195 +183,96 @@ class BatchNMF:
                 )
                 _nmf.initialize(init_method=self.init_method, init_norm=self.init_norm, fuzziness=self.fuzziness)
                 run = _nmf.train(max_iter=self.max_iter, converge_delta=self.converge_delta, converge_n=self.converge_n,
-                                 epoch=epoch, robust_mode=self.robust_mode, robust_n=self.robust_n,
+                                 model_i=model_i, robust_mode=self.robust_mode, robust_n=self.robust_n,
                                  robust_alpha=self.robust_alpha)
                 if run == -1:
-                    logger.error("Unable to execute batch run of NMF models.")
+                    logger.error(f"Unable to execute batch run of NMF models. Model: {model_i}")
                     pass
-                if _nmf.Qtrue < best_Q:
-                    best_Q = _nmf.Qtrue
-                    best_epoch = epoch
-                self.results.append(
-                    {
-                        "epoch": epoch,
-                        "Q(true)": float(_nmf.Qtrue),
-                        "Q(robust)": float(_nmf.Qrobust),
-                        "steps": _nmf.converge_steps,
-                        "converged": _nmf.converged,
-                        "H": _nmf.H,
-                        "W": _nmf.W,
-                        "wh": _nmf.WH,
-                        "seed": int(_seed)
-                    }
-                )
+                _nmf_q = _nmf.Qrobust if self.best_robust else _nmf.Qtrue
+                if _nmf_q < best_Q:
+                    best_Q = _nmf_q
+                    best_model = model_i
+                self.results.append(_nmf)
         t1 = time.time()
-        logger.info(f"Results - Best Model: {best_epoch}, Q(true): {self.results[best_epoch]['Q(true)']}, "
-                    f"Q(robust): {self.results[best_epoch]['Q(robust)']}, Converged: {self.results[best_epoch]['converged']}")
+        logger.info(f"Results - Best Model: {best_model}, Q(true): {self.results[best_model].Qtrue}, "
+                    f"Q(robust): {self.results[best_model].Qrobust}, Converged: {self.results[best_model].converged}")
         logger.info(f"Runtime: {round((t1 - t0) / 60, 2)} min(s)")
-        self.best_model = best_epoch
+        self.best_model = best_model
 
-    def _train_task(self, nmf, epoch):
+    def _train_task(self, nmf, model_i) -> (int, NMF):
+        """
+        Parallelized train task.
+
+        Parameters
+        ----------
+        nmf : NMF
+            Initialized NMF object.
+        model_i : int
+            Model id used for batch model referencing.
+
+        Returns
+        -------
+        int, NMF
+            The model id and the trained NMF object.
+
+        """
         t0 = time.time()
-        nmf.train(max_iter=self.max_iter, converge_delta=self.converge_delta, converge_n=self.converge_n, epoch=epoch,
+        nmf.train(max_iter=self.max_iter, converge_delta=self.converge_delta, converge_n=self.converge_n, model_i=model_i,
                   robust_mode=self.robust_mode, robust_n=self.robust_n, robust_alpha=self.robust_alpha)
         t1 = time.time()
         if self.verbose:
-            print(f"Model: {epoch}, Seed: {nmf.seed}, Q(true): {round(nmf.Qtrue, 4)}, Q(robust): {round(nmf.Qrobust, 4)}, "
+            logger.info(f"Model: {model_i}, Seed: {nmf.seed}, "
+                        f"Q(true): {round(nmf.Qtrue, 4)}, Q(robust): {round(nmf.Qrobust, 4)}, "
                         f"Steps: {nmf.converge_steps}/{self.max_iter}, Converged: {nmf.converged}, "
                         f"Runtime: {round(t1 - t0, 2)} sec")
-        return {
-            "epoch": epoch,
-            "Q(true)": float(nmf.Qtrue),
-            "Q(robust)": float(nmf.Qrobust),
-            "steps": nmf.converge_steps,
-            "converged": nmf.converged,
-            "H": nmf.H,
-            "W": nmf.W,
-            "wh": nmf.WH,
-            "seed": int(nmf.seed)
-        }
+        return model_i, nmf
 
-    def save(self, output_name: str = None, output_path: str = None):
-        if output_name is None:
-            output_name = f"results_{datetime.datetime.now().strftime('%d-%m-%Y_%H%M%S')}.json"
-        if output_path is None:
-            output_path = "."
-        elif not os.path.exists(output_path):
-            os.mkdir(output_path)
-        full_output_path = os.path.join(output_path, output_name)
-        processed_results = []
-        for result in self.results:
-            processed_result = {}
-            for k, v in result.items():
-                if isinstance(v, np.ndarray):
-                    v = v.astype(float).tolist()
-                processed_result[k] = v
-            processed_results.append(processed_result)
-        with open(full_output_path, 'w') as json_file:
-            json.dump(processed_results, json_file)
-            logger.info(f"Results saved to: {full_output_path}")
+    def save(self, batch_name: str,
+             output_directory: str,
+             pickle_model: bool = False,
+             pickle_batch: bool = True,
+             header: list = None):
+        """
+        Save the collection of NMF models. They can be saved as individual files (csv and json files),
+        as individual pickle models (each NMF model), or as a single NMF model of the batch NMF object.
 
+        Parameters
+        ----------
+        batch_name : str
+            The name to use for the batch save files.
+        output_directory :
+            The output directory to save the batch nmf files to.
+        pickle_model : bool
+            Pickle the individual models, creating a separate pickle file for each NMF model. Default = False.
+        pickle_batch : bool
+            Pickle the batch NMF object, which will contain all the NMF objects. Default = True.
+        header : list
+           A list of headers, feature names, to add to the top of the csv files. Default: None
 
-if __name__ == "__main__":
+        Returns
+        -------
+        bool
+           True if the model is written to file. False if the output directory does not exist.
 
-    import os
-    from src.data.datahandler import DataHandler
-    from src.utils import calculate_Q
-    from tests.factor_comparison import FactorComp
+        """
+        output_directory = Path(output_directory)
+        if not output_directory.is_absolute():
+            current_directory = os.path.abspath(__file__)
+            output_directory = Path(os.path.join(current_directory, output_directory)).resolve()
+        if os.path.exists(output_directory):
+            if pickle_batch:
+                file_path = os.path.join(output_directory, f"{batch_name}.pkl")
+                with open(file_path, "wb") as save_file:
+                    pickle.dump(self, save_file)
+                    logger.info(f"Batch NMF models saved to pickle file: {file_path}")
+            else:
+                for i, _nmf in enumerate(self.results):
+                    file_name = f"{batch_name}-model-{i}"
+                    _nmf.save(model_name=file_name, output_directory=output_directory,
+                              pickle_model=pickle_model, header=header)
+            logger.info(f"All batch NMF models saved. Name: {batch_name}, Directory: {output_directory}")
+            return True
+        else:
+            logger.error(f"Output directory does not exist. Specified directory: {output_directory}")
+            return False
 
-    logging.getLogger('matplotlib.font_manager').setLevel(logging.ERROR)
-    logging.getLogger('matplotlib').setLevel(logging.ERROR)
-
-    t0 = time.time()
-    for dataset in ["b", "sl", "br"]:           # "br", "sl", "b", "w"
-        for method in ["ls-nmf"]:     # "ls-nmf", "ws-nmf"
-            for factors in range(3, 13):
-                # factors = 4
-                # method = "ls-nmf"                   # "ls-nmf", "ws-nmf"
-                init_method = "col_means"           # default is column means, "kmeans", "cmeans"
-                init_norm = True
-                seed = 40
-                models = 20
-                if method == "ws-nmf":
-                    converge_delta = 1.0 if dataset == "b" else 0.1
-                    max_iterations = 2000
-                    converge_n = 5
-                else:
-                    max_iterations = 50000
-                    converge_delta = 0.001
-                    converge_n = 10
-                parallel = True
-                optimized = True
-                # dataset = "br"          # "br": Baton Rouge, "b": Baltimore, "sl": St Louis
-                index_col = "Date"
-
-                if dataset == "br":
-                    input_file = os.path.join("D:\\", "projects", "nmf_py", "data", "Dataset-BatonRouge-con.csv")
-                    uncertainty_file = os.path.join("D:\\", "projects", "nmf_py", "data", "Dataset-BatonRouge-unc.csv")
-                    output_path = os.path.join("D:\\", "projects", "nmf_py", "output", "BatonRouge")
-                    pmf_profile_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test", f"br{factors}f_profiles.txt")
-                    pmf_contribution_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test", f"br{factors}f_contributions.txt")
-                    pmf_residuals_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test",
-                                                      f"br{factors}f_residuals.txt")
-                elif dataset == "b":
-                    input_file = os.path.join("D:\\", "projects", "nmf_py", "data", "Dataset-Baltimore_con.txt")
-                    uncertainty_file = os.path.join("D:\\", "projects", "nmf_py", "data", "Dataset-Baltimore_unc.txt")
-                    output_path = os.path.join("D:\\", "projects", "nmf_py", "output", "Baltimore")
-                    pmf_profile_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test", f"b{factors}f_profiles.txt")
-                    pmf_contribution_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test", f"b{factors}f_contributions.txt")
-                    pmf_residuals_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test",
-                                                      f"b{factors}f_residuals.txt")
-                elif dataset == "sl":
-                    input_file = os.path.join("D:\\", "projects", "nmf_py", "data", "Dataset-StLouis-con.csv")
-                    uncertainty_file = os.path.join("D:\\", "projects", "nmf_py", "data", "Dataset-StLouis-unc.csv")
-                    output_path = os.path.join("D:\\", "projects", "nmf_py", "output", "StLouis")
-                    pmf_profile_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test", f"sl{factors}f_profiles.txt")
-                    pmf_contribution_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test", f"sl{factors}f_contributions.txt")
-                    pmf_residuals_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test",
-                                                      f"sl{factors}f_residuals.txt")
-                elif dataset == "w":
-                    input_file = os.path.join("D:\\", "projects", "nmf_py", "user_data", "wash_con_cleaned.csv")
-                    uncertainty_file = os.path.join("D:\\", "projects", "nmf_py", "user_data", "wash_unc_cleaned.csv")
-                    output_path = os.path.join("D:\\", "projects", "nmf_py", "output", "Washington")
-                    pmf_profile_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test", f"w{factors}f_profiles.txt")
-                    pmf_contribution_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test", f"w{factors}f_contributions.txt")
-                    pmf_residuals_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test",
-                                                      f"w{factors}f_residuals.txt")
-                    index_col = "obs_date"
-
-                sn_threshold = 2.0
-
-                dh = DataHandler(
-                    input_path=input_file,
-                    uncertainty_path=uncertainty_file,
-                    index_col=index_col,
-                    sn_threshold=sn_threshold
-                )
-                V = dh.input_data_processed
-                U = dh.uncertainty_data_processed
-
-                batch_nmf = BatchNMF(V=V, U=U, factors=factors, models=models, method=method, seed=seed, init_method=init_method,
-                                     init_norm=init_norm, fuzziness=5.0, max_iter=max_iterations, converge_delta=converge_delta,
-                                     converge_n=converge_n, parallel=parallel, optimized=optimized)
-                t0 = time.time()
-                batch_nmf.train()
-
-                t1 = time.time()
-                # full_output_path = f"{dataset}-nmf-output-f{factors}.json"
-                # batch_nmf.save(output_name=full_output_path)
-                #
-                # profile_comparison = FactorComp(nmf_output_file=full_output_path, pmf_profile_file=pmf_profile_file,
-                #                                 pmf_contribution_file=pmf_contribution_file, factors=factors,
-                #                                 species=len(dh.features), residuals_path=pmf_residuals_file)
-                # pmf_q = calculate_Q(profile_comparison.pmf_residuals.values, dh.uncertainty_data_processed)
-                # profile_comparison.compare(PMF_Q=pmf_q)
-                # os.remove(path=full_output_path)
-                runtime = round(t1-t0, 2)
-                print(f"Runtime: {round((t1-t0)/60, 2)} min(s)")
-
-                run_key = f"{dataset}-{factors}"
-                analysis_results = {
-                    run_key:
-                        {
-                            "dataset": dataset,
-                            "factors": factors,
-                            f"{method}-runtime": runtime,
-                            f"{method}-Q": float(batch_nmf.results[batch_nmf.best_epoch]["Q(true)"])
-                        }
-                }
-                current_results = {}
-                analysis_file = "runtime_analysis.json"
-                if os.path.exists(analysis_file):
-                    with open(analysis_file, 'r') as json_file:
-                        current_results = json.load(json_file)
-                        if run_key in current_results.keys():
-                            for k, v in analysis_results[run_key].items():
-                                current_results[run_key].update({k: v})
-                        else:
-                            current_results[run_key] = analysis_results[run_key]
-                else:
-                    current_results = analysis_results
-                with open(analysis_file, 'w') as json_file:
-                    current_results = dict(sorted(current_results.items()))
-                    json.dump(current_results, json_file)
-                logger.info(f"Completed method: {method}, factors: {factors}, dataset: {dataset}")

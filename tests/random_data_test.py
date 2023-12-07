@@ -36,8 +36,6 @@ if __name__ == "__main__":
         index_col=index_col,
         generate_data=True
     )
-    dh.create_data(sample_count=sample_count, species_count=species_count, value_min=value_min, value_max=value_max)
-
     V = dh.input_data_processed
     U = dh.uncertainty_data_processed
 

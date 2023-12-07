@@ -326,7 +326,7 @@ class NMF:
               model_i: int = -1,
               robust_mode: bool = False,
               robust_n: int = 200,
-              robust_alpha: int = 4
+              robust_alpha: float = 4
               ):
         """
         Train the NMF model by iteratively updating the W and H matrices reducing the loss value Q until convergence.
@@ -361,10 +361,10 @@ class NMF:
         robust_n : int
            When robust_mode=True, the number of iterations to use the default mode before turning on the robust mode to
            prevent reducing the impact of non-outliers. Default: 200
-        robust_alpha : int
+        robust_alpha : float
            When robust_mode=True, the cutoff of the uncertainty scaled residuals to decrease the weights. Robust weights
             are calculated as the uncertainty multiplied by the square root of the scaled residuals over robust_alpha.
-            Default: 4
+            Default: 4.0
         """
         if not self.__initialized:
             logger.warn("Model is not initialized, initializing with default parameters")
@@ -482,27 +482,33 @@ class NMF:
                 file_path = os.path.join(output_directory, f"{model_name}.pkl")
                 with open(file_path, "wb") as save_file:
                     pickle.dump(self, save_file)
+                    logger.info(f"NMF model saved to pickle file: {file_path}")
             else:
                 meta_file = os.path.join(output_directory, f"{model_name}-metadata.json")
                 with open(meta_file, "w") as mfile:
                     json.dump(self.metadata, mfile)
+                    logger.info(f"NMF model metadata saved to file: {meta_file}")
                 profile_file = os.path.join(output_directory, f"{model_name}-profile.csv")
                 with open(profile_file, "w") as pfile:
                     profile_comment = f"Factor Profile (H) Matrix\nMetadata File: {meta_file}\n\n"
                     np.savetxt(pfile, self.H, delimiter=',', header=header, comments=profile_comment)
+                    logger.info(f"NMF model factor profile saved to file: {profile_file}")
                 contribution_file = os.path.join(output_directory, f"{model_name}-contribution.csv")
                 with open(contribution_file, "w") as cfile:
                     contribution_comment = f"Factor Contribution (W) Matrix\nMetadata File: {meta_file}\n\n"
                     np.savetxt(cfile, self.W, delimiter=',', header=factor_header, comments=contribution_comment)
+                    logger.info(f"NMF model factor contribution saved to file: {contribution_file}")
                 v_prime_file = os.path.join(output_directory, f"{model_name}-vprime.csv")
                 with open(v_prime_file, 'w') as vpfile:
                     vp_comment = f"Estimated Data (WH=V') Matrix\nMetadata File: {meta_file}\n\n"
                     np.savetxt(vpfile, self.WH, delimiter=',', header=header, comments=vp_comment)
+                    logger.info(f"NMF model V' saved to file: {v_prime_file}")
                 residual_file = os.path.join(output_directory, f"{model_name}-residuals.csv")
                 with open(residual_file, 'w') as rfile:
                     residual_comment = f"Residual Matrix (V-V')\nMetadata File: {meta_file}\n\n"
                     residuals = self.V - self.WH
                     np.savetxt(rfile, residuals, delimiter=',', header=header, comments=residual_comment)
+                    logger.info(f"NMF model residuals saved to file: {residual_file}")
             return True
 
         else:

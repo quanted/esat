@@ -7,286 +7,52 @@ import plotly.graph_objects as go
 import plotly.express as px
 import plotly.figure_factory as ff
 from src.data.datahandler import DataHandler
-from src.model.batch_nmf import BatchNMF
-
-
-class CompareAnalyzer:
-
-    def __init__(self,
-                 input_df,
-                 pmf_profile_df,
-                 pmf_contributions_df,
-                 ls_profile_df,
-                 ws_profile_df,
-                 ls_mapping,
-                 ws_mapping,
-                 ls_contributions_df,
-                 ws_contributions_df,
-                 features,
-                 datetimestamps
-                 ):
-        self.input_df = input_df
-        self.pmf_profile_df = pmf_profile_df
-        self.ls_profile_df = ls_profile_df
-        self.ws_profile_df = ws_profile_df
-
-        self.ls_mapping = ls_mapping
-        self.ws_mapping = ws_mapping
-
-        self.pmf_contributions_df = pmf_contributions_df
-        self.ls_contributions_df = ls_contributions_df
-        self.ws_contributions_df = ws_contributions_df
-
-        self.features = features
-        self.factor_n = pmf_profile_df.shape[1] - 1
-        self.factor_columns = [f"Factor {i}" for i in range(1, self.factor_n + 1)]
-        self.datetimestamps = datetimestamps
-
-    def _standardize(self, data, include_features: bool = False):
-        std_data = data[self.factor_columns].div(data[self.factor_columns].sum(axis=1), axis=0)
-        if include_features:
-            std_data["features"] = self.features
-        return std_data
-
-    def _matmul(self, contributions, profile):
-        data = np.matmul(contributions.values, profile.values.T)
-        data_df = pd.DataFrame(data, columns=self.features)
-        data_df["Date"] = pd.to_datetime(self.datetimestamps, format="%m/%d/%y %H:%M")
-        data_df.set_index("Date", inplace=True)
-        return data_df
-
-    def plot_factor_contribution(self, feature: str = None, feature_i: int = 0):
-        if feature not in self.features:
-            feature = self.features[feature_i % len(self.features)]
-
-        pmf_norm = self._standardize(data=self.pmf_profile_df, include_features=True)
-        ls_norm = self._standardize(data=self.ls_profile_df, include_features=True)
-        ws_norm = self._standardize(data=self.ws_profile_df, include_features=True)
-
-        pmf_feature_profile = pmf_norm[self.features == feature]
-        ls_feature_profile = ls_norm[self.features == feature]
-        ws_feature_profile = ws_norm[self.features == feature]
-
-        pmf_pie = go.Pie(labels=self.factor_columns, values=pmf_feature_profile[self.factor_columns].values[0], name="PMF")
-        ls_pie = go.Pie(labels=self.factor_columns, values=ls_feature_profile[self.factor_columns].values[0], name="LS-NMF")
-        ws_pie = go.Pie(labels=self.factor_columns, values=ws_feature_profile[self.factor_columns].values[0], name="WS-NMF")
-
-        profile_subplot = make_subplots(rows=1, cols=3,
-                                        specs=[[{"type": "domain"}, {"type": "domain"}, {"type": "domain"}]],
-                                        subplot_titles=["PMF", "LS-NMF", "WS-NMF"])
-        profile_subplot.add_trace(pmf_pie, row=1, col=1)
-        profile_subplot.add_trace(ls_pie, row=1, col=2)
-        profile_subplot.add_trace(ws_pie, row=1, col=3)
-        profile_subplot.layout.title = f"Factor Contributions : {feature}"
-        profile_subplot.layout.height = 600
-        profile_subplot.show()
-
-    def plot_fingerprints(self, ls_nmf_r2: -1, ws_nmf_r2: -1):
-        pmf_fp = []
-        ws_fp = []
-        ls_fp = []
-
-        pmf_norm = self._standardize(data=self.pmf_profile_df, include_features=False)
-        ls_norm = self._standardize(data=self.ls_profile_df, include_features=False)
-        ws_norm = self._standardize(data=self.ws_profile_df, include_features=False)
-
-        for factor_n in range(self.factor_n - 1, -1, -1):
-            pmf_n = go.Bar(x=self.pmf_profile_df["species"],
-                           y=(100 * pmf_norm[self.factor_columns[factor_n]]), name=f"Factor {factor_n + 1}",
-                           legendgroup="PMF")
-            ws_n = go.Bar(x=self.ws_profile_df["species"], y=(100 * ws_norm[self.ws_mapping[factor_n]]),
-                          name=f"Factor {int(self.ws_mapping[factor_n].split(' ')[1])}", legendgroup="WS-NMF")
-            ls_n = go.Bar(x=self.ls_profile_df["species"], y=(100 * ls_norm[self.ls_mapping[factor_n]]),
-                          name=f"Factor {int(self.ls_mapping[factor_n].split(' ')[1])}", legendgroup="LS-NMF")
-            pmf_fp.append(pmf_n)
-            ws_fp.append(ws_n)
-            ls_fp.append(ls_n)
-
-        pmf_fig = go.Figure(data=pmf_fp)
-        pmf_fig.update_layout(barmode='stack')
-        pmf_fig.update_yaxes(title_text="Species Concentration %")
-        pmf_fig.layout.height = 600
-        pmf_fig.layout.title = "PMF Factor Fingerprints"
-        pmf_fig.show()
-
-        ls_fig = go.Figure(data=ls_fp)
-        ls_fig.update_layout(barmode='stack')
-        ls_fig.update_yaxes(title_text="Species Concentration %")
-        ls_fig.layout.height = 600
-        if ls_nmf_r2 > 0:
-            ls_fig.layout.title = f"LS-NMF Factor Fingerprints - R2: {round(ls_nmf_r2, 3)}"
-        else:
-            ls_fig.layout.title = f"LS-NMF Factor Fingerprints"
-        ls_fig.show()
-
-        ws_fig = go.Figure(data=ws_fp)
-        ws_fig.update_layout(barmode='stack')
-        ws_fig.update_yaxes(title_text="Species Concentration %")
-        ws_fig.layout.height = 600
-        if ws_nmf_r2 > 0:
-            ws_fig.layout.title = f"WS-NMF Factor Fingerprints - R2: {round(ws_nmf_r2, 3)}"
-        else:
-            ws_fig.layout.title = "WS-NMF Factor Fingerprints"
-        ws_fig.show()
-
-    def plot_factors(self):
-
-        profile_subplot = make_subplots(rows=6, cols=1, specs=[[{"type": "bar"}], [{"type": "bar"}], [{"type": "bar"}],
-                                                               [{"type": "bar"}], [{"type": "bar"}], [{"type": "bar"}]])
-
-        pmf_norm = self._standardize(data=self.pmf_profile_df, include_features=False)
-        ls_norm = self._standardize(data=self.ls_profile_df, include_features=False)
-        ws_norm = self._standardize(data=self.ws_profile_df, include_features=False)
-
-        for factor_n in range(0, self.factor_n):
-            pmf_profile_trace = go.Bar(x=self.pmf_profile_df["species"],
-                                       y=pmf_norm[self.factor_columns[factor_n]], name=f"PMF Factor {factor_n + 1}",
-                                       legendgroup=f"{factor_n + 1}")
-            ws_profile_trace = go.Bar(x=self.ws_profile_df["species"], y=ws_norm[self.ws_mapping[factor_n]],
-                                      name=f"WS-NMF {self.ws_mapping[factor_n]}", legendgroup=f"{factor_n + 1}")
-            ls_profile_trace = go.Bar(x=self.ls_profile_df["species"], y=ls_norm[self.ls_mapping[factor_n]],
-                                      name=f"LS-NMF {self.ls_mapping[factor_n]}", legendgroup=f"{factor_n + 1}")
-
-            profile_subplot.add_trace(pmf_profile_trace, row=factor_n + 1, col=1)
-            profile_subplot.add_trace(ws_profile_trace, row=factor_n + 1, col=1)
-            profile_subplot.add_trace(ls_profile_trace, row=factor_n + 1, col=1)
-
-        profile_subplot.layout.title = "PMF - NMF-PY : Normalized Factor Profiles"
-        profile_subplot.layout.height = 1800
-        profile_subplot.show()
-
-    def plot_feature_timeseries(self, factor_n: int, feature_n, show_input: bool = True):
-
-        pmf_f_p = self.pmf_profile_df[self.factor_columns[factor_n]].values
-        pmf_f_p = pmf_f_p.reshape(1, len(pmf_f_p))
-        pmf_f_c = self.pmf_contributions_df[self.factor_columns[factor_n]].values
-        pmf_f_c = pmf_f_c.reshape(len(pmf_f_c), 1)
-        pmf_f_prod = np.matmul(pmf_f_c, pmf_f_p)
-        pmf_f_df = pd.DataFrame(pmf_f_prod, columns=self.pmf_profile_df["species"])
-        pmf_f_df["Datetime"] = self.datetimestamps
-
-        ls_f_p = self.ls_profile_df[self.ls_mapping[factor_n]].values
-        ls_f_p = ls_f_p.reshape(1, len(ls_f_p))
-        ls_f_c = self.ls_contributions_df[self.ls_mapping[factor_n]].values
-        ls_f_c = ls_f_c.reshape(len(ls_f_c), 1)
-        ls_f_prod = np.matmul(ls_f_c, ls_f_p)
-        ls_f_df = pd.DataFrame(ls_f_prod, columns=self.pmf_profile_df["species"])
-        ls_f_df["Datetime"] = self.datetimestamps
-
-        ws_f_p = self.ws_profile_df[self.ws_mapping[factor_n]].values
-        ws_f_p = ws_f_p.reshape(1, len(ws_f_p))
-        ws_f_c = self.ws_contributions_df[self.ws_mapping[factor_n]].values
-        ws_f_c = ws_f_c.reshape(len(ws_f_c), 1)
-        ws_f_prod = np.matmul(ws_f_c, ws_f_p)
-        ws_f_df = pd.DataFrame(ws_f_prod, columns=self.pmf_profile_df["species"])
-        ws_f_df["Datetime"] = self.datetimestamps
-
-        if type(feature_n) == int:
-            feature_n = [feature_n]
-        elif type(feature_n) == str:
-            if feature_n == "all":
-                feature_n = range(0, self.pmf_profile_df.shape[0])
-
-        for feature_i in feature_n:
-
-            ts_fig = go.Figure()
-            ts_fig.add_trace(
-                go.Scatter(x=pmf_f_df["Datetime"], y=pmf_f_df[self.features[feature_i]], name=f"PMF - {self.features[feature_i]}"))
-            ts_fig.add_trace(
-                go.Scatter(x=ls_f_df["Datetime"], y=ls_f_df[self.features[feature_i]], name=f"LS - {self.features[feature_i]}"))
-            ts_fig.add_trace(
-                go.Scatter(x=ws_f_df["Datetime"], y=ws_f_df[self.features[feature_i]], name=f"WS - {self.features[feature_i]}"))
-            if show_input:
-                ts_fig.add_trace(go.Scatter(x=pmf_f_df["Datetime"], y=self.input_df[self.features[feature_i]],
-                                            name=f"Input - {self.features[feature_i]}", line=dict(dash='dot')))
-
-            ts_fig.layout.title = f"PMF - NMF-PY : Factor {factor_n + 1} Timeseries : {self.features[feature_i]}"
-            ts_fig.layout.height = 600
-            ts_fig.show()
-
-    def timeseries_plot(self, feature: str = None, feature_i: int = 0):
-
-        pmf_data_df = self._matmul(contributions=self.pmf_contributions_df[self.factor_columns],
-                                   profile=self.pmf_profile_df[self.factor_columns])
-        ls_data_df = self._matmul(contributions=self.ls_contributions_df[self.factor_columns],
-                                  profile=self.ls_profile_df[self.factor_columns])
-        ws_data_df = self._matmul(contributions=self.ws_contributions_df[self.factor_columns],
-                                  profile=self.ws_profile_df[self.factor_columns])
-
-        if feature not in self.features:
-            feature = self.features[feature_i]
-        pmf_ts = pmf_data_df[feature].resample("1D").mean()
-        ls_ts = ls_data_df[feature].resample("1D").mean()
-        ws_ts = ws_data_df[feature].resample("1D").mean()
-        data_ts = self.input_df[feature].resample("1D").mean()
-
-        ts_fig = go.Figure()
-        ts_fig.add_trace(go.Scatter(x=pmf_ts.index, y=pmf_ts, name=f"PMF - {feature}"))
-        ts_fig.add_trace(go.Scatter(x=ls_ts.index, y=ls_ts, name=f"LS - {feature}"))
-        ts_fig.add_trace(go.Scatter(x=ws_ts.index, y=ws_ts, name=f"WS - {feature}"))
-        ts_fig.add_trace(go.Scatter(x=data_ts.index, y=data_ts, name=f"Input - {feature}", line=dict(dash='dot')))
-
-        ts_fig.layout.title = f"PMF - NMF-PY Timeseries : Feature {feature}"
-        ts_fig.layout.height = 600
-        ts_fig.show()
-
-    def feature_histogram(self, feature: str = None, feature_i: int = 0, normalized: bool = False, threshold: float = 3.0):
-
-        pmf_data_df = self._matmul(contributions=self.pmf_contributions_df[self.factor_columns],
-                                   profile=self.pmf_profile_df[self.factor_columns])
-        ls_data_df = self._matmul(contributions=self.ls_contributions_df[self.factor_columns],
-                                  profile=self.ls_profile_df[self.factor_columns])
-        ws_data_df = self._matmul(contributions=self.ws_contributions_df[self.factor_columns],
-                                  profile=self.ws_profile_df[self.factor_columns])
-
-        pmf_residuals = self.input_df.subtract(pmf_data_df)
-        ls_residuals = self.input_df.subtract(ls_data_df)
-        ws_residuals = self.input_df.subtract(ws_data_df)
-
-        if feature not in self.features:
-            feature = self.features[feature_i]
-        pmf_his = pmf_residuals[feature]
-        ls_his = ls_residuals[feature]
-        ws_his = ws_residuals[feature]
-        if normalized:
-            pmf_trace = go.Histogram(x=pmf_his, histnorm='probability', name="PMF")
-            ls_trace = go.Histogram(x=ls_his, histnorm='probability', name="LS-NMF")
-            ws_trace = go.Histogram(x=ws_his, histnorm='probability', name="WS-NMF")
-        else:
-            pmf_trace = go.Histogram(x=pmf_his, name="PMF")
-            ls_trace = go.Histogram(x=ls_his, name="LS-NMF")
-            ws_trace = go.Histogram(x=ws_his, name="WS-NMF")
-        table_data = [
-            ["min", "mean", "max", f">|{threshold}|"],
-            [pmf_his.min(), pmf_his.mean(), pmf_his.max(), pmf_his[pmf_his.abs() >= threshold].count()],
-            [ls_his.min(), ls_his.mean(), ls_his.max(), ls_his[ls_his.abs() >= threshold].count()],
-            [ws_his.min(), ws_his.mean(), ws_his.max(), ws_his[ws_his.abs() >= threshold].count()]
-        ]
-        table_trace = go.Table(header=dict(values=["metric", "PMF", "LS-NMF", "WS-NMF"]), cells=dict(values=table_data))
-
-        hist_subplot = make_subplots(rows=4, cols=1, specs=[[{"type": "bar"}], [{"type": "bar"}], [{"type": "bar"}],
-                                                            [{"type": "table"}]])
-        hist_subplot.add_trace(pmf_trace, row=1, col=1)
-        hist_subplot.add_trace(ls_trace, row=2, col=1)
-        hist_subplot.add_trace(ws_trace, row=3, col=1)
-        hist_subplot.add_trace(table_trace, row=4, col=1)
-        hist_subplot.layout.title = f"Residual Analysis - {feature}"
-        hist_subplot.layout.height = 800
-        hist_subplot.show()
+from src.model.nmf import NMF
 
 
 class ModelAnalysis:
+    """
+    Class for running model analysis and generating plots.
+    """
     def __init__(self,
                  datahandler: DataHandler,
-                 model: BatchNMF,
+                 model: NMF,
                  selected_model: int = None
                  ):
+        """
+        A collection of model statistic methods and plot generation functions.
+
+        Parameters
+        ----------
+        datahandler : DataHandler
+            The datahandler instance used for processing the input and uncertainty datasets used by the NMF model.
+        model : NMF
+            A trained NMF model with output used for calculating model statistics and generating plots.
+        selected_model : int
+            If NMF model is part of a batch, the model id/index that will be used for plot labels.
+        """
         self.dh = datahandler
         self.model = model
         self.selected_model = selected_model
         self.statistics = None
 
-    def calculate_statistics(self, results=None):
+    def calculate_statistics(self,
+                             results: np.ndarray = None
+                             ):
+        """
+        Calculate general statistics from the results of the NMF model run.
+
+        Will generate a pd.DataFrame with a set of metrics for each feature. The resulting dataframe will be accessible
+        as .statistics. These metrics focus on residual analysis, including Norm tests of the residuals with three
+        different metrics for testing the norm.
+
+        Parameters
+        ----------
+        results : np.ndarray
+            The default behavior is for this function to use the nmf model WH matrix for calculating metrics, this can
+            be overriden by providing np.ndarray in the 'results' parameter. Default = None.
+
+        """
 
         statistics = {"Features": [], "Category": [], "r2": [], "Intercept": [], "Intercept SE": [], "Slope": [],
                       "Slope SE": [], "SE": [], "SE Regression": [],
@@ -294,7 +60,7 @@ class ModelAnalysis:
                       "Shapiro Normal Residuals": [], "Shapiro PValue": [],
                       "KS Normal Residuals": [], "KS PValue": [], "KS Statistic": []}
         cats = copy.copy(self.dh.metrics['Category'])
-        results = self.model.results[self.selected_model]['wh'] if results is None else results
+        results = self.model.WH if results is None else results
         residuals = self.dh.input_data - results
         scaled_residuals = residuals / self.dh.uncertainty_data
         for feature_idx, x_label in enumerate(self.dh.features):
@@ -339,13 +105,34 @@ class ModelAnalysis:
 
         self.statistics = pd.DataFrame(data=statistics)
 
-    def plot_residual_histogram(self, feature_idx: int, abs_threshold: float = 3.0, est_V = None):
+    def plot_residual_histogram(self,
+                                feature_idx: int,
+                                abs_threshold: float = 3.0,
+                                est_V: np.ndarray = None
+                                ):
+        """
+        Create a plot of a histogram of the residuals for a specific feature.
+
+        Parameters
+        ----------
+        feature_idx : int
+            The index of the feature for the plot.
+        abs_threshold : float
+            The function generates a list of residuals that exceed this limit, the absolute value of the limit.
+        est_V : np.ndarray
+            Overrides the use of the NMF model's WH matrix in the residual calculation. Default = None.
+
+        Returns
+        -------
+            pd.DataFrame
+                The list of residuals that exceed the absolute value of the threshold, as a pd.DataFrame
+        """
         if feature_idx > self.dh.input_data.shape[1] - 1 or feature_idx < 0:
             print(f"Invalid feature index provided, must be between 0 and {self.dh.input_data.shape[1]}")
             return
         V = self.model.V[:, feature_idx]
         if est_V is None:
-            est_V = self.model.results[self.selected_model]['wh'][:, feature_idx]
+            est_V = self.model.WH[:, feature_idx]
         else:
             est_V = est_V[:, feature_idx]
         U = self.model.U[:, feature_idx]
@@ -370,14 +157,25 @@ class ModelAnalysis:
         threshold_residuals = residuals[residuals[feature].abs() >= abs_threshold]
         return threshold_residuals
 
-    def plot_estimated_observed(self, feature_idx: int):
+    def plot_estimated_observed(self,
+                                feature_idx: int
+                                ):
+        """
+        Create a plot that shows the estimates concentrations of a feature vs the observed concentrations.
+
+        Parameters
+        ----------
+        feature_idx: int
+            The index of the feature to plot.
+
+        """
         if feature_idx > self.dh.input_data.shape[1] - 1 or feature_idx < 0:
             print(f"Invalid feature index provided, must between 0 and {self.dh.input_data.shape[1]}")
             return
         x_label = self.dh.input_data.columns[feature_idx]
 
         observed_data = self.dh.input_data[x_label]
-        predicted_data = self.model.results[self.selected_model]['wh'][:, feature_idx]
+        predicted_data = self.model.WH[:, feature_idx]
 
         A = np.vstack([observed_data.values, np.ones(len(observed_data))]).T
         m, c = np.linalg.lstsq(A, predicted_data, rcond=None)[0]
@@ -396,43 +194,76 @@ class ModelAnalysis:
         xy_plot.update_yaxes(range=[0, predicted_data.max() + 0.5])
         xy_plot.show()
 
-    def plot_estimated_timeseries(self, feature_idx: int):
+    def plot_estimated_timeseries(self,
+                                  feature_idx: int
+                                  ):
+        """
+        Create a plot that shows the estimated values of a timeseries for a specific feature, selected by feature index.
+
+        Parameters
+        ----------
+        feature_idx: int
+            The index of the feature to plot.
+
+        """
         if feature_idx > self.dh.input_data.shape[1] - 1 or feature_idx < 0:
             print(f"Invalid feature index provided, must be between 0 and {self.dh.input_data.shape[1]}")
             return
         x_label = self.dh.input_data.columns[feature_idx]
 
         observed_data = self.dh.input_data[x_label].values
-        predicted_data = self.model.results[self.selected_model]['wh'][:, feature_idx]
+        predicted_data = self.model.WH[:, feature_idx]
 
-        data_df = pd.DataFrame(data={"observed": observed_data, "predicted": predicted_data}, index=self.dh.input_data.index)
+        data_df = pd.DataFrame(data={"observed": observed_data, "predicted": predicted_data},
+                               index=self.dh.input_data.index)
         data_df.index = pd.to_datetime(data_df.index)
         data_df = data_df.sort_index()
         data_df = data_df.resample('D').mean()
 
         ts_subplot = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.01, row_heights=[0.8, 0.2])
 
-        ts_subplot.add_trace(go.Scatter(x=data_df.index, y=data_df["observed"], line=dict(width=1), mode='lines+markers', name="Observed Concentrations"), row=1, col=1)
-        ts_subplot.add_trace(go.Scatter(x=data_df.index, y=data_df["predicted"], line=dict(width=1), mode='lines+markers', name="Predicted Concentrations"), row=1, col=1)
-        ts_subplot.add_trace(go.Scatter(x=data_df.index, y=data_df["observed"] - data_df["predicted"], line=dict(width=1), mode='lines', name="Residuals"), row=2, col=1)
+        ts_subplot.add_trace(go.Scatter(x=data_df.index, y=data_df["observed"], line=dict(width=1),
+                                        mode='lines+markers', name="Observed Concentrations"), row=1, col=1)
+        ts_subplot.add_trace(go.Scatter(x=data_df.index, y=data_df["predicted"], line=dict(width=1),
+                                        mode='lines+markers', name="Predicted Concentrations"), row=1, col=1)
+        ts_subplot.add_trace(go.Scatter(x=data_df.index, y=data_df["observed"] - data_df["predicted"],
+                                        line=dict(width=1), mode='lines', name="Residuals"), row=2, col=1)
 
-        ts_subplot.update_layout(title_text=f"{x_label} - Model {self.selected_model}", width=1200, height=800, yaxis_title="Concentrations")
+        ts_subplot.update_layout(title_text=f"{x_label} - Model {self.selected_model}", width=1200, height=800,
+                                 yaxis_title="Concentrations")
         ts_subplot.show()
 
-    def plot_factor_profile(self, factor_idx: int, H=None, W=None):
+    def plot_factor_profile(self,
+                            factor_idx: int,
+                            H: np.ndarray = None,
+                            W: np.ndarray = None
+                            ):
+        """
+        Create a bar plot of a factor profile.
+
+        Parameters
+        ----------
+        factor_idx : int
+            The index of the factor to plot.
+        H : np.ndarray
+            Overrides the factor profile matrix in the NMF model used for the plot.
+        W : np.ndarray
+            Overrides the factor contribution matrix in the NMF model used for the plot.
+
+        """
         if factor_idx > self.model.factors - 1 or factor_idx < 0:
             print(f"Invalid factor provided, must be between 0 and {self.model.factors - 1}")
             return
 
         factor_label = f"Factor {factor_idx}"
         if H is None:
-            factors_data = self.model.results[self.selected_model]['H'][factor_idx]
-            factors_sum = self.model.results[self.selected_model]['H'].sum(axis=0)
+            factors_data = self.model.H[factor_idx]
+            factors_sum = self.model.H.sum(axis=0)
         else:
             factors_data = H[factor_idx]
             factors_sum = H.sum(axis=0)
         if W is None:
-            factor_contribution = self.model.results[self.selected_model]['W'][:, factor_idx]
+            factor_contribution = self.model.W[:, factor_idx]
         else:
             factor_contribution = W[:, factor_idx]
 
@@ -452,19 +283,23 @@ class ModelAnalysis:
         data_df = data_df.resample('D').mean()
 
         profile_plot = make_subplots(specs=[[{"secondary_y": True}]], rows=1, cols=1)
-        profile_plot.add_trace(go.Scatter(x=self.dh.features, y=norm_profile, mode='markers', marker=dict(color='red'), name="% of Features"), secondary_y=True, row=1, col=1)
+        profile_plot.add_trace(go.Scatter(x=self.dh.features, y=norm_profile, mode='markers', marker=dict(color='red'),
+                                          name="% of Features"), secondary_y=True, row=1, col=1)
         profile_plot.add_trace(go.Bar(x=self.dh.features, y=factor_conc_sums, marker_color='rgb(158,202,225)',
-                                        marker_line_color='rgb(8,48,107)', marker_line_width=1.5, opacity=0.6, name='Conc. of Features'), secondary_y=False, row=1, col=1)
+                                      marker_line_color='rgb(8,48,107)', marker_line_width=1.5, opacity=0.6,
+                                      name='Conc. of Features'), secondary_y=False, row=1, col=1)
         profile_plot.update_yaxes(title_text="Conc. of Features", secondary_y=False, row=1, col=1,
                                   type="log",
                                   range=[0, np.log10(factor_conc_sums).max()]
                                   )
         profile_plot.update_yaxes(title_text="% of Features", secondary_y=True, row=1, col=1, range=[0, 100])
-        profile_plot.update_layout(title=f"Factor Profile - Model {self.selected_model} - Factor {factor_idx}", width=1200, height=600)
+        profile_plot.update_layout(title=f"Factor Profile - Model {self.selected_model} - Factor {factor_idx}",
+                                   width=1200, height=600)
         profile_plot.show()
 
         contr_plot = go.Figure()
-        contr_plot.add_trace(go.Scatter(x=data_df.index, y=data_df[factor_label], mode='lines+markers', name="Normalized Contributions", line=dict(color='blue')))
+        contr_plot.add_trace(go.Scatter(x=data_df.index, y=data_df[factor_label], mode='lines+markers',
+                                        name="Normalized Contributions", line=dict(color='blue')))
         contr_plot.update_layout(title=f"Factor Contributions - Model {self.selected_model} - Factor {factor_idx}",
                                  width=1200, height=600, showlegend=True,
                                  legend=dict(orientation="h", xanchor="right", yanchor="bottom", x=1, y=1.02))
@@ -472,7 +307,11 @@ class ModelAnalysis:
         contr_plot.show()
 
     def plot_factor_fingerprints(self):
-        factors_data = self.model.results[self.selected_model]['H']
+        """
+        Create a stacked bar plot of the factor profile, fingerprints.
+
+        """
+        factors_data = self.model.H
         normalized_factors_data = 100 * (factors_data / factors_data.sum(axis=0))
 
         fig = go.Figure()
@@ -483,7 +322,21 @@ class ModelAnalysis:
         fig.update_yaxes(title_text="% Feature Concentration", range=[0, 100])
         fig.show()
 
-    def plot_g_space(self, factor_1: int, factor_2: int):
+    def plot_g_space(self,
+                     factor_1: int,
+                     factor_2: int
+                     ):
+        """
+        Create a scatter plot showing a factor contributions vs another factor contributions.
+
+        Parameters
+        ----------
+        factor_1 : int
+            The index of the factor to plot along the x-axis.
+        factor_2 : int
+            The index of the factor to plot along the y-axis.
+
+        """
         if factor_1 > self.model.factors - 1 or factor_1 < 0:
             print(f"Invalid factor_1 provided, must be between 0 and {self.model.factors - 1}")
             return
@@ -491,7 +344,7 @@ class ModelAnalysis:
             print(f"Invalid factor_2 provided, must be between 0 and {self.model.factors - 1}")
             return
 
-        factors_contr = self.model.results[self.selected_model]['W']
+        factors_contr = self.model.W
         normalized_factors_contr = factors_contr / factors_contr.sum(axis=0)
 
         fig = go.Figure(data=go.Scatter(
@@ -503,7 +356,21 @@ class ModelAnalysis:
         fig.update_xaxes(title_text=f"Factor {factor_1} Contributions (avg=1)")
         fig.show()
 
-    def plot_factor_contributions(self, feature_idx: int, contribution_threshold: float = 0.05):
+    def plot_factor_contributions(self,
+                                  feature_idx: int,
+                                  contribution_threshold: float = 0.05
+                                  ):
+        """
+        Create a plot of the factor contributions and the normalized contribution.
+
+        Parameters
+        ----------
+        feature_idx : int
+            The index of the feature to plot.
+        contribution_threshold : float
+            The contribution percentage of a factor above which to include on the plot.
+
+        """
         if feature_idx > self.dh.input_data.shape[1] - 1 or feature_idx < 0:
             print(f"Invalid feature index provided, must not be negative and be less than {self.dh.input_data.shape[1]-1}")
             return
@@ -512,7 +379,7 @@ class ModelAnalysis:
             return
         x_label = self.dh.input_data.columns[feature_idx]
 
-        factors_data = self.model.results[self.selected_model]['H']
+        factors_data = self.model.H
         normalized_factors_data = 100 * (factors_data / factors_data.sum(axis=0))
 
         feature_contr = normalized_factors_data[:, feature_idx]
@@ -529,7 +396,7 @@ class ModelAnalysis:
                                   legend_title_text=f"Factor Contribution > {0.05}%")
         feature_fig.show()
 
-        factors_contr = self.model.results[self.selected_model]['W']
+        factors_contr = self.model.W
         normalized_factors_contr = 100 * (factors_contr / factors_contr.sum(axis=0))
         factor_labels = [f"Factor {i}" for i in range(normalized_factors_contr.shape[1])]
         contr_df = pd.DataFrame(normalized_factors_contr, columns=factor_labels)
@@ -540,7 +407,7 @@ class ModelAnalysis:
         contr_fig = go.Figure()
         for factor in factor_labels:
             contr_fig.add_trace(go.Scatter(x=contr_df.index, y=contr_df[factor], mode='lines+markers', name=factor))
-        converged = "Converged Model" if self.model.results[self.selected_model]['converged'] else "Unconverged Model"
+        converged = "Converged Model" if self.model.converged else "Unconverged Model"
         contr_fig.update_layout(title=f"Factor Contributions (avg=1) From Base Model #{self.selected_model} ({converged})",
                                 width=1200, height=600,
                                 legend=dict(orientation="h", xanchor="right", yanchor="bottom", x=1, y=1.02))

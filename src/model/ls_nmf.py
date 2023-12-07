@@ -11,15 +11,28 @@ class LSNMF:
             H: np.ndarray
     ):
         """
-        Multiplicative Update (Lee and Seung) ls-nmf as described in
-        https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-7-175
-        :param V: The input data matrix.
-        :param We: The weight matrix, calculated from the uncertainty matrix.
-        :param W: The factor contribution matrix.
-        :param H: The factor profile matrix.
-        :return: The updated factor contribution and factor profile matrices. (W, H)
-        """
+        The update procedure for the least-squares nmf (ls-nmf) algorithm.
 
+        The ls-nmf algorithm is described in the publication <i>LS-NMF: A modified non-negative matrix factorization
+        algorithm utilizing uncertainty estimates</i> (https://doi.org/10.1186/1471-2105-7-175).
+
+        Parameters
+        ----------
+        V : np.ndarray
+           The input dataset.
+        We : np.ndarray
+           The weights calculated from the input uncertainty dataset.
+        W : np.ndarray
+           The factor contribution matrix.
+        H : np.ndarray
+           The factor profile matrix.
+
+        Returns
+        -------
+        np.ndarray, np.ndarray
+           The updated W and H matrices.
+
+        """
         WeV = np.multiply(We, V)
         WH = np.matmul(W, H)
         H_num = np.matmul(W.T, WeV)

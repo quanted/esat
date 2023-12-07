@@ -13,14 +13,31 @@ class WSNMF:
             H: np.ndarray
     ):
         """
-        Semi-NMF algorithm as described in https://people.eecs.berkeley.edu/~jordan/papers/ding-li-jordan-pami.pdf
-        and https://www2.dc.ufscar.br/~marcela/anaisKDMiLe2014/artigos/FULL/kdmile2014_Artigo15.pdf
-        Weighted semi-NMF algorithm.
-        :param V: The input data matrix.
-        :param We: The weights matrix, derived from the uncertainty matrix.
-        :param W: The factor contribution matrix.
-        :param H: The factor profile matrix.
-        :return: The updated factor contribution and factor profile matrices. (W, H)
+        Weighted Semi-NMF algorithm.
+
+        The details of the semi-nmf algorithm are described in <i>Convex and Semi-Nonnegative Matrix Factorizations</i>
+        (https://doi.org/10.1109/TPAMI.2008.277). The algorithm described here does not include the use of uncertainty
+        or weights. The paper <i>Semi-NMF and Weighted Semi-NMF Algorithms Comparison<i> by Eric Velten de Melo and
+        Jacques Wainer provides some additional details for part of the weighted semi-NMF algorithm as defined in this
+        function.
+
+        The update procedure defined in this function was created by merging the main concepts of these two papers.
+
+        Parameters
+        ----------
+        V : np.ndarray
+           The input dataset.
+        We : np.ndarray
+           The weights calculated from the input uncertainty dataset.
+        W : np.ndarray
+           The factor contribution matrix, prior W is not used by this algorithm but provided here for testing.
+        H : np.ndarray
+           The factor profile matrix.
+
+        Returns
+        -------
+        np.ndarray, np.ndarray
+           The updated W and H matrices.
         """
         uV = np.multiply(We, V)
 
@@ -45,7 +62,6 @@ class WSNMF:
             _W.append(_w)
         W = np.array(_W)
 
-        # (S2)
         W_n = (np.abs(W) - W) / 2.0
         W_p = (np.abs(W) + W) / 2.0
 

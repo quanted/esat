@@ -26,6 +26,23 @@ class Bootstrap:
                  threshold: float = 0.6,
                  seed: int = None
                  ):
+        """
+        Placeholder description
+
+        Parameters
+        ----------
+        data
+        uncertainty
+        model_selected
+        nmf_results
+        feature_labels
+        method
+        optimized
+        bootstrap_n
+        block_size
+        threshold
+        seed
+        """
         self.nmf_results = nmf_results
         self.model_selected = model_selected
         self.feature_labels = feature_labels
