@@ -250,8 +250,8 @@ class BatchNMF:
 
         Returns
         -------
-        bool
-           True if the model is written to file. False if the output directory does not exist.
+        str
+           The path to the output directory, if pickle=False or the path to the pickle file. If save fails returns None
 
         """
         output_directory = Path(output_directory)
@@ -265,13 +265,44 @@ class BatchNMF:
                     pickle.dump(self, save_file)
                     logger.info(f"Batch NMF models saved to pickle file: {file_path}")
             else:
+                file_path = output_directory
                 for i, _nmf in enumerate(self.results):
                     file_name = f"{batch_name}-model-{i}"
                     _nmf.save(model_name=file_name, output_directory=output_directory,
                               pickle_model=pickle_model, header=header)
             logger.info(f"All batch NMF models saved. Name: {batch_name}, Directory: {output_directory}")
-            return True
+            return file_path
         else:
             logger.error(f"Output directory does not exist. Specified directory: {output_directory}")
-            return False
+            return None
 
+    @staticmethod
+    def load(file_path: str):
+        """
+        Load a previously saved Batch NMF pickle file.
+
+        Parameters
+        ----------
+        file_path : str
+           File path to a previously saved Batch NMF pickle file
+
+        Returns
+        -------
+        BatchNMF
+           On successful load, will return a previously saved Batch NMF object. Will return None on load fail.
+        """
+        file_path = Path(file_path)
+        if not file_path.is_absolute():
+            current_directory = os.path.abspath(__file__)
+            file_path = Path(os.path.join(current_directory, file_path)).resolve()
+        if os.path.exists(file_path):
+            try:
+                with open(file_path, "rb") as pfile:
+                    bnmf = pickle.load(pfile)
+                    return bnmf
+            except pickle.PickleError as p_error:
+                logger.error(f"Failed to load BatchNMF pickle file {file_path}. \nError: {p_error}")
+                return None
+        else:
+            logger.error(f"BatchNMF load file failed, specified pickle file does not exist. File Path: {file_path}")
+            return None

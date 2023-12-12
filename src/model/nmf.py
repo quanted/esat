@@ -17,6 +17,7 @@ import logging
 import copy
 import pickle
 import json
+import time
 
 logger = logging.getLogger("NMF")
 logger.setLevel(logging.INFO)
@@ -106,8 +107,8 @@ class NMF:
             "creation_date": datetime.utcnow().strftime("%m/%d/%Y, %H:%M:%S %Z"),
             "method": self.method,
             "seed": self.seed,
-            "samples": self.m,
-            "features": self.n,
+            "samples": int(self.m),
+            "features": int(self.n),
             "factors": self.factors
         }
         self.converged = False
@@ -430,14 +431,31 @@ class NMF:
         self.Qtrue = q_loss(V=V, U=U, W=W, H=H)
         self.Qrobust, _ = qr_loss(V=V, U=U, W=W, H=H, alpha=robust_alpha)
         self.metadata["completion_date"] = datetime.utcnow().strftime("%m/%d/%Y, %H:%M:%S %Z")
-        self.metadata["max_iterations"] = max_iter
-        self.metadata["converge_delta"] = converge_delta
-        self.metadata["converge_n"] = converge_n
-        self.metadata["model_i"] = model_i
+        self.metadata["max_iterations"] = int(max_iter)
+        self.metadata["converge_delta"] = float(converge_delta)
+        self.metadata["converge_n"] = int(converge_n)
+        self.metadata["model_i"] = int(model_i)
         self.metadata["robust_mode"] = robust_mode
         if robust_mode:
-            self.metadata["robust_n"] = robust_n
-            self.metadata["robust_alpha"] = robust_alpha
+            self.metadata["robust_n"] = int(robust_n)
+            self.metadata["robust_alpha"] = float(robust_alpha)
+
+    @staticmethod
+    def __np_encoder(object):
+        """
+        Convert any numpy type to a generic type for json serialization.
+
+        Parameters
+        ----------
+        object
+           Object to be converted.
+        Returns
+        -------
+        object
+            Generic object or an unchanged object if not a numpy type
+        """
+        if isinstance(object, np.generic):
+            return object.item()
 
     def save(self,
              model_name: str,
@@ -464,8 +482,8 @@ class NMF:
 
         Returns
         -------
-        bool
-           True if the model is written to file. False if the output directory does not exist.
+        str
+           The path to the output directory, if pickle=False or the path to the pickle file. If save fails returns None
 
         """
         factor_header = None
@@ -484,9 +502,10 @@ class NMF:
                     pickle.dump(self, save_file)
                     logger.info(f"NMF model saved to pickle file: {file_path}")
             else:
+                file_path = output_directory
                 meta_file = os.path.join(output_directory, f"{model_name}-metadata.json")
                 with open(meta_file, "w") as mfile:
-                    json.dump(self.metadata, mfile)
+                    json.dump(self.metadata, mfile, default=self.__np_encoder)
                     logger.info(f"NMF model metadata saved to file: {meta_file}")
                 profile_file = os.path.join(output_directory, f"{model_name}-profile.csv")
                 with open(profile_file, "w") as pfile:
@@ -509,11 +528,11 @@ class NMF:
                     residuals = self.V - self.WH
                     np.savetxt(rfile, residuals, delimiter=',', header=header, comments=residual_comment)
                     logger.info(f"NMF model residuals saved to file: {residual_file}")
-            return True
+            return file_path
 
         else:
             logger.error(f"Output directory does not exist. Specified directory: {output_directory}")
-            return False
+            return None
 
     @staticmethod
     def load(file_path: str):
@@ -528,7 +547,7 @@ class NMF:
         Returns
         -------
         NMF
-           On successful load, will return a previous NMF object. Will return None on load fail.
+           On successful load, will return a previously saved NMF object. Will return None on load fail.
         """
         file_path = Path(file_path)
         if not file_path.is_absolute():

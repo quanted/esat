@@ -22,7 +22,7 @@ if __name__ == "__main__":
                 init_method = "col_means"           # default is column means, "kmeans", "cmeans"
                 init_norm = True
                 seed = 42
-                models = 500
+                models = 20
                 if method == "ws-nmf":
                     converge_delta = 1.0 if dataset == "b" else 0.01
                     max_iterations = 5000
@@ -75,8 +75,7 @@ if __name__ == "__main__":
                     index_col=index_col,
                     sn_threshold=sn_threshold
                 )
-                V = dh.input_data_processed
-                U = dh.uncertainty_data_processed
+                V, U = dh.get_data()
 
                 batch_nmf = BatchNMF(V=V, U=U, factors=factors, models=models, method=method, seed=seed, init_method=init_method,
                                      init_norm=init_norm, fuzziness=5.0, max_iter=max_iterations, converge_delta=converge_delta,
@@ -87,15 +86,17 @@ if __name__ == "__main__":
                 t1 = time.time()
                 runtime = round(t1-t0, 2)
                 print(f"Runtime: {round((t1-t0)/60, 2)} min(s)")
-                full_output_path = f"{dataset}-nmf-output-f{factors}.json"
-                batch_nmf.save(output_name=full_output_path)
+                # batch_name = f"test-batch-f{factors}"
+                # output_path = os.path.join("..", "..", "..", "data", "output")
+                # full_output_path = batch_nmf.save(batch_name=batch_name, output_directory=output_path,
+                #                                   pickle_batch=True, header=dh.features)
 
-                profile_comparison = FactorComp(nmf_output_file=full_output_path, pmf_profile_file=pmf_profile_file,
+                profile_comparison = FactorComp(batch_nmf=batch_nmf, pmf_profile_file=pmf_profile_file,
                                                 pmf_contribution_file=pmf_contribution_file, factors=factors,
-                                                species=len(dh.features), residuals_path=pmf_residuals_file)
+                                                features=dh.features, residuals_path=pmf_residuals_file)
                 pmf_q = calculate_Q(profile_comparison.pmf_residuals.values, dh.uncertainty_data_processed)
                 profile_comparison.compare(PMF_Q=pmf_q)
-                os.remove(path=full_output_path)
+                # os.remove(path=full_output_path)
 
                 run_type = "rust" if optimized else "py"
 
@@ -108,8 +109,8 @@ if __name__ == "__main__":
                             "method": method,
                             "best_model": profile_comparison.best_model,
                             "factor_mapping": profile_comparison.factor_map,
-                            "model_profiles": profile_comparison.nmf_epochs_dfs[profile_comparison.best_model]["H"].values.tolist(),
-                            "model_contributions": profile_comparison.nmf_epochs_dfs[profile_comparison.best_model]["W"].values.tolist(),
+                            "model_profiles": profile_comparison.nmf_model_dfs[profile_comparison.best_model]["H"].values.tolist(),
+                            "model_contributions": profile_comparison.nmf_model_dfs[profile_comparison.best_model]["W"].values.tolist(),
                             "model_profile_r2": float(profile_comparison.best_factor_r_avg),
                             "model_contribution_r2": float(profile_comparison.best_contribution_r_avg)
                         }

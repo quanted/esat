@@ -6,16 +6,17 @@ import pandas as pd
 from itertools import permutations, combinations
 import multiprocessing as mp
 from tqdm import tqdm
+from src.model.batch_nmf import BatchNMF
 
 
 class FactorComp:
 
-    def __init__(self, pmf_profile_file, pmf_contribution_file, factors, species, nmf_output_file=None, residuals_path=None, method="all"):
+    def __init__(self, pmf_profile_file, pmf_contribution_file, factors, features, batch_nmf=None, nmf_output_file=None, residuals_path=None, method="all"):
         self.nmf_output_file = nmf_output_file
         self.pmf_profile_file = pmf_profile_file
         self.pmf_contribution_file = pmf_contribution_file
         self.factors = factors
-        self.species = species
+        self.features = features
 
         self.pmf_residuals_path = residuals_path
         self.pmf_residuals = None
@@ -30,9 +31,10 @@ class FactorComp:
         self._parse_pmf_output()
         self._calculate_pmf_wh()
 
-        self.nmf_epochs_dfs = {}
+        self.batch_nmf = batch_nmf
+        self.nmf_model_dfs = {}
         self.nmf_Q = {}
-        if nmf_output_file is not None:
+        if nmf_output_file is not None or batch_nmf is not None:
             self._parse_nmf_output()
         self.factor_map = None
         self.best_model = None
@@ -71,11 +73,11 @@ class FactorComp:
                         i[1] = "species"
                         column_labels = i
                         continue
-                    if j < self.species:
+                    if j < len(self.features):
                         pmf_profiles.append(i)
-                    elif j < 2 * self.species:
+                    elif j < 2 * len(self.features):
                         pmf_profile_p.append(i)
-                    elif j < 3 * self.species:
+                    elif j < 3 * len(self.features):
                         pmf_profile_t.append(i)
                     j += 1
             pmf_profiles_df = pd.DataFrame(pmf_profiles, columns=column_labels)
@@ -149,47 +151,45 @@ class FactorComp:
                 self.pmf_WH[factor] = pmf_WH_f
 
     def _parse_nmf_output(self):
-        if not os.path.exists(self.nmf_output_file):
-            print(f"No nmf output found at: {self.nmf_output_file}")
-            return
-        if self.pmf_profiles_df is None:
-            print(f"PMF output must be loaded prior to loading NMF outputs")
-            return
-        with open(self.nmf_output_file, 'br') as json_file:
-            json_data = json.load(json_file)
-            species_columns = np.array(self.pmf_profiles_df["species"])
-            for i in range(len(json_data)):
-                nmf_h_data = np.array(json_data[i]["H"])
-                nmf_w_data = np.array(json_data[i]["W"])
-                nmf_wh_data = np.array(json_data[i]["wh"])
-                nmf_wh_data = nmf_wh_data.reshape(nmf_wh_data.shape[1], nmf_wh_data.shape[0])
+        if self.batch_nmf is None:
+            if not os.path.exists(self.nmf_output_file):
+                print(f"No nmf output found at: {self.nmf_output_file}")
+                return
+            else:
+                self.batch_nmf = BatchNMF.load(self.nmf_output_file)
+        species_columns = self.features
+        for i, i_nmf in enumerate(self.batch_nmf.results):
+            nmf_h_data = i_nmf.H
+            nmf_w_data = i_nmf.W
+            nmf_wh_data = i_nmf.WH
+            nmf_wh_data = nmf_wh_data.reshape(nmf_wh_data.shape[1], nmf_wh_data.shape[0])
 
-                nmf_h_df = pd.DataFrame(nmf_h_data, columns=species_columns, index=self.factor_columns)
-                nmf_w_df = pd.DataFrame(nmf_w_data, columns=self.factor_columns)
-                nmf_wh_df = pd.DataFrame(nmf_wh_data.T, columns=species_columns)
+            nmf_h_df = pd.DataFrame(nmf_h_data, columns=species_columns, index=self.factor_columns)
+            nmf_w_df = pd.DataFrame(nmf_w_data, columns=self.factor_columns)
+            nmf_wh_df = pd.DataFrame(nmf_wh_data.T, columns=species_columns)
 
-                nmf_wh_e = {}
-                for factor in self.factor_columns:
-                    nmf_H_f = nmf_h_df.loc[factor].to_numpy()
-                    nmf_W_f = nmf_w_df[factor].to_numpy()
-                    nmf_W_f = nmf_W_f.reshape(len(nmf_W_f), 1)
-                    nmf_WH_f = np.multiply(nmf_W_f, nmf_H_f)
-                    nmf_wh_e[factor] = nmf_WH_f
+            nmf_wh_e = {}
+            for factor in self.factor_columns:
+                nmf_H_f = nmf_h_df.loc[factor].to_numpy()
+                nmf_W_f = nmf_w_df[factor].to_numpy()
+                nmf_W_f = nmf_W_f.reshape(len(nmf_W_f), 1)
+                nmf_WH_f = np.multiply(nmf_W_f, nmf_H_f)
+                nmf_wh_e[factor] = nmf_WH_f
 
-                self.nmf_epochs_dfs[i] = {"WH": nmf_wh_df, "W": nmf_w_df, "H": nmf_h_df, 'WH-element': nmf_wh_e}
-                self.nmf_Q[i] = json_data[i]["Q(true)"]
+            self.nmf_model_dfs[i] = {"WH": nmf_wh_df, "W": nmf_w_df, "H": nmf_h_df, 'WH-element': nmf_wh_e}
+            self.nmf_Q[i] = i_nmf.Qtrue
 
     def compare(self, PMF_Q=None, verbose: bool = True):
         correlation_results = {}
         contribution_results = {}
         wh_results = {}
-        for m in tqdm(range(len(self.nmf_epochs_dfs)), desc="Calculating correlation between factors from each epoch"):
+        for m in tqdm(range(len(self.nmf_model_dfs)), desc="Calculating correlation between factors from each epoch"):
             correlation_results[m] = {}
             contribution_results[m] = {}
             wh_results[m] = {}
-            nmf_m = self.nmf_epochs_dfs[m]["H"]
-            nmf_contribution_m = self.nmf_epochs_dfs[m]["W"]
-            nmf_wh = self.nmf_epochs_dfs[m]["WH-element"]
+            nmf_m = self.nmf_model_dfs[m]["H"]
+            nmf_contribution_m = self.nmf_model_dfs[m]["W"]
+            nmf_wh = self.nmf_model_dfs[m]["WH-element"]
             for i in self.factor_columns:
                 pmf_i = self.pmf_profiles_df[i].astype(float)
                 pmf_contribution_i = self.pmf_contribution_df[i].astype(float)
@@ -222,7 +222,7 @@ class FactorComp:
 
         pool = mp.Pool()
 
-        for m in tqdm(range(len(self.nmf_epochs_dfs)), desc="Calculating average correlation for all permutations for each epoch"):
+        for m in tqdm(range(len(self.nmf_model_dfs)), desc="Calculating average correlation for all permutations for each epoch"):
             # Each Model
             permutation_results = {}
             model_contribution_results = {}
@@ -270,7 +270,8 @@ class FactorComp:
         self.factor_map = list(best_perm)
         if verbose:
             print(f"R2 - Model: {best_model}, Best permutations: {list(best_perm)}, Average R2: {self.best_avg_r}, \n"
-                  f"Profile R2 Avg: {self.best_factor_r_avg}, Contribution R2 Avg: {self.best_contribution_r_avg}, WH R2 Avg: {self.best_wh_r_avg}\n"
+                  f"Profile R2 Avg: {self.best_factor_r_avg}, Contribution R2 Avg: {self.best_contribution_r_avg}, "
+                  f"WH R2 Avg: {self.best_wh_r_avg}\n"
                   f"Profile R2: {self.best_factor_r}, \n"
                   f"Contribution R2: {self.best_contribution_r}, \n"
                   f"WH R2: {self.best_wh_r}\n"
