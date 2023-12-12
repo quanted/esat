@@ -9,22 +9,57 @@ logger.setLevel(logging.INFO)
 
 
 class Error:
+    """
+    Calculate the summary error statistics from bootstrap, displacement and BS-DISP results.
+    """
 
-    def __init__(self, bs: Bootstrap = None, disp: Displacement = None):
+    def __init__(self,
+                 bs: Bootstrap = None,
+                 disp: Displacement = None
+                 ):
+        """
+        Calculate the combined error summary statistics from various error estimation methods.
+
+        Parameters
+        ----------
+        bs : Bootstrap
+           The BS run to calculate the summary error.
+        disp : Displacement
+           The DISP run to calculate the summary error.
+        """
         self.bs = bs
         self.disp = disp
+        self.factors = 0
         if bs is not None:
             self.feature_labels = self.bs.feature_labels
             self.model_selected = self.bs.model_selected
+            self.factors = bs.factors
         if disp is not None:
             self.feature_labels = self.disp.feature_labels
             self.model_selected = self.disp.selected_model
+            self.factors = disp.factors
 
-    def plot_summary(self, factor_i: int):
+    def plot_summary(self,
+                     factor_i: int
+                     ):
+        """
+        Plot the combined error estimation results from all provided method results.
+
+        Parameters
+        ----------
+        factor_i : int
+           The index of the factor to plot.
+
+        """
         disp_dQ = 4
         if self.bs is None and self.disp is None:
             logging.error("Must complete and provide an instance of either displacement or bootstrap or both")
             return
+        if self.factors < factor_i:
+            logger.error(f"Factor index must be equal or less to the number of factors. Factors: {self.factors}, "
+                         f"Index: {factor_i}")
+            return
+
         error_plot = go.Figure()
 
         if self.bs is not None:
@@ -54,14 +89,11 @@ class Error:
                        base=selected_data.conc_min, name="Disp",
                        marker_color='rgb(171,245,106)', marker_line_color='rgb(128,216,52)'))
         error_plot.add_trace(go.Scatter(x=self.feature_labels, y=base_sums, mode='markers', name="Base",
-                                    marker=dict(size=12, color="red", symbol="line-ew", line_width=1,
-                                                line_color="red")))
+                                        marker=dict(size=12, color="red", symbol="line-ew", line_width=1,
+                                        line_color="red")))
         error_plot.update_layout(
             title=f"Error Estimation Concentration Summary - Model {self.model_selected} - Factor {factor_i}", width=1200,
             height=600, showlegend=True, barmode='group')
         error_plot.update_traces(selector=dict(type="bar"), hovertemplate='Max: %{value}<br>Min: %{base}')
         error_plot.update_yaxes(title_text="Concentration (log)", type="log")
         error_plot.show()
-
-
-

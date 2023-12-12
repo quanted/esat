@@ -14,19 +14,55 @@ logger.setLevel(logging.INFO)
 
 
 class Displacement:
+    """
+    The displacement method (DISP) for error estimation explores the rotational ambiguity in the solution by assessing
+    the largest range of source profile values without an appreciable increase in the loss value (Q).
+    """
 
     dQmax = [32, 16, 8, 4]
 
-    def __init__(self, batch_nmf, feature_labels, selected_model=None, max_search: int = 50, threshold_dQ: float = 0.1):
-        self.batch_nmf = batch_nmf
-        #TODO: switch to passing in NMF object (trained model).
-        self.selected_model = selected_model if selected_model is not None else self.batch_nmf.best_model
-        self.V = batch_nmf.V
-        self.U = batch_nmf.U
-        self.H = batch_nmf.results[self.selected_model]["H"]
-        self.W = batch_nmf.results[self.selected_model]["W"]
-        self.base_Q = batch_nmf.results[self.selected_model]["Q(true)"]
+    def __init__(self,
+                 nmf: NMF,
+                 feature_labels: list,
+                 selected_model: int = -1,
+                 max_search: int = 50,
+                 threshold_dQ: float = 0.1
+                 ):
+        """
+        The DISP method finds the required change in a factor profile feature value to cause a specific increase in the
+        loss function value (dQ). The change is found for dQ=(4, 8, 16, 32) and for both increasing and decreasing
+        changes to the factor profile feature values. The search for these changes is limited to max_search steps, where
+        a step is the binary search for the value based upon the bounds of the initial value. Factor profile values must
+        be greater than 0, so once the modified value is below 1e-8 or the modified value is no longer changing between
+        steps the search is stopped and the final value in the search used.
+
+        The process is repeated for all factors and features, if there are factors=k, features=N, dQ_N=4 then this
+        process is completed 2*k*N*4 times.
+
+        Parameters
+        ----------
+        nmf : NMF
+           The base model to run the DISP method on.
+        feature_labels : list
+           The list of feature, column, labels from the original input dataset. Provided in the data handler.
+        selected_model : int
+           The index of the model selected in the case of a batch NMF run, used for labeling.
+        max_search : int
+           The maximum number of search steps to complete when trying to find a factor feature value. Default = 50
+        threshold_dQ : float
+           The threshold range of the dQ value for the factor feature value to be considered found. I.E, dQ=4 and
+           threshold_dQ=0.1, than any value between 3.9 and 4.0 will be considered valid.
+
+        """
+        self.nmf = nmf
+        self.selected_model = selected_model
+        self.V = self.nmf.V
+        self.U = self.nmf.U
+        self.H = self.nmf.H
+        self.W = self.nmf.W
+        self.base_Q = self.nmf.Qtrue
         self.feature_labels = feature_labels
+        self.factors = self.H.shape[0]
 
         self.max_search = max_search
         self.threshold_dQ = threshold_dQ
@@ -39,16 +75,23 @@ class Displacement:
         self.compiled_results = None
 
     def run(self):
+        """
+        Run the DISP method on the provided NMF model.
+
+        """
         self._increase_disp()
         self._decrease_disp()
         self._compile_results()
 
     def summary(self):
+        """
+        Print the summary table showing the largest change in dQ and the % of factor flips that occurred.
+        """
         largest_dQ_inc = self.compiled_results["dQ_drop"].max()
         largest_dQ_dec = self.compiled_results["dQ_drop"].min()
         largest_dQ_change = largest_dQ_inc if np.abs(largest_dQ_inc) > np.abs(largest_dQ_dec) else largest_dQ_dec
         table_labels = ["dQ Max"]
-        for i in range(self.batch_nmf.factors):
+        for i in range(self.factors):
             table_labels.append(f"Factor {i}")
         table_data = np.round(100 * (self.swap_table/self.count_table), 2)
         dq_list = list(reversed(self.dQmax))
@@ -62,11 +105,44 @@ class Displacement:
                                  width=600, height=200, margin={'t': 50, 'l': 25, 'b': 10, 'r': 25})
         table_plot.show()
 
-    def plot_results(self, factor: int, dQ: int = 4):
+    def plot_results(self,
+                     factor: int,
+                     dQ: int = 4
+                     ):
+        """
+        Plot the DISP results for a specified factor and dQ value. The output results are grouped by dQ, with dQ=4 being
+        the default value displayed for results.
+
+        Parameters
+        ----------
+        factor : int
+           The index of the DISP factor results to display.
+        dQ : int
+           The dQ value to show in the results, valid values are (4, 8, 16, 32). Default = 4, will use default if
+           invalid value provided.
+
+        """
+        dQ = dQ if dQ in self.dQmax else 4
         self.plot_profile(factor=factor, dQ=dQ)
         self.plot_contribution(factor=factor, dQ=dQ)
 
-    def plot_profile(self, factor: int, dQ: int = 4):
+    def plot_profile(self,
+                     factor: int,
+                     dQ: int = 4
+                     ):
+        """
+        Plot the DISP factor profile results.
+
+        Parameters
+        ----------
+        factor : int
+           The index of the DISP factor results to display.
+        dQ : int
+           The dQ value to show in the results, valid values are (4, 8, 16, 32). Default = 4, will use default if
+           invalid value provided.
+
+        """
+        dQ = dQ if dQ in self.dQmax else 4
         selected_data = self.compiled_results.loc[self.compiled_results["factor"] == factor].loc[
             self.compiled_results["dQ"] == dQ]
 
@@ -87,7 +163,23 @@ class Displacement:
         disp_profile.update_traces(selector=dict(type="bar"), hovertemplate='Max: %{value}<br>Min: %{base}')
         disp_profile.show()
 
-    def plot_contribution(self, factor: int, dQ: int = 4):
+    def plot_contribution(self,
+                          factor: int,
+                          dQ: int = 4
+                          ):
+        """
+        Plot the DISP factor contribution results.
+
+        Parameters
+        ----------
+        factor : int
+           The index of the DISP factor results to display.
+        dQ : int
+           The dQ value to show in the results, valid values are (4, 8, 16, 32). Default = 4, will use default if
+           invalid value provided.
+
+        """
+        dQ = dQ if dQ in self.dQmax else 4
         selected_data = self.compiled_results.loc[self.compiled_results["factor"] == factor].loc[
             self.compiled_results["dQ"] == dQ]
 
@@ -111,8 +203,10 @@ class Displacement:
         disp_conc.show()
 
     def _increase_disp(self):
-        #TODO: Once NMF object available use those parameters for new model
-        print("DISP - Testing increasing value changes to H")
+        """
+        Run the increasing change DISP method on all factors and features.
+        """
+        logger.info("DISP - Testing increasing value changes to H")
         for factor_i in tqdm(range(self.H.shape[0]), desc=" Factors", position=0):
             factor_results = {}
             for feature_j in tqdm(range(self.H.shape[1]), desc=f"Factor {factor_i} - Features", position=0, leave=True):
@@ -163,11 +257,12 @@ class Displacement:
                         if dQ > max_dQ:
                             max_dQ = dQ
                     disp_i_nmf = NMF(V=self.V, U=self.U,
-                                     factors=self.batch_nmf.factors, method=self.batch_nmf.method,
-                                     seed=self.batch_nmf.seed, optimized=self.batch_nmf.optimized, verbose=False)
+                                     factors=self.nmf.factors, method=self.nmf.method,
+                                     seed=self.nmf.seed, optimized=self.nmf.optimized, verbose=False)
                     disp_i_nmf.initialize(H=new_H)
-                    disp_i_nmf.train(max_iter=self.batch_nmf.max_iter, converge_delta=self.batch_nmf.converge_delta,
-                                     converge_n=self.batch_nmf.converge_n, robust_mode=False)
+                    disp_i_nmf.train(max_iter=self.nmf.metadata["max_iterations"],
+                                     converge_delta=self.nmf.metadata["converge_delta"],
+                                     converge_n=self.nmf.metadata["converge_n"], robust_mode=False)
                     factor_swap = compare_all_factors(disp_i_nmf.H, self.H)
                     scaled_profiles = new_H / new_H.sum(axis=0)
                     percent = scaled_profiles[factor_i, feature_j]
@@ -182,8 +277,10 @@ class Displacement:
             self.increase_results[f"factor-{factor_i}"] = factor_results
 
     def _decrease_disp(self):
-        #TODO: Once NMF object available use those parameters for new model
-        print("DISP - Testing decreasing value changes to H")
+        """
+        Run the decreasing change DISP method on all factors and features.
+        """
+        logger.info("DISP - Testing decreasing value changes to H")
         for factor_i in tqdm(range(self.H.shape[0]), desc=" Factors", position=0):
             factor_results = {}
             for feature_j in tqdm(range(self.H.shape[1]), desc=f" Factor {factor_i} - Features", position=0, leave=True):
@@ -219,11 +316,12 @@ class Displacement:
                             max_dQ = dQ
                         p_mod = modifier
                     disp_i_nmf = NMF(V=self.V, U=self.U,
-                                     factors=self.batch_nmf.factors, method=self.batch_nmf.method,
-                                     seed=self.batch_nmf.seed, optimized=self.batch_nmf.optimized, verbose=False)
+                                     factors=self.nmf.factors, method=self.nmf.method,
+                                     seed=self.nmf.seed, optimized=self.nmf.optimized, verbose=False)
                     disp_i_nmf.initialize(H=new_H)
-                    disp_i_nmf.train(max_iter=self.batch_nmf.max_iter, converge_delta=self.batch_nmf.converge_delta,
-                                     converge_n=self.batch_nmf.converge_n, robust_mode=False)
+                    disp_i_nmf.train(max_iter=self.nmf.metadata["max_iterations"],
+                                     converge_delta=self.nmf.metadata["converge_delta"],
+                                     converge_n=self.nmf.metadata["converge_n"], robust_mode=False)
                     factor_swap = compare_all_factors(disp_i_nmf.H, self.H)
                     scaled_profiles = new_H / new_H.sum(axis=0)
                     percent = scaled_profiles[factor_i, feature_j]
@@ -238,6 +336,12 @@ class Displacement:
             self.decrease_results[f"factor-{factor_i}"] = factor_results
 
     def _compile_results(self):
+        """
+        Compile and calculate the DISP summary statistics from all runs and each dQ value.
+
+        Results are found in the self.compiled_results dataframe.
+
+        """
         scaled_profiles = self.H / self.H.sum(axis=0)
         compiled_data = {"dQ":[], "factor":[], "feature":[], "profile":[], "profile_max":[], "profile_min":[], "conc":[],
                        "conc_max":[], "conc_min":[], "dQ_drop": []}

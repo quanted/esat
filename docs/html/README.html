@@ -46,8 +46,16 @@
               <p class="caption" role="heading"><span class="caption-text">Readme:</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Non-Negative Matrix Factorization</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#summary">Summary</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#summary">Summary</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#pmf5">PMF5</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#nmf-py">NMF-PY</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#project-products">Project Products</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#requirements">Requirements</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#rust-requirements">Rust Requirements</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#creating-docs">Creating Docs</a></li>
 </ul>
 </li>
@@ -79,18 +87,54 @@
              
   <section id="non-negative-matrix-factorization">
 <h1>Non-Negative Matrix Factorization<a class="headerlink" href="#non-negative-matrix-factorization" title="Link to this heading"></a></h1>
-<p>Last Update: 12-06-2023</p>
+<p>Last Update: 12-11-2023</p>
 <section id="summary">
 <h2>Summary<a class="headerlink" href="#summary" title="Link to this heading"></a></h2>
-<p>Placehold for readme content</p>
+<section id="pmf5">
+<h3>PMF5<a class="headerlink" href="#pmf5" title="Link to this heading"></a></h3>
+<p>The EPA’s Positive Matrix Factorization (PMF) Model is a mathematical tool that processes a dataset of feature concentrations across many samples (and concentration uncertainties) to estimate a set of sources and their contributions. PMF5 can be used on a wide range of environmental data and is a powerful tool for estimating source apportionment: https://www.epa.gov/air-research/positive-matrix-factorization-model-environmental-data-analyses</p>
+<p>PMF version 5 was released in 2014 and is no longer being supported. PMF5 still has an active, international user community; making the development of a modern replacement a worthwhile effort. The primary goals for a PMF5 replacement would be to develop and release an open-source tool that replicates the functionality of PMF5 while also providing new data analytics features and techniques.</p>
+</section>
+<section id="nmf-py">
+<h3>NMF-PY<a class="headerlink" href="#nmf-py" title="Link to this heading"></a></h3>
+<p>The focus of the NMF-PY project is to replicate the results and performance of PMF5, using open-source packages and code. Existing mathematics and machine learning packages were investigated for use in the project, though none were able to satisfy the requirements of the project.</p>
+<p>Project Requirements:</p>
+<ol class="arabic simple">
+<li><p>See high correlations (&gt; 0.95) of the new algorithm’s output to the PMF5 solutions</p></li>
+<li><p>Q of the new algorithms must be less than or comparable to PMF5 (&lt; 10%)</p></li>
+<li><p>Model runtime should be comparable to or faster than PMF5 (&lt; 10%)</p></li>
+<li><p>Use only open-source packages and produce readable code</p></li>
+</ol>
+<p>NMF-PY also tested many different NMF algorithms, since we had to reverse engineer the ME2 solver or develop a comparable process. We have implemented two algorithms that were able to satisfy the constrains of the project.</p>
+<p>Additional features will be added to the python package as determined from the user-community and development team.</p>
+</section>
+<section id="project-products">
+<h3>Project Products<a class="headerlink" href="#project-products" title="Link to this heading"></a></h3>
+<p>The products from the NMF-PY project include the following:</p>
+<ol class="arabic simple">
+<li><p>Open-source python package (with minimal package dependencies)</p></li>
+<li><p>Jupyter Notebooks providing function and algorithm details, as well as complete workflows.</p></li>
+<li><p>Code documentation for users of the python package.</p></li>
+<li><p>Presentations/tutorials on how to use the python package and jupyter notebooks.</p></li>
+<li><p>Manuscript documenting the comparative analysis performed on the output of PMF5 vs the NMF-PY algorithms.</p></li>
+<li><p>Optional: Web/Desktop application wrapper of the python package.</p></li>
+</ol>
+</section>
 </section>
 <section id="requirements">
 <h2>Requirements<a class="headerlink" href="#requirements" title="Link to this heading"></a></h2>
-<p>Python 3.11<br />
+<p>Python = 3.11<br />
 numpy &gt;= 1.24<br />
 pandas &gt;= 2.0.0<br />
 plotly &gt;= 5.14<br />
 scipy &gt;= 1.10</p>
+<section id="rust-requirements">
+<h3>Rust Requirements<a class="headerlink" href="#rust-requirements" title="Link to this heading"></a></h3>
+<p>The python package includes a Rust module for running the algorithm update procedures, which requires local compiling to operate.</p>
+<p>To run the Rust functions that is specified by the optimized parameter, requires that Rust is installed (https://www.rust-lang.org/tools/install) and the python package maturin (https://pypi.org/project/maturin/) is installed to the py env.
+Then using the py env and from the project root running <i>maturin develop</i> or <i>maturin build</i> to compile the Rust functions to run from the python code. To compile the optimized Rust functions, add the <i>-r</i> or <i>–release</i> tags to compile with optimization.</p>
+<p>The rust functions are imported as python functions, under nmf_pyr.</p>
+</section>
 </section>
 <section id="creating-docs">
 <h2>Creating Docs<a class="headerlink" href="#creating-docs" title="Link to this heading"></a></h2>

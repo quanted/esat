@@ -19,12 +19,12 @@ The expected code products from the project include:
 
 .. toctree::
    :maxdepth: 3
-   :caption: Readme:
+   :caption: Readme
 
    README.md
 
 
-Indices and tables
+Indices and Tables
 ==================
 
 * :ref:`genindex`

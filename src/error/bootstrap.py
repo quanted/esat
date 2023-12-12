@@ -12,56 +12,66 @@ logger.setLevel(logging.INFO)
 
 
 class Bootstrap:
+    """
+    The Bootstrap (BS) method is used to detect and estimate disproportionate effects of a small set of data samples on
+    the solution. The BS method assembles dataset by randomly selecting blocks of consecutive samples from the original
+    dataset, with replacement.
+    """
 
     def __init__(self,
-                 data,
-                 uncertainty,
-                 model_selected,
-                 nmf_results,
-                 feature_labels,
-                 method,
-                 optimized,
+                 nmf: NMF,
+                 feature_labels: list,
+                 model_selected: int = -1,
                  bootstrap_n: int = 20,
                  block_size: int = 10,
                  threshold: float = 0.6,
                  seed: int = None
                  ):
         """
-        Placeholder description
+        The BS method implemented here is called the block bootstrap method. The block BS method is useful for use on
+        timeseries data that may contain temporal correlations that would otherwise be lost if single samples were
+        resampled.
+
+        For each BS run, a unique BS dataset is created and run through NMF to convergence where the output is compared
+        to see if the factors of the original base model map to each of the factors of the BS output. The factors are
+        mapped to the original base model factors by highest correlation, potentially having multiple BS factors mapping
+        to the same base model factor, where the correlation is above the user specified threshold.
 
         Parameters
         ----------
-        data
-        uncertainty
-        model_selected
-        nmf_results
-        feature_labels
-        method
-        optimized
-        bootstrap_n
-        block_size
-        threshold
-        seed
+        nmf : NMF
+           A completed NMF base model that used the same data and uncertainty datasets.
+        feature_labels : list
+           The labels for the features, columns of the dataset, specified from the data handler.
+        model_selected : int
+           The index of the model selected from a batch NMF run, used for labeling.
+        bootstrap_n : int
+           The number of bootstrap runs to make.
+        block_size : int
+           The block size for the BS resampling.
+        threshold : float
+           The correlation threshold that must be met for a BS factor to be mapped to a base model factor, factor
+           correlations must be greater than the threshold or are labeled unmapped.
+        seed : int
+           The random seed for random resampling of the BS datasets. The base model random seed is used for all BS runs,
+           which result in the same initial W matrix.
         """
-        self.nmf_results = nmf_results
+        self.nmf = nmf
         self.model_selected = model_selected
         self.feature_labels = feature_labels
-        self.data = data
-        self.uncertainty = uncertainty
+        self.data = nmf.V
+        self.uncertainty = nmf.U
 
-        #TODO: Pass in NMF object (trained model)
-        self.method = method
-        self.optimized = optimized
         self.bootstrap_n = bootstrap_n
         self.block_size = block_size
         self.threshold = threshold
 
-        self.base_W = self.nmf_results["W"]
-        self.base_H = self.nmf_results["H"]
-        self.base_Q = self.nmf_results["Q(robust)"]
+        self.base_W = self.nmf.W
+        self.base_H = self.nmf.H
+        self.base_Q = self.nmf.Qrobust
         self.factors = self.base_H.shape[0]
 
-        self.base_seed = self.nmf_results["seed"]
+        self.base_seed = self.nmf.seed
         self.bs_seed = seed if seed is not None else self.base_seed
 
         self.bs_results = {}
@@ -72,7 +82,13 @@ class Bootstrap:
         self.bs_profiles = {}
         self.bs_factor_contributions = {}
 
-    def block_resample(self, data, uncertainty, W, seed, overlapping: bool = False):
+    def _block_resample(self,
+                        data: np.ndarray,
+                        uncertainty: np.ndarray,
+                        W: np.ndarray,
+                        seed: int,
+                        overlapping: bool = False
+                        ):
         """
         Block resampling will resampled the set of data, uncertainty and W with the same resampling indices. The
         datasets are broken into block_size chunks and then randomly selected with replacement until the new bootstrap
@@ -83,15 +99,32 @@ class Bootstrap:
 
         The for loop assignment of the new indices is necessary due to a bug in the python package that passes the
         modified matrices to the Rust functions.
-        :param data: The original input dataset.
-        :param uncertainty: The original uncertainty dataset.
-        :param W: The base model factor contribution matrix.
-        :param overlapping: Specifies if blocks can overlap, i.e. have blocks [0, 1, 2, 3], [2, 3, 4, 5], etc...
-        :return: The resampled data, uncertainty, and W matrices, and the resampled index matrix for validation.
+
+        Parameters
+        ----------
+        data : np.ndarray
+           The original input dataset, deepcopy (required for Rust functions).
+        uncertainty : np.ndarray
+           The original uncertainty dataset, deepcopy (required for Rust functions).
+         W : np.ndarray
+           The base model factor contribution matrix, deepcopy (required for Rust functions).
+        seed: int
+           The random seed used to randomly resample the datasets.
+        overlapping : bool
+           Specifies if blocks can overlap, i.e. have blocks [0, 1, 2, 3], [2, 3, 4, 5], etc...
+
+        Returns
+        -------
+        np.ndarray, np.ndarray, nd.ndarray, list
+            The resampled data, uncertainty, and W matrices, and the resampled index matrix for validation.
+
         """
+        N = self.data.shape[0]
+        if self.block_size > N/2:
+            logging.warn(f"Block size is greater than half the samples of the data. N: {N}. Setting block size to {N/2}")
+            self.block_size = N/2
         rng = np.random.default_rng(seed=seed)
         index_blocks = []
-        N = self.data.shape[0]
         M = math.ceil(N / self.block_size)
         index_count = 0
         if not overlapping:
@@ -128,13 +161,30 @@ class Bootstrap:
             np.array(_uncertainty, dtype=np.float64), \
             np.array(_W, dtype=np.float64), index_matrix
 
-    def resample(self, data, uncertainty, W, seed):
+    def _resample(self,
+                  data: np.ndarray,
+                  uncertainty: np.ndarray,
+                  W: np.ndarray,
+                  seed: int
+                  ):
         """
         Resamples the datasets with replacement, by single sample.
-        :param data: The original input dataset.
-        :param uncertainty: The original uncertainty dataset.
-        :param W: The base model factor contribution matrix.
-        :return: The resampled data, uncertainty, and W matrices and the resampled index matrix for validation.
+
+        Parameters
+        ----------
+        data : np.ndarray
+           The original input dataset, deepcopy (required for Rust functions).
+        uncertainty : np.ndarray
+           The original uncertainty dataset, deepcopy (required for Rust functions).
+         W : np.ndarray
+           The base model factor contribution matrix, deepcopy (required for Rust functions).
+        seed: int
+           The random seed used to randomly resample the datasets.
+
+        Returns
+        -------
+        np.ndarray, np.ndarray, nd.ndarray, list
+            The resampled data, uncertainty, and W matrices, and the resampled index matrix for validation.
         """
         rng = np.random.default_rng(seed=seed)
         random_index = list(rng.choice(range(data.shape[0]), data.shape[0], replace=True))
@@ -145,7 +195,26 @@ class Bootstrap:
             np.array(_uncertainty, dtype=np.float64), \
             np.array(_W, dtype=np.float64), random_index
 
-    def _calculate_factor_correlation(self, factor1, factor2):
+    def _calculate_factor_correlation(self,
+                                      factor1: np.ndarray,
+                                      factor2: np.ndarray
+                                      ):
+        """
+        Calculate the correlation between two factors, two 1d arrays.
+
+        Parameters
+        ----------
+        factor1 : np.ndarray
+           The first factor in the comparison.
+        factor2 : np.ndarray
+           The second factor in the comparison.
+
+        Returns
+        -------
+        float
+           The R squared correlation of the two factors.
+
+        """
         factor1 = factor1.astype(float)
         factor2 = factor2.astype(float)
         corr_matrix = np.corrcoef(factor1, factor2)
@@ -153,7 +222,28 @@ class Bootstrap:
         r_sq = corr ** 2
         return r_sq
 
-    def map_factors(self, H1, H2, threshold=0.6):
+    def map_factors(self,
+                    H1: np.ndarray,
+                    H2: np.ndarray,
+                    threshold: float = 0.6
+                    ):
+        """
+        Map all the factors of one factor profile to the factors of a second factor profile.
+
+        Parameters
+        ----------
+        H1 : np.ndarray
+           The first factor profile for the mapping.
+        H2 : np.ndarray
+           The second factor profile for the mapping.
+        threshold : float
+           The threshold that a factor correlation must exceed to be mapped to another factor.
+
+        Returns
+        -------
+        dict
+           A dictionary of the mapping of the H1 factors to the H2 factors.
+        """
         mapping = {}
         for i in range(H1.shape[0]):
             f1_i = H1[i]
@@ -169,7 +259,33 @@ class Bootstrap:
             mapping[i] = {"match": best_i, "r2": best_r, "mapped": True if best_r >= threshold else False}
         return mapping
 
-    def map_contributions(self, W1, H1, W2, H2, threshold=0.6):
+    def map_contributions(self,
+                          W1: np.ndarray,
+                          H1: np.ndarray,
+                          W2: np.ndarray,
+                          H2: np.ndarray,
+                          threshold: float = 0.6):
+        """
+        Map all the factors of H1 to the factors of H2 by the factor contributions.
+
+        Parameters
+        ----------
+        W1 : np.ndarray
+           The first factor contribution matrix for the mapping.
+        H1 : np.ndarray
+           The first factor profile matrix for the mapping.
+        W2 : np.ndarray
+           The second factor contribution matrix for the mapping.
+        H2 : np.ndarray
+           The second factor profile matrix for the mapping.
+        threshold : float
+           The threshold that a factor correlation must exceed to be mapped to another factor.
+
+        Returns
+        -------
+        dict
+           A dictionary of the mapping of the H1 factors to the H2 factors.
+        """
         mapping = {}
         matrices1 = {}
         matrices2 = {}
@@ -199,11 +315,57 @@ class Bootstrap:
             mapping[i] = {"match": best_i, "r2": best_r, "mapped": True if best_r >= threshold else False}
         return mapping
 
-    def run(self, keep_H: bool = True, reuse_seed: bool = True, block: bool = True, overlapping: bool = False):
+    def run(self,
+            keep_H: bool = True,
+            reuse_seed: bool = True,
+            block: bool = True,
+            overlapping: bool = False
+            ):
+        """
+        Run the BS method.
+
+        Executes all the BS runs and compiles the results.
+
+        Parameters
+        ----------
+        keep_H : bool
+           When retraining the NMF models using the resampled input and uncertainty datasets, keep the base model H
+           matrix instead of reinitializing. The W matrix is always reinitialized when NMF is run on the BS datasets.
+           Default = True
+        reuse_seed : bool
+           Reuse the base model seed for initializing the W matrix, and the H matrix if keep_H = False. Default = True
+        block : bool
+           Use block resampling instead of full resampling. Default = True
+        overlapping : bool
+           Allow resampled blocks to overlap. Default = False
+
+        """
         self._train(keep_H=keep_H, reuse_seed=reuse_seed, block=block, overlapping=overlapping)
         self._compile_results()
 
-    def _train(self, keep_H: bool = True, reuse_seed: bool = True, block: bool = True, overlapping: bool = False):
+    def _train(self,
+               keep_H: bool = True,
+               reuse_seed: bool = True,
+               block: bool = True,
+               overlapping: bool = False
+               ):
+        """
+        Train a new NMF model for each BS dataset.
+
+        Parameters
+        ----------
+        keep_H : bool
+           When retraining the NMF models using the resampled input and uncertainty datasets, keep the base model H
+           matrix instead of reinitializing. The W matrix is always reinitialized when NMF is run on the BS datasets.
+           Default = True
+        reuse_seed : bool
+           Reuse the base model seed for initializing the W matrix, and the H matrix if keep_H = False. Default = True
+        block : bool
+           Use block resampling instead of full resampling. Default = True
+        overlapping : bool
+           Allow resampled blocks to overlap. Default = False
+
+        """
         #TODO: Implement parallelization
         for i in tqdm(range(self.bootstrap_n), desc="Bootstrap resampling, training and mapping"):
             sample_seed = self.rng.integers(low=0, high=1e10, size=1)
@@ -213,48 +375,52 @@ class Bootstrap:
             _H = copy.deepcopy(self.base_H)
             train_seed = sample_seed
             if block:
-                bs_data, bs_uncertainty, bs_W, bs_index = self.block_resample(data=_V,
-                                                                              uncertainty=_U,
-                                                                              W=_W,
-                                                                              seed=sample_seed,
-                                                                              overlapping=overlapping)
+                bs_data, bs_uncertainty, bs_W, bs_index = self._block_resample(data=_V,
+                                                                               uncertainty=_U,
+                                                                               W=_W,
+                                                                               seed=sample_seed,
+                                                                               overlapping=overlapping)
             else:
-                bs_data, bs_uncertainty, bs_W, bs_index = self.resample(data=_V,
-                                                                              uncertainty=_U,
-                                                                              W=_W,
-                                                                              seed=sample_seed)
+                bs_data, bs_uncertainty, bs_W, bs_index = self._resample(data=_V,
+                                                                         uncertainty=_U,
+                                                                         W=_W,
+                                                                         seed=sample_seed)
             if not keep_H:
                 _H = None
             if reuse_seed:
                 train_seed = self.base_seed
-            #TODO: Once NMF object available, use those parameters for this model.
-            bs_i_nmf = NMF(V=bs_data, U=bs_uncertainty, factors=self.factors, method=self.method, seed=train_seed,
-                           optimized=self.optimized, verbose=False)
+            bs_i_nmf = NMF(V=bs_data, U=bs_uncertainty, factors=self.factors, method=self.nmf.method, seed=train_seed,
+                           optimized=self.nmf.optimized, verbose=False)
             bs_i_nmf.initialize(H=_H)
-            bs_i_nmf.train()
+            bs_i_nmf.train(max_iter=self.nmf.metadata["max_iterations"],
+                           converge_delta=self.nmf.metadata["converge_delta"],
+                           converge_n=self.nmf.metadata["converge_n"])
             bs_i_mapping = self.map_contributions(W1=bs_i_nmf.W, H1=bs_i_nmf.H, W2=self.base_W, H2=self.base_H,
                                                   threshold=self.threshold)
             bs_i_results = {
-                "H": bs_i_nmf.H,
-                "W": bs_i_nmf.W,
-                "Q(true)": bs_i_nmf.Qtrue,
-                "Q(robust)": bs_i_nmf.Qrobust,
+                "model": bs_i_nmf,
                 "index": bs_index,
                 "mapping": bs_i_mapping
             }
             self.bs_results[i] = bs_i_results
 
     def _compile_results(self):
+        """
+        Generate the statistics and results as shown in PMF5.
+        """
         self._build_table()
         self._factor_statistics()
         self._calculate_factors()
 
     def _calculate_factors(self):
+        """
+        Calculates the factor distributions from all the BS runs.
+        """
         bs_profiles = {}
         for i in range(self.factors):
             profile = []
             for r_k, r_v in self.bs_results.items():
-                p_f = r_v["H"]
+                p_f = r_v["model"].H
                 p_fn = p_f / p_f.sum(axis=0)
                 profile.append(p_fn[i])
             bs_profiles[i] = profile
@@ -264,15 +430,19 @@ class Bootstrap:
         for i in range(self.factors):
             contributions = []
             for r_k, r_v in self.bs_results.items():
-                i_H = [r_v["H"][i]]
-                i_W = r_v["W"][:, i]
+                i_H = [r_v["model"].H[i]]
+                i_W = r_v["model"].W[:, i]
                 i_W = i_W.reshape(len(i_W), 1)
                 i_WH = np.matmul(i_W, i_H)
                 i_sum = i_WH.sum(axis=0)
                 contributions.append(i_sum)
             bs_factor_contributions[i] = contributions
         self.bs_factor_contributions = bs_factor_contributions
+
     def _build_table(self):
+        """
+        Constructs the factor mapping table that is shown in the summary
+        """
         qrobust_list = []
         mapping_table = np.zeros(shape=(self.factors, self.factors))
         table_columns = []
@@ -285,7 +455,7 @@ class Bootstrap:
                     mapping_table[j_k, j_v["match"]] += 1
                 else:
                     unmapped[j_k] += 1
-            qrobust_list.append(i_v["Q(robust)"])
+            qrobust_list.append(i_v["model"].Qrobust)
         boots = [f"Boot Factor {i}" for i in range(self.factors)]
         mapping_df = pd.DataFrame(mapping_table, columns=table_columns)
         mapping_df["Boot Factors"] = boots
@@ -295,15 +465,21 @@ class Bootstrap:
         self.q_results = pd.DataFrame(qrobust_list, columns=["Q(robust)"])
 
     def _factor_statistics(self):
+        """
+        Assemble the factor statistics as shown in PMF5.
+        """
         factor_tables = {}
         for i in range(self.factors):
             factor_results = []
             for j_k, j_v in self.bs_results.items():
-                factor_results.append(j_v["H"][i])
+                factor_results.append(j_v["model"].H[i])
             factor_tables[i] = factor_results
         self.factor_tables = factor_tables
 
     def summary(self):
+        """
+        Prints a summary of the BS parameters and results. Recreates the output provided in the PMF5 BS Summary.
+        """
         print("NMF Bootstrap Error Estimation Summary")
         print("----- Input Parameters -----")
         print(f"Base model run number: {self.model_selected}")
@@ -317,24 +493,39 @@ class Bootstrap:
             self.show_factor_results(factor_i=i)
 
     def show_mapping_table(self):
+        """
+        Plots the factor mapping table.
+        """
         mapping_table = go.Figure(data=[go.Table(header=dict(values=self.mapping_df.columns),
-            cells=dict(values=self.mapping_df.values.T)
+                                                 cells=dict(values=self.mapping_df.values.T)
         )])
         mapping_table.update_layout(title="Mapping of bootstrap factors to base factors",
-                                 width=1200, height=300, margin={'t': 50, 'l': 25, 'b': 10, 'r': 25})
+                                    width=1200, height=300, margin={'t': 50, 'l': 25, 'b': 10, 'r': 25})
         mapping_table.show()
 
     def show_q_table(self):
+        """
+        Plots the BS run Q(robust) statistics.
+        """
         q_table = go.Figure(data=[go.Table(header=dict(values=["Base", "Min", "25th", "Median", "75th", "Max"]),
             cells=dict(values=[round(self.base_Q), round(self.q_results.min()), round(self.q_results.quantile(0.25)),
                                round(self.q_results.median()), round(self.q_results.quantile(0.75)),
                                round(self.q_results.max())])
         )])
         q_table.update_layout(title="Q(Robust) Percentile Report",
-                                 width=1200, height=200, margin={'t': 50, 'l': 25, 'b': 10, 'r': 25})
+                              width=1200, height=200, margin={'t': 50, 'l': 25, 'b': 10, 'r': 25})
         q_table.show()
 
-    def show_factor_results(self, factor_i):
+    def show_factor_results(self, factor_i: int):
+        """
+        Create the table showing the factor metrics from the BS runs for a specific factor.
+
+        Parameters
+        ----------
+        factor_i: int
+           The index of the factor to show.
+
+        """
         factor_results = self.factor_tables[factor_i]
         factor_df = pd.DataFrame(factor_results, columns=self.feature_labels)
         factor_df[factor_df < 1e-5] = 0.0
@@ -355,10 +546,19 @@ class Bootstrap:
             cells=dict(values=list(results.values()))
         )])
         factor_summary_table.update_layout(title=f"Bootstrap run uncertainty statistics - Factor {factor_i}",
-                                 width=1800, height=1000, margin={'t': 50, 'l': 25, 'b': 10, 'r': 25})
+                                           width=1800, height=1000, margin={'t': 50, 'l': 25, 'b': 10, 'r': 25})
         factor_summary_table.show()
 
     def plot_factor(self, factor_i: int):
+        """
+        Plot the BS factor profile for a specific factor.
+
+        Parameters
+        ----------
+        factor_i : int
+           The index of the factor to plot.
+
+        """
         base_data = self.base_H
         base_ndata = base_data / base_data.sum(axis=0)
         f_data = np.array(self.bs_profiles[factor_i])
@@ -378,6 +578,15 @@ class Bootstrap:
         f_plot.show()
 
     def plot_contribution(self, factor_i: int):
+        """
+        Plot the BS factor contributions for a specific factor.
+
+        Parameters
+        ----------
+        factor_i : int
+           The index of the factor to plot.
+
+        """
         base_Wi = self.base_W[:, factor_i]
         base_Wi = base_Wi.reshape(len(base_Wi), 1)
         base_Hi = [self.base_H[factor_i]]
@@ -401,5 +610,14 @@ class Bootstrap:
         c_plot.show()
 
     def plot_results(self, factor_i: int):
+        """
+        Plot both the factor profile and factor contributions for a specific index.
+
+        Parameters
+        ----------
+        factor_i : int
+           The index of the factor to plot.
+
+        """
         self.plot_factor(factor_i=factor_i)
         self.plot_contribution(factor_i=factor_i)

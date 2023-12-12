@@ -13,8 +13,8 @@ class LSNMF:
         """
         The update procedure for the least-squares nmf (ls-nmf) algorithm.
 
-        The ls-nmf algorithm is described in the publication <i>LS-NMF: A modified non-negative matrix factorization
-        algorithm utilizing uncertainty estimates</i> (https://doi.org/10.1186/1471-2105-7-175).
+        The ls-nmf algorithm is described in the publication 'LS-NMF: A modified non-negative matrix factorization
+        algorithm utilizing uncertainty estimates' (https://doi.org/10.1186/1471-2105-7-175).
 
         Parameters
         ----------

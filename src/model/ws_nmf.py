@@ -15,9 +15,9 @@ class WSNMF:
         """
         Weighted Semi-NMF algorithm.
 
-        The details of the semi-nmf algorithm are described in <i>Convex and Semi-Nonnegative Matrix Factorizations</i>
+        The details of the semi-nmf algorithm are described in 'Convex and Semi-Nonnegative Matrix Factorizations'
         (https://doi.org/10.1109/TPAMI.2008.277). The algorithm described here does not include the use of uncertainty
-        or weights. The paper <i>Semi-NMF and Weighted Semi-NMF Algorithms Comparison<i> by Eric Velten de Melo and
+        or weights. The paper 'Semi-NMF and Weighted Semi-NMF Algorithms Comparison' by Eric Velten de Melo and
         Jacques Wainer provides some additional details for part of the weighted semi-NMF algorithm as defined in this
         function.
 

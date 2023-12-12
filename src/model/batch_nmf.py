@@ -130,7 +130,6 @@ class BatchNMF:
     def train(self):
         """
         Execute the training sequence for the batch of NMF models using the shared configuration parameters.
-        -------
         """
         t0 = time.time()
         if self.parallel:
@@ -165,7 +164,7 @@ class BatchNMF:
                 for i, result in enumerate(ordered_results):
                     logger.info(f"Model: {i}, Q(true): {round(result.Qtrue, 4)}, "
                                 f"Q(robust): {round(result.Qrobust, 4)}, Seed: {result.seed}, "
-                                f"Converged: {result.converged}, Steps: {result.converged_steps}/{self.max_iter}")
+                                f"Converged: {result.converged}, Steps: {result.converge_steps}/{self.max_iter}")
             self.results = ordered_results
             pool.close()
         else:

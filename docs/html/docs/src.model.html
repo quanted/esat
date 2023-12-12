@@ -42,54 +42,11 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <!-- Local TOC -->
-              <div class="local-toc"><ul>
-<li><a class="reference internal" href="#">src.model package</a><ul>
-<li><a class="reference internal" href="#submodules">Submodules</a></li>
-<li><a class="reference internal" href="#module-src.model.batch_nmf">src.model.batch_nmf module</a><ul>
-<li><a class="reference internal" href="#src.model.batch_nmf.BatchNMF"><code class="docutils literal notranslate"><span class="pre">BatchNMF</span></code></a><ul>
-<li><a class="reference internal" href="#src.model.batch_nmf.BatchNMF.save"><code class="docutils literal notranslate"><span class="pre">BatchNMF.save()</span></code></a></li>
-<li><a class="reference internal" href="#src.model.batch_nmf.BatchNMF.train"><code class="docutils literal notranslate"><span class="pre">BatchNMF.train()</span></code></a></li>
+              <p class="caption" role="heading"><span class="caption-text">Readme</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../README.html">Non-Negative Matrix Factorization</a></li>
 </ul>
-</li>
-</ul>
-</li>
-<li><a class="reference internal" href="#module-src.model.ls_nmf">src.model.ls_nmf module</a><ul>
-<li><a class="reference internal" href="#src.model.ls_nmf.LSNMF"><code class="docutils literal notranslate"><span class="pre">LSNMF</span></code></a><ul>
-<li><a class="reference internal" href="#src.model.ls_nmf.LSNMF.update"><code class="docutils literal notranslate"><span class="pre">LSNMF.update()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li><a class="reference internal" href="#module-src.model.nmf">src.model.nmf module</a><ul>
-<li><a class="reference internal" href="#src.model.nmf.NMF"><code class="docutils literal notranslate"><span class="pre">NMF</span></code></a><ul>
-<li><a class="reference internal" href="#src.model.nmf.NMF.initialize"><code class="docutils literal notranslate"><span class="pre">NMF.initialize()</span></code></a></li>
-<li><a class="reference internal" href="#src.model.nmf.NMF.save"><code class="docutils literal notranslate"><span class="pre">NMF.save()</span></code></a></li>
-<li><a class="reference internal" href="#src.model.nmf.NMF.summary"><code class="docutils literal notranslate"><span class="pre">NMF.summary()</span></code></a></li>
-<li><a class="reference internal" href="#src.model.nmf.NMF.train"><code class="docutils literal notranslate"><span class="pre">NMF.train()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li><a class="reference internal" href="#module-src.model.optimization">src.model.optimization module</a><ul>
-<li><a class="reference internal" href="#src.model.optimization.FactorSearch"><code class="docutils literal notranslate"><span class="pre">FactorSearch</span></code></a><ul>
-<li><a class="reference internal" href="#src.model.optimization.FactorSearch.search"><code class="docutils literal notranslate"><span class="pre">FactorSearch.search()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li><a class="reference internal" href="#module-src.model.ws_nmf">src.model.ws_nmf module</a><ul>
-<li><a class="reference internal" href="#src.model.ws_nmf.WSNMF"><code class="docutils literal notranslate"><span class="pre">WSNMF</span></code></a><ul>
-<li><a class="reference internal" href="#src.model.ws_nmf.WSNMF.update"><code class="docutils literal notranslate"><span class="pre">WSNMF.update()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li><a class="reference internal" href="#module-src.model">Module contents</a></li>
-</ul>
-</li>
-</ul>
-</div>
+
         </div>
       </div>
     </nav>
@@ -123,17 +80,39 @@
 <span id="src-model-batch-nmf-module"></span><h2>src.model.batch_nmf module<a class="headerlink" href="#module-src.model.batch_nmf" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="src.model.batch_nmf.BatchNMF">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.model.batch_nmf.</span></span><span class="sig-name descname"><span class="pre">BatchNMF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">V</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">U</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">factors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">models</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'ls-nmf'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">42</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'column_mean'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_norm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fuzziness</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">converge_delta</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">converge_n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">robust_mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">robust_n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">robust_alpha</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parallel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimized</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.model.batch_nmf.BatchNMF" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.model.batch_nmf.</span></span><span class="sig-name descname"><span class="pre">BatchNMF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">V</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">U</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">factors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">models</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'ls-nmf'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">42</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'column_mean'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_norm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fuzziness</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">5.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">converge_delta</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">converge_n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">best_robust</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">robust_mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">robust_n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">robust_alpha</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parallel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimized</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.model.batch_nmf.BatchNMF" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>The batch NMF class is used to create multiple NMF models, using the same input configuration and different
+random seeds for initialization of W and H matrices.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="src.model.batch_nmf.BatchNMF.save">
-<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.model.batch_nmf.BatchNMF.save" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_directory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pickle_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pickle_batch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">header</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.model.batch_nmf.BatchNMF.save" title="Link to this definition"></a></dt>
+<dd><p>Save the collection of NMF models. They can be saved as individual files (csv and json files),
+as individual pickle models (each NMF model), or as a single NMF model of the batch NMF object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>batch_name</strong> (<em>str</em>) – The name to use for the batch save files.</p></li>
+<li><p><strong>output_directory</strong> – The output directory to save the batch nmf files to.</p></li>
+<li><p><strong>pickle_model</strong> (<em>bool</em>) – Pickle the individual models, creating a separate pickle file for each NMF model. Default = False.</p></li>
+<li><p><strong>pickle_batch</strong> (<em>bool</em>) – Pickle the batch NMF object, which will contain all the NMF objects. Default = True.</p></li>
+<li><p><strong>header</strong> (<em>list</em>) – A list of headers, feature names, to add to the top of the csv files. Default: None</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if the model is written to file. False if the output directory does not exist.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.model.batch_nmf.BatchNMF.train">
 <span class="sig-name descname"><span class="pre">train</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#src.model.batch_nmf.BatchNMF.train" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Execute the training sequence for the batch of NMF models using the shared configuration parameters.</p>
+</dd></dl>
 
 </dd></dl>
 
@@ -147,13 +126,25 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="src.model.ls_nmf.LSNMF.update">
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">V</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">We</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">W</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">H</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.model.ls_nmf.LSNMF.update" title="Link to this definition"></a></dt>
-<dd><p>Multiplicative Update (Lee and Seung) ls-nmf as described in
-<a class="reference external" href="https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-7-175">https://bmcbioinformatics.biomedcentral.com/articles/10.1186/1471-2105-7-175</a>
-:param V: The input data matrix.
-:param We: The weight matrix, calculated from the uncertainty matrix.
-:param W: The factor contribution matrix.
-:param H: The factor profile matrix.
-:return: The updated factor contribution and factor profile matrices. (W, H)</p>
+<dd><p>The update procedure for the least-squares nmf (ls-nmf) algorithm.</p>
+<p>The ls-nmf algorithm is described in the publication ‘LS-NMF: A modified non-negative matrix factorization
+algorithm utilizing uncertainty estimates’ (<a class="reference external" href="https://doi.org/10.1186/1471-2105-7-175">https://doi.org/10.1186/1471-2105-7-175</a>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>V</strong> (<em>np.ndarray</em>) – The input dataset.</p></li>
+<li><p><strong>We</strong> (<em>np.ndarray</em>) – The weights calculated from the input uncertainty dataset.</p></li>
+<li><p><strong>W</strong> (<em>np.ndarray</em>) – The factor contribution matrix.</p></li>
+<li><p><strong>H</strong> (<em>np.ndarray</em>) – The factor profile matrix.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The updated W and H matrices.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray, np.ndarray</p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
@@ -196,18 +187,36 @@ prior to clustering.</p></li>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="src.model.nmf.NMF.load">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.model.nmf.NMF.load" title="Link to this definition"></a></dt>
+<dd><p>Load a previously saved NMF pickle file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>file_path</strong> (<em>str</em>) – File path to a previously saved NMF pickle file</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>On successful load, will return a previous NMF object. Will return None on load fail.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#src.model.nmf.NMF" title="src.model.nmf.NMF">NMF</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="src.model.nmf.NMF.save">
-<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_directory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pickle_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.model.nmf.NMF.save" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_directory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pickle_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">header</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.model.nmf.NMF.save" title="Link to this definition"></a></dt>
 <dd><p>Save the NMF model to file.</p>
 <p>Two options are provided for saving the output of NMF to file, 1) saving the NMF to separate files (csv and
-json) and 2) saving the NMF model to a binary pickle object. The files are written to the provided save_directory
+json) and 2) saving the NMF model to a binary pickle object. The files are written to the provided output_directory
 path, if it exists, using the model_name for the file names.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>model_name</strong> (<em>str</em>) – The name for the model save files.</p></li>
-<li><p><strong>save_directory</strong> (<em>str</em>) – The path to save the files to, path must exist.</p></li>
+<li><p><strong>output_directory</strong> (<em>str</em>) – The path to save the files to, path must exist.</p></li>
 <li><p><strong>pickle_model</strong> (<em>bool</em>) – Saving the model to a pickle file, default = False.</p></li>
+<li><p><strong>header</strong> (<em>list</em>) – A list of headers, feature names, to add to the top of the csv files. Default: None</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -227,7 +236,7 @@ path, if it exists, using the model_name for the file names.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.model.nmf.NMF.train">
-<span class="sig-name descname"><span class="pre">train</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">converge_delta</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">converge_n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">robust_mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">robust_n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">robust_alpha</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.model.nmf.NMF.train" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">train</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">converge_delta</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">converge_n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">robust_mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">robust_n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">robust_alpha</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.model.nmf.NMF.train" title="Link to this definition"></a></dt>
 <dd><p>Train the NMF model by iteratively updating the W and H matrices reducing the loss value Q until convergence.</p>
 <p>The train method runs the update algorithm until the convergence criteria is met or the maximum number
 of iterations is reached. The stopping conditions are specified by the input parameters to the train method. The
@@ -244,7 +253,7 @@ robust_alpha is the adjustment made to the weights.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>max_iter</strong> (<em>int</em>) – The maximum number of iterations to update W and H matrices. Default: 2000</p></li>
+<li><p><strong>max_iter</strong> (<em>int</em>) – The maximum number of iterations to update W and H matrices. Default: 20000</p></li>
 <li><p><strong>converge_delta</strong> (<em>float</em>) – The change in the loss value where the model will be considered converged. Default: 0.1</p></li>
 <li><p><strong>converge_n</strong> (<em>int</em>) – The number of iterations where the change in the loss value is less than converge_delta for the model to be
 considered converged. Default: 100</p></li>
@@ -252,9 +261,9 @@ considered converged. Default: 100</p></li>
 <li><p><strong>robust_mode</strong> (<em>bool</em>) – Used to turn on the robust mode, use the robust loss value in the update algorithm. Default: False</p></li>
 <li><p><strong>robust_n</strong> (<em>int</em>) – When robust_mode=True, the number of iterations to use the default mode before turning on the robust mode to
 prevent reducing the impact of non-outliers. Default: 200</p></li>
-<li><p><strong>robust_alpha</strong> (<em>int</em>) – <dl class="simple">
+<li><p><strong>robust_alpha</strong> (<em>float</em>) – <dl class="simple">
 <dt>When robust_mode=True, the cutoff of the uncertainty scaled residuals to decrease the weights. Robust weights</dt><dd><p>are calculated as the uncertainty multiplied by the square root of the scaled residuals over robust_alpha.
-Default: 4</p>
+Default: 4.0</p>
 </dd>
 </dl>
 </p></li>
@@ -289,14 +298,29 @@ Default: 4</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="src.model.ws_nmf.WSNMF.update">
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">V</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">We</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">W</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">H</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.model.ws_nmf.WSNMF.update" title="Link to this definition"></a></dt>
-<dd><p>Semi-NMF algorithm as described in <a class="reference external" href="https://people.eecs.berkeley.edu/~jordan/papers/ding-li-jordan-pami.pdf">https://people.eecs.berkeley.edu/~jordan/papers/ding-li-jordan-pami.pdf</a>
-and <a class="reference external" href="https://www2.dc.ufscar.br/~marcela/anaisKDMiLe2014/artigos/FULL/kdmile2014_Artigo15.pdf">https://www2.dc.ufscar.br/~marcela/anaisKDMiLe2014/artigos/FULL/kdmile2014_Artigo15.pdf</a>
-Weighted semi-NMF algorithm.
-:param V: The input data matrix.
-:param We: The weights matrix, derived from the uncertainty matrix.
-:param W: The factor contribution matrix.
-:param H: The factor profile matrix.
-:return: The updated factor contribution and factor profile matrices. (W, H)</p>
+<dd><p>Weighted Semi-NMF algorithm.</p>
+<p>The details of the semi-nmf algorithm are described in ‘Convex and Semi-Nonnegative Matrix Factorizations’
+(<a class="reference external" href="https://doi.org/10.1109/TPAMI.2008.277">https://doi.org/10.1109/TPAMI.2008.277</a>). The algorithm described here does not include the use of uncertainty
+or weights. The paper ‘Semi-NMF and Weighted Semi-NMF Algorithms Comparison’ by Eric Velten de Melo and
+Jacques Wainer provides some additional details for part of the weighted semi-NMF algorithm as defined in this
+function.</p>
+<p>The update procedure defined in this function was created by merging the main concepts of these two papers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>V</strong> (<em>np.ndarray</em>) – The input dataset.</p></li>
+<li><p><strong>We</strong> (<em>np.ndarray</em>) – The weights calculated from the input uncertainty dataset.</p></li>
+<li><p><strong>W</strong> (<em>np.ndarray</em>) – The factor contribution matrix, prior W is not used by this algorithm but provided here for testing.</p></li>
+<li><p><strong>H</strong> (<em>np.ndarray</em>) – The factor profile matrix.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The updated W and H matrices.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray, np.ndarray</p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
