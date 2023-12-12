@@ -40,14 +40,14 @@ class Error:
             self.factors = disp.factors
 
     def plot_summary(self,
-                     factor_i: int
+                     factor: int
                      ):
         """
         Plot the combined error estimation results from all provided method results.
 
         Parameters
         ----------
-        factor_i : int
+        factor : int
            The index of the factor to plot.
 
         """
@@ -55,10 +55,10 @@ class Error:
         if self.bs is None and self.disp is None:
             logging.error("Must complete and provide an instance of either displacement or bootstrap or both")
             return
-        if self.factors < factor_i:
-            logger.error(f"Factor index must be equal or less to the number of factors. Factors: {self.factors}, "
-                         f"Index: {factor_i}")
+        if factor > self.factors or factor < 1:
+            print(f"Invalid factor provided, must be between 1 and {self.factors}")
             return
+        factor_i = factor-1
 
         error_plot = go.Figure()
 
@@ -92,7 +92,7 @@ class Error:
                                         marker=dict(size=12, color="red", symbol="line-ew", line_width=1,
                                         line_color="red")))
         error_plot.update_layout(
-            title=f"Error Estimation Concentration Summary - Model {self.model_selected} - Factor {factor_i}", width=1200,
+            title=f"Error Estimation Concentration Summary - Model {self.model_selected} - Factor {factor}", width=1200,
             height=600, showlegend=True, barmode='group')
         error_plot.update_traces(selector=dict(type="bar"), hovertemplate='Max: %{value}<br>Min: %{base}')
         error_plot.update_yaxes(title_text="Concentration (log)", type="log")

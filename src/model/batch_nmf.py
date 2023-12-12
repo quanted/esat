@@ -136,7 +136,7 @@ class BatchNMF:
             # TODO: Add batch processing for large datasets and large number of epochs to reduce memory requirements.
             pool = mp.Pool()
             input_parameters = []
-            for i in range(self.models):
+            for i in range(1, self.models+1):
                 _seed = self.rng.integers(low=0, high=1e5)
                 _nmf = NMF(
                     factors=self.factors,
@@ -152,7 +152,7 @@ class BatchNMF:
             results = pool.starmap(self._train_task, input_parameters)
             best_model = -1
             best_q = float("inf")
-            ordered_results = [None for i in range(len(results))]
+            ordered_results = [None for i in range(0, len(results)+1)]
             for result in results:
                 model_i, _nmf = result
                 ordered_results[model_i] = _nmf
@@ -162,6 +162,8 @@ class BatchNMF:
                     best_model = model_i
             if self.verbose:
                 for i, result in enumerate(ordered_results):
+                    if result is None:
+                        continue
                     logger.info(f"Model: {i}, Q(true): {round(result.Qtrue, 4)}, "
                                 f"Q(robust): {round(result.Qrobust, 4)}, Seed: {result.seed}, "
                                 f"Converged: {result.converged}, Steps: {result.converge_steps}/{self.max_iter}")
@@ -171,7 +173,7 @@ class BatchNMF:
             self.results = []
             best_Q = float("inf")
             best_model = -1
-            for model_i in range(self.models):
+            for model_i in range(1, self.models+1):
                 _seed = self.rng.integers(low=0, high=1e5)
                 _nmf = NMF(
                     factors=self.factors,

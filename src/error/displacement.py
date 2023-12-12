@@ -1,7 +1,10 @@
 import logging
 import copy
+import pickle
+import os
 import numpy as np
 import pandas as pd
+from pathlib import Path
 import multiprocessing as mp
 import plotly.graph_objects as go
 from tqdm import tqdm
@@ -92,7 +95,7 @@ class Displacement:
         largest_dQ_change = largest_dQ_inc if np.abs(largest_dQ_inc) > np.abs(largest_dQ_dec) else largest_dQ_dec
         table_labels = ["dQ Max"]
         for i in range(self.factors):
-            table_labels.append(f"Factor {i}")
+            table_labels.append(f"Factor {i+1}")
         table_data = np.round(100 * (self.swap_table/self.count_table), 2)
         dq_list = list(reversed(self.dQmax))
         dq_list = np.reshape(dq_list, newshape=(len(dq_list), 1))
@@ -142,6 +145,11 @@ class Displacement:
            invalid value provided.
 
         """
+        if factor > self.factors or factor < 1:
+            print(f"Invalid factor provided, must be between 1 and {self.factors}")
+            return
+        factor_label = factor
+        factor = factor - 1
         dQ = dQ if dQ in self.dQmax else 4
         selected_data = self.compiled_results.loc[self.compiled_results["factor"] == factor].loc[
             self.compiled_results["dQ"] == dQ]
@@ -157,7 +165,7 @@ class Displacement:
                                    marker_line_color='rgb(8,48,107)',
                                    marker_line_width=1.5, opacity=0.6)
         disp_profile.update_layout(
-            title=f"Variability in Percentage of Features - Model {self.selected_model} - Factor {factor} - dQ {dQ}",
+            title=f"Variability in Percentage of Features - Model {self.selected_model} - Factor {factor_label} - dQ {dQ}",
             width=1200, height=600, showlegend=True)
         disp_profile.update_yaxes(title_text="Percentage", range=[0, 100])
         disp_profile.update_traces(selector=dict(type="bar"), hovertemplate='Max: %{value}<br>Min: %{base}')
@@ -179,6 +187,11 @@ class Displacement:
            invalid value provided.
 
         """
+        if factor > self.factors or factor < 1:
+            print(f"Invalid factor provided, must be between 1 and {self.factors}")
+            return
+        factor_label = factor
+        factor = factor - 1
         dQ = dQ if dQ in self.dQmax else 4
         selected_data = self.compiled_results.loc[self.compiled_results["factor"] == factor].loc[
             self.compiled_results["dQ"] == dQ]
@@ -197,7 +210,7 @@ class Displacement:
                                 marker_line_color='rgb(8,48,107)',
                                 marker_line_width=1.5, opacity=0.6, hovertemplate='Max: %{value}<br>Min: %{base}')
         disp_conc.update_layout(
-            title=f"Variability in Concentration of Features - Model {self.selected_model} - Factor {factor} - dQ {dQ}",
+            title=f"Variability in Concentration of Features - Model {self.selected_model} - Factor {factor_label} - dQ {dQ}",
             width=1200, height=600, showlegend=True)
         disp_conc.update_yaxes(title_text="Concentration (log)", type="log")
         disp_conc.show()
@@ -209,7 +222,7 @@ class Displacement:
         logger.info("DISP - Testing increasing value changes to H")
         for factor_i in tqdm(range(self.H.shape[0]), desc=" Factors", position=0):
             factor_results = {}
-            for feature_j in tqdm(range(self.H.shape[1]), desc=f"Factor {factor_i} - Features", position=0, leave=True):
+            for feature_j in tqdm(range(self.H.shape[1]), desc=f"Factor {factor_i+1} - Features", position=0, leave=True):
                 new_H = copy.copy(self.H)
                 high_modifier = 2.0
                 high_found = False
@@ -232,7 +245,7 @@ class Displacement:
                         max_dQ = dQ
                     if high_search_i >= max_high_search:
                         logging.warn(f"Failed to find upper bound modifier within search limit. "
-                                     f"Factor: {factor_i}, Feature: {feature_j}, Max iterations: {max_high_search}, max dQ: {max_dQ}")
+                                     f"Factor: {factor_i+1}, Feature: {feature_j}, Max iterations: {max_high_search}, max dQ: {max_dQ}")
                         break
                 for i in range(len(self.dQmax)):
                     low_modifier = 1.0
@@ -274,7 +287,7 @@ class Displacement:
                                                 "search steps": search_i, "swap": factor_swap, "conc": factor_conc_i,
                                                 "Q_drop": self.base_Q - disp_i_nmf.Qtrue}
                 factor_results[f"feature-{feature_j}"] = i_results
-            self.increase_results[f"factor-{factor_i}"] = factor_results
+            self.increase_results[f"factor-{factor_i+1}"] = factor_results
 
     def _decrease_disp(self):
         """
@@ -283,7 +296,7 @@ class Displacement:
         logger.info("DISP - Testing decreasing value changes to H")
         for factor_i in tqdm(range(self.H.shape[0]), desc=" Factors", position=0):
             factor_results = {}
-            for feature_j in tqdm(range(self.H.shape[1]), desc=f" Factor {factor_i} - Features", position=0, leave=True):
+            for feature_j in tqdm(range(self.H.shape[1]), desc=f" Factor {factor_i+1} - Features", position=0, leave=True):
                 i_results = {}
                 for i in range(len(self.dQmax)):
                     high_mod = 1.0
@@ -333,7 +346,7 @@ class Displacement:
                                                 "search steps": search_i, "swap": factor_swap, "conc": factor_conc_i,
                                                 "Q_drop": self.base_Q - disp_i_nmf.Qtrue}
                 factor_results[f"feature-{feature_j}"] = i_results
-            self.decrease_results[f"factor-{factor_i}"] = factor_results
+            self.decrease_results[f"factor-{factor_i+1}"] = factor_results
 
     def _compile_results(self):
         """
@@ -347,12 +360,13 @@ class Displacement:
                        "conc_max":[], "conc_min":[], "dQ_drop": []}
         for dQ in self.dQmax:
             for factor_i in range(self.H.shape[0]):
+                factor_label = factor_i + 1
                 factor_W = self.W[:, factor_i]
                 factor_matrix = np.matmul(factor_W.reshape(len(factor_W), 1), [self.H[factor_i]])
                 factor_conc = factor_matrix.sum(axis=0)
                 for feature_j in range(self.H.shape[1]):
-                    feature_inc_results = self.increase_results[f"factor-{factor_i}"][f"feature-{feature_j}"][dQ]
-                    feature_dec_results = self.decrease_results[f"factor-{factor_i}"][f"feature-{feature_j}"][dQ]
+                    feature_inc_results = self.increase_results[f"factor-{factor_label}"][f"feature-{feature_j}"][dQ]
+                    feature_dec_results = self.decrease_results[f"factor-{factor_label}"][f"feature-{feature_j}"][dQ]
                     compiled_data["profile_max"].append(feature_inc_results["percent"])
                     compiled_data["profile_min"].append(feature_dec_results["percent"])
                     compiled_data["profile"].append(scaled_profiles[factor_i, feature_j])
@@ -389,3 +403,66 @@ class Displacement:
                         self.swap_table[dQ_i, factor_i] += 1
                     dQ_i += 1
             factor_i += 1
+
+    def save(self, disp_name: str,
+             output_directory: str
+             ):
+        """
+        Save the DISP results.
+        Parameters
+        ----------
+        disp_name : str
+            The name to use for the DISP pickle file.
+        output_directory :
+            The output directory to save the DISP pickle file to.
+
+        Returns
+        -------
+        str
+           The path to the saved file.
+
+        """
+        output_directory = Path(output_directory)
+        if not output_directory.is_absolute():
+            current_directory = os.path.abspath(__file__)
+            output_directory = Path(os.path.join(current_directory, output_directory)).resolve()
+        if os.path.exists(output_directory):
+            file_path = os.path.join(output_directory, f"{disp_name}.pkl")
+            with open(file_path, "wb") as save_file:
+                pickle.dump(self, save_file)
+                logger.info(f"DISP NMF output saved to pickle file: {file_path}")
+            return file_path
+        else:
+            logger.error(f"Output directory does not exist. Specified directory: {output_directory}")
+            return None
+
+    @staticmethod
+    def load(file_path: str):
+        """
+        Load a previously saved DISP NMF pickle file.
+
+        Parameters
+        ----------
+        file_path : str
+           File path to a previously saved DISP NMF pickle file
+
+        Returns
+        -------
+        Displacement
+           On successful load, will return a previously saved DISP NMF object. Will return None on load fail.
+        """
+        file_path = Path(file_path)
+        if not file_path.is_absolute():
+            current_directory = os.path.abspath(__file__)
+            file_path = Path(os.path.join(current_directory, file_path)).resolve()
+        if os.path.exists(file_path):
+            try:
+                with open(file_path, "rb") as pfile:
+                    disp = pickle.load(pfile)
+                    return disp
+            except pickle.PickleError as p_error:
+                logger.error(f"Failed to load DISP pickle file {file_path}. \nError: {p_error}")
+                return None
+        else:
+            logger.error(f"DISP load file failed, specified pickle file does not exist. File Path: {file_path}")
+            return None

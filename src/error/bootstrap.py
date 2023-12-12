@@ -1,4 +1,6 @@
 import logging
+import pickle
+import os
 import copy
 import math
 import numpy as np
@@ -6,6 +8,8 @@ import pandas as pd
 from tqdm import tqdm
 import plotly.graph_objects as go
 from src.model.nmf import NMF
+from pathlib import Path
+
 
 logger = logging.getLogger("NMF")
 logger.setLevel(logging.INFO)
@@ -367,7 +371,7 @@ class Bootstrap:
 
         """
         #TODO: Implement parallelization
-        for i in tqdm(range(self.bootstrap_n), desc="Bootstrap resampling, training and mapping"):
+        for i in tqdm(range(1, self.bootstrap_n+1), desc="Bootstrap resampling, training and mapping"):
             sample_seed = self.rng.integers(low=0, high=1e10, size=1)
             _V = copy.deepcopy(self.data)
             _U = copy.deepcopy(self.uncertainty)
@@ -448,7 +452,7 @@ class Bootstrap:
         table_columns = []
         unmapped = np.zeros(shape=(self.factors, 1))
         for i in range(self.factors):
-            table_columns.append(f"Base Factor {i}")
+            table_columns.append(f"Base Factor {i+1}")
         for i_k, i_v in self.bs_results.items():
             for j_k, j_v in i_v["mapping"].items():
                 if j_v["mapped"]:
@@ -456,7 +460,7 @@ class Bootstrap:
                 else:
                     unmapped[j_k] += 1
             qrobust_list.append(i_v["model"].Qrobust)
-        boots = [f"Boot Factor {i}" for i in range(self.factors)]
+        boots = [f"Boot Factor {i+1}" for i in range(self.factors)]
         mapping_df = pd.DataFrame(mapping_table, columns=table_columns)
         mapping_df["Boot Factors"] = boots
         mapping_df.insert(0, "Boot Factors", mapping_df.pop("Boot Factors"))
@@ -489,8 +493,8 @@ class Bootstrap:
         print("\n")
         self.show_mapping_table()
         self.show_q_table()
-        for i in range(self.factors):
-            self.show_factor_results(factor_i=i)
+        for i in range(1, self.factors+1):
+            self.show_factor_results(factor=i)
 
     def show_mapping_table(self):
         """
@@ -516,20 +520,25 @@ class Bootstrap:
                               width=1200, height=200, margin={'t': 50, 'l': 25, 'b': 10, 'r': 25})
         q_table.show()
 
-    def show_factor_results(self, factor_i: int):
+    def show_factor_results(self, factor: int):
         """
         Create the table showing the factor metrics from the BS runs for a specific factor.
 
         Parameters
         ----------
-        factor_i: int
+        factor : int
            The index of the factor to show.
 
         """
-        factor_results = self.factor_tables[factor_i]
+        if factor > self.factors or factor < 1:
+            print(f"Invalid factor provided, must be between 1 and {self.factors}")
+            return
+        factor_label = factor
+        factor = factor - 1
+        factor_results = self.factor_tables[factor]
         factor_df = pd.DataFrame(factor_results, columns=self.feature_labels)
         factor_df[factor_df < 1e-5] = 0.0
-        base_factor = self.base_H[factor_i]
+        base_factor = self.base_H[factor]
         base_factor[base_factor < 1e-5] = 0.0
         base_df = pd.DataFrame(base_factor.reshape(1, len(base_factor)), columns=self.feature_labels)
         round_value = 6
@@ -545,23 +554,29 @@ class Bootstrap:
             header=dict(values=list(results.keys())),
             cells=dict(values=list(results.values()))
         )])
-        factor_summary_table.update_layout(title=f"Bootstrap run uncertainty statistics - Factor {factor_i}",
+        factor_summary_table.update_layout(title=f"Bootstrap run uncertainty statistics - Factor {factor_label}",
                                            width=1800, height=1000, margin={'t': 50, 'l': 25, 'b': 10, 'r': 25})
         factor_summary_table.show()
 
-    def plot_factor(self, factor_i: int):
+    def plot_factor(self, factor: int):
         """
         Plot the BS factor profile for a specific factor.
 
         Parameters
         ----------
-        factor_i : int
+        factor : int
            The index of the factor to plot.
 
         """
+        if factor > self.factors or factor < 1:
+            print(f"Invalid factor provided, must be between 1 and {self.factors}")
+            return
+        factor_label = factor
+        factor = factor - 1
+
         base_data = self.base_H
         base_ndata = base_data / base_data.sum(axis=0)
-        f_data = np.array(self.bs_profiles[factor_i])
+        f_data = np.array(self.bs_profiles[factor])
 
         f_plot = go.Figure()
         for i in range(len(self.feature_labels)):
@@ -569,30 +584,36 @@ class Bootstrap:
             f_plot.add_trace(go.Box(name=self.feature_labels[i], y=i_data, boxpoints='outliers', notched=True,
                                     marker_color='rgb(107,174,214)', line_color='rgb(107,174,214)', marker_size=4,
                                     line_width=1))
-        f_plot.add_trace(go.Scatter(x=self.feature_labels, y=100 * base_ndata[factor_i], mode='markers',
+        f_plot.add_trace(go.Scatter(x=self.feature_labels, y=100 * base_ndata[factor], mode='markers',
                                     marker=dict(color='red', size=4), name="Base"))
         f_plot.update_layout(
-            title=f"Variability in Percentage of Species - Model {self.model_selected} - Factor {factor_i} ", width=1200,
-            height=600, showlegend=False)
+            title=f"Variability in Percentage of Species - Model {self.model_selected} - Factor {factor_label} ",
+            width=1200, height=600, showlegend=False)
         f_plot.update_yaxes(title_text="Percentage", range=[0, 100])
         f_plot.show()
 
-    def plot_contribution(self, factor_i: int):
+    def plot_contribution(self, factor: int):
         """
         Plot the BS factor contributions for a specific factor.
 
         Parameters
         ----------
-        factor_i : int
+        factor : int
            The index of the factor to plot.
 
         """
-        base_Wi = self.base_W[:, factor_i]
+        if factor > self.factors or factor < 1:
+            print(f"Invalid factor provided, must be between 1 and {self.factors}")
+            return
+        factor_label = factor
+        factor = factor - 1
+
+        base_Wi = self.base_W[:, factor]
         base_Wi = base_Wi.reshape(len(base_Wi), 1)
-        base_Hi = [self.base_H[factor_i]]
+        base_Hi = [self.base_H[factor]]
         base_sums = np.matmul(base_Wi, base_Hi).sum(axis=0)
         base_sums[base_sums < 1e-4] = 1e-4
-        c_data = np.array(self.bs_factor_contributions[factor_i])
+        c_data = np.array(self.bs_factor_contributions[factor])
         c_plot = go.Figure()
         for i in range(len(self.feature_labels)):
             i_data = c_data[:, i]
@@ -604,20 +625,83 @@ class Bootstrap:
             go.Scatter(x=self.feature_labels, y=base_sums, mode='markers', marker=dict(color='red', size=4),
                        name="Base"))
         c_plot.update_layout(
-            title=f"Variability in Concentration of Species - Model {self.model_selected} - Factor {factor_i} ",
+            title=f"Variability in Concentration of Species - Model {self.model_selected} - Factor {factor_label} ",
             width=1200, height=600, showlegend=False)
         c_plot.update_yaxes(title_text="Concentration (log)", type="log")
         c_plot.show()
 
-    def plot_results(self, factor_i: int):
+    def plot_results(self, factor: int):
         """
         Plot both the factor profile and factor contributions for a specific index.
 
         Parameters
         ----------
-        factor_i : int
+        factor : int
            The index of the factor to plot.
 
         """
-        self.plot_factor(factor_i=factor_i)
-        self.plot_contribution(factor_i=factor_i)
+        self.plot_factor(factor=factor)
+        self.plot_contribution(factor=factor)
+
+    def save(self, bs_name: str,
+             output_directory: str
+             ):
+        """
+        Save the BS results.
+        Parameters
+        ----------
+        bs_name : str
+            The name to use for the BS file.
+        output_directory :
+            The output directory to save the BS file to.
+
+        Returns
+        -------
+        str
+           The path to the saved file.
+
+        """
+        output_directory = Path(output_directory)
+        if not output_directory.is_absolute():
+            current_directory = os.path.abspath(__file__)
+            output_directory = Path(os.path.join(current_directory, output_directory)).resolve()
+        if os.path.exists(output_directory):
+            file_path = os.path.join(output_directory, f"{bs_name}.pkl")
+            with open(file_path, "wb") as save_file:
+                pickle.dump(self, save_file)
+                logger.info(f"BS NMF output saved to pickle file: {file_path}")
+            return file_path
+        else:
+            logger.error(f"Output directory does not exist. Specified directory: {output_directory}")
+            return None
+
+    @staticmethod
+    def load(file_path: str):
+        """
+        Load a previously saved BS NMF pickle file.
+
+        Parameters
+        ----------
+        file_path : str
+           File path to a previously saved BS NMF pickle file
+
+        Returns
+        -------
+        Bootstrap
+           On successful load, will return a previously saved BS NMF object. Will return None on load fail.
+        """
+        file_path = Path(file_path)
+        if not file_path.is_absolute():
+            current_directory = os.path.abspath(__file__)
+            file_path = Path(os.path.join(current_directory, file_path)).resolve()
+        if os.path.exists(file_path):
+            try:
+                with open(file_path, "rb") as pfile:
+                    bs = pickle.load(pfile)
+                    return bs
+            except pickle.PickleError as p_error:
+                logger.error(f"Failed to load Bootstrap pickle file {file_path}. \nError: {p_error}")
+                return None
+        else:
+            logger.error(f"Bootstrap load file failed, specified pickle file does not exist. File Path: {file_path}")
+            return None

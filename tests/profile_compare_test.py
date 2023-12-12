@@ -14,9 +14,9 @@ if __name__ == "__main__":
     logging.getLogger('matplotlib').setLevel(logging.ERROR)
 
     t0 = time.time()
-    for dataset in ["br"]:           # "br", "sl", "b", "w"
+    for dataset in ["br", "sl", "b"]:           # "br", "sl", "b"
         for method in ["ls-nmf", "ws-nmf"]:     # "ls-nmf", "ws-nmf"
-            for factors in range(6, 7):
+            for factors in range(3, 12):
                 parallel = True
                 optimized = True
                 init_method = "col_means"           # default is column means, "kmeans", "cmeans"

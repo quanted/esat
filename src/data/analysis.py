@@ -36,9 +36,7 @@ class ModelAnalysis:
         self.selected_model = selected_model
         self.statistics = None
 
-    def calculate_statistics(self,
-                             results: np.ndarray = None
-                             ):
+    def calculate_statistics(self, results: np.ndarray = None):
         """
         Calculate general statistics from the results of the NMF model run.
 
@@ -157,9 +155,7 @@ class ModelAnalysis:
         threshold_residuals = residuals[residuals[feature].abs() >= abs_threshold]
         return threshold_residuals
 
-    def plot_estimated_observed(self,
-                                feature_idx: int
-                                ):
+    def plot_estimated_observed(self, feature_idx: int):
         """
         Create a plot that shows the estimates concentrations of a feature vs the observed concentrations.
 
@@ -194,9 +190,7 @@ class ModelAnalysis:
         xy_plot.update_yaxes(range=[0, predicted_data.max() + 0.5])
         xy_plot.show()
 
-    def plot_estimated_timeseries(self,
-                                  feature_idx: int
-                                  ):
+    def plot_estimated_timeseries(self, feature_idx: int):
         """
         Create a plot that shows the estimated values of a timeseries for a specific feature, selected by feature index.
 
@@ -244,18 +238,19 @@ class ModelAnalysis:
         Parameters
         ----------
         factor_idx : int
-            The index of the factor to plot.
+            The index of the factor to plot (1 -> k).
         H : np.ndarray
             Overrides the factor profile matrix in the NMF model used for the plot.
         W : np.ndarray
             Overrides the factor contribution matrix in the NMF model used for the plot.
 
         """
-        if factor_idx > self.model.factors - 1 or factor_idx < 0:
-            print(f"Invalid factor provided, must be between 0 and {self.model.factors - 1}")
+        if factor_idx > self.model.factors or factor_idx < 1:
+            print(f"Invalid factor provided, must be between 1 and {self.model.factors}")
             return
-
         factor_label = f"Factor {factor_idx}"
+        factor_idx_l = factor_idx
+        factor_idx = factor_idx-1
         if H is None:
             factors_data = self.model.H[factor_idx]
             factors_sum = self.model.H.sum(axis=0)
@@ -293,14 +288,14 @@ class ModelAnalysis:
                                   range=[0, np.log10(factor_conc_sums).max()]
                                   )
         profile_plot.update_yaxes(title_text="% of Features", secondary_y=True, row=1, col=1, range=[0, 100])
-        profile_plot.update_layout(title=f"Factor Profile - Model {self.selected_model} - Factor {factor_idx}",
+        profile_plot.update_layout(title=f"Factor Profile - Model {self.selected_model} - Factor {factor_idx_l}",
                                    width=1200, height=600)
         profile_plot.show()
 
         contr_plot = go.Figure()
         contr_plot.add_trace(go.Scatter(x=data_df.index, y=data_df[factor_label], mode='lines+markers',
                                         name="Normalized Contributions", line=dict(color='blue')))
-        contr_plot.update_layout(title=f"Factor Contributions - Model {self.selected_model} - Factor {factor_idx}",
+        contr_plot.update_layout(title=f"Factor Contributions - Model {self.selected_model} - Factor {factor_idx_l}",
                                  width=1200, height=600, showlegend=True,
                                  legend=dict(orientation="h", xanchor="right", yanchor="bottom", x=1, y=1.02))
         contr_plot.update_yaxes(title_text="Normalized Contributions")
@@ -316,7 +311,7 @@ class ModelAnalysis:
 
         fig = go.Figure()
         for idx in range(self.model.factors-1, -1, -1):
-            fig.add_trace(go.Bar(name=f"Factor {idx}", x=self.dh.features, y=normalized_factors_data[idx]))
+            fig.add_trace(go.Bar(name=f"Factor {idx+1}", x=self.dh.features, y=normalized_factors_data[idx]))
         fig.update_layout(title=f"Factor Fingerprints - Model {self.selected_model}",
                           width=1200, height=800, barmode='stack')
         fig.update_yaxes(title_text="% Feature Concentration", range=[0, 100])
@@ -337,19 +332,20 @@ class ModelAnalysis:
             The index of the factor to plot along the y-axis.
 
         """
-        if factor_1 > self.model.factors - 1 or factor_1 < 0:
-            print(f"Invalid factor_1 provided, must be between 0 and {self.model.factors - 1}")
+        if factor_1 > self.model.factors or factor_1 < 1:
+            print(f"Invalid factor_1 provided, must be between 1 and {self.model.factors}")
             return
-        if factor_2 > self.model.factors - 1 or factor_2 < 0:
-            print(f"Invalid factor_2 provided, must be between 0 and {self.model.factors - 1}")
+        if factor_2 > self.model.factors or factor_2 < 1:
+            print(f"Invalid factor_2 provided, must be between 0 and {self.model.factors}")
             return
 
         factors_contr = self.model.W
         normalized_factors_contr = factors_contr / factors_contr.sum(axis=0)
-
+        f1_idx = factor_1 - 1
+        f2_idx = factor_2 - 1
         fig = go.Figure(data=go.Scatter(
-            x=normalized_factors_contr[:, factor_1],
-            y=normalized_factors_contr[:, factor_2], mode='markers')
+            x=normalized_factors_contr[:, f1_idx],
+            y=normalized_factors_contr[:, f2_idx], mode='markers')
         )
         fig.update_layout(title=f"G-Space Plot - Model {self.selected_model}", width=800, height=800)
         fig.update_yaxes(title_text=f"Factor {factor_2} Contributions (avg=1)")
@@ -387,10 +383,11 @@ class ModelAnalysis:
         feature_contr_labels = []
         feature_legend = {}
         for idx in range(feature_contr.shape[0]-1, -1, -1):
+            idx_l = idx+1
             if feature_contr[idx] > contribution_threshold:
                 feature_contr_inc.append(feature_contr[idx])
-                feature_contr_labels.append(f"Factor {idx}")
-                feature_legend[f"Factor {idx}"] = f"Factor {idx} = {factors_data[idx:, feature_idx]}"
+                feature_contr_labels.append(f"Factor {idx_l}")
+                feature_legend[f"Factor {idx_l}"] = f"Factor {idx_l} = {factors_data[idx:, feature_idx]}"
         feature_fig = go.Figure(data=[go.Pie(labels=feature_contr_labels, values=feature_contr_inc)])
         feature_fig.update_layout(title=f"{x_label} - Model {self.selected_model}", width=1200, height=600,
                                   legend_title_text=f"Factor Contribution > {0.05}%")
@@ -398,7 +395,7 @@ class ModelAnalysis:
 
         factors_contr = self.model.W
         normalized_factors_contr = 100 * (factors_contr / factors_contr.sum(axis=0))
-        factor_labels = [f"Factor {i}" for i in range(normalized_factors_contr.shape[1])]
+        factor_labels = [f"Factor {i}" for i in range(1, normalized_factors_contr.shape[1]+1)]
         contr_df = pd.DataFrame(normalized_factors_contr, columns=factor_labels)
         contr_df.index = pd.to_datetime(self.dh.input_data.index)
         contr_df = contr_df.sort_index()
