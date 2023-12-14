@@ -3,6 +3,7 @@ import numpy as np
 import plotly.graph_objects as go
 from src.error.bootstrap import Bootstrap
 from src.error.displacement import Displacement
+from src.error.bs_disp import BSDISP
 
 logger = logging.getLogger("NMF")
 logger.setLevel(logging.INFO)
@@ -15,7 +16,8 @@ class Error:
 
     def __init__(self,
                  bs: Bootstrap = None,
-                 disp: Displacement = None
+                 disp: Displacement = None,
+                 bsdisp: BSDISP = None
                  ):
         """
         Calculate the combined error summary statistics from various error estimation methods.
@@ -26,9 +28,12 @@ class Error:
            The BS run to calculate the summary error.
         disp : Displacement
            The DISP run to calculate the summary error.
+        bsdisp: BSDISP
+           The BS-DISP run to calculate the summary error.
         """
         self.bs = bs
         self.disp = disp
+        self.bsdisp = bsdisp
         self.factors = 0
         if bs is not None:
             self.feature_labels = self.bs.feature_labels
@@ -38,6 +43,10 @@ class Error:
             self.feature_labels = self.disp.feature_labels
             self.model_selected = self.disp.selected_model
             self.factors = disp.factors
+        if bsdisp is not None:
+            self.feature_labels = self.bsdisp.feature_labels
+            self.model_selected = self.bsdisp.model_selected
+            self.factors = bsdisp.factors
 
     def plot_summary(self,
                      factor: int
@@ -88,6 +97,21 @@ class Error:
                 go.Bar(x=self.feature_labels, y=selected_data.conc_max - selected_data.conc_min,
                        base=selected_data.conc_min, name="Disp",
                        marker_color='rgb(171,245,106)', marker_line_color='rgb(128,216,52)'))
+        if self.bsdisp is not None:
+            base_Wi = self.bsdisp.bootstrap.base_W[:, factor_i]
+            base_Wi = base_Wi.reshape(len(base_Wi), 1)
+            base_Hi = [self.bsdisp.bootstrap.base_H[factor_i]]
+            base_sums = np.matmul(base_Wi, base_Hi).sum(axis=0)
+            base_sums[base_sums < 1e-4] = 1e-4
+
+            selected_data = self.bsdisp.compiled_results.loc[self.bsdisp.compiled_results["factor"] == factor_i].loc[
+                self.bsdisp.compiled_results["dQ"] == disp_dQ]
+            conc = selected_data["conc"]
+            conc[conc < 1e-4] = 1e-4
+            error_plot.add_trace(
+                go.Bar(x=self.feature_labels, y=selected_data.conc_max - selected_data.conc_min,
+                       base=selected_data.conc_min, name="BS-Disp",
+                       marker_color='rgb(204,153,255)', marker_line_color='rgb(178,102,255)'))
         error_plot.add_trace(go.Scatter(x=self.feature_labels, y=base_sums, mode='markers', name="Base",
                                         marker=dict(size=12, color="red", symbol="line-ew", line_width=1,
                                         line_color="red")))

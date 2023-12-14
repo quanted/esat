@@ -3,11 +3,13 @@ import pickle
 import os
 import copy
 import math
+import json
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
 import plotly.graph_objects as go
 from src.model.nmf import NMF
+from src.utils import np_encoder
 from pathlib import Path
 
 
@@ -85,6 +87,7 @@ class Bootstrap:
         self.factor_tables = {}
         self.bs_profiles = {}
         self.bs_factor_contributions = {}
+        self.metadata = {}
 
     def _block_resample(self,
                         data: np.ndarray,
@@ -344,6 +347,11 @@ class Bootstrap:
            Allow resampled blocks to overlap. Default = False
 
         """
+        self.metadata["keep_H"] = keep_H
+        self.metadata["reuse_seed"] = reuse_seed
+        self.metadata["block"] = block
+        self.metadata["overlapping"] = overlapping
+
         self._train(keep_H=keep_H, reuse_seed=reuse_seed, block=block, overlapping=overlapping)
         self._compile_results()
 
@@ -644,7 +652,8 @@ class Bootstrap:
         self.plot_contribution(factor=factor)
 
     def save(self, bs_name: str,
-             output_directory: str
+             output_directory: str,
+             pickle_result: bool = True
              ):
         """
         Save the BS results.
@@ -652,8 +661,10 @@ class Bootstrap:
         ----------
         bs_name : str
             The name to use for the BS file.
-        output_directory :
+        output_directory : str
             The output directory to save the BS file to.
+        pickle_result : bool
+            Pickle the bs model. Default = True.
 
         Returns
         -------
@@ -667,9 +678,16 @@ class Bootstrap:
             output_directory = Path(os.path.join(current_directory, output_directory)).resolve()
         if os.path.exists(output_directory):
             file_path = os.path.join(output_directory, f"{bs_name}.pkl")
-            with open(file_path, "wb") as save_file:
-                pickle.dump(self, save_file)
-                logger.info(f"BS NMF output saved to pickle file: {file_path}")
+            if pickle_result:
+                with open(file_path, "wb") as save_file:
+                    pickle.dump(self, save_file)
+                    logger.info(f"BS NMF output saved to pickle file: {file_path}")
+            else:
+                # meta_file = os.path.join(output_directory, f"{bs_name}-metadata.json")
+                # with open(meta_file, "w") as mfile:
+                #     json.dump(self.metadata, mfile, default=np_encoder)
+                #     logger.info(f"BS NMF model metadata saved to file: {meta_file}")
+                logger.error("Not yet implemented.")
             return file_path
         else:
             logger.error(f"Output directory does not exist. Specified directory: {output_directory}")

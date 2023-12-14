@@ -4,6 +4,23 @@ import copy
 EPSILON = 1e-15
 
 
+def np_encoder(object):
+    """
+    Convert any numpy type to a generic type for json serialization.
+
+    Parameters
+    ----------
+    object
+       Object to be converted.
+    Returns
+    -------
+    object
+        Generic object or an unchanged object if not a numpy type
+    """
+    if isinstance(object, np.generic):
+        return object.item()
+
+
 def calculate_Q(residuals, uncertainty):
     return np.sum(np.sum(np.square(np.divide(residuals, uncertainty))))
 

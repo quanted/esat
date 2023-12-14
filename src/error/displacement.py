@@ -5,10 +5,9 @@ import os
 import numpy as np
 import pandas as pd
 from pathlib import Path
-import multiprocessing as mp
 import plotly.graph_objects as go
 from tqdm import tqdm
-from src.utils import q_loss, compare_all_factors
+from src.utils import q_loss, compare_all_factors, EPSILON
 from src.model.nmf import NMF
 
 
@@ -27,9 +26,10 @@ class Displacement:
     def __init__(self,
                  nmf: NMF,
                  feature_labels: list,
-                 selected_model: int = -1,
+                 model_selected: int = -1,
                  max_search: int = 50,
-                 threshold_dQ: float = 0.1
+                 threshold_dQ: float = 0.1,
+                 features: list = None
                  ):
         """
         The DISP method finds the required change in a factor profile feature value to cause a specific increase in the
@@ -48,23 +48,27 @@ class Displacement:
            The base model to run the DISP method on.
         feature_labels : list
            The list of feature, column, labels from the original input dataset. Provided in the data handler.
-        selected_model : int
+        model_selected : int
            The index of the model selected in the case of a batch NMF run, used for labeling.
         max_search : int
            The maximum number of search steps to complete when trying to find a factor feature value. Default = 50
         threshold_dQ : float
            The threshold range of the dQ value for the factor feature value to be considered found. I.E, dQ=4 and
            threshold_dQ=0.1, than any value between 3.9 and 4.0 will be considered valid.
+        features : list
+           A list of the feature indices to run DISP on, default is None which will run DISP on all features.
 
         """
         self.nmf = nmf
-        self.selected_model = selected_model
+        self.selected_model = model_selected
         self.V = self.nmf.V
         self.U = self.nmf.U
-        self.H = self.nmf.H
+        self.H = self.nmf.H + EPSILON
         self.W = self.nmf.W
         self.base_Q = self.nmf.Qtrue
         self.feature_labels = feature_labels
+        self.features = features if features is not None else [i for i in range(len(self.feature_labels))]
+        self.excluded_features = set(range(len(self.feature_labels))).difference(set(self.features))
         self.factors = self.H.shape[0]
 
         self.max_search = max_search
@@ -73,18 +77,24 @@ class Displacement:
         self.increase_results = {}
         self.decrease_results = {}
 
-        self.swap_table = np.zeros(shape=(len(self.dQmax), self.H.shape[0]))
-        self.count_table = np.zeros(shape=(len(self.dQmax), self.H.shape[0]))
+        self.swap_table = np.zeros(shape=(len(self.dQmax), self.factors))
+        self.count_table = np.zeros(shape=(len(self.dQmax), self.factors))
         self.compiled_results = None
 
-    def run(self):
+    def run(self, batch: int = -1):
         """
         Run the DISP method on the provided NMF model.
 
+        Parameters
+        ----------
+        batch : int
+           Batch number identifier, used for labeling DISP during parallel runs with BS-DISP.
         """
-        self._increase_disp()
-        self._decrease_disp()
+        logger.info(f"Starting DISP for batch: {batch}")
+        self._increase_disp(batch=batch)
+        self._decrease_disp(batch=batch)
         self._compile_results()
+        logger.info(f"Completed DISP for batch: {batch}")
 
     def summary(self):
         """
@@ -100,12 +110,13 @@ class Displacement:
         dq_list = list(reversed(self.dQmax))
         dq_list = np.reshape(dq_list, newshape=(len(dq_list), 1))
         table_data = np.hstack((dq_list, table_data))
+
+        logger.info(f"Largest dQ Decrease: {round(largest_dQ_change, 2)}")
         table_plot = go.Figure(data=[go.Table(
             header=dict(values=table_labels),
             cells=dict(values=table_data.T)
         )])
-        table_plot.update_layout(title=f"Swap % - Largest dQ Change: {round(largest_dQ_change, 2)}",
-                                 width=600, height=200, margin={'t': 50, 'l': 25, 'b': 10, 'r': 25})
+        table_plot.update_layout(title=f"Swap %", width=600, height=200, margin={'t': 50, 'l': 25, 'b': 10, 'r': 25})
         table_plot.show()
 
     def plot_results(self,
@@ -215,14 +226,20 @@ class Displacement:
         disp_conc.update_yaxes(title_text="Concentration (log)", type="log")
         disp_conc.show()
 
-    def _increase_disp(self):
+    def _increase_disp(self, batch: int = -1):
         """
         Run the increasing change DISP method on all factors and features.
+
+        Parameters
+        ----------
+        batch : int
+           Batch number identifier, used for labeling DISP during parallel runs with BS-DISP.
+
         """
-        logger.info("DISP - Testing increasing value changes to H")
-        for factor_i in tqdm(range(self.H.shape[0]), desc=" Factors", position=0):
+        # logger.info("DISP - Testing increasing value changes to H")
+        for factor_i in tqdm(range(self.H.shape[0]), desc="Increasing value for factors", position=0, leave=True):
             factor_results = {}
-            for feature_j in tqdm(range(self.H.shape[1]), desc=f"Factor {factor_i+1} - Features", position=0, leave=True):
+            for feature_j in tqdm(self.features, desc=f"+ : Batch {batch}, Factor {factor_i+1} - Features", position=0, leave=True):
                 new_H = copy.copy(self.H)
                 high_modifier = 2.0
                 high_found = False
@@ -245,8 +262,10 @@ class Displacement:
                         max_dQ = dQ
                     if high_search_i >= max_high_search:
                         logging.warn(f"Failed to find upper bound modifier within search limit. "
-                                     f"Factor: {factor_i+1}, Feature: {feature_j}, Max iterations: {max_high_search}, max dQ: {max_dQ}")
+                                     f"Batch :{batch}, Factor: {factor_i+1}, Feature: {feature_j}, "
+                                     f"Max iterations: {max_high_search}, max dQ: {max_dQ}")
                         break
+                new_value = 0.0
                 for i in range(len(self.dQmax)):
                     low_modifier = 1.0
                     modifier = (high_modifier + low_modifier) / 2.0
@@ -289,14 +308,19 @@ class Displacement:
                 factor_results[f"feature-{feature_j}"] = i_results
             self.increase_results[f"factor-{factor_i+1}"] = factor_results
 
-    def _decrease_disp(self):
+    def _decrease_disp(self, batch: int = -1):
         """
         Run the decreasing change DISP method on all factors and features.
+
+        Parameters
+        ----------
+        batch : int
+           Batch number identifier, used for labeling DISP during parallel runs with BS-DISP.
         """
-        logger.info("DISP - Testing decreasing value changes to H")
-        for factor_i in tqdm(range(self.H.shape[0]), desc=" Factors", position=0):
+        # logger.info("DISP - Testing decreasing value changes to H")
+        for factor_i in tqdm(range(self.H.shape[0]), desc="Decreasing value for factors", position=0, leave=True):
             factor_results = {}
-            for feature_j in tqdm(range(self.H.shape[1]), desc=f" Factor {factor_i+1} - Features", position=0, leave=True):
+            for feature_j in tqdm(self.features, desc=f"- : Batch {batch}, Factor {factor_i+1} - Features", position=0, leave=True):
                 i_results = {}
                 for i in range(len(self.dQmax)):
                     high_mod = 1.0
@@ -365,19 +389,29 @@ class Displacement:
                 factor_matrix = np.matmul(factor_W.reshape(len(factor_W), 1), [self.H[factor_i]])
                 factor_conc = factor_matrix.sum(axis=0)
                 for feature_j in range(self.H.shape[1]):
-                    feature_inc_results = self.increase_results[f"factor-{factor_label}"][f"feature-{feature_j}"][dQ]
-                    feature_dec_results = self.decrease_results[f"factor-{factor_label}"][f"feature-{feature_j}"][dQ]
-                    compiled_data["profile_max"].append(feature_inc_results["percent"])
-                    compiled_data["profile_min"].append(feature_dec_results["percent"])
+                    if feature_j in self.excluded_features:
+                        profile_max = scaled_profiles[factor_i, feature_j]
+                        profile_min = scaled_profiles[factor_i, feature_j]
+                        conc_max = factor_conc[feature_j]
+                        conc_min = factor_conc[feature_j]
+                        dQ_drop = 0.0
+                    else:
+                        feature_inc_results = self.increase_results[f"factor-{factor_label}"][f"feature-{feature_j}"][dQ]
+                        feature_dec_results = self.decrease_results[f"factor-{factor_label}"][f"feature-{feature_j}"][dQ]
+                        profile_max = feature_inc_results["percent"]
+                        profile_min = feature_dec_results["percent"]
+                        conc_max = feature_inc_results["conc"]
+                        conc_min = feature_dec_results["conc"]
+                        inc_dQ = feature_inc_results["Q_drop"]
+                        dec_dQ = feature_dec_results["Q_drop"]
+                        dQ_drop = inc_dQ if inc_dQ < dec_dQ else dec_dQ
+                    compiled_data["profile_max"].append(profile_max)
+                    compiled_data["profile_min"].append(profile_min)
                     compiled_data["profile"].append(scaled_profiles[factor_i, feature_j])
-                    conc_max = feature_inc_results["conc"]
                     compiled_data["conc_max"].append(conc_max if conc_max > 1e-4 else 1e-4)
-                    conc_min = feature_dec_results["conc"]
                     compiled_data["conc_min"].append(conc_min if conc_min > 1e-4 else 1e-4)
                     compiled_data["conc"].append(factor_conc[feature_j])
-                    inc_dQ = feature_inc_results["Q_drop"]
-                    dec_dQ = feature_dec_results["Q_drop"]
-                    compiled_data["dQ_drop"].append(inc_dQ if np.abs(inc_dQ) > np.abs(dec_dQ) else dec_dQ)
+                    compiled_data["dQ_drop"].append(dQ_drop if dQ_drop < 0.0 else 0.0)
                     compiled_data["dQ"].append(dQ)
                     compiled_data["factor"].append(factor_i)
                     compiled_data["feature"].append(self.feature_labels[feature_j])
@@ -405,7 +439,8 @@ class Displacement:
             factor_i += 1
 
     def save(self, disp_name: str,
-             output_directory: str
+             output_directory: str,
+             pickle_result: bool = True
              ):
         """
         Save the DISP results.
@@ -413,8 +448,10 @@ class Displacement:
         ----------
         disp_name : str
             The name to use for the DISP pickle file.
-        output_directory :
+        output_directory : str
             The output directory to save the DISP pickle file to.
+        pickle_result : bool
+            Pickle the disp model. Default = True.
 
         Returns
         -------
@@ -428,9 +465,12 @@ class Displacement:
             output_directory = Path(os.path.join(current_directory, output_directory)).resolve()
         if os.path.exists(output_directory):
             file_path = os.path.join(output_directory, f"{disp_name}.pkl")
-            with open(file_path, "wb") as save_file:
-                pickle.dump(self, save_file)
-                logger.info(f"DISP NMF output saved to pickle file: {file_path}")
+            if pickle_result:
+                with open(file_path, "wb") as save_file:
+                    pickle.dump(self, save_file)
+                    logger.info(f"DISP NMF output saved to pickle file: {file_path}")
+            else:
+                logger.error("Not yet implemented.")
             return file_path
         else:
             logger.error(f"Output directory does not exist. Specified directory: {output_directory}")

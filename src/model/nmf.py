@@ -6,7 +6,7 @@ sys.path.append(module_path)
 
 from src.model.ls_nmf import LSNMF
 from src.model.ws_nmf import WSNMF
-from src.utils import q_loss, qr_loss
+from src.utils import q_loss, qr_loss, np_encoder
 from scipy.cluster.vq import kmeans2, whiten
 from fcmeans import FCM
 from tqdm import trange
@@ -440,22 +440,6 @@ class NMF:
             self.metadata["robust_n"] = int(robust_n)
             self.metadata["robust_alpha"] = float(robust_alpha)
 
-    @staticmethod
-    def __np_encoder(object):
-        """
-        Convert any numpy type to a generic type for json serialization.
-
-        Parameters
-        ----------
-        object
-           Object to be converted.
-        Returns
-        -------
-        object
-            Generic object or an unchanged object if not a numpy type
-        """
-        if isinstance(object, np.generic):
-            return object.item()
 
     def save(self,
              model_name: str,
@@ -505,7 +489,7 @@ class NMF:
                 file_path = output_directory
                 meta_file = os.path.join(output_directory, f"{model_name}-metadata.json")
                 with open(meta_file, "w") as mfile:
-                    json.dump(self.metadata, mfile, default=self.__np_encoder)
+                    json.dump(self.metadata, mfile, default=np_encoder)
                     logger.info(f"NMF model metadata saved to file: {meta_file}")
                 profile_file = os.path.join(output_directory, f"{model_name}-profile.csv")
                 with open(profile_file, "w") as pfile:
