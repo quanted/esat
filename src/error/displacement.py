@@ -2,12 +2,13 @@ import logging
 import copy
 import pickle
 import os
+import json
 import numpy as np
 import pandas as pd
 from pathlib import Path
 import plotly.graph_objects as go
 from tqdm import tqdm
-from src.utils import q_loss, compare_all_factors, EPSILON
+from src.utils import q_loss, compare_all_factors, EPSILON, np_encoder
 from src.model.nmf import NMF
 
 
@@ -80,6 +81,13 @@ class Displacement:
         self.swap_table = np.zeros(shape=(len(self.dQmax), self.factors))
         self.count_table = np.zeros(shape=(len(self.dQmax), self.factors))
         self.compiled_results = None
+        self.metadata = {
+            "selected_model": self.selected_model,
+            "features": self.features,
+            "excluded_features": self.excluded_features,
+            "max_search": self.max_search,
+            "threshold_dQ": self.threshold_dQ
+        }
 
     def run(self, batch: int = -1):
         """
@@ -236,7 +244,6 @@ class Displacement:
            Batch number identifier, used for labeling DISP during parallel runs with BS-DISP.
 
         """
-        # logger.info("DISP - Testing increasing value changes to H")
         for factor_i in tqdm(range(self.H.shape[0]), desc="Increasing value for factors", position=0, leave=True):
             factor_results = {}
             for feature_j in tqdm(self.features, desc=f"+ : Batch {batch}, Factor {factor_i+1} - Features", position=0, leave=True):
@@ -317,7 +324,6 @@ class Displacement:
         batch : int
            Batch number identifier, used for labeling DISP during parallel runs with BS-DISP.
         """
-        # logger.info("DISP - Testing decreasing value changes to H")
         for factor_i in tqdm(range(self.H.shape[0]), desc="Decreasing value for factors", position=0, leave=True):
             factor_results = {}
             for feature_j in tqdm(self.features, desc=f"- : Batch {batch}, Factor {factor_i+1} - Features", position=0, leave=True):
@@ -470,7 +476,35 @@ class Displacement:
                     pickle.dump(self, save_file)
                     logger.info(f"DISP NMF output saved to pickle file: {file_path}")
             else:
-                logger.error("Not yet implemented.")
+                file_path = output_directory
+                meta_file = os.path.join(output_directory, f"{disp_name}-metadata.json")
+                with open(meta_file, "w") as mfile:
+                    json.dump(self.metadata, mfile, default=np_encoder)
+                    logger.info(f"DISP NMF model metadata saved to file: {meta_file}")
+                increase_file = os.path.join(output_directory, f"{disp_name}-increase-disp.json")
+                with open(increase_file, "w") as incfile:
+                    json.dump(self.increase_results, incfile, default=np_encoder)
+                    logger.info(f"DISP NMF model increasing results saved to file: {increase_file}")
+                decrease_file = os.path.join(output_directory, f"{disp_name}-decrease-disp.json")
+                with open(increase_file, "w") as decfile:
+                    json.dump(self.decrease_results, decfile, default=np_encoder)
+                    logger.info(f"DISP NMF model decreasing results saved to file: {decrease_file}")
+                swap_file = os.path.join(output_directory, f"{disp_name}-swaptable.csv")
+                with open(swap_file, 'w') as stfile:
+                    table_labels = ["dQ Max"]
+                    for i in range(self.factors):
+                        table_labels.append(f"Factor {i + 1}")
+                    table_data = np.round(100 * (self.swap_table / self.count_table), 2)
+                    dq_list = list(reversed(self.dQmax))
+                    dq_list = np.reshape(dq_list, newshape=(len(dq_list), 1))
+                    table_data = np.hstack((dq_list, table_data))
+                    swap_comment = f"Swap % Table\nMetadata File: {meta_file}\n\n"
+                    np.savetxt(stfile, table_data, delimiter=',', header=table_labels, comments=swap_comment)
+                    logger.info(f"DISP NMF swap table saved to file: {swap_file}")
+                compiled_file = os.path.join(output_directory, f"{disp_name}-results.csv")
+                with open(compiled_file, 'w') as cfile:
+                    self.compiled_results.to_csv(cfile)
+                    logger.info(f"DISP NMF compiled results saved to file: {compiled_file}")
             return file_path
         else:
             logger.error(f"Output directory does not exist. Specified directory: {output_directory}")

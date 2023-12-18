@@ -87,7 +87,13 @@ class Bootstrap:
         self.factor_tables = {}
         self.bs_profiles = {}
         self.bs_factor_contributions = {}
-        self.metadata = {}
+        self.metadata = {
+            "model_selected": self.model_selected,
+            "bootstrap_n": self.bootstrap_n,
+            "block_size": self.block_size,
+            "threshold": self.threshold,
+            "bs_seed": self.bs_seed
+        }
 
     def _block_resample(self,
                         data: np.ndarray,
@@ -349,7 +355,7 @@ class Bootstrap:
         """
         self.metadata["keep_H"] = keep_H
         self.metadata["reuse_seed"] = reuse_seed
-        self.metadata["block"] = block
+        self.metadata["use_block"] = block
         self.metadata["overlapping"] = overlapping
 
         self._train(keep_H=keep_H, reuse_seed=reuse_seed, block=block, overlapping=overlapping)
@@ -683,12 +689,36 @@ class Bootstrap:
                     pickle.dump(self, save_file)
                     logger.info(f"BS NMF output saved to pickle file: {file_path}")
             else:
-                # meta_file = os.path.join(output_directory, f"{bs_name}-metadata.json")
-                # with open(meta_file, "w") as mfile:
-                #     json.dump(self.metadata, mfile, default=np_encoder)
-                #     logger.info(f"BS NMF model metadata saved to file: {meta_file}")
-                logger.error("Not yet implemented.")
-            return file_path
+                file_path = output_directory
+                meta_file = os.path.join(output_directory, f"{bs_name}-metadata.json")
+                with open(meta_file, "w") as mfile:
+                    json.dump(self.metadata, mfile, default=np_encoder)
+                    logger.info(f"BS NMF model metadata saved to file: {meta_file}")
+                results_file = os.path.join(output_directory, f"{bs_name}-results.json")
+                with open(results_file, "w") as resfile:
+                    json.dump(self.bs_results, resfile, default=np_encoder)
+                    logger.info(f"BS NMF results saved to file: {results_file}")
+                mapping_file = os.path.join(output_directory, f"{bs_name}-mapping.csv")
+                with open(mapping_file, "w") as mapfile:
+                    self.mapping_df.to_csv(mapfile)
+                    logger.info(f"BS NMF model mapping saved to file: {mapping_file}")
+                qtable_file = os.path.join(output_directory, f"{bs_name}-qtable.csv")
+                with open(qtable_file, "w") as qfile:
+                    self.q_results.to_csv(qfile)
+                    logger.info(f"BS NMF q table saved to file: {qtable_file}")
+                ftables_file = os.path.join(output_directory, f"{bs_name}-ftables.json")
+                with open(ftables_file, "w") as f_file:
+                    json.dump(self.factor_tables, f_file, default=np_encoder)
+                    logger.info(f"BS NMF factor tables saved to file: {ftables_file}")
+                profiles_file = os.path.join(output_directory, f"{bs_name}-profiles.json")
+                with open(profiles_file, "w") as p_file:
+                    json.dump(self.bs_profiles, p_file, default=np_encoder)
+                    logger.info(f"BS NMF profiles saved to file: {profiles_file}")
+                contr_file = os.path.join(output_directory, f"{bs_name}-contributions.json")
+                with open(contr_file, "w") as c_file:
+                    json.dump(self.bs_factor_contributions, c_file, default=np_encoder)
+                    logger.info(f"BS NMF contributions saved to file: {contr_file}")
+                return file_path
         else:
             logger.error(f"Output directory does not exist. Specified directory: {output_directory}")
             return None

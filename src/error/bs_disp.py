@@ -93,9 +93,18 @@ class BSDISP:
         self.n_drops = 0
         self.disp_swap = 0
         self.fit_swaps = -1
+        self.metadata = {
+            "model_selected": self.model_selected,
+            "bs-block_size": self.block_size,
+            "bs-threshold": self.threshold,
+            "disp-max_search": self.max_search,
+            "disp-threshold_dQ": self.threshold_dQ,
+            "features": self.features,
+            "seed": self.seed
+        }
 
     def run(self,
-            parallel: bool = True,
+            parallel: bool = False,
             keep_H: bool = True,
             reuse_seed: bool = True,
             block: bool = True,
@@ -117,10 +126,13 @@ class BSDISP:
         overlapping : bool
            Allow resampled blocks to overlap. Default = False
 
-        Returns
-        -------
-
         """
+        self.metadata["parallel"] = parallel
+        self.metadata["keep_H"] = keep_H
+        self.metadata["reuse_seed"] = reuse_seed
+        self.metadata["block"] = block
+        self.metadata["overlapping"] = overlapping
+
         if self.bootstrap is None:
             logger.info(f"Running new Bootstrap instance with {self.bootstrap_n} runs and block size {self.block_size}")
             # Run BS
@@ -137,9 +149,9 @@ class BSDISP:
             cpus = cpus - 1 if cpus > 1 else 1
             with mp.Pool(processes=cpus) as pool:
                 p_args = []
-                for i in range(len(self.bootstrap.bs_results.keys())):
-                    i_model = self.bootstrap.bs_results[bs_keys[i]]["model"]
-                    i_args = (bs_keys[i], i_model, self.feature_labels, self.model_selected, self.threshold_dQ,
+                for i, bs_key in enumerate(bs_keys):
+                    i_model = self.bootstrap.bs_results[bs_key]["model"]
+                    i_args = (bs_key, i_model, self.feature_labels, self.model_selected, self.threshold_dQ,
                               self.max_search, self.features, self.dQmax)
                     p_args.append(i_args)
 
@@ -147,14 +159,14 @@ class BSDISP:
                     i, i_disp = result
                     self.disp_results[i] = i_disp
         else:
-            for i in tqdm(range(len(self.bootstrap.bs_results.keys())), desc="BS-DISP - Displacement Stage", position=0, leave=True):
-                bs_result = self.bootstrap.bs_results[bs_keys[i]]
+            for bs_key in tqdm(bs_keys, desc="BS-DISP - Displacement Stage", position=0, leave=True):
+                bs_result = self.bootstrap.bs_results[bs_key]
                 bs_model = bs_result["model"]
                 i_disp = Displacement(nmf=bs_model, feature_labels=self.feature_labels, model_selected=self.model_selected,
                                       threshold_dQ=self.threshold_dQ, max_search=self.max_search, features=self.features)
                 i_disp.dQmax = self.dQmax
-                i_disp.run(batch=i)
-                self.disp_results[i] = i_disp
+                i_disp.run(batch=bs_key)
+                self.disp_results[bs_key] = i_disp
         t1 = time.time()
         logger.info(f"Completed all BS-DISP calculations, BS runs: {self.bootstrap_n}, "
                     f"Features: {len(self.feature_labels)}, Factors: {self.factors}, "
@@ -177,8 +189,8 @@ class BSDISP:
         """
         Calculate the merging statistics and metrics for the bs-disp results.
         """
-        disp_result = self.disp_results[0].compiled_results
-
+        key0 = list(self.disp_results.keys())[0]
+        disp_result = self.disp_results[key0].compiled_results
         profiles = disp_result["profile"]
         profiles_max = disp_result["profile_max"]
         profiles_min = disp_result["profile_min"]
@@ -198,17 +210,15 @@ class BSDISP:
             conc_min_i = disp_result_i["conc_min"]
             dQ_drop_i = disp_result_i["dQ_drop"]
             disp_profiles.append(profile_i)
-            # profiles = np.mean((profiles, profile_i))
             profiles_max = np.max([profiles_max, profile_max_i], axis=0)
             profiles_min = np.min([profiles_min, profile_min_i], axis=0)
-            # conc = np.mean((conc, conc_i))
             disp_conc.append(conc_i)
             conc_max = np.max([conc_max, conc_max_i], axis=0)
             conc_min = np.min([conc_min, conc_min_i], axis=0)
             dQ_drop = np.min([dQ_drop, dQ_drop_i.values], axis=0)
             if any(dQ_drop_i < 0.0):
                 self.n_drops += 1
-        self.compiled_results = copy.copy(self.disp_results[0].compiled_results)
+        self.compiled_results = copy.copy(self.disp_results[key0].compiled_results)
         self.compiled_results["profiles"] = np.mean(disp_profiles, axis=0)
         self.compiled_results["profile_max"] = profiles_max
         self.compiled_results["profile_min"] = profiles_min
@@ -217,7 +227,7 @@ class BSDISP:
         self.compiled_results["conc_min"] = conc_min
         self.compiled_results["dQ_drop"] = dQ_drop
 
-        for result_i in range(0, len(self.disp_results.keys())):
+        for result_i in self.disp_results.keys():
             self.swap_table = self.swap_table + self.disp_results[result_i].swap_table
             self.count_table = self.count_table + self.disp_results[result_i].count_table
             if np.count_nonzero(self.disp_results[result_i].swap_table) > 0:
@@ -395,6 +405,7 @@ class BSDISP:
                     pickle.dump(self, save_file)
                     logger.info(f"BS-DISP NMF output saved to pickle file: {file_path}")
             else:
+
                 logger.error("Not yet implemented.")
             return file_path
         else:
