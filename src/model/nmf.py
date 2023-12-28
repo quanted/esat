@@ -1,17 +1,19 @@
 import sys
 import os
+import types
 
 module_path = os.path.abspath(os.path.join('..', "nmf_py"))
 sys.path.append(module_path)
 
 from src.model.ls_nmf import LSNMF
 from src.model.ws_nmf import WSNMF
-from src.utils import q_loss, qr_loss, np_encoder
+from src.utils import q_loss, qr_loss, np_encoder, EPSILON
 from scipy.cluster.vq import kmeans2, whiten
 from fcmeans import FCM
 from tqdm import trange
 from datetime import datetime
 from pathlib import Path
+from numpy import linalg as npl
 import numpy as np
 import logging
 import copy
@@ -214,8 +216,8 @@ class NMF:
         else:
             validated = False
 
-        if validated and self.verbose:
-            logger.debug("All inputs and initialized matrices have been validated.")
+        # if validated and self.verbose:
+        #     logger.debug("All inputs and initialized matrices have been validated.")
         self.__validated = validated
         self.__has_neg = has_neg
 
@@ -224,7 +226,7 @@ class NMF:
                    W: np.ndarray = None,
                    init_method: str = "column_mean",
                    init_norm: bool = True,
-                   fuzziness: float = 5.0
+                   fuzziness: float = 5.0,
                    ):
         """
         Initialize the factor profile (H) and factor contribution matrices (W).
@@ -301,8 +303,8 @@ class NMF:
         self.W = W
         self.init_method = init_method
         self.__initialized = True
-        if self.verbose:
-            logger.debug("Completed initializing the factor profile and contribution matrices.")
+        # if self.verbose:
+        #     logger.debug("Completed initializing the factor profile and contribution matrices.")
         self.__validate()
 
     def summary(self):
@@ -327,7 +329,8 @@ class NMF:
               model_i: int = -1,
               robust_mode: bool = False,
               robust_n: int = 200,
-              robust_alpha: float = 4
+              robust_alpha: float = 4,
+              update_step: str = None
               ):
         """
         Train the NMF model by iteratively updating the W and H matrices reducing the loss value Q until convergence.
@@ -366,6 +369,8 @@ class NMF:
            When robust_mode=True, the cutoff of the uncertainty scaled residuals to decrease the weights. Robust weights
             are calculated as the uncertainty multiplied by the square root of the scaled residuals over robust_alpha.
             Default: 4.0
+        update_step: str
+           A replacement to the update method used for algorithm experimentation.
         """
         if not self.__initialized:
             logger.warn("Model is not initialized, initializing with default parameters")
@@ -373,6 +378,12 @@ class NMF:
         if not self.__validated:
             logger.error("Current model inputs and parameters are not valid.")
             return -1
+
+        update = None
+        if update_step is not None:
+            lcls = locals()
+            exec(update_step, globals(), lcls)
+            self.update_step = types.MethodType(lcls['update'], self)
 
         V = self.V
         U = self.U
@@ -408,6 +419,10 @@ class NMF:
                         q = q_robust
                         We_prime = np.divide(1, U_robust ** 2).astype(np.float64)
                 prior_q.append(q)
+                if np.isnan(q) or np.isnan(q_robust):
+                    logger.error(f"Stopping NMF model train due to loss value being NAN. Q(true): {q_true}, "
+                                 f"Q(robust): {q_robust}")
+                    break
                 if len(prior_q) > converge_n:
                     prior_q.pop(0)
                     delta_q_first = prior_q[0]
