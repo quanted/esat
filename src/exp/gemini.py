@@ -26,6 +26,12 @@ logger.setLevel(logging.DEBUG)
 
 
 class GeminiModels:
+    """
+    Experimental workflow for prompting Google's Gemini API for optimized or creative versions of the existing
+    algorithms. The process parses out a modified version of the code from the Gemini prompt, injects the code as the
+    update function for the BatchNMF workflow. The results are evaluating against the base model (original) and
+    depending on the comparison will re-prompt accordingly or save the new algorithm code and update the summary file.
+    """
 
     def __init__(self, output_dir: str = None, algorithm: str = "ls-nmf"):
         self.base_code = None
@@ -60,7 +66,6 @@ class GeminiModels:
                 if "return" in code_line:
                     break
         base_code = "".join(base_code)
-        # base_code = base_code[0: -1]
         self.base_code = base_code
 
     def run_algorithm(self, new_algorithm):
@@ -276,11 +281,7 @@ class GeminiModels:
     def execute(self, max_iterations: int = 500):
         gemini_search = True
         search_i = 1
-        added_algs = 0
-        best_alg = 0
-        best_q = self.base_Qrobust
         logger.info("Starting Gemini Algorithm Search")
-        # the previous model. If an error provide the error and ask for a better model or correct model.
         # Steps:
         # 1. Select a random algorithm from the collection.
         # 2. Generate prompt that asks for a better version of the algorithm (status=0)
@@ -289,8 +290,9 @@ class GeminiModels:
         #    b. Produces the same results as the base model. Ask for a more better or more creative algorithm. (status=2)
         #    c. Produces results that are 5 times worse than the base model, ask if it can do better. (status=3, message=Qrobust)
         #    d. Produces NAN loss values. Ask for a corrected algorithm, stating that the prior one produced NAN in the loss value. (status=4)
-        #    e. The max number of attempts on this algorithm have been reached. Don't save and restart the process.
-        #    f. Otherwise save the algorithm to the collection.
+        #    e. The max number of attempts on this algorithm have been reached. Don't save and restart the prompt process.
+        #    f. The algorithm runtime exceeds the runtime allowed and training is halted with the runtime error message. (status=5)
+        #    g. Otherwise save the algorithm to the collection.
         # For 3a-3d, have multiple possible prompts to work with.
 
         while gemini_search:
@@ -365,10 +367,11 @@ class GeminiModels:
                         gemini_prompt = self.generate_prompt(code=gemini_code, status=status, message=message)
                         gemini_response = self.submit(prompt=gemini_prompt, session=chat_session)
                         gemini_code = self.parse_response(new_alg_str=gemini_response)
-                    except IndexError as ex:
+                    except Exception as ex:
                         logger.error(f"Gemini chat error due to {ex}")
-                        logger.info("Ending current session.")
+                        logger.info("Ending current session. Waiting 60 seconds before starting next session.")
                         alg_session = False
+                        time.sleep(60)
 
 
 if __name__ == "__main__":
