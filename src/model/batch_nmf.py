@@ -1,8 +1,10 @@
+import datetime
 import sys
 import os
 module_path = os.path.abspath(os.path.join('..', "nmf_py"))
 sys.path.append(module_path)
 
+import types
 import logging
 import time
 import pickle
@@ -121,20 +123,37 @@ class BatchNMF:
         self.robust_n = robust_n
         self.robust_alpha = robust_alpha
 
+        self.runtime = None
         self.parallel = parallel
         self.optimized = optimized
         self.verbose = verbose
         self.results = []
         self.best_model = None
+        self.update_step = None
 
-    def train(self):
+    def train(self, min_limit: int = None):
         """
         Execute the training sequence for the batch of NMF models using the shared configuration parameters.
+
+        Parameters
+        ----------
+        min_limit : int
+            The maximum allowed time limit for training, in minutes. Default is None and specifying this parameter will
+            not enforce the time limit on the current iteration but will halt the training process if a single model
+            exceeds the limit.
+
+        Returns
+        -------
+        bool, str
+            True and "" if the model train is successful, if training fails then the function will return False with
+            an error message explaining the reason training ended.
         """
         t0 = time.time()
         if self.parallel:
             # TODO: Add batch processing for large datasets and large number of epochs to reduce memory requirements.
-            pool = mp.Pool()
+            cpus = mp.cpu_count()
+            cpus = cpus - 1 if cpus > 1 else 1
+            pool = mp.Pool(processes=cpus)
             input_parameters = []
             for i in range(1, self.models+1):
                 _seed = self.rng.integers(low=0, high=1e5)
@@ -144,7 +163,8 @@ class BatchNMF:
                     V=self.V,
                     U=self.U,
                     seed=_seed,
-                    optimized=self.optimized
+                    optimized=self.optimized,
+                    verbose=self.verbose
                 )
                 _nmf.initialize(init_method=self.init_method, init_norm=self.init_norm, fuzziness=self.fuzziness)
                 input_parameters.append((_nmf, i))
@@ -155,11 +175,11 @@ class BatchNMF:
             ordered_results = [None for i in range(0, len(results)+1)]
             for result in results:
                 model_i, _nmf = result
-                ordered_results[model_i] = _nmf
+                ordered_results[model_i-1] = _nmf
                 _nmf_q = _nmf.Qrobust if self.best_robust else _nmf.Qtrue
                 if _nmf_q < best_q:
                     best_q = _nmf_q
-                    best_model = model_i
+                    best_model = model_i-1
             if self.verbose:
                 for i, result in enumerate(ordered_results):
                     if result is None:
@@ -174,18 +194,26 @@ class BatchNMF:
             best_Q = float("inf")
             best_model = -1
             for model_i in range(1, self.models+1):
+                t3 = time.time()
                 _seed = self.rng.integers(low=0, high=1e5)
                 _nmf = NMF(
                     factors=self.factors,
                     method=self.method,
                     V=self.V,
                     U=self.U,
-                    seed=_seed
+                    seed=_seed,
+                    verbose=self.verbose,
                 )
                 _nmf.initialize(init_method=self.init_method, init_norm=self.init_norm, fuzziness=self.fuzziness)
                 run = _nmf.train(max_iter=self.max_iter, converge_delta=self.converge_delta, converge_n=self.converge_n,
                                  model_i=model_i, robust_mode=self.robust_mode, robust_n=self.robust_n,
-                                 robust_alpha=self.robust_alpha)
+                                 robust_alpha=self.robust_alpha, update_step=self.update_step)
+                t4 = time.time()
+                t_delta = datetime.timedelta(seconds=t4-t3)
+                if min_limit:
+                    if t_delta.seconds/60 > min_limit:
+                        logger.warn(f"NMF model training time exceeded specified runtime limit")
+                        return False, f"Error: Model train time: {t_delta} exceeded runtime limit: {min_limit} min(s)"
                 if run == -1:
                     logger.error(f"Unable to execute batch run of NMF models. Model: {model_i}")
                     pass
@@ -195,10 +223,13 @@ class BatchNMF:
                     best_model = model_i
                 self.results.append(_nmf)
         t1 = time.time()
-        logger.info(f"Results - Best Model: {best_model}, Q(true): {self.results[best_model].Qtrue}, "
+        self.runtime = round(t1 - t0, 2)
+        best_model = best_model - 1
+        logger.info(f"Results - Best Model: {best_model+1}, Q(true): {self.results[best_model].Qtrue}, "
                     f"Q(robust): {self.results[best_model].Qrobust}, Converged: {self.results[best_model].converged}")
         logger.info(f"Runtime: {round((t1 - t0) / 60, 2)} min(s)")
         self.best_model = best_model
+        return True, ""
 
     def _train_task(self, nmf, model_i) -> (int, NMF):
         """
@@ -219,7 +250,8 @@ class BatchNMF:
         """
         t0 = time.time()
         nmf.train(max_iter=self.max_iter, converge_delta=self.converge_delta, converge_n=self.converge_n, model_i=model_i,
-                  robust_mode=self.robust_mode, robust_n=self.robust_n, robust_alpha=self.robust_alpha)
+                  robust_mode=self.robust_mode, robust_n=self.robust_n, robust_alpha=self.robust_alpha,
+                  update_step=self.update_step)
         t1 = time.time()
         if self.verbose:
             logger.info(f"Model: {model_i}, Seed: {nmf.seed}, "
