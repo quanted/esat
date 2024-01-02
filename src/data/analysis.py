@@ -388,9 +388,10 @@ class ModelAnalysis:
                 feature_contr_inc.append(feature_contr[idx])
                 feature_contr_labels.append(f"Factor {idx_l}")
                 feature_legend[f"Factor {idx_l}"] = f"Factor {idx_l} = {factors_data[idx:, feature_idx]}"
-        feature_fig = go.Figure(data=[go.Pie(labels=feature_contr_labels, values=feature_contr_inc)])
+        feature_fig = go.Figure(data=[go.Pie(labels=feature_contr_labels, values=feature_contr_inc,
+                                             hoverinfo="label+value", textinfo="percent")])
         feature_fig.update_layout(title=f"{x_label} - Model {self.selected_model}", width=1200, height=600,
-                                  legend_title_text=f"Factor Contribution > {0.05}%")
+                                  legend_title_text=f"Factor Contribution > {contribution_threshold}%")
         feature_fig.show()
 
         factors_contr = self.model.W
@@ -410,3 +411,80 @@ class ModelAnalysis:
                                 legend=dict(orientation="h", xanchor="right", yanchor="bottom", x=1, y=1.02))
         contr_fig.update_yaxes(title_text="Normalized Contribution")
         contr_fig.show()
+
+    def plot_factor_composition(self):
+        """
+        Creates a radar plot of the composition of all the factors to all features.
+
+        """
+        categories = self.dh.features
+        profile_p = self.model.H / self.model.H.sum(axis=0)
+
+        profile_radar = go.Figure()
+        for f in range(self.model.factors):
+            fH = profile_p[f]
+            profile_radar.add_trace(go.Scatterpolar(
+                r=fH,
+                theta=categories,
+                fill='toself',
+                name=f"Factor {f+1}",
+                hoverinfo="all",
+                mode="lines+markers+text"
+            ))
+        profile_radar.update_layout(title="Factor Profile Composition", showlegend=True, width=1400, height=1200)
+        profile_radar.show()
+
+    def plot_factor_surface(self, factor_idx: int, percentage: bool = True, zero_threshold: float = 1e-4):
+        """
+        Creates a 3d surface plot of the specified factor_idx's concentration percentage or mass.
+
+        Parameters
+        ----------
+        factor_idx : int
+           The factor index to plot.
+        percentage : bool
+           Plot the concentration as a scaled value, percentage of the sum of all factors, or as the calculated mass.
+           Default = True.
+        zero_threshold : float
+           Values below this threshold are considered zero on the plot.
+
+        """
+        if factor_idx > self.model.factors or factor_idx < 1:
+            print(f"Invalid factor_idx provided, must be between 1 and {self.model.factors}")
+            return
+        factor_idx = factor_idx - 1
+
+        factor_matrices = []
+        percent_matrices = []
+        for f in range(self.model.factors):
+            fW = self.model.W[:, f]
+            fW = fW.reshape(len(fW), 1)
+            fH = self.model.H[f]
+            f_matrix = np.multiply(fW, fH)
+            factor_matrices.append(f_matrix)
+            percent_matrices.append(f_matrix / self.model.V)
+
+        z_title = "Percentage (%)" if percentage else "Mass"
+        _x = self.dh.features
+        _y = self.dh.input_data.index
+        _z = percent_matrices[factor_idx] if percentage else factor_matrices[factor_idx]
+        _z[_z < zero_threshold] = np.nan
+
+        x_labels = []
+        x_label_values = []
+        for f in range(self.model.n):
+            if not all(np.isnan(_z[:, f])):
+                x_labels.append(_x[f])
+                x_label_values.append(f)
+
+        matrix_plot = go.Figure()
+        matrix_plot.add_trace(
+            go.Surface(x=_x, y=_y, z=_z, opacity=1.0, name=f"Factor {factor_idx + 1}", showscale=True, showlegend=False,
+                       colorscale='spectral'))
+        matrix_plot.update_layout(scene=dict(
+            xaxis=dict(title="", nticks=len(x_labels), ticktext=x_labels, tickvals=x_label_values),
+            yaxis=dict(title=""),
+            zaxis=dict(title=f'Concentration {z_title}')),
+                                  title=f"Feature Concentration for Factor {factor_idx + 1}", width=1200, height=1200,
+                                  margin=dict(l=65, r=50, b=65, t=60))
+        matrix_plot.show()
