@@ -179,12 +179,12 @@ class BatchNMF:
                 _nmf_q = _nmf.Qrobust if self.best_robust else _nmf.Qtrue
                 if _nmf_q < best_q:
                     best_q = _nmf_q
-                    best_model = model_i-1
+                    best_model = model_i
             if self.verbose:
                 for i, result in enumerate(ordered_results):
                     if result is None:
                         continue
-                    logger.info(f"Model: {i}, Q(true): {round(result.Qtrue, 4)}, "
+                    logger.info(f"Model: {i+1}, Q(true): {round(result.Qtrue, 4)}, "
                                 f"Q(robust): {round(result.Qrobust, 4)}, Seed: {result.seed}, "
                                 f"Converged: {result.converged}, Steps: {result.converge_steps}/{self.max_iter}")
             self.results = ordered_results
@@ -225,8 +225,8 @@ class BatchNMF:
         t1 = time.time()
         self.runtime = round(t1 - t0, 2)
         best_model = best_model - 1
-        logger.info(f"Results - Best Model: {best_model+1}, Q(true): {self.results[best_model].Qtrue}, "
-                    f"Q(robust): {self.results[best_model].Qrobust}, Converged: {self.results[best_model].converged}")
+        logger.info(f"Results - Best Model: {best_model+1}, Q(true): {round(self.results[best_model].Qtrue, 4)}, "
+                    f"Q(robust): {round(self.results[best_model].Qrobust, 4)}, Converged: {self.results[best_model].converged}")
         logger.info(f"Runtime: {round((t1 - t0) / 60, 2)} min(s)")
         self.best_model = best_model
         return True, ""

@@ -1,5 +1,6 @@
 from plotly.subplots import make_subplots
 import copy
+import logging
 import pandas as pd
 import numpy as np
 from scipy import stats
@@ -9,6 +10,9 @@ import plotly.figure_factory as ff
 from src.data.datahandler import DataHandler
 from src.model.nmf import NMF
 
+
+logger = logging.getLogger("NMF")
+logger.setLevel(logging.INFO)
 
 class ModelAnalysis:
     """
@@ -434,7 +438,8 @@ class ModelAnalysis:
         profile_radar.update_layout(title="Factor Profile Composition", showlegend=True, width=1400, height=1200)
         profile_radar.show()
 
-    def plot_factor_surface(self, factor_idx: int, percentage: bool = True, zero_threshold: float = 1e-4):
+    def plot_factor_surface(self, factor_idx: int = 1, feature_idx: int = None,
+                            percentage: bool = True, zero_threshold: float = 1e-4):
         """
         Creates a 3d surface plot of the specified factor_idx's concentration percentage or mass.
 
@@ -442,6 +447,8 @@ class ModelAnalysis:
         ----------
         factor_idx : int
            The factor index to plot.
+        feature_idx : int
+           The features to include in the plot, or if factor_idx=None, which feature
         percentage : bool
            Plot the concentration as a scaled value, percentage of the sum of all factors, or as the calculated mass.
            Default = True.
@@ -449,10 +456,20 @@ class ModelAnalysis:
            Values below this threshold are considered zero on the plot.
 
         """
-        if factor_idx > self.model.factors or factor_idx < 1:
-            print(f"Invalid factor_idx provided, must be between 1 and {self.model.factors}")
+        if factor_idx is None and feature_idx is None:
+            logger.warn("A factor or feature index must be provided.")
             return
-        factor_idx = factor_idx - 1
+        if factor_idx is not None:
+            if factor_idx > self.model.factors or factor_idx < 1:
+                logger.warn(f"Invalid factor_idx provided, must be between 1 and {self.model.factors}")
+                return
+            factor_idx = factor_idx - 1
+        if feature_idx is not None:
+            if feature_idx < 1 or feature_idx > self.model.n:
+                logger.warn(f"Invalid feature_idx provided, must be between 1 and {self.model.n}")
+                return
+            feature_idx = feature_idx - 1
+
 
         factor_matrices = []
         percent_matrices = []
@@ -464,27 +481,42 @@ class ModelAnalysis:
             factor_matrices.append(f_matrix)
             percent_matrices.append(f_matrix / self.model.V)
 
-        z_title = "Percentage (%)" if percentage else "Mass"
-        _x = self.dh.features
         _y = self.dh.input_data.index
-        _z = percent_matrices[factor_idx] if percentage else factor_matrices[factor_idx]
-        _z[_z < zero_threshold] = np.nan
-
+        z_title = "Percentage (%)" if percentage else "Mass"
         x_labels = []
         x_label_values = []
-        for f in range(self.model.n):
-            if not all(np.isnan(_z[:, f])):
-                x_labels.append(_x[f])
-                x_label_values.append(f)
+
+        if factor_idx is None:
+            trace_name = self.dh.features[feature_idx]
+            plot_title = f"{trace_name} Concentrations for All Factors"
+            _z = []
+            for i in range(len(factor_matrices)):
+                i_z = percent_matrices[i][:, feature_idx] if percentage else factor_matrices[i][:, feature_idx]
+                _z.append(i_z)
+            _x = [f"Factor {i}" for i in range(1, self.model.factors + 1)]
+            _z = np.array(_z).T
+            x_labels = _x
+            x_label_values = _x
+        else:
+            plot_title = f"Feature Concentration for Factor {factor_idx + 1}"
+            trace_name = f"Factor {factor_idx + 1}"
+            _z = percent_matrices[factor_idx] if percentage else factor_matrices[factor_idx]
+            _z[_z < zero_threshold] = np.nan
+            _x = self.dh.features
+
+            for f in range(self.model.n):
+                if not all(np.isnan(_z[:, f])):
+                    x_labels.append(_x[f])
+                    x_label_values.append(f)
 
         matrix_plot = go.Figure()
         matrix_plot.add_trace(
-            go.Surface(x=_x, y=_y, z=_z, opacity=1.0, name=f"Factor {factor_idx + 1}", showscale=True, showlegend=False,
+            go.Surface(x=_x, y=_y, z=_z, opacity=1.0, name=trace_name, showscale=True, showlegend=False,
                        colorscale='spectral'))
         matrix_plot.update_layout(scene=dict(
             xaxis=dict(title="", nticks=len(x_labels), ticktext=x_labels, tickvals=x_label_values),
             yaxis=dict(title=""),
             zaxis=dict(title=f'Concentration {z_title}')),
-                                  title=f"Feature Concentration for Factor {factor_idx + 1}", width=1200, height=1200,
+                                  title=plot_title, width=1200, height=1200,
                                   margin=dict(l=65, r=50, b=65, t=60))
         matrix_plot.show()
