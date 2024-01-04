@@ -568,8 +568,9 @@ class Bootstrap:
             header=dict(values=list(results.keys())),
             cells=dict(values=list(results.values()))
         )])
+        height = 200 + (len(self.feature_labels) * 18)
         factor_summary_table.update_layout(title=f"Bootstrap run uncertainty statistics - Factor {factor_label}",
-                                           width=1800, height=1000, margin={'t': 50, 'l': 25, 'b': 10, 'r': 25})
+                                           width=1800, height=height, margin={'t': 50, 'l': 25, 'b': 10, 'r': 25})
         factor_summary_table.show()
 
     def plot_factor(self, factor: int):

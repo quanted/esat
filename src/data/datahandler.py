@@ -1,3 +1,4 @@
+import math
 import os
 import sys
 import logging
@@ -5,6 +6,7 @@ import copy
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
+from src.model.recombinator import optimal_block_length
 from datetime import datetime, timedelta
 
 logging.basicConfig(format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S', level=logging.DEBUG)
@@ -75,6 +77,10 @@ class DataHandler:
 
         self._check_paths()
         self._load_data()
+
+        self.optimal_block = None
+        self._determine_optimal_block()
+
 
     def get_data(self):
         """
@@ -218,6 +224,19 @@ class DataHandler:
             data={"Category": categories, "S/N": sn, "Min": min_con, "25th": p25, "50th": median_con, "75th": p75,
                   "Max": max_con})
 
+    def _determine_optimal_block(self):
+        """
+        Runs the recombinator code to obtain the optimal block size for Bootstrap based upon the Politis and White 2004
+        algorithm. https://web.archive.org/web/20040726091553id_/http://1cj3301.ucsd.edu:80/hwcv-093.pdf
+
+        Sets the self.optimal_block parameter by taking the average value of b_star_cb of each feature.
+        """
+        optimal_blocks = optimal_block_length(self.input_data_processed)
+        optimal_block = []
+        for opt in optimal_blocks:
+            optimal_block.append(opt.b_star_cb)
+        self.optimal_block = math.floor(np.mean(optimal_block))
+
     def data_uncertainty_plot(self, feature_idx):
         """
         Create a plot of the data vs the uncertainty for a specified feature, by the feature index.
@@ -274,7 +293,7 @@ class DataHandler:
         xy_plot.add_trace(go.Scatter(x=x_data, y=y_data, mode='markers', name="Data"))
         xy_plot.add_trace(go.Scatter(x=x_data, y=(m*x_data.values + c), line=dict(color='red', dash='dash', width=1), name='Regression'))
         xy_plot.add_trace(go.Scatter(x=x_data, y=(m1*x_data.values + c1), line=dict(color='blue', width=1), name='One-to-One'))
-        xy_plot.update_layout(title=f"{y_label}/{x_label}", width=800, height=600,
+        xy_plot.update_layout(title=f"Feature vs Feature Plot: {y_label}/{x_label}", width=800, height=600,
                               xaxis_title=f"{x_label}", yaxis_title=f"{y_label}",
                               )
         xy_plot.update_xaxes(range=[0, x_data.max() + 0.5])

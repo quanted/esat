@@ -151,7 +151,7 @@ class ModelAnalysis:
         residual_fig = px.histogram(residuals, x=feature, histnorm='probability', marginal='box')
         residual_fig.add_trace(go.Scatter(x=normal_x, y=normal_y, mode='lines', name='Normal'))
         residual_fig.add_trace(go.Scatter(x=normal_x2, y=normal_y2, mode='lines', name='KDE'))
-        residual_fig.update_layout(title=f"{feature}", xaxis_title="Scaled Residuals", yaxis_title="Percent",
+        residual_fig.update_layout(title=f"Residual Histrogram for {feature}", xaxis_title="Scaled Residuals", yaxis_title="Percent",
                                    width=1200, height=600, showlegend=True)
         residual_fig.update_traces(marker_line_width=1, marker_line_color="white")
         residual_fig.show()
@@ -227,7 +227,7 @@ class ModelAnalysis:
         ts_subplot.add_trace(go.Scatter(x=data_df.index, y=data_df["observed"] - data_df["predicted"],
                                         line=dict(width=1), mode='lines', name="Residuals"), row=2, col=1)
 
-        ts_subplot.update_layout(title_text=f"{x_label} - Model {self.selected_model}", width=1200, height=800,
+        ts_subplot.update_layout(title_text=f"Estimated Time-series for {x_label} - Model {self.selected_model}", width=1200, height=800,
                                  yaxis_title="Concentrations")
         ts_subplot.show()
 
@@ -394,7 +394,7 @@ class ModelAnalysis:
                 feature_legend[f"Factor {idx_l}"] = f"Factor {idx_l} = {factors_data[idx:, feature_idx]}"
         feature_fig = go.Figure(data=[go.Pie(labels=feature_contr_labels, values=feature_contr_inc,
                                              hoverinfo="label+value", textinfo="percent")])
-        feature_fig.update_layout(title=f"{x_label} - Model {self.selected_model}", width=1200, height=600,
+        feature_fig.update_layout(title=f"Factor Contributions to Feature: {x_label} - Model {self.selected_model}", width=1200, height=600,
                                   legend_title_text=f"Factor Contribution > {contribution_threshold}%")
         feature_fig.show()
 
@@ -498,7 +498,7 @@ class ModelAnalysis:
             x_labels = _x
             x_label_values = _x
         else:
-            plot_title = f"Feature Concentration for Factor {factor_idx + 1}"
+            plot_title = f"Feature Concentrations for Factor {factor_idx + 1}"
             trace_name = f"Factor {factor_idx + 1}"
             _z = percent_matrices[factor_idx] if percentage else factor_matrices[factor_idx]
             _z[_z < zero_threshold] = np.nan
