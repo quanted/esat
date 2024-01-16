@@ -293,7 +293,7 @@ class ModelAnalysis:
                                   )
         profile_plot.update_yaxes(title_text="% of Features", secondary_y=True, row=1, col=1, range=[0, 100])
         profile_plot.update_layout(title=f"Factor Profile - Model {self.selected_model} - Factor {factor_idx_l}",
-                                   width=1200, height=600)
+                                   width=1200, height=600, hovermode='x unified')
         profile_plot.show()
 
         contr_plot = go.Figure()
@@ -317,7 +317,7 @@ class ModelAnalysis:
         for idx in range(self.model.factors-1, -1, -1):
             fig.add_trace(go.Bar(name=f"Factor {idx+1}", x=self.dh.features, y=normalized_factors_data[idx]))
         fig.update_layout(title=f"Factor Fingerprints - Model {self.selected_model}",
-                          width=1200, height=800, barmode='stack')
+                          width=1200, height=800, barmode='stack', hovermode='x unified')
         fig.update_yaxes(title_text="% Feature Concentration", range=[0, 100])
         fig.show()
 
