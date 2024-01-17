@@ -75,16 +75,24 @@ class Fpeak:
         W = np.multiply(W, np.divide(W_num, W_den))
         return W
 
+    def ls_nmf_h(self, W, H):
+        WH = np.matmul(W, H)
+        H_num = np.matmul(W.T, self.WeV)
+        H_den = np.matmul(W.T, np.multiply(self.We, WH))
+        H = np.multiply(H, np.divide(H_num, H_den))
+        return H
+
     def run(self, max_iter: int = 5000, converge_delta: float = 1e-4, converge_n: int = 20):
         for fp in self.fpeaks:
             phi = np.full(shape=(self.factors, self.factors), fill_value=fp)
             for i in range(self.factors):
                 phi[i, i] = 0.0
-            t_iter = trange(max_iter, desc=f"Qb(Robust): {self.base.Qrobust}, Q(main): NA, Q(aux): NA",
+            t_iter = trange(max_iter, desc=f"W Update - Q(robust): NA, Q(main): NA, Q(aux): NA",
                             position=0, leave=True)
             W_i = self.base_W
             H_i = self.base_H
             Qaux_i, Qm = None, None
+            converged = False
             qa_list = []
             qm_list = []
             qd_list = []
@@ -98,7 +106,7 @@ class Fpeak:
                 Qmr_i, _ = qr_loss(V=self.V, U=self.U, W=W_i, H=H_i)
                 Qaux_i = self.qaux_loss(Wp=W_i, D=D)
                 Qm = Qm_i + Qaux_i
-                t_iter.set_description(f"Qb(Robust): {round(self.base.Qrobust, 4)}, Q(main): {round(Qm, 4)}, "
+                t_iter.set_description(f"W Update - Q(robust): {round(Qmr_i, 4)}, Q(main): {round(Qm, 4)}, "
                                        f"Q(aux): {round(Qaux_i, 4)}")
                 qa_list.append(Qaux_i)
                 qm_list.append(Qm)
@@ -109,14 +117,28 @@ class Fpeak:
                     if len(qd_list) > converge_n:
                         qd_list.pop(0)
                     if np.abs(qa_list[0] - qa_list[-1]) <= converge_delta:
+                        converged = True
                         break
-
+            t_iter = trange(max_iter, desc=f"H Update - Q(robust): NA, Q(main): NA, Q(aux): NA",
+                            position=0, leave=True)
+            qh_list = []
+            for i in t_iter:
+                H_i = self.ls_nmf_h(W=W_i, H=H_i)
+                Qm_i = q_loss(V=self.V, U=self.U, W=W_i, H=H_i)
+                Qr_i, _ = qr_loss(V=self.V, U=self.U, W=W_i, H=H_i)
+                qh_list.append(Qm_i)
+                t_iter.set_description(f"H Update - Q(robust): {round(Qr_i, 2)}, Q(main): {round(Qm_i, 2)}")
+                if len(qh_list) > converge_n:
+                    qh_list.pop(0)
+                    if np.abs(qh_list[0] - qh_list[-1]) <= converge_delta:
+                        break
             nmf_i = NMF(V=self.V, U=self.U, factors=self.factors, method=self.base.method, seed=self.base.seed,
                         optimized=self.base.optimized, verbose=self.base.verbose)
-            nmf_i.initialize(H=self.base_H, W=W_i)
-            nmf_i.train(max_iter=max_iter, converge_delta=converge_delta, converge_n=converge_n)
-            Qm_2 = q_loss(V=self.V, U=self.U, W=nmf_i.W, H=nmf_i.H)
-            Qr_2, _ = qr_loss(V=self.V, U=self.U, W=nmf_i.W, H=nmf_i.H)
+            nmf_i.initialize(H=H_i, W=W_i)
+            nmf_i.converged = converged
+            nmf_i.Qtrue = q_loss(V=self.V, U=self.U, W=nmf_i.W, H=nmf_i.H)
+            nmf_i.Qrobust, _ = qr_loss(V=self.V, U=self.U, W=nmf_i.W, H=nmf_i.H)
+            Qm_2 = nmf_i.Qrobust + Qaux_i
             self.results[str(fp)] = {
                 'model': nmf_i,
                 'Strength': str(fp),
@@ -124,9 +146,6 @@ class Fpeak:
                 'Q(M)': Qm_2,
             }
             del nmf_i
-            # logger.info(f"Strength: {fp}, dQ(Robust): {round(Qmr_i - self.base.Qrobust, 2)}, Q(Robust): {round(Qmr_i, 2)}, "
-            #     f"% dQ(Robust): {round(100*((Qmr_i / self.base.Qrobust)-1), 2)}, Q(Aux): {round(Qaux_i, 2)}, "
-            #     f"Q(True): {round(Qm_i, 2)}, Q2: {round(Qm_2, 2)}")
         self._compile_results()
 
     def run_bs(self, bootstrap_n: int = 20, block_size: int = None, threshold: float = 0.6):
