@@ -1,4 +1,3 @@
-from plotly.subplots import make_subplots
 import copy
 import logging
 import pandas as pd
@@ -7,12 +6,14 @@ from scipy import stats
 import plotly.graph_objects as go
 import plotly.express as px
 import plotly.figure_factory as ff
+from plotly.subplots import make_subplots
 from src.data.datahandler import DataHandler
 from src.model.nmf import NMF
 
 
 logger = logging.getLogger("NMF")
 logger.setLevel(logging.INFO)
+
 
 class ModelAnalysis:
     """
