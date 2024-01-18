@@ -7,7 +7,8 @@ sys.path.append(module_path)
 
 from src.model.nmf import NMF
 from src.data.datahandler import DataHandler
-from src.utils import q_loss, qr_loss, np_encoder, EPSILON
+from src.error.bootstrap import Bootstrap
+from src.utils import q_loss, qr_loss, np_encoder
 from tqdm import trange
 from datetime import datetime
 from pathlib import Path
@@ -17,7 +18,6 @@ import plotly.express as px
 import plotly.figure_factory as ff
 import numpy as np
 import pandas as pd
-import plotly as plt
 import logging
 import copy
 import pickle
@@ -40,6 +40,11 @@ class Fpeak:
         self.fpeaks = fpeaks
         if self.fpeaks is None:
             self.fpeaks = (0.5, -0.5, 1.0, -1.0, 1.5)
+        else:
+            if 0.0 in self.fpeaks:
+                logger.error(f"Invalid value in fpeak list, 0.0 is not a valid value for fpeak. "
+                             f"Use values != 0.0, either less than or greater than zero.")
+                self.fpeaks.remove(0.0)
         self.s = s
         self.S = S
         if self.S is None:
@@ -62,6 +67,12 @@ class Fpeak:
 
         self.results_df = None
         self.results = {}
+
+        self.bs_results = {}
+        self.bs_seed = None
+        self.bs_n = None
+        self.bs_block_size = None
+        self.bs_threshold = None
 
     def qaux_loss(self, Wp, D):
         r = np.square(self.base_W + D - Wp)
@@ -138,6 +149,11 @@ class Fpeak:
             nmf_i.converged = converged
             nmf_i.Qtrue = q_loss(V=self.V, U=self.U, W=nmf_i.W, H=nmf_i.H)
             nmf_i.Qrobust, _ = qr_loss(V=self.V, U=self.U, W=nmf_i.W, H=nmf_i.H)
+            nmf_i.metadata["completion_date"] = datetime.utcnow().strftime("%m/%d/%Y, %H:%M:%S %Z")
+            nmf_i.metadata["max_iterations"] = int(max_iter)
+            nmf_i.metadata["converge_delta"] = float(converge_delta)
+            nmf_i.metadata["converge_n"] = int(converge_n)
+            nmf_i.metadata["robust_mode"] = False
             Qm_2 = nmf_i.Qrobust + Qaux_i
             self.results[str(fp)] = {
                 'model': nmf_i,
@@ -148,8 +164,32 @@ class Fpeak:
             del nmf_i
         self._compile_results()
 
-    def run_bs(self, bootstrap_n: int = 20, block_size: int = None, threshold: float = 0.6):
-        pass
+    def run_bs(self, bootstrap_n: int = 20, block_size: int = None, threshold: float = 0.6, seed: int = None):
+        self.bs_n = bootstrap_n
+        self.bs_block_size = block_size
+        self.bs_threshold = threshold
+        if len(self.results.keys()) == 0:
+            logger.error("Fpeak models must be created before running bootstrap on the results.")
+            return
+        if seed is None:
+            seed = self.base.seed
+        self.bs_seed = seed
+        for fp, fp_result in self.results.items():
+            fp_model = fp_result["model"]
+            fp_bs = Bootstrap(nmf=fp_model, feature_labels=self.dh.features, model_selected=fp, bootstrap_n=bootstrap_n, block_size=block_size, threshold=threshold, seed=seed)
+            fp_bs.run()
+            self.bs_results[fp] = fp_bs
+
+    def display_bs_results(self, fpeak, factor_idx):
+        if factor_idx is not None:
+            if factor_idx > self.base.factors or factor_idx < 1:
+                logger.warn(f"Invalid factor_idx provided, must be between 1 and {self.base.factors}")
+                return
+        if fpeak not in self.fpeaks:
+            fpeak = self.fpeaks[0]
+        fpeak = str(fpeak)
+        self.bs_results[fpeak].summary()
+        self.bs_results[fpeak].plot_results(factor=factor_idx)
 
     def _compile_results(self):
         df_data = {'Strength': [], 'dQ(Robust)': [], 'Q(Robust)': [], '% dQ(Robust)': [], 'Q(Aux)': [], 'Q(True)': [],
