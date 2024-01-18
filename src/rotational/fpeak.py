@@ -130,7 +130,7 @@ class Fpeak:
                 t_iter.set_description(f"H Update - Q(robust): {round(Qr_i, 2)}, Q(main): {round(Qm_i, 2)}")
                 if len(qh_list) > converge_n:
                     qh_list.pop(0)
-                    if np.abs(qh_list[0] - qh_list[-1]) <= converge_delta:
+                    if np.abs(qh_list[0] - qh_list[-1]) <= 1e-2:
                         break
             nmf_i = NMF(V=self.V, U=self.U, factors=self.factors, method=self.base.method, seed=self.base.seed,
                         optimized=self.base.optimized, verbose=self.base.verbose)
