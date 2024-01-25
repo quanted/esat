@@ -159,6 +159,8 @@ class FactorComp:
                 self.batch_nmf = BatchNMF.load(self.nmf_output_file)
         species_columns = self.features
         for i, i_nmf in enumerate(self.batch_nmf.results):
+            if i_nmf is None:
+                continue
             nmf_h_data = i_nmf.H
             nmf_w_data = i_nmf.W
             nmf_wh_data = i_nmf.WH

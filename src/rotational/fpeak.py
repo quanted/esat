@@ -23,6 +23,7 @@ import copy
 import pickle
 import json
 import time
+from warnings import deprecated
 
 
 logger = logging.getLogger("NMF")
@@ -33,7 +34,18 @@ class Fpeak:
     """
 
     """
+    @deprecated("The Fpeak method has been deprecated and will likely be removed.")
     def __init__(self, base_model: NMF, data_handler: DataHandler, fpeaks: list = None, s: float = 0.1, S: list = None):
+        """
+
+        Parameters
+        ----------
+        base_model
+        data_handler
+        fpeaks
+        s
+        S
+        """
 
         self.base = base_model
         self.dh = data_handler
@@ -75,11 +87,32 @@ class Fpeak:
         self.bs_threshold = None
 
     def qaux_loss(self, Wp, D):
+        """
+
+        Parameters
+        ----------
+        Wp
+        D
+
+        Returns
+        -------
+
+        """
         r = np.square(self.base_W + D - Wp)
         qaux = np.divide(r.sum(axis=1), np.square(self.S))
         return np.sum(qaux)
 
     def ls_nmf_w(self, W):
+        """
+
+        Parameters
+        ----------
+        W
+
+        Returns
+        -------
+
+        """
         WH = np.matmul(W, self.base_H)
         W_num = np.matmul(self.WeV, self.base_H.T)
         W_den = np.matmul(np.multiply(self.We, WH), self.base_H.T)
@@ -87,6 +120,17 @@ class Fpeak:
         return W
 
     def ls_nmf_h(self, W, H):
+        """
+
+        Parameters
+        ----------
+        W
+        H
+
+        Returns
+        -------
+
+        """
         WH = np.matmul(W, H)
         H_num = np.matmul(W.T, self.WeV)
         H_den = np.matmul(W.T, np.multiply(self.We, WH))
@@ -94,6 +138,18 @@ class Fpeak:
         return H
 
     def run(self, max_iter: int = 5000, converge_delta: float = 1e-4, converge_n: int = 20):
+        """
+
+        Parameters
+        ----------
+        max_iter
+        converge_delta
+        converge_n
+
+        Returns
+        -------
+
+        """
         for fp in self.fpeaks:
             phi = np.full(shape=(self.factors, self.factors), fill_value=fp)
             for i in range(self.factors):
@@ -165,6 +221,19 @@ class Fpeak:
         self._compile_results()
 
     def run_bs(self, bootstrap_n: int = 20, block_size: int = None, threshold: float = 0.6, seed: int = None):
+        """
+
+        Parameters
+        ----------
+        bootstrap_n
+        block_size
+        threshold
+        seed
+
+        Returns
+        -------
+
+        """
         self.bs_n = bootstrap_n
         self.bs_block_size = block_size
         self.bs_threshold = threshold
@@ -181,6 +250,17 @@ class Fpeak:
             self.bs_results[fp] = fp_bs
 
     def display_bs_results(self, fpeak, factor_idx):
+        """
+
+        Parameters
+        ----------
+        fpeak
+        factor_idx
+
+        Returns
+        -------
+
+        """
         if factor_idx is not None:
             if factor_idx > self.base.factors or factor_idx < 1:
                 logger.warn(f"Invalid factor_idx provided, must be between 1 and {self.base.factors}")
@@ -192,6 +272,12 @@ class Fpeak:
         self.bs_results[fpeak].plot_results(factor=factor_idx)
 
     def _compile_results(self):
+        """
+
+        Returns
+        -------
+
+        """
         df_data = {'Strength': [], 'dQ(Robust)': [], 'Q(Robust)': [], '% dQ(Robust)': [], 'Q(Aux)': [], 'Q(True)': [],
                    'Converged': []}
         for fp, data in self.results.items():
@@ -204,7 +290,29 @@ class Fpeak:
             df_data['Converged'].append(data['model'].converged)
         self.results_df = pd.DataFrame(data=df_data)
 
+    def save(self,
+             model_name: str,
+             output_directory: str,
+             pickle_model: bool = False,
+             header: list = None):
+        raise NotImplementedError
+
+    @staticmethod
+    def load(file_path: str):
+        raise NotImplementedError
+
     def plot_profile_contributions(self, factor_idx, fpeak):
+        """
+
+        Parameters
+        ----------
+        factor_idx
+        fpeak
+
+        Returns
+        -------
+
+        """
         if fpeak not in self.fpeaks:
             logger.warn(f"fpeak is not a value calculated. Provided fpeak: {fpeak}. "
                         f"Valid fpeak values are: {self.fpeaks}")
@@ -219,6 +327,17 @@ class Fpeak:
         self.plot_contributions(factor_idx=factor_idx, fpeak=fpeak)
 
     def plot_profile(self, factor_idx, fpeak):
+        """
+
+        Parameters
+        ----------
+        factor_idx
+        fpeak
+
+        Returns
+        -------
+
+        """
         factor_label = factor_idx
         factor_idx = factor_idx - 1
 
@@ -260,6 +379,17 @@ class Fpeak:
         fig.show()
 
     def plot_contributions(self, factor_idx, fpeak):
+        """
+
+        Parameters
+        ----------
+        factor_idx
+        fpeak
+
+        Returns
+        -------
+
+        """
         factor_label = f"Factor {factor_idx}"
         factor_idx = factor_idx - 1
 
@@ -294,6 +424,16 @@ class Fpeak:
         fig.show()
 
     def plot_factor_fingerprints(self, fpeak):
+        """
+
+        Parameters
+        ----------
+        fpeak
+
+        Returns
+        -------
+
+        """
         if fpeak not in self.fpeaks:
             logger.warn(f"fpeak is not a value calculated. Provided fpeak: {fpeak}. "
                         f"Valid fpeak values are: {self.fpeaks}")
@@ -322,6 +462,20 @@ class Fpeak:
         fp_factors_fig.show()
 
     def plot_g_space(self, fpeak, factor_idx1, factor_idx2, show_base: bool = False, show_delta: bool = False):
+        """
+
+        Parameters
+        ----------
+        fpeak
+        factor_idx1
+        factor_idx2
+        show_base
+        show_delta
+
+        Returns
+        -------
+
+        """
         if fpeak not in self.fpeaks:
             logger.warn(f"fpeak is not a value calculated. Provided fpeak: {fpeak}. "
                         f"Valid fpeak values are: {self.fpeaks}")
@@ -373,6 +527,18 @@ class Fpeak:
         fp_g_fig.show()
 
     def plot_factor_contributions(self, fpeak, feature_idx, threshold: float = 0.06):
+        """
+
+        Parameters
+        ----------
+        fpeak
+        feature_idx
+        threshold
+
+        Returns
+        -------
+
+        """
         if fpeak not in self.fpeaks:
             logger.warn(f"fpeak is not a value calculated. Provided fpeak: {fpeak}. "
                         f"Valid fpeak values are: {self.fpeaks}")
