@@ -254,6 +254,7 @@ class Displacement:
                 high_search_i = 0
                 max_dQ = 0
                 max_high_search = 5000
+                low_modifier = 0.0
 
                 while not high_found:
                     new_value = self.H[factor_i, feature_j] * high_modifier
@@ -261,6 +262,7 @@ class Displacement:
                     disp_i_Q = q_loss(V=self.V, U=self.U, W=self.W, H=new_H)
                     dQ = np.abs(self.base_Q - disp_i_Q)
                     if dQ < self.dQmax[0]:
+                        low_modifier = high_modifier
                         high_modifier *= 2
                     else:
                         high_found = True
@@ -274,7 +276,7 @@ class Displacement:
                         break
                 new_value = 0.0
                 for i in range(len(self.dQmax)):
-                    low_modifier = 1.0
+                    # low_modifier = 1.0
                     modifier = (high_modifier + low_modifier) / 2.0
                     value_found = False
                     search_i = 0
