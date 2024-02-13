@@ -85,6 +85,45 @@
 <p>The Bootstrap (BS) method is used to detect and estimate disproportionate effects of a small set of data samples on
 the solution. The BS method assembles dataset by randomly selecting blocks of consecutive samples from the original
 dataset, with replacement.</p>
+<p>The BS method implemented here is called the block bootstrap method. The block BS method is useful for use on
+timeseries data that may contain temporal correlations that would otherwise be lost if single samples were
+resampled.</p>
+<p>For each BS run, a unique BS dataset is created and run through NMF to convergence where the output is compared
+to see if the factors of the original base model map to each of the factors of the BS output. The factors are
+mapped to the original base model factors by highest correlation, potentially having multiple BS factors mapping
+to the same base model factor, where the correlation is above the user specified threshold.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>nmf</strong> (<a class="reference internal" href="src.model.html#src.model.nmf.NMF" title="src.model.nmf.NMF"><em>NMF</em></a>) – A completed NMF base model that used the same data and uncertainty datasets.</p></li>
+<li><p><strong>feature_labels</strong> (<em>list</em>) – The labels for the features, columns of the dataset, specified from the data handler.</p></li>
+<li><p><strong>model_selected</strong> (<em>int</em>) – The index of the model selected from a batch NMF run, used for labeling.</p></li>
+<li><p><strong>bootstrap_n</strong> (<em>int</em>) – The number of bootstrap runs to make.</p></li>
+<li><p><strong>block_size</strong> (<em>int</em>) – The block size for the BS resampling.</p></li>
+<li><p><strong>threshold</strong> (<em>float</em>) – The correlation threshold that must be met for a BS factor to be mapped to a base model factor, factor
+correlations must be greater than the threshold or are labeled unmapped.</p></li>
+<li><p><strong>seed</strong> (<em>int</em>) – The random seed for random resampling of the BS datasets. The base model random seed is used for all BS runs,
+which result in the same initial W matrix.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="src.error.bootstrap.Bootstrap.load">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.error.bootstrap.Bootstrap.load" title="Link to this definition"></a></dt>
+<dd><p>Load a previously saved BS NMF pickle file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>file_path</strong> (<em>str</em>) – File path to a previously saved BS NMF pickle file</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>On successful load, will return a previously saved BS NMF object. Will return None on load fail.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#src.error.bootstrap.Bootstrap" title="src.error.bootstrap.Bootstrap">Bootstrap</a></p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="src.error.bootstrap.Bootstrap.map_contributions">
 <span class="sig-name descname"><span class="pre">map_contributions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">W1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">H1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">W2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">H2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.6</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.error.bootstrap.Bootstrap.map_contributions" title="Link to this definition"></a></dt>
@@ -131,33 +170,33 @@ dataset, with replacement.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.error.bootstrap.Bootstrap.plot_contribution">
-<span class="sig-name descname"><span class="pre">plot_contribution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor_i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.error.bootstrap.Bootstrap.plot_contribution" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">plot_contribution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.error.bootstrap.Bootstrap.plot_contribution" title="Link to this definition"></a></dt>
 <dd><p>Plot the BS factor contributions for a specific factor.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>factor_i</strong> (<em>int</em>) – The index of the factor to plot.</p>
+<dd class="field-odd"><p><strong>factor</strong> (<em>int</em>) – The index of the factor to plot.</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.error.bootstrap.Bootstrap.plot_factor">
-<span class="sig-name descname"><span class="pre">plot_factor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor_i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.error.bootstrap.Bootstrap.plot_factor" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">plot_factor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.error.bootstrap.Bootstrap.plot_factor" title="Link to this definition"></a></dt>
 <dd><p>Plot the BS factor profile for a specific factor.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>factor_i</strong> (<em>int</em>) – The index of the factor to plot.</p>
+<dd class="field-odd"><p><strong>factor</strong> (<em>int</em>) – The index of the factor to plot.</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.error.bootstrap.Bootstrap.plot_results">
-<span class="sig-name descname"><span class="pre">plot_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor_i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.error.bootstrap.Bootstrap.plot_results" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">plot_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.error.bootstrap.Bootstrap.plot_results" title="Link to this definition"></a></dt>
 <dd><p>Plot both the factor profile and factor contributions for a specific index.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>factor_i</strong> (<em>int</em>) – The index of the factor to plot.</p>
+<dd class="field-odd"><p><strong>factor</strong> (<em>int</em>) – The index of the factor to plot.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -182,12 +221,32 @@ Default = True</p></li>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="src.error.bootstrap.Bootstrap.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bs_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_directory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pickle_result</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.error.bootstrap.Bootstrap.save" title="Link to this definition"></a></dt>
+<dd><p>Save the BS results.
+:param bs_name: The name to use for the BS file.
+:type bs_name: str
+:param output_directory: The output directory to save the BS file to.
+:type output_directory: str
+:param pickle_result: Pickle the bs model. Default = True.
+:type pickle_result: bool</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The path to the saved file.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="src.error.bootstrap.Bootstrap.show_factor_results">
-<span class="sig-name descname"><span class="pre">show_factor_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor_i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.error.bootstrap.Bootstrap.show_factor_results" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">show_factor_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.error.bootstrap.Bootstrap.show_factor_results" title="Link to this definition"></a></dt>
 <dd><p>Create the table showing the factor metrics from the BS runs for a specific factor.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>factor_i</strong> (<em>int</em>) – The index of the factor to show.</p>
+<dd class="field-odd"><p><strong>factor</strong> (<em>int</em>) – The index of the factor to show.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -217,14 +276,52 @@ Default = True</p></li>
 <span id="src-error-displacement-module"></span><h2>src.error.displacement module<a class="headerlink" href="#module-src.error.displacement" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="src.error.displacement.Displacement">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.error.displacement.</span></span><span class="sig-name descname"><span class="pre">Displacement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nmf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="src.model.html#src.model.nmf.NMF" title="src.model.nmf.NMF"><span class="pre">NMF</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_labels</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">selected_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_search</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_dQ</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.error.displacement.Displacement" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.error.displacement.</span></span><span class="sig-name descname"><span class="pre">Displacement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">nmf</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="src.model.html#src.model.nmf.NMF" title="src.model.nmf.NMF"><span class="pre">NMF</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_labels</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_selected</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_search</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_dQ</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.error.displacement.Displacement" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>The displacement method (DISP) for error estimation explores the rotational ambiguity in the solution by assessing
 the largest range of source profile values without an appreciable increase in the loss value (Q).</p>
+<p>The DISP method finds the required change in a factor profile feature value to cause a specific increase in the
+loss function value (dQ). The change is found for dQ=(4, 8, 16, 32) and for both increasing and decreasing
+changes to the factor profile feature values. The search for these changes is limited to max_search steps, where
+a step is the binary search for the value based upon the bounds of the initial value. Factor profile values must
+be greater than 0, so once the modified value is below 1e-8 or the modified value is no longer changing between
+steps the search is stopped and the final value in the search used.</p>
+<p>The process is repeated for all factors and features, if there are factors=k, features=N, dQ_N=4 then this
+process is completed 2*k*N*4 times.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>nmf</strong> (<a class="reference internal" href="src.model.html#src.model.nmf.NMF" title="src.model.nmf.NMF"><em>NMF</em></a>) – The base model to run the DISP method on.</p></li>
+<li><p><strong>feature_labels</strong> (<em>list</em>) – The list of feature, column, labels from the original input dataset. Provided in the data handler.</p></li>
+<li><p><strong>model_selected</strong> (<em>int</em>) – The index of the model selected in the case of a batch NMF run, used for labeling.</p></li>
+<li><p><strong>max_search</strong> (<em>int</em>) – The maximum number of search steps to complete when trying to find a factor feature value. Default = 50</p></li>
+<li><p><strong>threshold_dQ</strong> (<em>float</em>) – The threshold range of the dQ value for the factor feature value to be considered found. I.E, dQ=4 and
+threshold_dQ=0.1, than any value between 3.9 and 4.0 will be considered valid.</p></li>
+<li><p><strong>features</strong> (<em>list</em>) – A list of the feature indices to run DISP on, default is None which will run DISP on all features.</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="src.error.displacement.Displacement.dQmax">
 <span class="sig-name descname"><span class="pre">dQmax</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[32,</span> <span class="pre">16,</span> <span class="pre">8,</span> <span class="pre">4]</span></em><a class="headerlink" href="#src.error.displacement.Displacement.dQmax" title="Link to this definition"></a></dt>
 <dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.error.displacement.Displacement.load">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.error.displacement.Displacement.load" title="Link to this definition"></a></dt>
+<dd><p>Load a previously saved DISP NMF pickle file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>file_path</strong> (<em>str</em>) – File path to a previously saved DISP NMF pickle file</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>On successful load, will return a previously saved DISP NMF object. Will return None on load fail.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#src.error.displacement.Displacement" title="src.error.displacement.Displacement">Displacement</a></p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.error.displacement.Displacement.plot_contribution">
@@ -274,8 +371,33 @@ invalid value provided.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.error.displacement.Displacement.run">
-<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#src.error.displacement.Displacement.run" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.error.displacement.Displacement.run" title="Link to this definition"></a></dt>
 <dd><p>Run the DISP method on the provided NMF model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>batch</strong> (<em>int</em>) – Batch number identifier, used for labeling DISP during parallel runs with BS-DISP.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.error.displacement.Displacement.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">disp_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_directory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pickle_result</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.error.displacement.Displacement.save" title="Link to this definition"></a></dt>
+<dd><p>Save the DISP results.
+:param disp_name: The name to use for the DISP pickle file.
+:type disp_name: str
+:param output_directory: The output directory to save the DISP pickle file to.
+:type output_directory: str
+:param pickle_result: Pickle the disp model. Default = True.
+:type pickle_result: bool</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The path to the saved file.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -291,16 +413,26 @@ invalid value provided.</p></li>
 <span id="src-error-error-module"></span><h2>src.error.error module<a class="headerlink" href="#module-src.error.error" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="src.error.error.Error">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.error.error.</span></span><span class="sig-name descname"><span class="pre">Error</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#src.error.bootstrap.Bootstrap" title="src.error.bootstrap.Bootstrap"><span class="pre">Bootstrap</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">disp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#src.error.displacement.Displacement" title="src.error.displacement.Displacement"><span class="pre">Displacement</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.error.error.Error" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.error.error.</span></span><span class="sig-name descname"><span class="pre">Error</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#src.error.bootstrap.Bootstrap" title="src.error.bootstrap.Bootstrap"><span class="pre">Bootstrap</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">disp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#src.error.displacement.Displacement" title="src.error.displacement.Displacement"><span class="pre">Displacement</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bsdisp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">BSDISP</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.error.error.Error" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Calculate the summary error statistics from bootstrap, displacement and BS-DISP results.</p>
+<p>Calculate the combined error summary statistics from various error estimation methods.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>bs</strong> (<a class="reference internal" href="#src.error.bootstrap.Bootstrap" title="src.error.bootstrap.Bootstrap"><em>Bootstrap</em></a>) – The BS run to calculate the summary error.</p></li>
+<li><p><strong>disp</strong> (<a class="reference internal" href="#src.error.displacement.Displacement" title="src.error.displacement.Displacement"><em>Displacement</em></a>) – The DISP run to calculate the summary error.</p></li>
+<li><p><strong>bsdisp</strong> (<em>BSDISP</em>) – The BS-DISP run to calculate the summary error.</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="src.error.error.Error.plot_summary">
-<span class="sig-name descname"><span class="pre">plot_summary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor_i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.error.error.Error.plot_summary" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">plot_summary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.error.error.Error.plot_summary" title="Link to this definition"></a></dt>
 <dd><p>Plot the combined error estimation results from all provided method results.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>factor_i</strong> (<em>int</em>) – The index of the factor to plot.</p>
+<dd class="field-odd"><p><strong>factor</strong> (<em>int</em>) – The index of the factor to plot.</p>
 </dd>
 </dl>
 </dd></dl>

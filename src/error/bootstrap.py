@@ -22,6 +22,34 @@ class Bootstrap:
     The Bootstrap (BS) method is used to detect and estimate disproportionate effects of a small set of data samples on
     the solution. The BS method assembles dataset by randomly selecting blocks of consecutive samples from the original
     dataset, with replacement.
+
+    The BS method implemented here is called the block bootstrap method. The block BS method is useful for use on
+    timeseries data that may contain temporal correlations that would otherwise be lost if single samples were
+    resampled.
+
+    For each BS run, a unique BS dataset is created and run through NMF to convergence where the output is compared
+    to see if the factors of the original base model map to each of the factors of the BS output. The factors are
+    mapped to the original base model factors by highest correlation, potentially having multiple BS factors mapping
+    to the same base model factor, where the correlation is above the user specified threshold.
+
+    Parameters
+    ----------
+    nmf : NMF
+       A completed NMF base model that used the same data and uncertainty datasets.
+    feature_labels : list
+       The labels for the features, columns of the dataset, specified from the data handler.
+    model_selected : int
+       The index of the model selected from a batch NMF run, used for labeling.
+    bootstrap_n : int
+       The number of bootstrap runs to make.
+    block_size : int
+       The block size for the BS resampling.
+    threshold : float
+       The correlation threshold that must be met for a BS factor to be mapped to a base model factor, factor
+       correlations must be greater than the threshold or are labeled unmapped.
+    seed : int
+       The random seed for random resampling of the BS datasets. The base model random seed is used for all BS runs,
+       which result in the same initial W matrix.
     """
 
     def __init__(self,
@@ -34,33 +62,7 @@ class Bootstrap:
                  seed: int = None
                  ):
         """
-        The BS method implemented here is called the block bootstrap method. The block BS method is useful for use on
-        timeseries data that may contain temporal correlations that would otherwise be lost if single samples were
-        resampled.
-
-        For each BS run, a unique BS dataset is created and run through NMF to convergence where the output is compared
-        to see if the factors of the original base model map to each of the factors of the BS output. The factors are
-        mapped to the original base model factors by highest correlation, potentially having multiple BS factors mapping
-        to the same base model factor, where the correlation is above the user specified threshold.
-
-        Parameters
-        ----------
-        nmf : NMF
-           A completed NMF base model that used the same data and uncertainty datasets.
-        feature_labels : list
-           The labels for the features, columns of the dataset, specified from the data handler.
-        model_selected : int
-           The index of the model selected from a batch NMF run, used for labeling.
-        bootstrap_n : int
-           The number of bootstrap runs to make.
-        block_size : int
-           The block size for the BS resampling.
-        threshold : float
-           The correlation threshold that must be met for a BS factor to be mapped to a base model factor, factor
-           correlations must be greater than the threshold or are labeled unmapped.
-        seed : int
-           The random seed for random resampling of the BS datasets. The base model random seed is used for all BS runs,
-           which result in the same initial W matrix.
+        Constructor method.
         """
         self.nmf = nmf
         self.model_selected = model_selected

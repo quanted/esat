@@ -23,6 +23,38 @@ class BSDISP:
     """
     The Bootstrap-Displacement (BS-DISP) method combines both the Bootstrap and Displacement methods to estimate the
     errors with both random and rotational ambiguity. For each BS run/dataset, the DISP method is run on that dataset.
+
+    The BS-DISP method uses a base model, and an optional BS instance. For each bootstrap run, BS dataset, DISP will
+    be run on each BS model for the specified features. If no features are specified then all features are run on
+    DISP.
+
+    Parameters
+    ----------
+    nmf : NMF
+       A completed NMF base model that used the same data and uncertainty datasets.
+    feature_labels : list
+       The labels for the features, columns of the dataset, specified from the data handler.
+    model_selected : int
+       The index of the model selected from a batch NMF run, used for labeling.
+    bootstrap: Bootstrap
+       A previously complete BS model.
+    bootstrap_n : int
+       The number of bootstrap runs to make.
+    block_size : int
+       The block size for the BS resampling.
+    threshold : float
+       The correlation threshold that must be met for a BS factor to be mapped to a base model factor, factor
+       correlations must be greater than the threshold or are labeled unmapped.
+    max_search : int
+       The maximum number of search steps to complete when trying to find a factor feature value. Default = 50
+    threshold_dQ : float
+       The threshold range of the dQ value for the factor feature value to be considered found. I.E, dQ=4 and
+       threshold_dQ=0.1, than any value between 3.9 and 4.0 will be considered valid.
+    features: list
+       A list of the feature indices to run DISP on, default is None which will run DISP on all features.
+    seed : int
+       The random seed for random resampling of the BS datasets. The base model random seed is used for all BS runs,
+       which result in the same initial W matrix.
     """
 
     dQmax = [4, 2, 1, 0.5]
@@ -41,37 +73,7 @@ class BSDISP:
                  seed: int = None,
                  ):
         """
-        The BS-DISP method uses a base model, and an optional BS instance. For each bootstrap run, BS dataset, DISP will
-        be run on each BS model for the specified features. If no features are specified then all features are run on
-        DISP.
-
-        Parameters
-        ----------
-        nmf : NMF
-           A completed NMF base model that used the same data and uncertainty datasets.
-        feature_labels : list
-           The labels for the features, columns of the dataset, specified from the data handler.
-        model_selected : int
-           The index of the model selected from a batch NMF run, used for labeling.
-        bootstrap: Bootstrap
-           A previously complete BS model.
-        bootstrap_n : int
-           The number of bootstrap runs to make.
-        block_size : int
-           The block size for the BS resampling.
-        threshold : float
-           The correlation threshold that must be met for a BS factor to be mapped to a base model factor, factor
-           correlations must be greater than the threshold or are labeled unmapped.
-        max_search : int
-           The maximum number of search steps to complete when trying to find a factor feature value. Default = 50
-        threshold_dQ : float
-           The threshold range of the dQ value for the factor feature value to be considered found. I.E, dQ=4 and
-           threshold_dQ=0.1, than any value between 3.9 and 4.0 will be considered valid.
-        features: list
-           A list of the feature indices to run DISP on, default is None which will run DISP on all features.
-        seed : int
-           The random seed for random resampling of the BS datasets. The base model random seed is used for all BS runs,
-           which result in the same initial W matrix.
+        Constructor method.
         """
         self.nmf = nmf
         self.feature_labels = feature_labels

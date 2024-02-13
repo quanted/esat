@@ -20,6 +20,32 @@ class Displacement:
     """
     The displacement method (DISP) for error estimation explores the rotational ambiguity in the solution by assessing
     the largest range of source profile values without an appreciable increase in the loss value (Q).
+
+    The DISP method finds the required change in a factor profile feature value to cause a specific increase in the
+    loss function value (dQ). The change is found for dQ=(4, 8, 16, 32) and for both increasing and decreasing
+    changes to the factor profile feature values. The search for these changes is limited to max_search steps, where
+    a step is the binary search for the value based upon the bounds of the initial value. Factor profile values must
+    be greater than 0, so once the modified value is below 1e-8 or the modified value is no longer changing between
+    steps the search is stopped and the final value in the search used.
+
+    The process is repeated for all factors and features, if there are factors=k, features=N, dQ_N=4 then this
+    process is completed 2*k*N*4 times.
+
+    Parameters
+    ----------
+    nmf : NMF
+       The base model to run the DISP method on.
+    feature_labels : list
+       The list of feature, column, labels from the original input dataset. Provided in the data handler.
+    model_selected : int
+       The index of the model selected in the case of a batch NMF run, used for labeling.
+    max_search : int
+       The maximum number of search steps to complete when trying to find a factor feature value. Default = 50
+    threshold_dQ : float
+       The threshold range of the dQ value for the factor feature value to be considered found. I.E, dQ=4 and
+       threshold_dQ=0.1, than any value between 3.9 and 4.0 will be considered valid.
+    features : list
+       A list of the feature indices to run DISP on, default is None which will run DISP on all features.
     """
 
     dQmax = [32, 16, 8, 4]
@@ -33,32 +59,7 @@ class Displacement:
                  features: list = None
                  ):
         """
-        The DISP method finds the required change in a factor profile feature value to cause a specific increase in the
-        loss function value (dQ). The change is found for dQ=(4, 8, 16, 32) and for both increasing and decreasing
-        changes to the factor profile feature values. The search for these changes is limited to max_search steps, where
-        a step is the binary search for the value based upon the bounds of the initial value. Factor profile values must
-        be greater than 0, so once the modified value is below 1e-8 or the modified value is no longer changing between
-        steps the search is stopped and the final value in the search used.
-
-        The process is repeated for all factors and features, if there are factors=k, features=N, dQ_N=4 then this
-        process is completed 2*k*N*4 times.
-
-        Parameters
-        ----------
-        nmf : NMF
-           The base model to run the DISP method on.
-        feature_labels : list
-           The list of feature, column, labels from the original input dataset. Provided in the data handler.
-        model_selected : int
-           The index of the model selected in the case of a batch NMF run, used for labeling.
-        max_search : int
-           The maximum number of search steps to complete when trying to find a factor feature value. Default = 50
-        threshold_dQ : float
-           The threshold range of the dQ value for the factor feature value to be considered found. I.E, dQ=4 and
-           threshold_dQ=0.1, than any value between 3.9 and 4.0 will be considered valid.
-        features : list
-           A list of the feature indices to run DISP on, default is None which will run DISP on all features.
-
+        Constructor method.
         """
         self.nmf = nmf
         self.selected_model = model_selected
@@ -253,8 +254,7 @@ class Displacement:
                 i_results = {}
                 high_search_i = 0
                 max_dQ = 0
-                max_high_search = 5000
-                low_modifier = 0.0
+                max_high_search = 50
 
                 while not high_found:
                     new_value = self.H[factor_i, feature_j] * high_modifier
@@ -262,7 +262,6 @@ class Displacement:
                     disp_i_Q = q_loss(V=self.V, U=self.U, W=self.W, H=new_H)
                     dQ = np.abs(self.base_Q - disp_i_Q)
                     if dQ < self.dQmax[0]:
-                        low_modifier = high_modifier
                         high_modifier *= 2
                     else:
                         high_found = True
@@ -276,7 +275,7 @@ class Displacement:
                         break
                 new_value = 0.0
                 for i in range(len(self.dQmax)):
-                    # low_modifier = 1.0
+                    low_modifier = 1.0
                     modifier = (high_modifier + low_modifier) / 2.0
                     value_found = False
                     search_i = 0
@@ -297,6 +296,8 @@ class Displacement:
                         search_i += 1
                         if dQ > max_dQ:
                             max_dQ = dQ
+                        if search_i >= max_high_search:
+                            value_found = True
                     disp_i_nmf = NMF(V=self.V, U=self.U,
                                      factors=self.nmf.factors, method=self.nmf.method,
                                      seed=self.nmf.seed, optimized=self.nmf.optimized, verbose=False)
@@ -339,6 +340,7 @@ class Displacement:
                     max_dQ = 0
                     search_i = 0
                     p_mod = 0.0
+                    max_search_i = 50
                     while not value_found:
                         new_H = copy.copy(self.H)
                         new_value = self.H[factor_i, feature_j] * modifier
@@ -353,13 +355,14 @@ class Displacement:
                             modifier = (low_mod + modifier) / 2
                         else:
                             value_found = True
-                        if np.abs(
-                                p_mod - modifier) <= 1e-8:  # small value, considered zero. Or no change in the modifier.
+                        if np.abs(p_mod - modifier) <= 1e-8:  # small value, considered zero. Or no change of modifier.
                             value_found = True
                         search_i += 1
                         if dQ > max_dQ:
                             max_dQ = dQ
                         p_mod = modifier
+                        if search_i >= max_search_i:
+                            value_found = True
                     disp_i_nmf = NMF(V=self.V, U=self.U,
                                      factors=self.nmf.factors, method=self.nmf.method,
                                      seed=self.nmf.seed, optimized=self.nmf.optimized, verbose=False)

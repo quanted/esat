@@ -29,6 +29,41 @@ class NMF:
     """
     The primary Non-negative Matrix Factorization (NMF) model object which holds and manages the configuration, data,
     and meta-data for executing and analyzing NMF output.
+
+    The NMF class object contains all the parameters and data required for executing one of the implemented NMF
+    algorithms.
+
+    The NMF class contains the core logic for managing all the steps in the NMF workflow. These include:
+
+    1) The initialization of the factor profile (H) and factor contribution matrices (W) where these matrices can
+    be set using passed in values, or randomly determined based upon the input data through mean distributions,
+    k-means, or fuzzy c-means clustering.
+
+    2) The executing of the specified NMF algorithm for updating the W and H matrices. The two currently implemented
+    algorithms are least-squares nmf (LS-NMF) and weighted-semi nmf (WS-NMF).
+
+    Parameters
+    ----------
+    V : np.ndarray
+        The input data matrix containing M samples (rows) by N features (columns).
+    U : np.ndarray
+        The uncertainty associated with the data points in the V matrix, of shape M x N.
+    factors : int
+        The number of factors, sources, NMF will create through the W and H matrices.
+    method : str
+        The NMF algorithm to be used for updating the W and H matrices. Options are: 'ls-nmf' and 'ws-nmf'.
+    seed : int
+        The random seed used for initializing the W and H matrices. Default is 42.
+    optimized : bool
+        The two update algorithms have also been written in Rust, which can be compiled with maturin, providing
+        an optimized implementation for rapid training of NMF models. Setting optimized to True will run the
+        compiled Rust functions.
+    parallelized : bool
+        The Rust implementation of 'ws-nmf' has a parallelized version for increased optimization. This parameter is
+        only used when method='ws-nmf' and optimized=True, then setting parallelized=True will run the parallel
+        version of the function.
+    verbose : bool
+        Allows for increased verbosity of the initialization and model training steps.
     """
 
     def __init__(self,
@@ -42,40 +77,7 @@ class NMF:
                  verbose: bool = False
                  ):
         """
-        The NMF class object contains all the parameters and data required for executing one of the implemented NMF
-        algorithms.
-
-        The NMF class contains the core logic for managing all the steps in the NMF workflow. These include:
-
-        1) The initialization of the factor profile (H) and factor contribution matrices (W) where these matrices can
-        be set using passed in values, or randomly determined based upon the input data through mean distributions,
-        k-means, or fuzzy c-means clustering.
-
-        2) The executing of the specified NMF algorithm for updating the W and H matrices. The two currently implemented
-        algorithms are least-squares nmf (LS-NMF) and weighted-semi nmf (WS-NMF).
-
-        Parameters
-        ----------
-        V : np.ndarray
-            The input data matrix containing M samples (rows) by N features (columns).
-        U : np.ndarray
-            The uncertainty associated with the data points in the V matrix, of shape M x N.
-        factors : int
-            The number of factors, sources, NMF will create through the W and H matrices.
-        method : str
-            The NMF algorithm to be used for updating the W and H matrices. Options are: 'ls-nmf' and 'ws-nmf'.
-        seed : int
-            The random seed used for initializing the W and H matrices. Default is 42.
-        optimized : bool
-            The two update algorithms have also been written in Rust, which can be compiled with maturin, providing
-            an optimized implementation for rapid training of NMF models. Setting optimized to True will run the
-            compiled Rust functions.
-        parallelized : bool
-            The Rust implementation of 'ws-nmf' has a parallelized version for increased optimization. This parameter is
-            only used when method='ws-nmf' and optimized=True, then setting parallelized=True will run the parallel
-            version of the function.
-        verbose : bool
-            Allows for increased verbosity of the initialization and model training steps.
+        Constructor method.
         """
 
         self.V = V.astype(np.float64)
