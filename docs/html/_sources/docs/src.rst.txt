@@ -10,6 +10,7 @@ Subpackages
    src.data
    src.error
    src.model
+   src.rotational
 
 Submodules
 ----------

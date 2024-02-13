@@ -19,6 +19,29 @@ ROOT_DIR = os.path.join(os.path.abspath(__file__), "..", "..", "..")
 class DataHandler:
     """
     The class for cleaning and preparing input datasets for use in NMF.
+
+    The DataHandler class is intended to provide a standardized way of cleaning and preparing data from file to NMF
+    models.
+
+    The input and uncertainty data files are specified by their file paths. Input files can be .csv or tab separated
+    text files. Other file formats are not supported at this time.
+    #TODO: Add additional supported file formats but expanding the __read_data function.
+    #TODO: Add in weight adjustment for signal to noise ratio categories, using the same approach as the robust calculation.
+
+    Parameters
+    ----------
+    input_path : str
+        The file path to the input dataset.
+    uncertainty_path : str
+        The file path to the uncertainty dataset.
+        #TODO: Add the option of generating an uncertainty dataset from a provided input dataset, using a random selection of some percentage range of the input dataset cell values.
+    index_col : str
+        The name of the index column if it is not the first column in the dataset. Default = None, which will use
+        the 1st column.
+    drop_col : list
+            A list of columns to drop from the dataset. Default = None.
+    sn_threshold : float
+        The threshold for the signal to noise ratio values.
     """
     def __init__(self,
                  input_path: str,
@@ -27,28 +50,7 @@ class DataHandler:
                  drop_col: list = None,
                  sn_threshold: float = 2.0):
         """
-        The DataHandler class is intended to provide a standardized way of cleaning and preparing data from file to NMF
-        models.
-
-        The input and uncertainty data files are specified by their file paths. Input files can be .csv or tab separated
-        text files. Other file formats are not supported at this time.
-        #TODO: Add additional supported file formats but expanding the __read_data function.
-        #TODO: Add in weight adjustment for signal to noise ratio categories, using the same approach as the robust calculation.
-
-        Parameters
-        ----------
-        input_path : str
-            The file path to the input dataset.
-        uncertainty_path : str
-            The file path to the uncertainty dataset.
-            #TODO: Add the option of generating an uncertainty dataset from a provided input dataset, using a random selection of some percentage range of the input dataset cell values.
-        index_col : str
-            The name of the index column if it is not the first column in the dataset. Default = None, which will use
-            the 1st column.
-        drop_col : list
-            A list of columns to drop from the dataset. Default = None.
-        sn_threshold : float
-            The threshold for the signal to noise ratio values.
+        Constructor method.
         """
         self.input_path = input_path
         self.uncertainty_path = uncertainty_path

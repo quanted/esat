@@ -22,6 +22,60 @@ class BatchNMF:
     """
     The batch NMF class is used to create multiple NMF models, using the same input configuration and different
     random seeds for initialization of W and H matrices.
+
+    The batch NMF class allows for the parallel execution of multiple NMF models.
+
+    The set of parameters for the batch include both the initialization parameters and the model run parameters.
+
+    Parameters
+    ----------
+    V : np.ndarray
+        The input data matrix containing M samples (rows) by N features (columns).
+    U : np.ndarray
+        The uncertainty associated with the data points in the V matrix, of shape M x N.
+    factors : int
+        The number of factors, sources, NMF will create through the W and H matrices.
+    models : int
+        The number of NMF models to create. Default = 20.
+    method : str
+        The NMF algorithm to be used for updating the W and H matrices. Options are: 'ls-nmf' and 'ws-nmf'.
+    seed : int
+        The random seed used for initializing the W and H matrices. Default is 42.
+    init_method : str
+       The default option is column means, though any option other than 'kmeans' or 'cmeans' will use the column
+       means initialization when W and/or H is not provided.
+    init_norm : bool
+       When using init_method either 'kmeans' or 'cmeans', this option allows for normalizing the input dataset
+       prior to clustering.
+    fuzziness : float
+       The amount of fuzziness to apply to fuzzy c-means clustering. Default is 5.
+    max_iter : int
+       The maximum number of iterations to update W and H matrices. Default: 20000
+    converge_delta:  float
+       The change in the loss value where the model will be considered converged. Default: 0.1
+    converge_n : int
+       The number of iterations where the change in the loss value is less than converge_delta for the model to be
+       considered converged. Default: 100
+    best_robust: bool
+       Use the Q(robust) loss value to determine which model is the best, instead of Q(true). Default = True.
+    robust_mode : bool
+       Used to turn on the robust mode, use the robust loss value in the update algorithm. Default: False
+    robust_n : int
+       When robust_mode=True, the number of iterations to use the default mode before turning on the robust mode to
+       prevent reducing the impact of non-outliers. Default: 200
+    robust_alpha : int
+       When robust_mode=True, the cutoff of the uncertainty scaled residuals to decrease the weights. Robust weights
+       are calculated as the uncertainty multiplied by the square root of the scaled residuals over robust_alpha.
+       Default: 4
+    parallel : bool
+        Run the individual models in parallel, not the same as the optimized parallelized option for an NMF ws-nmf
+        model. Default = True.
+    optimized: bool
+        The two update algorithms have also been written in Rust, which can be compiled with maturin, providing
+        an optimized implementation for rapid training of NMF models. Setting optimized to True will run the
+        compiled Rust functions.
+    verbose : bool
+        Allows for increased verbosity of the initialization and model training steps.
     """
     def __init__(self,
                  V: np.ndarray,
@@ -45,59 +99,7 @@ class BatchNMF:
                  verbose: bool = True
                  ):
         """
-        The batch NMF class allows for the parallel execution of multiple NMF models.
-
-        The set of parameters for the batch include both the initialization parameters and the model run parameters.
-
-        Parameters
-        ----------
-        V : np.ndarray
-            The input data matrix containing M samples (rows) by N features (columns).
-        U : np.ndarray
-            The uncertainty associated with the data points in the V matrix, of shape M x N.
-        factors : int
-            The number of factors, sources, NMF will create through the W and H matrices.
-        models : int
-            The number of NMF models to create. Default = 20.
-        method : str
-            The NMF algorithm to be used for updating the W and H matrices. Options are: 'ls-nmf' and 'ws-nmf'.
-        seed : int
-            The random seed used for initializing the W and H matrices. Default is 42.
-        init_method : str
-           The default option is column means, though any option other than 'kmeans' or 'cmeans' will use the column
-           means initialization when W and/or H is not provided.
-        init_norm : bool
-           When using init_method either 'kmeans' or 'cmeans', this option allows for normalizing the input dataset
-           prior to clustering.
-        fuzziness : float
-           The amount of fuzziness to apply to fuzzy c-means clustering. Default is 5.
-        max_iter : int
-           The maximum number of iterations to update W and H matrices. Default: 20000
-        converge_delta:  float
-           The change in the loss value where the model will be considered converged. Default: 0.1
-        converge_n : int
-           The number of iterations where the change in the loss value is less than converge_delta for the model to be
-           considered converged. Default: 100
-        best_robust: bool
-           Use the Q(robust) loss value to determine which model is the best, instead of Q(true). Default = True.
-        robust_mode : bool
-           Used to turn on the robust mode, use the robust loss value in the update algorithm. Default: False
-        robust_n : int
-           When robust_mode=True, the number of iterations to use the default mode before turning on the robust mode to
-           prevent reducing the impact of non-outliers. Default: 200
-        robust_alpha : int
-           When robust_mode=True, the cutoff of the uncertainty scaled residuals to decrease the weights. Robust weights
-           are calculated as the uncertainty multiplied by the square root of the scaled residuals over robust_alpha.
-           Default: 4
-        parallel : bool
-            Run the individual models in parallel, not the same as the optimized parallelized option for an NMF ws-nmf
-            model. Default = True.
-        optimized: bool
-            The two update algorithms have also been written in Rust, which can be compiled with maturin, providing
-            an optimized implementation for rapid training of NMF models. Setting optimized to True will run the
-            compiled Rust functions.
-        verbose : bool
-            Allows for increased verbosity of the initialization and model training steps.
+        Constructor method.
         """
         self.factors = factors
         self.method = method

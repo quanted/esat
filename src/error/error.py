@@ -12,6 +12,17 @@ logger.setLevel(logging.INFO)
 class Error:
     """
     Calculate the summary error statistics from bootstrap, displacement and BS-DISP results.
+
+    Calculate the combined error summary statistics from various error estimation methods.
+
+    Parameters
+    ----------
+    bs : Bootstrap
+       The BS run to calculate the summary error.
+    disp : Displacement
+       The DISP run to calculate the summary error.
+    bsdisp: BSDISP
+       The BS-DISP run to calculate the summary error.
     """
 
     def __init__(self,
@@ -20,16 +31,7 @@ class Error:
                  bsdisp: BSDISP = None
                  ):
         """
-        Calculate the combined error summary statistics from various error estimation methods.
-
-        Parameters
-        ----------
-        bs : Bootstrap
-           The BS run to calculate the summary error.
-        disp : Displacement
-           The DISP run to calculate the summary error.
-        bsdisp: BSDISP
-           The BS-DISP run to calculate the summary error.
+        Constructor method.
         """
         self.bs = bs
         self.disp = disp

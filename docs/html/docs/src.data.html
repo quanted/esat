@@ -42,7 +42,7 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Readme:</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Readme</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../README.html">Non-Negative Matrix Factorization</a></li>
 </ul>
@@ -82,7 +82,17 @@
 <dt class="sig sig-object py" id="src.data.analysis.ModelAnalysis">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.data.analysis.</span></span><span class="sig-name descname"><span class="pre">ModelAnalysis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">datahandler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#src.data.datahandler.DataHandler" title="src.data.datahandler.DataHandler"><span class="pre">DataHandler</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="src.model.html#src.model.nmf.NMF" title="src.model.nmf.NMF"><span class="pre">NMF</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">selected_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.data.analysis.ModelAnalysis" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Class for running model analysis and generating plots.</p>
+<p>Class for running model analysis and generating plots.
+A collection of model statistic methods and plot generation functions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>datahandler</strong> (<a class="reference internal" href="#src.data.datahandler.DataHandler" title="src.data.datahandler.DataHandler"><em>DataHandler</em></a>) – The datahandler instance used for processing the input and uncertainty datasets used by the NMF model.</p></li>
+<li><p><strong>model</strong> (<a class="reference internal" href="src.model.html#src.model.nmf.NMF" title="src.model.nmf.NMF"><em>NMF</em></a>) – A trained NMF model with output used for calculating model statistics and generating plots.</p></li>
+<li><p><strong>selected_model</strong> (<em>int</em>) – If NMF model is part of a batch, the model id/index that will be used for plot labels.</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="src.data.analysis.ModelAnalysis.calculate_statistics">
 <span class="sig-name descname"><span class="pre">calculate_statistics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.data.analysis.ModelAnalysis.calculate_statistics" title="Link to this definition"></a></dt>
@@ -121,6 +131,12 @@ be overriden by providing np.ndarray in the ‘results’ parameter. Default = N
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="src.data.analysis.ModelAnalysis.plot_factor_composition">
+<span class="sig-name descname"><span class="pre">plot_factor_composition</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#src.data.analysis.ModelAnalysis.plot_factor_composition" title="Link to this definition"></a></dt>
+<dd><p>Creates a radar plot of the composition of all the factors to all features.</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="src.data.analysis.ModelAnalysis.plot_factor_contributions">
 <span class="sig-name descname"><span class="pre">plot_factor_contributions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature_idx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contribution_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.05</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.data.analysis.ModelAnalysis.plot_factor_contributions" title="Link to this definition"></a></dt>
 <dd><p>Create a plot of the factor contributions and the normalized contribution.</p>
@@ -147,9 +163,26 @@ be overriden by providing np.ndarray in the ‘results’ parameter. Default = N
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>factor_idx</strong> (<em>int</em>) – The index of the factor to plot.</p></li>
+<li><p><strong>factor_idx</strong> (<em>int</em>) – The index of the factor to plot (1 -&gt; k).</p></li>
 <li><p><strong>H</strong> (<em>np.ndarray</em>) – Overrides the factor profile matrix in the NMF model used for the plot.</p></li>
 <li><p><strong>W</strong> (<em>np.ndarray</em>) – Overrides the factor contribution matrix in the NMF model used for the plot.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.data.analysis.ModelAnalysis.plot_factor_surface">
+<span class="sig-name descname"><span class="pre">plot_factor_surface</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor_idx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_idx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">percentage</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zero_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0001</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.data.analysis.ModelAnalysis.plot_factor_surface" title="Link to this definition"></a></dt>
+<dd><p>Creates a 3d surface plot of the specified factor_idx’s concentration percentage or mass.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>factor_idx</strong> (<em>int</em>) – The factor index to plot.</p></li>
+<li><p><strong>feature_idx</strong> (<em>int</em>) – The features to include in the plot, or if factor_idx=None, which feature</p></li>
+<li><p><strong>percentage</strong> (<em>bool</em>) – Plot the concentration as a scaled value, percentage of the sum of all factors, or as the calculated mass.
+Default = True.</p></li>
+<li><p><strong>zero_threshold</strong> (<em>float</em>) – Values below this threshold are considered zero on the plot.</p></li>
 </ul>
 </dd>
 </dl>
@@ -200,6 +233,25 @@ be overriden by providing np.ndarray in the ‘results’ parameter. Default = N
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.data.datahandler.</span></span><span class="sig-name descname"><span class="pre">DataHandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uncertainty_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index_col</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_col</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sn_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.data.datahandler.DataHandler" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>The class for cleaning and preparing input datasets for use in NMF.</p>
+<p>The DataHandler class is intended to provide a standardized way of cleaning and preparing data from file to NMF
+models.</p>
+<p>The input and uncertainty data files are specified by their file paths. Input files can be .csv or tab separated
+text files. Other file formats are not supported at this time.
+#TODO: Add additional supported file formats but expanding the __read_data function.
+#TODO: Add in weight adjustment for signal to noise ratio categories, using the same approach as the robust calculation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_path</strong> (<em>str</em>) – The file path to the input dataset.</p></li>
+<li><p><strong>uncertainty_path</strong> (<em>str</em>) – The file path to the uncertainty dataset.
+#TODO: Add the option of generating an uncertainty dataset from a provided input dataset, using a random selection of some percentage range of the input dataset cell values.</p></li>
+<li><p><strong>index_col</strong> (<em>str</em>) – The name of the index column if it is not the first column in the dataset. Default = None, which will use
+the 1st column.</p></li>
+<li><p><strong>drop_col</strong> (<em>list</em>) – A list of columns to drop from the dataset. Default = None.</p></li>
+<li><p><strong>sn_threshold</strong> (<em>float</em>) – The threshold for the signal to noise ratio values.</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="src.data.datahandler.DataHandler.data_uncertainty_plot">
 <span class="sig-name descname"><span class="pre">data_uncertainty_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature_idx</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.data.datahandler.DataHandler.data_uncertainty_plot" title="Link to this definition"></a></dt>

@@ -18,6 +18,16 @@ logger.setLevel(logging.INFO)
 class ModelAnalysis:
     """
     Class for running model analysis and generating plots.
+    A collection of model statistic methods and plot generation functions.
+
+    Parameters
+    ----------
+    datahandler : DataHandler
+        The datahandler instance used for processing the input and uncertainty datasets used by the NMF model.
+    model : NMF
+        A trained NMF model with output used for calculating model statistics and generating plots.
+    selected_model : int
+        If NMF model is part of a batch, the model id/index that will be used for plot labels.
     """
     def __init__(self,
                  datahandler: DataHandler,
@@ -25,16 +35,7 @@ class ModelAnalysis:
                  selected_model: int = None
                  ):
         """
-        A collection of model statistic methods and plot generation functions.
-
-        Parameters
-        ----------
-        datahandler : DataHandler
-            The datahandler instance used for processing the input and uncertainty datasets used by the NMF model.
-        model : NMF
-            A trained NMF model with output used for calculating model statistics and generating plots.
-        selected_model : int
-            If NMF model is part of a batch, the model id/index that will be used for plot labels.
+        Constructor method
         """
         self.dh = datahandler
         self.model = model

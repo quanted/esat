@@ -19,6 +19,13 @@ release = '12/06/2023'
 
 extensions = ['myst_parser', 'sphinx.ext.autosummary', 'sphinx.ext.autodoc', 'sphinx.ext.todo', 'sphinx.ext.napoleon']
 
+autodoc_typehints = "signature"
+autodoc_default_options = {
+    'members': True,
+    'undoc-members': True,
+    'memer-order': 'bysource'
+}
+
 templates_path = ['_templates']
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 

@@ -31,7 +31,37 @@ logger.setLevel(logging.INFO)
 
 class Constraint:
     """
+    The constrained model takes a base NMF solution and finds a new solution that applies both constraints and
+    expressions. The Constraint class objects are created from the add_constraint method in the constrained model class.
+    The constraint class does not need to be called directly.
 
+    Defines a constraint targeting a single factor element in the solution. There are 6 different constraint types:
+    "pull down", "pull up", "pull to value", "set to zero", "set to base value", "define limits". A constraint must
+    target a factor element in either the 'sample' or 'feature' solutions, which determines which matrix the
+    provided index is targeting. The target_values of the constraint can take several forms depending on what
+    constraint type is provided. Here are examples of each type and their target_values:
+
+    Constraint(constraint_type='pull down', index=(0,0), target='feature', target_values=dQ_limit)
+    Constraint(constraint_type='pull up', index=(0,0), target='feature', target_values=dQ_limit)
+    Constraint(constraint_type='pull to value', index=(0,0), target='feature', target_values=(pull_to_value, dQ_limit))
+    Constraint(constraint_type='set to zero', index=(0,0), target='feature')
+    Constraint(constraint_type='set to base value', index=(0,0), target='feature')
+    Constraint(constraint_type='define limits', index=(0,0), target='feature', target_values=(min_value, max_value))
+
+    These examples are created when a user calls the add_constraint method from a ConstrainedModel instance.
+
+    Parameters
+    ----------
+    constraint_type : str
+        The type of constraint that is being defined. Valid types are: "pull down", "pull up", "pull to value",
+        "set to zero", "set to base value", "define limits".
+    index : tuple
+        A tuple that specifies the index of the factor matrix that is being constrained.
+    target : str
+        The target matrix for the constraint. Options are 'feature' (H) or 'sample' (W) matrices.
+    target_values
+        The target values for the constraint. The parameter type and value is dependent on the constraint type,
+        details shown in the Constraint description.
     """
 
     type_list = ("pull down", "pull up", "pull to value", "set to zero", "set to base value", "define limits")
@@ -43,25 +73,7 @@ class Constraint:
                  target_values=None
                  ):
         """
-        Defines a constraint targeting a single factor element in the solution. There are 6 different constraint types:
-        "pull down", "pull up", "pull to value", "set to zero", "set to base value", "define limits". A constraint must
-        target a factor element in either the 'sample' or 'feature' solutions, which determines which matrix the
-        provided index is targeting. The target_values of the constraint can take several forms depending on what
-        constraint type is provided. Here are examples of each type and their target_values:
-
-        Constraint(constraint_type='pull down', index=(0,0), target='feature', target_values=dQ_limit)
-        Constraint(constraint_type='pull up', index=(0,0), target='feature', target_values=dQ_limit)
-        Constraint(constraint_type='pull to value', index=(0,0), target='feature', target_values=(pull_to_value, dQ_limit))
-        Constraint(constraint_type='set to zero', index=(0,0), target='feature')
-        Constraint(constraint_type='set to base value', index=(0,0), target='feature')
-        Constraint(constraint_type='define limits', index=(0,0), target='feature', target_values=(min_value, max_value))
-
-        Parameters
-        ----------
-        constraint_type
-        index
-        target
-        target_values
+        Constructor method.
         """
         self.constraint_type = constraint_type
         self.index = index
@@ -69,19 +81,62 @@ class Constraint:
         self.target_values = target_values
 
     def describe(self, label):
-        print_statement = f"Label: {label}, Type: {self.constraint_type}, Index: {self.index}, Target: {self.target}"
+        """
+        Prints the constraint details.
+
+        Parameters
+        ----------
+        label : str
+           The label or title of the constraint, created by the ConstrainedModel class.
+
+        """
+        print(self.tostring(label=label))
+
+    def tostring(self, label: str = None):
+        """
+        Get string representation of the constraint.
+
+        Parameters
+        ----------
+        label : str
+            Optional label for the constraint.
+
+        Returns
+        -------
+        str
+            The constraint string.
+        """
+        string_statement = f"Type: {self.constraint_type}, Index: {self.index}, Target: {self.target}"
+        if label is not None:
+            string_statement = f"Label: {label}, " + string_statement
         if self.constraint_type in ('pull down', 'pull up'):
-            print_statement += f", dQ: {self.target_values}"
+            string_statement += f", dQ: {self.target_values}"
         elif self.constraint_type == 'pull to value':
-            print_statement += f", Value: {self.target_values[0]}, dQ: {self.target_values[1]}"
+            string_statement += f", Value: {self.target_values[0]}, dQ: {self.target_values[1]}"
         elif self.constraint_type == 'define limits':
-            print_statement += f", Min Value: {self.target_values[0]}, Max Value: {self.target_values[1]}"
-        print(print_statement)
+            string_statement += f", Min Value: {self.target_values[0]}, Max Value: {self.target_values[1]}"
+        return string_statement
 
 
 class ConstrainedModel:
     """
+    The constrained model class that creates an instead of a constrained model using a base NMF model.
 
+    The constrained model takes as input a previously completed NMF instance, the solution of a base model run
+    (single NMF instance) is used for the initial conditions of a constrained model run. Additional inputs include
+    the instance of the DataHandler used to provided data to the NMF instance (used for plotting) and a 'softness'
+    parameter that determines how soft, or how large, the Q(aux) value is in comparison to the Q(Robust) and
+    Q(True) loss values.
+
+    Parameters
+    ----------
+    base_model : NMF
+       The completed base model instance of NMF.
+    data_handler : DataHandler
+       The instance of the DataHandler user to preprocess the input data for NMF.
+    softness : float
+       The softness parameter that determines how large the Q(aux) loss value is in comparison to the primary Q
+       loss.
     """
 
     def __init__(self,
@@ -90,11 +145,7 @@ class ConstrainedModel:
                  softness: float = 1.0,
                  ):
         """
-
-        Parameters
-        ----------
-        base_model
-        softness
+        Constructor method.
         """
         self.base_model = base_model
         self.dh = data_handler
@@ -105,31 +156,46 @@ class ConstrainedModel:
         self.soft_W2 = np.square(self.soft_W)
         self.soft_H2 = np.square(self.soft_H)
 
-        self.constraints = {}
-        self.expressions = []
+        self.constraints = {}                   # When a user adds a constraint they are added to this dict.
+        self.expressions = []                   # Expressions are added to this list.
+        # Once all expressions are added and the train method run, the expressions are parsed and those parsed
+        # expressions are added to the labeled and mapped variables.
         self.expression_labeled = None
         self.expression_mapped = None
 
+        # Once the trained model is completed, an instance of NMF is created and set to this parameter which includes
+        # all values of the solution. This constrained model can be passed as the nmf_model to the error methods.
         self.constrained_model = None
-        self.Qaux = None
+        self.Qaux = None                        # The Q(aux) loss value, the difference between the current and target solutions.
 
         self.metadata = {}
 
+        # Constrained model uses the same update method as the base NMF instance (though not an optimized update step)
         self.update = self.base_model.update_step
 
-    def add_constraint(self, constraint_type, index, target, target_values=None):
+    def add_constraint(self, constraint_type: str, index: tuple, target: str, target_values=None):
         """
+        Adds a single constraint to the ConstrainedModel instance. What constraints are available and valid structure
+        of the constraint parameters can be found in the Constraint class. A factor element can only have one
+        constraint.
 
         Parameters
         ----------
-        constraint_type
-        index
-        target
+        constraint_type : str
+           The type of constraint being added, there are 6 types which are detailed in the Constraint class.
+        index : tuple
+           The index of the factor element (as they natively appear in either the H or W matrices). i.e. (i,j)
+        target : str
+           The target factor element matrix. A factor feature element (H) is 'feature' while a factor sample element (W)
+           is 'sample'.
         target_values
+           The target values type and values depend on the constraint_type. The details of correct target_values values
+           are provided in the details of the Constraint class.
 
         Returns
         -------
-
+        bool
+           True if the constraint was added or False if the constraint wasn't valid and is not added.
         """
         constraint_label = ""
         if target == 'feature':
@@ -162,25 +228,25 @@ class ConstrainedModel:
             target_values=target_values
         )
         self.constraints[constraint_label] = new_constraint
+        return True
 
     def remove_constraint(self, constraint_label):
         """
+        Remove a constraint. When a constraint is added to a ConstrainedModel, a label is created for that constraint
+        that is defined by: 'factor:I|feature:K' or 'factor:I|sample:J'. The labels can also be found by listing the
+        constraints.
 
         Parameters
         ----------
-        constraint_label
-
-        Returns
-        -------
+        constraint_label : str
+           The label of the constraint to be removed.
 
         """
         self.constraints.pop(constraint_label)
 
     def list_constraints(self):
         """
-
-        Returns
-        -------
+        List all the constraints that are currently set for this constrained model.
 
         """
         print(f"Constraint List - Count: {len(self.constraints.keys())}")
@@ -189,13 +255,25 @@ class ConstrainedModel:
 
     def add_expression(self, expression):
         """
+        Add an expression to the constrained model. An expression is an equation involving 2 or more factor elements
+        that quantifies the relationship between those factor elements. These expressions are structured as formatted
+        strings, that take the form:
+
+        "(0.66*[factor:1|feature:2])-(4.2*[factor:2|feature:4])=0,250"
+        "(0.35*[factor:0|feature:3])-(2.0*[factor:1|feature:3])-(3.7*[factor:3|feature:4])=0,250"
+        "(3.2*[factor:2|feature:4])+(1.2*[factor:3|feature:10])+(0.1*[factor:1|feature:3])+(20.0*[factor:4|feature:3])-(10.7*[factor:5|feature:4])=0,250"
+
+        Where each element is defined inside of () and consist of a coefficient and the factor element, i.e.
+        (COEF_ij*(factor:I|feature:J). Then the combination of factor elements are correlated by +/0- operators with the
+        resulting equation equal to 0. The comma and following value is the dQ limit. These limits are summed for all
+        expressions and used to decrease the amount of change these expressions can apply to the solution matrices if
+        the expressions dQ is greater than that summed limit.
 
         Parameters
         ----------
-        expression
+        expression : str
+           A string expression to be added to the list of expressions for the constrained model.
 
-        Returns
-        -------
 
         """
         #TODO: Add validation of expressions to make sure they are properly structured.
@@ -203,23 +281,20 @@ class ConstrainedModel:
 
     def list_expressions(self):
         """
-
-        Returns
-        -------
+        List all the current expressions assigned to the constrained model.
 
         """
-        for i,exp in enumerate(self.expressions):
+        for i, exp in enumerate(self.expressions):
             print(f"{i}: {exp}")
 
     def remove_expression(self, expression_idx):
         """
+        Remove an expression from the current list of expressions by index.
 
         Parameters
         ----------
-        expression_idx
-
-        Returns
-        -------
+        expression_idx: int
+           The index of the expression to remove, values from 0 to the number of expressions - 1.
 
         """
         if 0 <= expression_idx < len(self.expressions):
@@ -343,15 +418,36 @@ class ConstrainedModel:
 
     def train(self, max_iterations: int = None, converge_delta: float = None, converge_n: int = None):
         """
+        Retrain the specified nmf model applying the constraints and expressions conditions on the solution and finding
+        to calculate a new solution. If no arguments are provided, the values used in the base nmf model will be
+        applied.
+
+        Prior to beginning the update iterations, all the expressions are processed and converted into data structures
+        that will be used to solve those expressions.
+
+        For each iteration, the constraint and expression target values are calculated and two matrices are created
+        which contain the difference between the curren value in those matrices and the target value. The expression
+        target values are calculated first and then followed by the constraint values. The difference matrices are added
+        to the solution matrices before being updated by the NMF update algorithm that is used in the base model.
+
+        The model is considered converged when Q(Main) changes by less than converge_delta over converge_n iterations,
+        where Q(Main) is defined as Q(main) = Q(True) + Q(aux). Q(aux) is defined as
+        Q(aux) = sum(square(W_base + Difference_to_Target_W - W_i)/S_W) +
+        sum(square(H_base + Difference_to_Target_H - H_i)/S_H).
+
+        The completed constrained model solution is assigned to the .constrained_model variable, which is an instance of
+        NMF. This constrained NMF solution can then be passed into any of the error estimation methods in the same way
+        as an NMF solution from the BatchNMF instance.
 
         Parameters
         ----------
-        max_iterations
-        converge_delta
-        converge_n
-
-        Returns
-        -------
+        max_iterations : int
+           The maximum number of iterations to run the update procedure. Defaults to the value set in the base model.
+        converge_delta : float
+           The change in Q that determines convergence. Defaults to the value set in the base model.
+        converge_n : int
+           The number of iterations where the change in Q is less than converge_delta for the model to be considered
+           converged.
 
         """
         max_iterations = self.base_model.metadata["max_iterations"] if max_iterations is None else max_iterations
@@ -405,6 +501,9 @@ class ConstrainedModel:
         self.constrained_model.metadata["max_iterations"] = max_iterations
         self.constrained_model.metadata["converge_delta"] = converge_delta
         self.constrained_model.metadata["converge_n"] = converge_n
+        self.constrained_model.metadata["Q(Robust)"] = Qrobust_i
+        self.constrained_model.metadata["Q(True)"] = Qtrue_i
+        self.constrained_model.metadata["Q(Aux)"] = Qaux_i
         self.constrained_model.Qrobust = Qrobust_i
         self.constrained_model.Qtrue = Qtrue_i
         self.constrained_model.converged = converged
@@ -608,9 +707,7 @@ class ConstrainedModel:
 
     def display_results(self):
         """
-
-        Returns
-        -------
+        Print the results of the constrained model run.
 
         """
         logger.info(f"dQ(Robust): {round(self.constrained_model.Qrobust - self.base_model.Qrobust, 2)}, "
@@ -623,42 +720,51 @@ class ConstrainedModel:
 
     def plot_Q(self, Qtype: str = 'True'):
         """
+        Plot the loss value Q as it changes over iterations. Four options for Qtype are available.
 
         Parameters
         ----------
-        Qtype
-
-        Returns
-        -------
+        Qtype : str
+           The Q loss value to plot. Available options are: true, robust, aux, and main. Q(Main) is the loss value of
+           the objective function for the constrained model and is the sum of true and aux.
 
         """
-        title = 'Q(True)'
-        q_index = 0
-        if Qtype.lower() == "robust":
-            q_index = 1
+        if Qtype.lower() == "true":
+            title = 'Q(True)'
+            x = list(range(len(self.Q_list[0])))
+            y = self.Q_list[0]
+        elif Qtype.lower() == "robust":
             title = 'Q(Robust)'
+            x = list(range(len(self.Q_list[1])))
+            y = self.Q_list[1]
         elif Qtype.lower() == "aux":
-            q_index = 2
             title = 'Q(aux)'
-
-        x = list(range(len(self.Q_list[q_index])))
-        y = self.Q_list[q_index]
+            x = list(range(len(self.Q_list[2])))
+            y = self.Q_list[2]
+        elif Qtype.lower() == "main":
+            title = 'Q(Main)'
+            x = list(range(len(self.Q_list[0])))
+            y = self.Q_list[0] + self.Q_list[2]
+        else:
+            logger.error(f"Error: Invalid option for Qtype. Provided value: {Qtype}. "
+                         f"Available options: true, robust, aux, main.")
+            return
         q_plot = go.Figure()
         q_plot.add_trace(go.Scatter(x=x, y=y))
-        q_plot.update_layout(height=800, width=800, title=f"{title}")
-        q_plot.update_yaxes(title_text="Q")
+        q_plot.update_layout(height=800, width=800, title=f"Change in {title} over Iterations")
+        q_plot.update_yaxes(title_text=title)
         q_plot.update_xaxes(title_text="Iterations")
         q_plot.show()
 
     def plot_profile_contributions(self, factor_idx):
         """
+        Plot the constrained model factor profile and factor contribution by index. The plots are similar to those available to NMF models
+        in the analysis module.
 
         Parameters
         ----------
-        factor_idx
-
-        Returns
-        -------
+        factor_idx : int
+           The factor index to plot. Valid index values range from 1 to the total number of factors.
 
         """
         if factor_idx is not None:
@@ -670,13 +776,12 @@ class ConstrainedModel:
 
     def plot_profile(self, factor_idx):
         """
+        Plot the constrained model factor profile by index.
 
         Parameters
         ----------
-        factor_idx
-
-        Returns
-        -------
+        factor_idx : int
+            The factor index to plot. Valid index values range from 1 to the total number of factors.
 
         """
         factor_label = factor_idx
@@ -733,13 +838,12 @@ class ConstrainedModel:
 
     def plot_contributions(self, factor_idx):
         """
+        Plot the constrained model factor contributions by factor index.
 
         Parameters
         ----------
-        factor_idx
-
-        Returns
-        -------
+        factor_idx : int
+            The factor index to plot. Valid index values range from 1 to the total number of factors.
 
         """
         factor_label = f"Factor {factor_idx}"
@@ -775,12 +879,7 @@ class ConstrainedModel:
 
     def plot_factor_fingerprints(self):
         """
-
-        Parameters
-        ----------
-
-        Returns
-        -------
+        Plot the constrained model factor fingerprints.
 
         """
         b_H = self.base_model.H
@@ -805,16 +904,19 @@ class ConstrainedModel:
 
     def plot_g_space(self, factor_idx1, factor_idx2, show_base: bool = False, show_delta: bool = False):
         """
+        Plot the constrained model G-Space plot for two factors. Options include adding the base model values and/or
+        adding the change of values from the base values and the constrained model.
 
         Parameters
         ----------
-        factor_idx1
-        factor_idx2
-        show_base
-        show_delta
-
-        Returns
-        -------
+        factor_idx1 : int
+            The first factor index to plot. Valid index values range from 1 to the total number of factors.
+        factor_idx2 : int
+            The second factor index to plot. Valid index values range from 1 to the total number of factors.
+        show_base : bool
+            Include the base model values in the plot.
+        show_delta : bool
+            Include the change of the constrained model from the base model, will set show_base to True.
 
         """
         if factor_idx1 is not None:
@@ -862,14 +964,14 @@ class ConstrainedModel:
 
     def plot_factor_contributions(self, feature_idx, threshold: float = 0.06):
         """
+        Plot the constrained model factor contributions for a specified feature by feature index.
 
         Parameters
         ----------
-        feature_idx
-        threshold
-
-        Returns
-        -------
+        feature_idx : int
+            The feature index to plot. Valid index range from 1 to the number of features in the model.
+        threshold : float
+            The factor contribution threshold for a factor to be included in the plot.
 
         """
         if feature_idx is not None:
@@ -917,9 +1019,26 @@ class ConstrainedModel:
         contr_fig.update_yaxes(title_text="Normalized Contribution")
         contr_fig.show()
 
-    def save(self):
-        pass
+    def save(self, model_name: str, output_directory: str, pickle_model: bool = False, header: list = None):
+        model_name = f"constrained_model-{model_name}"
+        output_directory = Path(output_directory)
+        if not output_directory.is_absolute():
+            current_directory = os.path.abspath(__file__)
+            output_directory = Path(os.path.join(current_directory, output_directory)).resolve()
+        if os.path.exists(output_directory):
+            self.constrained_model.save(
+                model_name=model_name,
+                output_directory=output_directory,
+                pickle_model=pickle_model,
+                header=header)
+            meta_file = os.path.join(output_directory, f"{model_name}-metadata.json")
+            metadata = self.metadata
+            metadata["constraints"] = [c.tostring(label=k) for k, c in self.constraints.items()]
+            metadata["expressions"] = self.expressions
+            metadata["softness"] = self.softness
 
-    @staticmethod
-    def load():
-        pass
+            with open(meta_file, "w") as mfile:
+                json.dump(metadata, mfile, default=np_encoder)
+                logger.info(f"Constrained NMF model metadata saved to file: {meta_file}")
+        else:
+            logger.error(f"Output directory not found. Provided directory: {output_directory}")
