@@ -254,7 +254,7 @@ class Displacement:
                 i_results = {}
                 high_search_i = 0
                 max_dQ = 0
-                max_high_search = 50
+                max_high_search = 100
 
                 while not high_found:
                     new_value = self.H[factor_i, feature_j] * high_modifier
