@@ -26,7 +26,8 @@ class FactorSearch:
         self.data = data
         self.uncertainty = uncertainty
         self.results = None
-        self.Q = []
+        self.Qtrue = []
+        self.Qrobust = []
 
         self.min_n = min_factor
         self.max_n = max_factor
@@ -59,4 +60,6 @@ class FactorSearch:
             )
             model.train()
             self.results[n] = model
-            self.Q.append(model.results[model.best_model].Qtrue)
+            self.Qtrue.append(model.results[model.best_model].Qtrue)
+            self.Qrobust.append(model.results[model.best_model].Qrobust)
+
