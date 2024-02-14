@@ -173,7 +173,15 @@ class ConstrainedModel:
         # Constrained model uses the same update method as the base NMF instance (though not an optimized update step)
         self.update = self.base_model.update_step
 
-    def add_constraint(self, constraint_type: str, index: tuple, target: str, target_values=None):
+    def add_constraint(self,
+                       constraint_type: str,
+                       index: tuple,
+                       target: str,
+                       target_value: float = None,
+                       min_value: float = None,
+                       max_value: float = None,
+                       dQ: float = None
+                       ):
         """
         Adds a single constraint to the ConstrainedModel instance. What constraints are available and valid structure
         of the constraint parameters can be found in the Constraint class. A factor element can only have one
@@ -188,9 +196,14 @@ class ConstrainedModel:
         target : str
            The target factor element matrix. A factor feature element (H) is 'feature' while a factor sample element (W)
            is 'sample'.
-        target_values
-           The target values type and values depend on the constraint_type. The details of correct target_values values
-           are provided in the details of the Constraint class.
+        target_value : float
+           The target value for pull to value constraint.
+        min_value : float
+           The min value for the define limits constraint.
+        max_value : float
+           The max value for the define limits constraint.
+        dQ : float
+           The dQ value for the constraints with dQ limits.
 
         Returns
         -------
@@ -221,6 +234,13 @@ class ConstrainedModel:
         if constraint_label in self.constraints.keys():
             logger.error(f"Error: Unable to set more than one constraint on a factor element. Existing constraint found.")
             return False
+        target_values = None
+        if constraint_type in ('pull down', 'pull up'):
+            target_values = dQ
+        elif constraint_type == 'pull to value':
+            target_values = (target_value, dQ)
+        elif constraint_type == 'define limits':
+            target_values = (min_value, max_value)
         new_constraint = Constraint(
             constraint_type=constraint_type,
             index=index,
@@ -329,7 +349,7 @@ class ConstrainedModel:
                 if current_value < constraint.target_values[0]:
                     new_value = constraint.target_values[0] - current_value
                 elif current_value > constraint.target_values[1]:
-                    new_value = constraint.target_values[1] - current_value
+                    new_value = current_value - constraint.target_values[1]
                 else:
                     new_value = current_value
             if constraint.target == "feature":
@@ -755,6 +775,69 @@ class ConstrainedModel:
         q_plot.update_yaxes(title_text=title)
         q_plot.update_xaxes(title_text="Iterations")
         q_plot.show()
+
+    def evaluate_constraints(self):
+        constraint_values = []
+        for k, c in self.constraints.items():
+            value = self.constrained_model.H[c.index] if c.target == "feature" else self.constrained_model.W[c.index]
+            dQ = None
+            target_value = None
+            min_value = None
+            max_value = None
+            if c.constraint_type in ("pull down", "pull up", "pull to value"):
+                if c.constraint_type == 'pull to value':
+                    target_value = c.target_values[0]
+                    dQ = c.target_values[1]
+                else:
+                    dQ = c.target_values
+            elif c.constraint_type == "define limits":
+                min_value = c.target_values[0]
+                max_value = c.target_values[1]
+            elif c.constraint_type == "set to base value":
+                target_value = self.base_model.H[c.index] if c.target == "feature" else \
+                self.base_model.W[c.index]
+            constraint_values.append(
+                (c.index, c.target, c.constraint_type,
+                 np.round(target_value, 4) if target_value is not None else None,
+                 np.round(value, 4) if value is not None else None,
+                 dQ, min_value, max_value))
+
+        c_columns = ["index", "target", "type", "target value", "value", "dQ", "min value", "max value"]
+        c_df = pd.DataFrame(constraint_values, columns=c_columns)
+        c_fig = go.Figure(data=[go.Table(header=dict(values=list(c_df.columns)), cells=dict(values=c_df.values.T))])
+        c_fig.update_layout(width=1200, height=40*len(constraint_values), title="Constraints Evaluation Table",
+                            margin={'t': 50, 'l': 25, 'b': 10, 'r': 25})
+        c_fig.show()
+
+    def evaluate_expressions(self):
+        exp_element = {}
+        eval_exp = []
+        _base_model = self.base_model
+        for i in range(len(self.expression_labeled)):
+            exp_values = []
+            expression_i = self.expression_labeled[i]
+            for ele in expression_i[0]:
+                element_details = self.expression_mapped[ele]
+                ele_index = element_details['index']
+                ele_coef_idx = element_details["exp_i"].index(i)
+                ele_coef = element_details["coef"][ele_coef_idx]
+                ele_value = self.constrained_model.H[ele_index] if element_details["type"] == "feature" \
+                    else self.constrained_model.W[ele_index]
+                base_value = _base_model.H[ele_index] if element_details["type"] == "feature" else _base_model.W[
+                    ele_index]
+                exp_element[ele] = (ele_index, element_details['type'], np.round(ele_value,4), np.round(base_value,4))
+                exp_values.append(ele_value * ele_coef)
+            eval_exp.append(np.sum(exp_values))
+        e_columns = ["index", "target", "value", "base value"]
+        e_df = pd.DataFrame(exp_element.values(), columns=e_columns)
+        e_fig = go.Figure(data=[go.Table(header=dict(values=list(e_df.columns)), cells=dict(values=e_df.values.T))])
+        e_fig.update_layout(width=1200, height=40*len(exp_element.keys()), title="Expressions Evaluation Table",
+                            margin={'t': 50, 'l': 25, 'b': 10, 'r': 25})
+        e_fig.show()
+
+        for i, ee in enumerate(eval_exp):
+            exp = self.expressions[i].split(",")
+            print(f"Expression: {exp} evaluated to {ee}")
 
     def plot_profile_contributions(self, factor_idx):
         """
