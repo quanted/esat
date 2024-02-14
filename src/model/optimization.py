@@ -17,7 +17,10 @@ class FactorSearch:
                  max_iterations: int = 1000,
                  models: int = 10,
                  converge_delta: int = 0.1,
-                 converge_n=10
+                 converge_n=10,
+                 parallel: bool = False,
+                 optimized: bool = False,
+                 verbose: bool = True
                  ):
         self.seed = seed
         self.data = data
@@ -32,6 +35,9 @@ class FactorSearch:
         self.models = models
         self.converge_delta = converge_delta
         self.converge_n = converge_n
+        self.optimized = optimized
+        self.parallel = parallel
+        self.verbose = verbose
 
     def search(self):
         self.results = {}
@@ -47,9 +53,9 @@ class FactorSearch:
                 models=self.models,
                 converge_n=self.converge_n,
                 converge_delta=self.converge_delta,
-                parallel=True,
-                optimized=True,
-                verbose=True
+                parallel=self.parallel,
+                optimized=self.optimized,
+                verbose=self.verbose
             )
             model.train()
             self.results[n] = model
