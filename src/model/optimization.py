@@ -1,6 +1,7 @@
 import logging
 from src.model.batch_nmf import BatchNMF
 from src.utils import cal_cophenetic, cal_dispersion, cal_connectivity
+from numpy import linalg as LA
 
 logger = logging.getLogger("NMF")
 logger.setLevel(logging.DEBUG)
@@ -53,8 +54,8 @@ class FactorSearch:
                 V=self.data,
                 U=self.uncertainty,
                 factors=n,
-                f=np.Shape(V)[1],
-                s=np.Shape(V)[0],
+                s=np.shape(V)[0],
+                f=np.shape(V)[1],
                 method=self.method,
                 seed=self.seed,
                 max_iter=self.max_iter,
@@ -71,6 +72,13 @@ class FactorSearch:
             self.Qrobust.append(model.results[model.best_model].Qrobust)
             self.Cophen.append(cal_cophenetic(model.results[model.best_model].WH))
             self.Disp.append(cal_dispersion(model.results[model.best_model].WH))
-            self.BIC1.append(log10((model.results[model.best_model].WH-V)^2)+(n*(f+s)/(f*s))*log10((f*s)/(f+s))
-            self.BIC2.append(log10((model.results[model.best_model].WH-V)^2)+(n*(f+s)/(f*s))*log10(min(f^0.5,s^0.5)^2)
-            self.BIC3.append(log10((model.results[model.best_model].WH-V)^2)+(n*(f+s)/(f*s))*(log10(min(f^0.5,s^0.5)^2))/(min(f^0.5,s^0.5)^2)
+
+            Vp = model.results[model.best_model].WH
+            C1 = (s+f)/(s*f)
+            C2 = n*C1
+            C3 = min(s**0.5,f**0.5)**2
+            norm = (LA.norm(Vp-V))**2
+            
+            self.BIC1.append(log10(norm)+C2*log10(1/C1))
+            self.BIC2.append(log10(norm)+C2*log10(C3))
+            self.BIC3.append(log10(norm)+C2*log10(C3)/C3)
