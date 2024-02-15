@@ -49,14 +49,12 @@ class FactorSearch:
 
     def search(self):
         self.results = {}
-        for n in range(self.min_n, self.max_n+1):
-            logger.info(f"Factor search - factors: {n}, models: {self.models}, method: {self.method}")
+        for factors in range(self.min_n, self.max_n+1):
+            logger.info(f"Factor search - factors: {factors}, models: {self.models}, method: {self.method}")
             model = BatchNMF(
                 V=self.data,
                 U=self.uncertainty,
-                factors=n,
-                s=np.shape(np.array(V))[0],
-                f=np.shape(np.array(V))[1],
+                factors=factors,
                 method=self.method,
                 seed=self.seed,
                 max_iter=self.max_iter,
@@ -67,8 +65,12 @@ class FactorSearch:
                 optimized=self.optimized,
                 verbose=self.verbose
             )
+
+            s=np.shape(self.data)[0]
+            f=np.shape(self.data)[1]
+            
             model.train()
-            self.results[n] = model
+            self.results[factors] = model
             self.Qtrue.append(model.results[model.best_model].Qtrue)
             self.Qrobust.append(model.results[model.best_model].Qrobust)
             self.Cophen.append(cal_cophenetic(model.results[model.best_model].WH))
@@ -76,10 +78,10 @@ class FactorSearch:
 
             Vp = model.results[model.best_model].WH
             C1 = (s+f)/(s*f)
-            C2 = n*C1
-            C3 = min(s**0.5,f**0.5)**2
-            norm = (LA.norm(Vp-V))**2
+            C2 = factors*C1
+            C3 = np.min(s**0.5,f**0.5)**2
+            norm = (LA.norm(Vp-self.data))**2
             
-            self.BIC1.append(log10(norm)+C2*log10(1/C1))
-            self.BIC2.append(log10(norm)+C2*log10(C3))
-            self.BIC3.append(log10(norm)+C2*log10(C3)/C3)
+            self.BIC1.append(np.log10(norm)+C2*np.log10(1/C1))
+            self.BIC2.append(np.log10(norm)+C2*np.log10(C3))
+            self.BIC3.append(np.log10(norm)+C2*np.log10(C3)/C3)
