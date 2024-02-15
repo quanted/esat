@@ -72,8 +72,8 @@ class FactorSearch:
                 verbose=self.verbose
             )
 
-            s=np.shape(self.data)[0]
-            f=np.shape(self.data)[1]
+            s=np.float(np.shape(self.data)[0])
+            f=np.float(np.shape(self.data)[1])
             
             model.train()
             self.results[factors] = model
