@@ -2,8 +2,21 @@ import numpy as np
 import copy
 import fastcluster as fc
 from scipy.cluster.hierarchy import cophenet
+import itertools
 
 EPSILON = 1e-15
+
+def cal_connectivity(H, idx):
+	""" calculate connectivity matrix """
+	print("=== calculate connectivity matrix ===")
+	connectivity_mat = np.zeros((H.shape[1], H.shape[1]))
+	classN = H.shape[0]
+	for i in range(classN):
+		xidx = list(np.concatenate(np.where(idx == i)))
+		iterables = [ xidx, xidx ]
+		for t in itertools.product(*iterables):
+			connectivity_mat[t[0],t[1]] = 1
+	return connectivity_mat
 
 def cal_cophenetic(C):
   """ calculate cophenetic correlation coefficient """
