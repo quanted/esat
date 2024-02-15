@@ -1,5 +1,7 @@
 import numpy as np
 import copy
+import fastcluster as fc
+from scipy.cluster.hierarchy import cophenet
 
 EPSILON = 1e-15
 
