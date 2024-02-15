@@ -1,6 +1,6 @@
 import logging
 from src.model.batch_nmf import BatchNMF
-from src.utils import cal_cophenetic, cal_dispersion
+from src.utils import cal_cophenetic, cal_dispersion, cal_connectivity
 
 logger = logging.getLogger("NMF")
 logger.setLevel(logging.DEBUG)
