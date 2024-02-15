@@ -1,9 +1,9 @@
 import logging
 from src.model.batch_nmf import BatchNMF
+from src.utils import cal_cophenetic, cal_dispersion
 
 logger = logging.getLogger("NMF")
 logger.setLevel(logging.DEBUG)
-
 
 class FactorSearch:
 
@@ -28,7 +28,9 @@ class FactorSearch:
         self.results = None
         self.Qtrue = []
         self.Qrobust = []
-
+        self.Cophen = []
+        self.Disp = []
+                     
         self.min_n = min_factor
         self.max_n = max_factor
         self.method = method
@@ -62,4 +64,5 @@ class FactorSearch:
             self.results[n] = model
             self.Qtrue.append(model.results[model.best_model].Qtrue)
             self.Qrobust.append(model.results[model.best_model].Qrobust)
-
+            self.Cophen.append(cal_cophenetic(model.WH))
+            self.Disp.append(cal_dispersion(model.WH))
