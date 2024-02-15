@@ -32,6 +32,9 @@ class FactorSearch:
         self.Qrobust = []
         self.Cophen = []
         self.Disp = []
+                     
+# BIC equations from ...
+                     
         self.BIC1 = []
         self.BIC2 = []
         self.BIC3 = []
