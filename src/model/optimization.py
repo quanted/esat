@@ -64,5 +64,5 @@ class FactorSearch:
             self.results[n] = model
             self.Qtrue.append(model.results[model.best_model].Qtrue)
             self.Qrobust.append(model.results[model.best_model].Qrobust)
-            self.Cophen.append(cal_cophenetic(model.WH))
-            self.Disp.append(cal_dispersion(model.WH))
+            self.Cophen.append(cal_cophenetic(model.results[model.best_model].WH))
+            self.Disp.append(cal_dispersion(model.results[model.best_model].WH))
