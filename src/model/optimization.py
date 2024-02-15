@@ -1,7 +1,10 @@
 import logging
 import numpy as np
 from src.model.batch_nmf import BatchNMF
+
+# add reference to github repository for these functions
 from src.utils import cal_cophenetic, cal_dispersion, cal_connectivity
+
 from numpy import linalg as LA
 
 logger = logging.getLogger("NMF")
