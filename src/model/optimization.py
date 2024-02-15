@@ -1,4 +1,5 @@
 import logging
+import numpy as np
 from src.model.batch_nmf import BatchNMF
 from src.utils import cal_cophenetic, cal_dispersion, cal_connectivity
 from numpy import linalg as LA
