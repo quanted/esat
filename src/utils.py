@@ -3,6 +3,22 @@ import copy
 
 EPSILON = 1e-15
 
+def cal_cophenetic(C):
+  """ calculate cophenetic correlation coefficient """
+  print("=== calculate cophenetic correlation coefficient ===")
+  X = C
+  Z = fc.linkage_vector(X)   # Clustering
+  orign_dists = fc.pdist(X)  # Matrix of original distances between observations
+  cophe_dists = cophenet(Z)  # Matrix of cophenetic distances between observations
+  corr_coef = np.corrcoef(orign_dists, cophe_dists)[0,1]
+  return corr_coef
+
+def cal_dispersion(C):
+  """ calculate dispersion coefficient """
+  print("=== calculate dispersion coefficient ===")
+  n = C.shape[1]
+  corr_disp = np.sum(4 * np.square(np.concatenate(C - 1/2)))/(np.square(n))
+  return corr_disp
 
 def np_encoder(object):
     """
