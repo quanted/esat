@@ -85,7 +85,7 @@ class FactorSearch:
             Vp = model.results[model.best_model].WH
             C1 = (s+f)/(s*f)
             C2 = factors*C1
-            C3 = np.min(s**0.5,f**0.5)**2
+            C3 = min(s**0.5,f**0.5)**2
             norm = (LA.norm(Vp-self.data))**2
             
             self.BIC1.append(np.log10(norm)+C2*np.log10(1/C1))
