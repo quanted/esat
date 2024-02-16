@@ -6,6 +6,8 @@ import itertools
 
 EPSILON = 1e-15
 
+#  functions for connectivity, consensus, dispersion from https://github.com/yal054/snATAC/blob/master/snATAC.nmf.py
+
 def cal_connectivity(H, idx):
 	""" calculate connectivity matrix """
 	print("=== calculate connectivity matrix ===")
