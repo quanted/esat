@@ -36,7 +36,7 @@ class FactorSearch:
         self.Cophen = []
         self.Disp = []
                      
-# BIC equations from ...
+# Bayes Information metrics from https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9181460/
                      
         self.BIC1 = []
         self.BIC2 = []
