@@ -389,7 +389,7 @@ class ConstrainedModel:
                 exp_B[i] = exp_b
 
             # Solve the expression matrices using a least squares solver from scipy.optimize (with solutions bounded between 0.0 and the max value of the total vector)
-            exp_bounds = (0.0, np.max(exp_B))
+            exp_bounds = (1e-8, np.max(exp_B))
             exp_X = optimize.lsq_linear(exp_A, exp_B, bounds=exp_bounds)
 
             # Assign the expression matrix solution values to the target matrix of H or W (depending on the factor element).
@@ -515,13 +515,6 @@ class ConstrainedModel:
                 if np.max(qm_list) - np.min(qm_list) <= converge_delta:
                     converged = True
                     break
-        # D_w, D_h = self._calculate_pull_matrices(iW=W_i, iH=H_i)
-        # W_i = D_w + W_i
-        # H_i = np.abs(D_h + H_i)
-        # Qtrue_i = q_loss(V=V, U=U, W=W_i, H=H_i)
-        # Qrobust_i, _ = qr_loss(V=V, U=U, W=W_i, H=H_i)
-        # Qaux_i = self._Qaux_loss(W=self.base_model.W, Wp=W_i, Dw=D_w, H=self.base_model.H, Hp=H_i, Dh=D_h)
-
         self.constrained_model = NMF(V=V, U=U, factors=self.base_model.factors, method=self.base_model.method,
                                      seed=self.base_model.seed)
         self.constrained_model.initialize(H=H_i, W=W_i)
@@ -613,6 +606,8 @@ class ConstrainedModel:
                 value_found = True
             search_i += 1
             p_mod = modifier
+        if new_value == 0.0:
+            new_value = 1e-8
         return new_value
 
     def _pull_up_value(self, iW, iH, target, index, dQ_limit):
@@ -789,28 +784,29 @@ class ConstrainedModel:
             value = self.constrained_model.H[c.index] if c.target == "feature" else self.constrained_model.W[c.index]
             dQ = None
             target_value = None
-            min_value = None
-            max_value = None
             if c.constraint_type in ("pull down", "pull up", "pull to value"):
                 if c.constraint_type == 'pull to value':
                     target_value = c.target_values[0]
                     dQ = c.target_values[1]
                 else:
                     dQ = c.target_values
+            elif c.constraint_type == "set to zero":
+                target_value = 0.0
             elif c.constraint_type == "define limits":
-                min_value = c.target_values[0]
-                max_value = c.target_values[1]
+                min_value = np.round(c.target_values[0], 3)
+                max_value = np.round(c.target_values[1], 3)
+                target_value = f"[{min_value}, {max_value}]"
             elif c.constraint_type == "set to base value":
-                target_value = self.base_model.H[c.index] if c.target == "feature" else \
-                self.base_model.W[c.index]
+                target_value = np.round(self.base_model.H[c.index], 4) if c.target == "feature" else \
+                np.round(self.base_model.W[c.index], 4)
             constraint_values.append(
                 (c.index, c.target, c.constraint_type,
-                 np.round(self.base_model.H[c.index], 2) if c.target == "feature" else np.round(self.base_model.W[c.index], 2),
-                 np.round(target_value, 4) if target_value is not None else None,
+                 np.round(self.base_model.H[c.index], 4) if c.target == "feature" else np.round(self.base_model.W[c.index], 4),
+                 target_value if target_value is not None else None,
                  np.round(value, 4) if value is not None else None,
-                 dQ, min_value, max_value))
+                 dQ))
 
-        c_columns = ["Index", "Target", "Type", "Base Value", "Target Value", "Solution Value", "dQ", "Min Value", "Max Value"]
+        c_columns = ["Index", "Target", "Type", "Base Value", "Target", "Solution Value", "dQ"]
         c_df = pd.DataFrame(constraint_values, columns=c_columns)
         c_fig = go.Figure(data=[go.Table(header=dict(values=list(c_df.columns)), cells=dict(values=c_df.values.T))])
         c_fig.update_layout(width=1200, height=40*len(constraint_values), title="Constraints Evaluation Table",
@@ -819,7 +815,8 @@ class ConstrainedModel:
 
     def evaluate_expressions(self):
         exp_element = {}
-        exp_table = [[""] * (len(self.expression_mapped.keys()) + 3) for i in range(len(self.expression_labeled))]
+        max_terms = np.max([len(i[0]) for i in self.expression_labeled])
+        exp_table = [[""] * (max_terms + 3) for i in range(len(self.expression_labeled))]
         eval_exp = []
         base_exp = []
         _base_model = self.base_model
@@ -827,7 +824,7 @@ class ConstrainedModel:
             exp_values = []
             base_values = []
             expression_i = self.expression_labeled[i]
-            for ele in expression_i[0]:
+            for j, ele in enumerate(expression_i[0]):
                 element_details = self.expression_mapped[ele]
                 ele_index = element_details['index']
                 ele_coef_idx = element_details["exp_i"].index(i)
@@ -839,7 +836,7 @@ class ConstrainedModel:
                 exp_element[ele] = (ele_index, element_details['type'], np.round(base_value,4), np.round(ele_value,4))
                 exp_values.append(ele_value * ele_coef)
                 base_values.append(base_value * ele_coef)
-                exp_table[i][element_details['coef_index']] = f"{str(ele_coef)}({ele})"
+                exp_table[i][j] = f"{str(ele_coef)}({ele})"
             eval_exp.append(np.sum(exp_values))
             base_exp.append(np.sum(base_values))
             exp_table[i][-1] = np.round(np.sum(exp_values), 4)
@@ -852,7 +849,7 @@ class ConstrainedModel:
                             margin={'t': 50, 'l': 25, 'b': 10, 'r': 25})
         e_fig.show()
 
-        term_columns = [f"Term {i+1}" for i in range(len(self.expression_mapped))]
+        term_columns = [f"Term {i+1}" for i in range(max_terms)]
         term_columns = term_columns + ["dQ", "Base Eval", "Solution Eval"]
         term_table = pd.DataFrame(exp_table, columns=term_columns)
         term_fig = go.Figure(data=[go.Table(header=dict(values=list(term_table.columns)), cells=dict(values=term_table.values.T))])
