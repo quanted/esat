@@ -806,7 +806,7 @@ class ConstrainedModel:
                  np.round(value, 4) if value is not None else None,
                  dQ))
 
-        c_columns = ["Index", "Target", "Type", "Base Value", "Target", "Solution Value", "dQ"]
+        c_columns = ["Index", "Target", "Type", "Base Value", "Target Value(s)", "Solution Value", "dQ"]
         c_df = pd.DataFrame(constraint_values, columns=c_columns)
         c_fig = go.Figure(data=[go.Table(header=dict(values=list(c_df.columns)), cells=dict(values=c_df.values.T))])
         c_fig.update_layout(width=1200, height=40*len(constraint_values), title="Constraints Evaluation Table",
