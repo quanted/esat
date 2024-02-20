@@ -100,7 +100,7 @@ loss.</p></li>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="src.rotational.constrained.ConstrainedModel.add_constraint">
-<span class="sig-name descname"><span class="pre">add_constraint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">constraint_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_values</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.rotational.constrained.ConstrainedModel.add_constraint" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">add_constraint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">constraint_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dQ</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.rotational.constrained.ConstrainedModel.add_constraint" title="Link to this definition"></a></dt>
 <dd><p>Adds a single constraint to the ConstrainedModel instance. What constraints are available and valid structure
 of the constraint parameters can be found in the Constraint class. A factor element can only have one
 constraint.</p>
@@ -111,8 +111,10 @@ constraint.</p>
 <li><p><strong>index</strong> (<em>tuple</em>) – The index of the factor element (as they natively appear in either the H or W matrices). i.e. (i,j)</p></li>
 <li><p><strong>target</strong> (<em>str</em>) – The target factor element matrix. A factor feature element (H) is ‘feature’ while a factor sample element (W)
 is ‘sample’.</p></li>
-<li><p><strong>target_values</strong> – The target values type and values depend on the constraint_type. The details of correct target_values values
-are provided in the details of the Constraint class.</p></li>
+<li><p><strong>target_value</strong> (<em>float</em>) – The target value for pull to value constraint.</p></li>
+<li><p><strong>min_value</strong> (<em>float</em>) – The min value for the define limits constraint.</p></li>
+<li><p><strong>max_value</strong> (<em>float</em>) – The max value for the define limits constraint.</p></li>
+<li><p><strong>dQ</strong> (<em>float</em>) – The dQ value for the constraints with dQ limits.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -150,6 +152,16 @@ the expressions dQ is greater than that summed limit.</p>
 <span class="sig-name descname"><span class="pre">display_results</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#src.rotational.constrained.ConstrainedModel.display_results" title="Link to this definition"></a></dt>
 <dd><p>Print the results of the constrained model run.</p>
 </dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.rotational.constrained.ConstrainedModel.evaluate_constraints">
+<span class="sig-name descname"><span class="pre">evaluate_constraints</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#src.rotational.constrained.ConstrainedModel.evaluate_constraints" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.rotational.constrained.ConstrainedModel.evaluate_expressions">
+<span class="sig-name descname"><span class="pre">evaluate_expressions</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#src.rotational.constrained.ConstrainedModel.evaluate_expressions" title="Link to this definition"></a></dt>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.rotational.constrained.ConstrainedModel.list_constraints">

@@ -418,8 +418,8 @@ class ConstrainedModel:
                 if _dQ < total_dQ:
                     dQ_search = False
                 else:
-                    _D_w = _D_w * 0.9
-                    _D_h = _D_h * 0.9
+                    _D_w = _D_w * 0.98
+                    _D_h = _D_h * 0.98
                 if max_search < 0:
                     dQ_search = False
                     _D_w = np.zeros(shape=iW.shape)
@@ -515,6 +515,13 @@ class ConstrainedModel:
                 if np.max(qm_list) - np.min(qm_list) <= converge_delta:
                     converged = True
                     break
+        # D_w, D_h = self._calculate_pull_matrices(iW=W_i, iH=H_i)
+        # W_i = D_w + W_i
+        # H_i = np.abs(D_h + H_i)
+        # Qtrue_i = q_loss(V=V, U=U, W=W_i, H=H_i)
+        # Qrobust_i, _ = qr_loss(V=V, U=U, W=W_i, H=H_i)
+        # Qaux_i = self._Qaux_loss(W=self.base_model.W, Wp=W_i, Dw=D_w, H=self.base_model.H, Hp=H_i, Dh=D_h)
+
         self.constrained_model = NMF(V=V, U=U, factors=self.base_model.factors, method=self.base_model.method,
                                      seed=self.base_model.seed)
         self.constrained_model.initialize(H=H_i, W=W_i)
@@ -798,11 +805,12 @@ class ConstrainedModel:
                 self.base_model.W[c.index]
             constraint_values.append(
                 (c.index, c.target, c.constraint_type,
+                 np.round(self.base_model.H[c.index], 2) if c.target == "feature" else np.round(self.base_model.W[c.index], 2),
                  np.round(target_value, 4) if target_value is not None else None,
                  np.round(value, 4) if value is not None else None,
                  dQ, min_value, max_value))
 
-        c_columns = ["index", "target", "type", "target value", "value", "dQ", "min value", "max value"]
+        c_columns = ["Index", "Target", "Type", "Base Value", "Target Value", "Solution Value", "dQ", "Min Value", "Max Value"]
         c_df = pd.DataFrame(constraint_values, columns=c_columns)
         c_fig = go.Figure(data=[go.Table(header=dict(values=list(c_df.columns)), cells=dict(values=c_df.values.T))])
         c_fig.update_layout(width=1200, height=40*len(constraint_values), title="Constraints Evaluation Table",
@@ -811,10 +819,13 @@ class ConstrainedModel:
 
     def evaluate_expressions(self):
         exp_element = {}
+        exp_table = [[""] * (len(self.expression_mapped.keys()) + 3) for i in range(len(self.expression_labeled))]
         eval_exp = []
+        base_exp = []
         _base_model = self.base_model
         for i in range(len(self.expression_labeled)):
             exp_values = []
+            base_values = []
             expression_i = self.expression_labeled[i]
             for ele in expression_i[0]:
                 element_details = self.expression_mapped[ele]
@@ -825,19 +836,32 @@ class ConstrainedModel:
                     else self.constrained_model.W[ele_index]
                 base_value = _base_model.H[ele_index] if element_details["type"] == "feature" else _base_model.W[
                     ele_index]
-                exp_element[ele] = (ele_index, element_details['type'], np.round(ele_value,4), np.round(base_value,4))
+                exp_element[ele] = (ele_index, element_details['type'], np.round(base_value,4), np.round(ele_value,4))
                 exp_values.append(ele_value * ele_coef)
+                base_values.append(base_value * ele_coef)
+                exp_table[i][element_details['coef_index']] = f"{str(ele_coef)}({ele})"
             eval_exp.append(np.sum(exp_values))
-        e_columns = ["index", "target", "value", "base value"]
+            base_exp.append(np.sum(base_values))
+            exp_table[i][-1] = np.round(np.sum(exp_values), 4)
+            exp_table[i][-2] = np.round(np.sum(base_values), 4)
+            exp_table[i][-3] = expression_i[1]
+        e_columns = ["Index", "Target", "Base Value", "Solution Value"]
         e_df = pd.DataFrame(exp_element.values(), columns=e_columns)
         e_fig = go.Figure(data=[go.Table(header=dict(values=list(e_df.columns)), cells=dict(values=e_df.values.T))])
-        e_fig.update_layout(width=1200, height=40*len(exp_element.keys()), title="Expressions Evaluation Table",
+        e_fig.update_layout(width=1200, height=35*len(exp_element.keys()), title="Expressions Element Evaluation Table",
                             margin={'t': 50, 'l': 25, 'b': 10, 'r': 25})
         e_fig.show()
 
-        for i, ee in enumerate(eval_exp):
-            exp = self.expressions[i].split(",")
-            print(f"Expression: {exp} evaluated to {ee}")
+        term_columns = [f"Term {i+1}" for i in range(len(self.expression_mapped))]
+        term_columns = term_columns + ["dQ", "Base Eval", "Solution Eval"]
+        term_table = pd.DataFrame(exp_table, columns=term_columns)
+        term_fig = go.Figure(data=[go.Table(header=dict(values=list(term_table.columns)), cells=dict(values=term_table.values.T))])
+        term_fig.update_layout(height=25*len(exp_element.keys()), title="Expressions Evaluation Table",
+                            margin={'t': 50, 'l': 25, 'b': 10, 'r': 25})
+        term_fig.show()
+        # for i, ee in enumerate(eval_exp):
+        #     exp = self.expressions[i].split(",")
+        #     print(f"Expression: {exp[0]} evaluated to {ee}, base evaluated to {base_exp[i]}")
 
     def plot_profile_contributions(self, factor_idx):
         """
@@ -975,11 +999,12 @@ class ConstrainedModel:
                                        subplot_titles=("Base Profile", "Constrained Profile"), vertical_spacing=0.075)
         colors = px.colors.sequential.Viridis_r
         for idx in range(self.base_model.factors - 1, -1, -1):
-            fp_factors_fig.add_trace(go.Bar(name=f"Base Factor {idx + 1}", x=self.dh.features, y=b_normalized[idx],
-                                            marker_color=colors[idx]), row=1, col=1)
+            fp_factors_fig.add_trace(go.Bar(name=f"Factor {idx + 1}", x=self.dh.features, y=b_normalized[idx],
+                                            marker_color=colors[idx], hovertext="Base", legendgroup=f"group{idx}",
+                                            showlegend=False), row=1, col=1)
             fp_factors_fig.add_trace(
-                go.Bar(name=f"Constrained Factor {idx + 1}", x=self.dh.features, y=c_normalized[idx],
-                       marker_color=colors[idx]), row=2, col=1)
+                go.Bar(name=f"Factor {idx + 1}", x=self.dh.features, y=c_normalized[idx],
+                       marker_color=colors[idx], hovertext="Constrained", legendgroup=f"group{idx}"), row=2, col=1)
         fp_factors_fig.update_layout(title=f"Constrained Factor Fingerprints", width=1200, height=800,
                                      barmode='stack', hovermode='x unified')
         fp_factors_fig.update_yaxes(title_text="% Feature Concentration", range=[0, 100])
