@@ -9,10 +9,10 @@ sys.path.insert(0, os.path.abspath('.'))
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'NMF'
-copyright = '2023, EPA'
+project = 'Environmental Source Apportionment Toolkit (ESAT)'
+copyright = '2024, EPA'
 author = 'Deron Smith'
-release = '12/06/2023'
+release = '02/26/2024'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -34,4 +34,4 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = 'sphinx_rtd_theme'
-html_static_path = ['_static']
+html_static_path = ['docs/static']

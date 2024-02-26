@@ -15,6 +15,14 @@ Subpackages
 Submodules
 ----------
 
+src.metrics module
+------------------
+
+.. automodule:: src.metrics
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 src.utils module
 ----------------
 

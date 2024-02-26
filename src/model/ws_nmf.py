@@ -1,5 +1,5 @@
 import numpy as np
-from src.utils import EPSILON
+from src.metrics import EPSILON
 from numpy import linalg as npl
 
 

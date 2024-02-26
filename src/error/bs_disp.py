@@ -5,18 +5,16 @@ import os
 import copy
 import time
 import numpy as np
-import pandas as pd
 import multiprocessing as mp
 from tqdm import tqdm
 import plotly.graph_objects as go
 from pathlib import Path
-
-from src.model.nmf import NMF
+from src.model.sa import SA
 from src.error.bootstrap import Bootstrap
 from src.error.displacement import Displacement
 
-logger = logging.getLogger("NMF")
-logger.setLevel(logging.INFO)
+logging.basicConfig(format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S', level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 class BSDISP:
@@ -30,8 +28,8 @@ class BSDISP:
 
     Parameters
     ----------
-    nmf : NMF
-       A completed NMF base model that used the same data and uncertainty datasets.
+    sa : SA
+       A completed SA base model that used the same data and uncertainty datasets.
     feature_labels : list
        The labels for the features, columns of the dataset, specified from the data handler.
     model_selected : int
@@ -60,7 +58,7 @@ class BSDISP:
     dQmax = [4, 2, 1, 0.5]
 
     def __init__(self,
-                 nmf: NMF,
+                 sa: SA,
                  feature_labels: list,
                  model_selected: int = -1,
                  bootstrap: Bootstrap = None,
@@ -75,10 +73,10 @@ class BSDISP:
         """
         Constructor method.
         """
-        self.nmf = nmf
+        self.sa = sa
         self.feature_labels = feature_labels
         self.model_selected = model_selected
-        self.factors = self.nmf.factors
+        self.factors = self.sa.factors
         self.bootstrap = bootstrap
         self.bootstrap_n = bootstrap_n if bootstrap is None else bootstrap.bootstrap_n
         self.block_size = block_size if bootstrap is None else bootstrap.block_size
@@ -118,8 +116,8 @@ class BSDISP:
         Parameters
         ----------
         keep_H : bool
-           When retraining the NMF models using the resampled input and uncertainty datasets, keep the base model H
-           matrix instead of reinitializing. The W matrix is always reinitialized when NMF is run on the BS datasets.
+           When retraining the SA models using the resampled input and uncertainty datasets, keep the base model H
+           matrix instead of reinitializing. The W matrix is always reinitialized when SA is run on the BS datasets.
            Default = True
         reuse_seed : bool
            Reuse the base model seed for initializing the W matrix, and the H matrix if keep_H = False. Default = True
@@ -138,7 +136,7 @@ class BSDISP:
         if self.bootstrap is None:
             logger.info(f"Running new Bootstrap instance with {self.bootstrap_n} runs and block size {self.block_size}")
             # Run BS
-            self.bootstrap = Bootstrap(nmf=self.nmf, feature_labels=self.feature_labels,
+            self.bootstrap = Bootstrap(sa=self.sa, feature_labels=self.feature_labels,
                                        model_selected=self.model_selected, block_size=self.block_size,
                                        bootstrap_n=self.bootstrap_n, threshold=self.threshold, seed=self.seed)
             self.bootstrap.run(keep_H=keep_H, reuse_seed=reuse_seed, block=block, overlapping=overlapping)
@@ -164,8 +162,13 @@ class BSDISP:
             for bs_key in tqdm(bs_keys, desc="BS-DISP - Displacement Stage", position=0, leave=True):
                 bs_result = self.bootstrap.bs_results[bs_key]
                 bs_model = bs_result["model"]
-                i_disp = Displacement(nmf=bs_model, feature_labels=self.feature_labels, model_selected=self.model_selected,
-                                      threshold_dQ=self.threshold_dQ, max_search=self.max_search, features=self.features)
+                i_disp = Displacement(sa=bs_model,
+                                      feature_labels=self.feature_labels,
+                                      model_selected=self.model_selected,
+                                      threshold_dQ=self.threshold_dQ,
+                                      max_search=self.max_search,
+                                      features=self.features
+                                      )
                 i_disp.dQmax = self.dQmax
                 i_disp.run(batch=bs_key)
                 self.disp_results[bs_key] = i_disp
@@ -179,7 +182,7 @@ class BSDISP:
     def _parallel_disp(bs_key, bs_model, feature_labels, model_selected, threshold_dQ, max_search, features, dQmax):
         t0 = time.time()
         logger.info(f"Starting Displacement Stage for BS run {bs_key}.")
-        i_disp = Displacement(nmf=bs_model, feature_labels=feature_labels, model_selected=model_selected,
+        i_disp = Displacement(sa=bs_model, feature_labels=feature_labels, model_selected=model_selected,
                               threshold_dQ=threshold_dQ, max_search=max_search, features=features)
         i_disp.dQmax = dQmax
         i_disp.run(batch=bs_key)
@@ -405,7 +408,7 @@ class BSDISP:
             if pickle_result:
                 with open(file_path, "wb") as save_file:
                     pickle.dump(self, save_file)
-                    logger.info(f"BS-DISP NMF output saved to pickle file: {file_path}")
+                    logger.info(f"BS-DISP SA output saved to pickle file: {file_path}")
             else:
 
                 logger.error("Not yet implemented.")
@@ -417,17 +420,17 @@ class BSDISP:
     @staticmethod
     def load(file_path: str):
         """
-        Load a previously saved BS-DISP NMF pickle file.
+        Load a previously saved BS-DISP SA pickle file.
 
         Parameters
         ----------
         file_path : str
-           File path to a previously saved BS-DISP NMF pickle file
+           File path to a previously saved BS-DISP SA pickle file
 
         Returns
         -------
         BSDISP
-           On successful load, will return a previously saved BS-DISP NMF object. Will return None on load fail.
+           On successful load, will return a previously saved BS-DISP SA object. Will return None on load fail.
         """
         file_path = Path(file_path)
         if not file_path.is_absolute():

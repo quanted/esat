@@ -5,8 +5,8 @@ from src.error.bootstrap import Bootstrap
 from src.error.displacement import Displacement
 from src.error.bs_disp import BSDISP
 
-logger = logging.getLogger("NMF")
-logger.setLevel(logging.INFO)
+logging.basicConfig(format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S', level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 class Error:

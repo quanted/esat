@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>src.data package &mdash; NMF 12/06/2023 documentation</title>
+  <title>src.data package &mdash; Environmental Source Apportionment Toolkit (ESAT) 02/26/2024 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=92fd9be5" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
 
@@ -15,7 +15,7 @@
   
         <script src="../_static/jquery.js?v=5d32c60e"></script>
         <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../_static/documentation_options.js?v=1640ae22"></script>
+        <script src="../_static/documentation_options.js?v=775bfdcd"></script>
         <script src="../_static/doctools.js?v=888ff710"></script>
         <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
@@ -32,7 +32,7 @@
           
           
           <a href="../index.html" class="icon icon-home">
-            NMF
+            Environmental Source Apportionment Toolkit (ESAT)
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -44,7 +44,7 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Readme</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../README.html">Non-Negative Matrix Factorization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html">Environmental Source Apportionment Toolkit (ESAT)</a></li>
 </ul>
 
         </div>
@@ -53,7 +53,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../index.html">NMF</a>
+          <a href="../index.html">Environmental Source Apportionment Toolkit (ESAT)</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -80,16 +80,16 @@
 <span id="src-data-analysis-module"></span><h2>src.data.analysis module<a class="headerlink" href="#module-src.data.analysis" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="src.data.analysis.ModelAnalysis">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.data.analysis.</span></span><span class="sig-name descname"><span class="pre">ModelAnalysis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">datahandler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#src.data.datahandler.DataHandler" title="src.data.datahandler.DataHandler"><span class="pre">DataHandler</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="src.model.html#src.model.nmf.NMF" title="src.model.nmf.NMF"><span class="pre">NMF</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">selected_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.data.analysis.ModelAnalysis" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.data.analysis.</span></span><span class="sig-name descname"><span class="pre">ModelAnalysis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">datahandler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#src.data.datahandler.DataHandler" title="src.data.datahandler.DataHandler"><span class="pre">DataHandler</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="src.model.html#src.model.sa.SA" title="src.model.sa.SA"><span class="pre">SA</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">selected_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.data.analysis.ModelAnalysis" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Class for running model analysis and generating plots.
 A collection of model statistic methods and plot generation functions.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>datahandler</strong> (<a class="reference internal" href="#src.data.datahandler.DataHandler" title="src.data.datahandler.DataHandler"><em>DataHandler</em></a>) – The datahandler instance used for processing the input and uncertainty datasets used by the NMF model.</p></li>
-<li><p><strong>model</strong> (<a class="reference internal" href="src.model.html#src.model.nmf.NMF" title="src.model.nmf.NMF"><em>NMF</em></a>) – A trained NMF model with output used for calculating model statistics and generating plots.</p></li>
-<li><p><strong>selected_model</strong> (<em>int</em>) – If NMF model is part of a batch, the model id/index that will be used for plot labels.</p></li>
+<li><p><strong>datahandler</strong> (<a class="reference internal" href="#src.data.datahandler.DataHandler" title="src.data.datahandler.DataHandler"><em>DataHandler</em></a>) – The datahandler instance used for processing the input and uncertainty datasets used by the SA model.</p></li>
+<li><p><strong>model</strong> (<em>SAModel</em>) – A completed SA model with output used for calculating model statistics and generating plots.</p></li>
+<li><p><strong>selected_model</strong> (<em>int</em>) – If SA model is part of a batch, the model id/index that will be used for plot labels.</p></li>
 </ul>
 </dd>
 </dl>
@@ -232,12 +232,12 @@ Default = True.</p></li>
 <dt class="sig sig-object py" id="src.data.datahandler.DataHandler">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.data.datahandler.</span></span><span class="sig-name descname"><span class="pre">DataHandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uncertainty_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index_col</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_col</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sn_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.data.datahandler.DataHandler" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>The class for cleaning and preparing input datasets for use in NMF.</p>
-<p>The DataHandler class is intended to provide a standardized way of cleaning and preparing data from file to NMF
+<p>The class for cleaning and preparing input datasets for use in ESAT.</p>
+<p>The DataHandler class is intended to provide a standardized way of cleaning and preparing data from file to ESAT
 models.</p>
 <p>The input and uncertainty data files are specified by their file paths. Input files can be .csv or tab separated
-text files. Other file formats are not supported at this time.
-#TODO: Add additional supported file formats but expanding the __read_data function.
+text files. Other file formats are not supported at this time.</p>
+<p>#TODO: Add additional supported file formats by expanding the __read_data function.
 #TODO: Add in weight adjustment for signal to noise ratio categories, using the same approach as the robust calculation.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -253,8 +253,16 @@ the 1st column.</p></li>
 </dd>
 </dl>
 <dl class="py method">
-<dt class="sig sig-object py" id="src.data.datahandler.DataHandler.data_uncertainty_plot">
-<span class="sig-name descname"><span class="pre">data_uncertainty_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature_idx</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.data.datahandler.DataHandler.data_uncertainty_plot" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="src.data.datahandler.DataHandler.get_data">
+<span class="sig-name descname"><span class="pre">get_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#src.data.datahandler.DataHandler.get_data" title="Link to this definition"></a></dt>
+<dd><p>Get the processed input and uncertainty dataset ready for use in ESAT.
+:returns: The processed input dataset and the processed uncertainty dataset as numpy arrays.
+:rtype: np.ndarray, np.ndarray</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.data.datahandler.DataHandler.plot_data_uncertainty">
+<span class="sig-name descname"><span class="pre">plot_data_uncertainty</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature_idx</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.data.datahandler.DataHandler.plot_data_uncertainty" title="Link to this definition"></a></dt>
 <dd><p>Create a plot of the data vs the uncertainty for a specified feature, by the feature index.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -264,8 +272,8 @@ the 1st column.</p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="src.data.datahandler.DataHandler.feature_data_plot">
-<span class="sig-name descname"><span class="pre">feature_data_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_idx</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.data.datahandler.DataHandler.feature_data_plot" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="src.data.datahandler.DataHandler.plot_feature_data">
+<span class="sig-name descname"><span class="pre">plot_feature_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_idx</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.data.datahandler.DataHandler.plot_feature_data" title="Link to this definition"></a></dt>
 <dd><p>Create a plot of a data feature, column, vs another data feature, column. Specified by the feature indices.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -278,8 +286,8 @@ the 1st column.</p></li>
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="src.data.datahandler.DataHandler.feature_timeseries_plot">
-<span class="sig-name descname"><span class="pre">feature_timeseries_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature_selection</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.data.datahandler.DataHandler.feature_timeseries_plot" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="src.data.datahandler.DataHandler.plot_feature_timeseries">
+<span class="sig-name descname"><span class="pre">plot_feature_timeseries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature_selection</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.data.datahandler.DataHandler.plot_feature_timeseries" title="Link to this definition"></a></dt>
 <dd><p>Create a plot of a feature, or list of features, as a timeseries.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -288,13 +296,45 @@ the 1st column.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="src.data.datahandler.DataHandler.get_data">
-<span class="sig-name descname"><span class="pre">get_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#src.data.datahandler.DataHandler.get_data" title="Link to this definition"></a></dt>
-<dd><p>Get the processed input and uncertainty dataset ready for use in NMF.
-:returns: The processed input dataset and the processed uncertainty dataset as numpy arrays.
-:rtype: np.ndarray, np.ndarray</p>
 </dd></dl>
+
+</section>
+<section id="module-src.data.test_tools">
+<span id="src-data-test-tools-module"></span><h2>src.data.test_tools module<a class="headerlink" href="#module-src.data.test_tools" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="src.data.test_tools.CompareAnalyzer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.data.test_tools.</span></span><span class="sig-name descname"><span class="pre">CompareAnalyzer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pmf_profile_df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pmf_contributions_df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ls_profile_df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ws_profile_df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ls_mapping</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ws_mapping</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ls_contributions_df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ws_contributions_df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">datetimestamps</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.data.test_tools.CompareAnalyzer" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Compare ESAT output with the PMF5 output.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="src.data.test_tools.CompareAnalyzer.feature_histogram">
+<span class="sig-name descname"><span class="pre">feature_histogram</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalized</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.data.test_tools.CompareAnalyzer.feature_histogram" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.data.test_tools.CompareAnalyzer.plot_factor_contribution">
+<span class="sig-name descname"><span class="pre">plot_factor_contribution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.data.test_tools.CompareAnalyzer.plot_factor_contribution" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.data.test_tools.CompareAnalyzer.plot_factors">
+<span class="sig-name descname"><span class="pre">plot_factors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#src.data.test_tools.CompareAnalyzer.plot_factors" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.data.test_tools.CompareAnalyzer.plot_feature_timeseries">
+<span class="sig-name descname"><span class="pre">plot_feature_timeseries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor_n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_input</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.data.test_tools.CompareAnalyzer.plot_feature_timeseries" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.data.test_tools.CompareAnalyzer.plot_fingerprints">
+<span class="sig-name descname"><span class="pre">plot_fingerprints</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ls_nmf_r2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ws_nmf_r2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">-1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.data.test_tools.CompareAnalyzer.plot_fingerprints" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="src.data.test_tools.CompareAnalyzer.timeseries_plot">
+<span class="sig-name descname"><span class="pre">timeseries_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.data.test_tools.CompareAnalyzer.timeseries_plot" title="Link to this definition"></a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 
@@ -312,7 +352,7 @@ the 1st column.</p></li>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2023, EPA.</p>
+    <p>&#169; Copyright 2024, EPA.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

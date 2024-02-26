@@ -2,7 +2,6 @@
 # https://github.com/InvestmentSystems/recombinator/blob/master/recombinator/optimal_block_length.py
 # All credit goes to the original authors.
 
-# from dataclasses import dataclass
 import numpy as np
 import typing as tp
 
@@ -65,8 +64,6 @@ class OptimalBlockLength(tp.NamedTuple):
     b_star_cb: float  # optimal block length for circular block bootstrap
 
 
-# ToDo: Add calculation of optimal block length for moving block bootstrap
-# ToDo: Add calculation of optimal block length for tapered block bootstrap
 def optimal_block_length(data: np.ndarray) -> tp.Sequence[OptimalBlockLength]:
     """
     This is a function to select the optimal (in the sense of minimising the MSE

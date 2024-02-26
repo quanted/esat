@@ -1,14 +1,12 @@
 import logging
 import numpy as np
-from src.model.batch_nmf import BatchNMF
-
-# add reference to github repository for these functions
-from src.utils import cal_cophenetic, cal_dispersion, cal_connectivity
-
+from src.model.batch_sa import BatchSA
+from src.metrics import cal_cophenetic, cal_dispersion, cal_connectivity
 from numpy import linalg as LA
 
-logger = logging.getLogger("NMF")
-logger.setLevel(logging.DEBUG)
+logging.basicConfig(format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S', level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 
 class FactorSearch:
 
@@ -36,8 +34,7 @@ class FactorSearch:
         self.Cophen = []
         self.Disp = []
                      
-# Bayes Information metrics from https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9181460/
-                     
+        # Bayes Information metrics from https://www.ncbi.nlm.nih.gov/pmc/articles/PMC9181460/
         self.BIC1 = []
         self.BIC2 = []
         self.BIC3 = []
@@ -57,7 +54,7 @@ class FactorSearch:
         self.results = {}
         for factors in range(self.min_n, self.max_n+1):
             logger.info(f"Factor search - factors: {factors}, models: {self.models}, method: {self.method}")
-            model = BatchNMF(
+            model = BatchSA(
                 V=self.data,
                 U=self.uncertainty,
                 factors=factors,
@@ -72,8 +69,8 @@ class FactorSearch:
                 verbose=self.verbose
             )
 
-            s=float(np.shape(self.data)[0])
-            f=float(np.shape(self.data)[1])
+            s = float(np.shape(self.data)[0])
+            f = float(np.shape(self.data)[1])
             
             model.train()
             self.results[factors] = model

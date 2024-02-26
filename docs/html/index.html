@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Welcome to NMF’s documentation! &mdash; NMF 12/06/2023 documentation</title>
+  <title>Welcome to EPA ESAT’s Documentation! &mdash; Environmental Source Apportionment Toolkit (ESAT) 02/26/2024 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=92fd9be5" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
 
@@ -15,13 +15,13 @@
   
         <script src="_static/jquery.js?v=5d32c60e"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="_static/documentation_options.js?v=1640ae22"></script>
+        <script src="_static/documentation_options.js?v=775bfdcd"></script>
         <script src="_static/doctools.js?v=888ff710"></script>
         <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Non-Negative Matrix Factorization" href="README.html" /> 
+    <link rel="next" title="Environmental Source Apportionment Toolkit (ESAT)" href="README.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -33,7 +33,7 @@
           
           
           <a href="#" class="icon icon-home">
-            NMF
+            Environmental Source Apportionment Toolkit (ESAT)
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -45,7 +45,7 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Readme</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="README.html">Non-Negative Matrix Factorization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="README.html">Environmental Source Apportionment Toolkit (ESAT)</a></li>
 </ul>
 
         </div>
@@ -54,7 +54,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="#">NMF</a>
+          <a href="#">Environmental Source Apportionment Toolkit (ESAT)</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -62,7 +62,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">Welcome to NMF’s documentation!</li>
+      <li class="breadcrumb-item active">Welcome to EPA ESAT’s Documentation!</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -72,32 +72,47 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="welcome-to-nmf-s-documentation">
-<h1>Welcome to NMF’s documentation!<a class="headerlink" href="#welcome-to-nmf-s-documentation" title="Link to this heading"></a></h1>
+  <section id="welcome-to-epa-esat-s-documentation">
+<h1>Welcome to EPA ESAT’s Documentation!<a class="headerlink" href="#welcome-to-epa-esat-s-documentation" title="Link to this heading"></a></h1>
 <div class="toctree-wrapper compound">
 </div>
-<p>The NMF-PY project is intended to replicate and expand upon the functionality of the EPA’s PMF5 tool. The NMF-PY project will focus on open-source code written in Python using well known packages, such as Numpy and Pandas.
-The expected code products from the project include:</p>
-<ol class="arabic simple">
-<li><p>Python package (available on pypi.org)</p></li>
-<li><p>Collection of Jupyter Notebooks (python code) as both tutorials and allowing users to use their own data in the notebooks.</p></li>
-<li><p>Web application with similar features found in the PMF5 application.</p></li>
-</ol>
+<p>The EPA’s Environmental Source Apportionment Toolkit (ESAT) project provides an open-source python package with which
+source apportionment workflows can be programmatically created and run. The features available in the ESAT package
+include data preprocessing and cleaning, non-negative matrix factorization (NMF) algorithms (currently two options are
+available), solution analytics and visualizations, error estimation methods, and customized constrained factorization models.
+These features reproduce and expand upon what is found in EPA’s PMF5 application, which is no longer being updated
+or maintained.</p>
+<p>ESAT python package focuses on source apportionment estimates using NMF algorithms. These
+algorithms are implemented both in python using numpy functions as well as in Rust for an optimization option. The
+two currently available are:</p>
+<div class="line-block">
+<div class="line">1. LS-NMF: Least-squares NMF, a well documented and widely uses NMF algorithm. The ls-nmf algorithm is available in the NMF R package.</div>
+<div class="line">2. WS-NMF: Weight-Semi NMF, a variant of the NMF algorithm which allows for negative values in both the input data matrix and in the factor contribution matrix.</div>
+</div>
+<p>Source apportionment solution error estimation methods are also available, which are the same methods that are found in PMF5.
+These are:</p>
+<div class="line-block">
+<div class="line">1. Bootstrap (BS): the input dataset is divided into multiple blocks and randomly reassembled to attempt to quantify the variability in the factor profiles and contributions.</div>
+<div class="line">2. Displacement (DISP): the solution factor profiles are all individually shifted (both increased and decreased) to determine the amount of change required for the loss value to reach specific dQ (change in Q) values.</div>
+<div class="line">3. Bootstrap-Displacement (BS-DISP): the combination of the two error estimation methods. Where for each Bootstrap dataset/model, all or targeted factor profile values are adjusted using the DISP method.</div>
+</div>
+<p>Lastly, constrained models are able to be created where the user can define constraints and expressions which set or limit specific factor elements (single values from either the factor profile or factor contribution matrices), or define correlations between factor elements as linear expressions.</p>
+<p>Code examples are available in the repository jupyter notebooks, which also provided detailed algorithm documentation and complete workflow examples.</p>
 <div class="toctree-wrapper compound">
 <p class="caption" role="heading"><span class="caption-text">Readme</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="README.html">Non-Negative Matrix Factorization</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="README.html">Environmental Source Apportionment Toolkit (ESAT)</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="README.html#summary">Summary</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="README.html#pmf5">PMF5</a></li>
-<li class="toctree-l3"><a class="reference internal" href="README.html#nmf-py">NMF-PY</a></li>
-<li class="toctree-l3"><a class="reference internal" href="README.html#project-products">Project Products</a></li>
+<li class="toctree-l3"><a class="reference internal" href="README.html#esat">ESAT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="README.html#notebooks">Notebooks</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="README.html#requirements">Requirements</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="README.html#rust-requirements">Rust Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="README.html#creating-docs">Creating Docs</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="README.html#creating-docs">Creating Docs</a></li>
 </ul>
 </li>
 </ul>
@@ -116,13 +131,13 @@ The expected code products from the project include:</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="README.html" class="btn btn-neutral float-right" title="Non-Negative Matrix Factorization" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="README.html" class="btn btn-neutral float-right" title="Environmental Source Apportionment Toolkit (ESAT)" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2023, EPA.</p>
+    <p>&#169; Copyright 2024, EPA.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
