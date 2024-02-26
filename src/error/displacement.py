@@ -8,12 +8,12 @@ import pandas as pd
 from pathlib import Path
 import plotly.graph_objects as go
 from tqdm import tqdm
-from src.utils import q_loss, compare_all_factors, EPSILON, np_encoder
-from src.model.nmf import NMF
+from src.utils import compare_all_factors, np_encoder
+from src.metrics import q_loss, EPSILON
+from src.model.sa import SA
 
-
-logger = logging.getLogger("NMF")
-logger.setLevel(logging.INFO)
+logging.basicConfig(format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S', level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 class Displacement:
@@ -33,7 +33,7 @@ class Displacement:
 
     Parameters
     ----------
-    nmf : NMF
+    sa : SA
        The base model to run the DISP method on.
     feature_labels : list
        The list of feature, column, labels from the original input dataset. Provided in the data handler.
@@ -51,7 +51,7 @@ class Displacement:
     dQmax = [32, 16, 8, 4]
 
     def __init__(self,
-                 nmf: NMF,
+                 sa: SA,
                  feature_labels: list,
                  model_selected: int = -1,
                  max_search: int = 50,
@@ -61,13 +61,13 @@ class Displacement:
         """
         Constructor method.
         """
-        self.nmf = nmf
+        self.sa = sa
         self.selected_model = model_selected
-        self.V = self.nmf.V
-        self.U = self.nmf.U
-        self.H = self.nmf.H + EPSILON
-        self.W = self.nmf.W
-        self.base_Q = self.nmf.Qtrue
+        self.V = self.sa.V
+        self.U = self.sa.U
+        self.H = self.sa.H + EPSILON
+        self.W = self.sa.W
+        self.base_Q = self.sa.Qtrue
         self.feature_labels = feature_labels
         self.features = features if features is not None else [i for i in range(len(self.feature_labels))]
         self.excluded_features = set(range(len(self.feature_labels))).difference(set(self.features))
@@ -92,7 +92,7 @@ class Displacement:
 
     def run(self, batch: int = -1):
         """
-        Run the DISP method on the provided NMF model.
+        Run the DISP method on the provided SA model.
 
         Parameters
         ----------
@@ -298,14 +298,14 @@ class Displacement:
                             max_dQ = dQ
                         if search_i >= max_high_search:
                             value_found = True
-                    disp_i_nmf = NMF(V=self.V, U=self.U,
-                                     factors=self.nmf.factors, method=self.nmf.method,
-                                     seed=self.nmf.seed, optimized=self.nmf.optimized, verbose=False)
-                    disp_i_nmf.initialize(H=new_H)
-                    disp_i_nmf.train(max_iter=self.nmf.metadata["max_iterations"],
-                                     converge_delta=self.nmf.metadata["converge_delta"],
-                                     converge_n=self.nmf.metadata["converge_n"], robust_mode=False)
-                    factor_swap = compare_all_factors(disp_i_nmf.H, self.H)
+                    disp_i_sa = SA(V=self.V, U=self.U,
+                                     factors=self.sa.factors, method=self.sa.method,
+                                     seed=self.sa.seed, optimized=self.sa.optimized, verbose=False)
+                    disp_i_sa.initialize(H=new_H)
+                    disp_i_sa.train(max_iter=self.sa.metadata["max_iterations"],
+                                     converge_delta=self.sa.metadata["converge_delta"],
+                                     converge_n=self.sa.metadata["converge_n"], robust_mode=False)
+                    factor_swap = compare_all_factors(disp_i_sa.H, self.H)
                     scaled_profiles = new_H / new_H.sum(axis=0)
                     percent = scaled_profiles[factor_i, feature_j]
                     factor_W = self.W[:, factor_i]
@@ -314,7 +314,7 @@ class Displacement:
                     factor_conc_i = factor_conc_sum[feature_j]
                     i_results[self.dQmax[i]] = {"dQ": dQ, "value": new_value, "percent": percent,
                                                 "search steps": search_i, "swap": factor_swap, "conc": factor_conc_i,
-                                                "Q_drop": self.base_Q - disp_i_nmf.Qtrue}
+                                                "Q_drop": self.base_Q - disp_i_sa.Qtrue}
                 factor_results[f"feature-{feature_j}"] = i_results
             self.increase_results[f"factor-{factor_i+1}"] = factor_results
 
@@ -363,14 +363,14 @@ class Displacement:
                         p_mod = modifier
                         if search_i >= max_search_i:
                             value_found = True
-                    disp_i_nmf = NMF(V=self.V, U=self.U,
-                                     factors=self.nmf.factors, method=self.nmf.method,
-                                     seed=self.nmf.seed, optimized=self.nmf.optimized, verbose=False)
-                    disp_i_nmf.initialize(H=new_H)
-                    disp_i_nmf.train(max_iter=self.nmf.metadata["max_iterations"],
-                                     converge_delta=self.nmf.metadata["converge_delta"],
-                                     converge_n=self.nmf.metadata["converge_n"], robust_mode=False)
-                    factor_swap = compare_all_factors(disp_i_nmf.H, self.H)
+                    disp_i_sa = SA(V=self.V, U=self.U,
+                                     factors=self.sa.factors, method=self.sa.method,
+                                     seed=self.sa.seed, optimized=self.sa.optimized, verbose=False)
+                    disp_i_sa.initialize(H=new_H)
+                    disp_i_sa.train(max_iter=self.sa.metadata["max_iterations"],
+                                     converge_delta=self.sa.metadata["converge_delta"],
+                                     converge_n=self.sa.metadata["converge_n"], robust_mode=False)
+                    factor_swap = compare_all_factors(disp_i_sa.H, self.H)
                     scaled_profiles = new_H / new_H.sum(axis=0)
                     percent = scaled_profiles[factor_i, feature_j]
                     factor_W = self.W[:, factor_i]
@@ -379,7 +379,7 @@ class Displacement:
                     factor_conc_i = factor_conc_sum[feature_j]
                     i_results[self.dQmax[i]] = {"dQ": dQ, "value": new_value, "percent": percent,
                                                 "search steps": search_i, "swap": factor_swap, "conc": factor_conc_i,
-                                                "Q_drop": self.base_Q - disp_i_nmf.Qtrue}
+                                                "Q_drop": self.base_Q - disp_i_sa.Qtrue}
                 factor_results[f"feature-{feature_j}"] = i_results
             self.decrease_results[f"factor-{factor_i+1}"] = factor_results
 
@@ -391,8 +391,8 @@ class Displacement:
 
         """
         scaled_profiles = self.H / self.H.sum(axis=0)
-        compiled_data = {"dQ":[], "factor":[], "feature":[], "profile":[], "profile_max":[], "profile_min":[], "conc":[],
-                       "conc_max":[], "conc_min":[], "dQ_drop": []}
+        compiled_data = {"dQ": [], "factor": [], "feature": [], "profile": [], "profile_max": [], "profile_min": [],
+                         "conc": [], "conc_max": [], "conc_min": [], "dQ_drop": []}
         for dQ in self.dQmax:
             for factor_i in range(self.H.shape[0]):
                 factor_label = factor_i + 1
@@ -479,21 +479,21 @@ class Displacement:
             if pickle_result:
                 with open(file_path, "wb") as save_file:
                     pickle.dump(self, save_file)
-                    logger.info(f"DISP NMF output saved to pickle file: {file_path}")
+                    logger.info(f"DISP SA output saved to pickle file: {file_path}")
             else:
                 file_path = output_directory
                 meta_file = os.path.join(output_directory, f"{disp_name}-metadata.json")
                 with open(meta_file, "w") as mfile:
                     json.dump(self.metadata, mfile, default=np_encoder)
-                    logger.info(f"DISP NMF model metadata saved to file: {meta_file}")
+                    logger.info(f"DISP SA model metadata saved to file: {meta_file}")
                 increase_file = os.path.join(output_directory, f"{disp_name}-increase-disp.json")
                 with open(increase_file, "w") as incfile:
                     json.dump(self.increase_results, incfile, default=np_encoder)
-                    logger.info(f"DISP NMF model increasing results saved to file: {increase_file}")
+                    logger.info(f"DISP SA model increasing results saved to file: {increase_file}")
                 decrease_file = os.path.join(output_directory, f"{disp_name}-decrease-disp.json")
                 with open(increase_file, "w") as decfile:
                     json.dump(self.decrease_results, decfile, default=np_encoder)
-                    logger.info(f"DISP NMF model decreasing results saved to file: {decrease_file}")
+                    logger.info(f"DISP SA model decreasing results saved to file: {decrease_file}")
                 swap_file = os.path.join(output_directory, f"{disp_name}-swaptable.csv")
                 with open(swap_file, 'w') as stfile:
                     table_labels = ["dQ Max"]
@@ -505,11 +505,11 @@ class Displacement:
                     table_data = np.hstack((dq_list, table_data))
                     swap_comment = f"Swap % Table\nMetadata File: {meta_file}\n\n"
                     np.savetxt(stfile, table_data, delimiter=',', header=table_labels, comments=swap_comment)
-                    logger.info(f"DISP NMF swap table saved to file: {swap_file}")
+                    logger.info(f"DISP SA swap table saved to file: {swap_file}")
                 compiled_file = os.path.join(output_directory, f"{disp_name}-results.csv")
                 with open(compiled_file, 'w') as cfile:
                     self.compiled_results.to_csv(cfile)
-                    logger.info(f"DISP NMF compiled results saved to file: {compiled_file}")
+                    logger.info(f"DISP SA compiled results saved to file: {compiled_file}")
             return file_path
         else:
             logger.error(f"Output directory does not exist. Specified directory: {output_directory}")
@@ -518,12 +518,12 @@ class Displacement:
     @staticmethod
     def load(file_path: str):
         """
-        Load a previously saved DISP NMF pickle file.
+        Load a previously saved DISP SA pickle file.
 
         Parameters
         ----------
         file_path : str
-           File path to a previously saved DISP NMF pickle file
+           File path to a previously saved DISP SA pickle file
 
         Returns
         -------

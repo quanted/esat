@@ -12,6 +12,14 @@ src.error.bootstrap module
    :undoc-members:
    :show-inheritance:
 
+src.error.bs\_disp module
+-------------------------
+
+.. automodule:: src.error.bs_disp
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 src.error.displacement module
 -----------------------------
 

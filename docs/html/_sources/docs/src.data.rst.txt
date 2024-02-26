@@ -20,6 +20,14 @@ src.data.datahandler module
    :undoc-members:
    :show-inheritance:
 
+src.data.test\_tools module
+---------------------------
+
+.. automodule:: src.data.test_tools
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Module contents
 ---------------
 

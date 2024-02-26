@@ -12,14 +12,6 @@ src.rotational.constrained module
    :undoc-members:
    :show-inheritance:
 
-src.rotational.fpeak module
----------------------------
-
-.. automodule:: src.rotational.fpeak
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 Module contents
 ---------------
 

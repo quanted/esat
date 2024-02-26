@@ -6,7 +6,7 @@ import plotly.graph_objects as go
 
 class CompareAnalyzer:
     """
-    Compare NMF output with the PMF5 output.
+    Compare ESAT output with the PMF5 output.
     """
 
     def __init__(self,
@@ -70,7 +70,7 @@ class CompareAnalyzer:
 
         profile_subplot = make_subplots(rows=1, cols=3,
                                         specs=[[{"type": "domain"}, {"type": "domain"}, {"type": "domain"}]],
-                                        subplot_titles=["PMF", "LS-NMF", "WS-NMF"])
+                                        subplot_titles=["PMF", "LS-NMF ", "WS-NMF"])
         profile_subplot.add_trace(pmf_pie, row=1, col=1)
         profile_subplot.add_trace(ls_pie, row=1, col=2)
         profile_subplot.add_trace(ws_pie, row=1, col=3)

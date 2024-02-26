@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>src.rotational package &mdash; NMF 12/06/2023 documentation</title>
+  <title>src.rotational package &mdash; Environmental Source Apportionment Toolkit (ESAT) 02/26/2024 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=92fd9be5" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
 
@@ -15,7 +15,7 @@
   
         <script src="../_static/jquery.js?v=5d32c60e"></script>
         <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../_static/documentation_options.js?v=1640ae22"></script>
+        <script src="../_static/documentation_options.js?v=775bfdcd"></script>
         <script src="../_static/doctools.js?v=888ff710"></script>
         <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
@@ -32,7 +32,7 @@
           
           
           <a href="../index.html" class="icon icon-home">
-            NMF
+            Environmental Source Apportionment Toolkit (ESAT)
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -44,7 +44,7 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Readme</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../README.html">Non-Negative Matrix Factorization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html">Environmental Source Apportionment Toolkit (ESAT)</a></li>
 </ul>
 
         </div>
@@ -53,7 +53,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../index.html">NMF</a>
+          <a href="../index.html">Environmental Source Apportionment Toolkit (ESAT)</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -80,19 +80,19 @@
 <span id="src-rotational-constrained-module"></span><h2>src.rotational.constrained module<a class="headerlink" href="#module-src.rotational.constrained" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="src.rotational.constrained.ConstrainedModel">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.rotational.constrained.</span></span><span class="sig-name descname"><span class="pre">ConstrainedModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="src.model.html#src.model.nmf.NMF" title="src.model.nmf.NMF"><span class="pre">NMF</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_handler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="src.data.html#src.data.datahandler.DataHandler" title="src.data.datahandler.DataHandler"><span class="pre">DataHandler</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">softness</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.rotational.constrained.ConstrainedModel" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.rotational.constrained.</span></span><span class="sig-name descname"><span class="pre">ConstrainedModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="src.model.html#src.model.sa.SA" title="src.model.sa.SA"><span class="pre">SA</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_handler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="src.data.html#src.data.datahandler.DataHandler" title="src.data.datahandler.DataHandler"><span class="pre">DataHandler</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">softness</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.rotational.constrained.ConstrainedModel" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>The constrained model class that creates an instead of a constrained model using a base NMF model.</p>
-<p>The constrained model takes as input a previously completed NMF instance, the solution of a base model run
-(single NMF instance) is used for the initial conditions of a constrained model run. Additional inputs include
-the instance of the DataHandler used to provided data to the NMF instance (used for plotting) and a ‘softness’
+<p>The constrained model class that creates an instead of a constrained model using a base SA model.</p>
+<p>The constrained model takes as input a previously completed SA instance, the solution of a base model run
+(single SA instance) is used for the initial conditions of a constrained model run. Additional inputs include
+the instance of the DataHandler used to provided data to the SA instance (used for plotting) and a ‘softness’
 parameter that determines how soft, or how large, the Q(aux) value is in comparison to the Q(Robust) and
 Q(True) loss values.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>base_model</strong> (<a class="reference internal" href="src.model.html#src.model.nmf.NMF" title="src.model.nmf.NMF"><em>NMF</em></a>) – The completed base model instance of NMF.</p></li>
-<li><p><strong>data_handler</strong> (<a class="reference internal" href="src.data.html#src.data.datahandler.DataHandler" title="src.data.datahandler.DataHandler"><em>DataHandler</em></a>) – The instance of the DataHandler user to preprocess the input data for NMF.</p></li>
+<li><p><strong>base_model</strong> (<a class="reference internal" href="src.model.html#src.model.sa.SA" title="src.model.sa.SA"><em>SA</em></a>) – The completed base model instance of SA.</p></li>
+<li><p><strong>data_handler</strong> (<a class="reference internal" href="src.data.html#src.data.datahandler.DataHandler" title="src.data.datahandler.DataHandler"><em>DataHandler</em></a>) – The instance of the DataHandler user to preprocess the input data for SA.</p></li>
 <li><p><strong>softness</strong> (<em>float</em>) – The softness parameter that determines how large the Q(aux) loss value is in comparison to the primary Q
 loss.</p></li>
 </ul>
@@ -156,12 +156,14 @@ the expressions dQ is greater than that summed limit.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="src.rotational.constrained.ConstrainedModel.evaluate_constraints">
 <span class="sig-name descname"><span class="pre">evaluate_constraints</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#src.rotational.constrained.ConstrainedModel.evaluate_constraints" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Evaluate and show the factor element constraint results of the constrained model run.</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.rotational.constrained.ConstrainedModel.evaluate_expressions">
 <span class="sig-name descname"><span class="pre">evaluate_expressions</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#src.rotational.constrained.ConstrainedModel.evaluate_expressions" title="Link to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Evaluate and show the expression results of the constrained model run.</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="src.rotational.constrained.ConstrainedModel.list_constraints">
@@ -249,8 +251,8 @@ adding the change of values from the base values and the constrained model.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="src.rotational.constrained.ConstrainedModel.plot_profile_contributions">
 <span class="sig-name descname"><span class="pre">plot_profile_contributions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor_idx</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.rotational.constrained.ConstrainedModel.plot_profile_contributions" title="Link to this definition"></a></dt>
-<dd><p>Plot the constrained model factor profile and factor contribution by index. The plots are similar to those available to NMF models
-in the analysis module.</p>
+<dd><p>Plot the constrained model factor profile and factor contribution by index. The plots are similar to those
+available to SA models in the analysis module.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>factor_idx</strong> (<em>int</em>) – The factor index to plot. Valid index values range from 1 to the total number of factors.</p>
@@ -298,14 +300,14 @@ that will be used to solve those expressions.</p>
 <p>For each iteration, the constraint and expression target values are calculated and two matrices are created
 which contain the difference between the curren value in those matrices and the target value. The expression
 target values are calculated first and then followed by the constraint values. The difference matrices are added
-to the solution matrices before being updated by the NMF update algorithm that is used in the base model.</p>
+to the solution matrices before being updated by the SA update algorithm that is used in the base model.</p>
 <p>The model is considered converged when Q(Main) changes by less than converge_delta over converge_n iterations,
 where Q(Main) is defined as Q(main) = Q(True) + Q(aux). Q(aux) is defined as
 Q(aux) = sum(square(W_base + Difference_to_Target_W - W_i)/S_W) +
 sum(square(H_base + Difference_to_Target_H - H_i)/S_H).</p>
 <p>The completed constrained model solution is assigned to the .constrained_model variable, which is an instance of
-NMF. This constrained NMF solution can then be passed into any of the error estimation methods in the same way
-as an NMF solution from the BatchNMF instance.</p>
+SA. This constrained SA solution can then be passed into any of the error estimation methods in the same way
+as an SA solution from the BatchNMF instance.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -324,7 +326,7 @@ converged.</p></li>
 <dt class="sig sig-object py" id="src.rotational.constrained.Constraint">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">src.rotational.constrained.</span></span><span class="sig-name descname"><span class="pre">Constraint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">constraint_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_values</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#src.rotational.constrained.Constraint" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>The constrained model takes a base NMF solution and finds a new solution that applies both constraints and
+<p>The constrained model takes a base SA solution and finds a new solution that applies both constraints and
 expressions. The Constraint class objects are created from the add_constraint method in the constrained model class.
 The constraint class does not need to be called directly.</p>
 <p>Defines a constraint targeting a single factor element in the solution. There are 6 different constraint types:
@@ -387,9 +389,6 @@ details shown in the Constraint description.</p></li>
 </dd></dl>
 
 </section>
-<section id="src-rotational-fpeak-module">
-<h2>src.rotational.fpeak module<a class="headerlink" href="#src-rotational-fpeak-module" title="Link to this heading"></a></h2>
-</section>
 <section id="module-src.rotational">
 <span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-src.rotational" title="Link to this heading"></a></h2>
 </section>
@@ -403,7 +402,7 @@ details shown in the Constraint description.</p></li>
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2023, EPA.</p>
+    <p>&#169; Copyright 2024, EPA.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

@@ -8,13 +8,13 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 import plotly.graph_objects as go
-from src.model.nmf import NMF
+from src.model.sa import SA
 from src.utils import np_encoder
 from pathlib import Path
 
 
-logger = logging.getLogger("NMF")
-logger.setLevel(logging.INFO)
+logging.basicConfig(format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S', level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 class Bootstrap:
@@ -23,7 +23,7 @@ class Bootstrap:
     the solution. The BS method assembles dataset by randomly selecting blocks of consecutive samples from the original
     dataset, with replacement.
 
-    The BS method implemented here is called the block bootstrap method. The block BS method is useful for use on
+    The BS method implemented here is called the block bootstrap method. The block BS method is useful on
     timeseries data that may contain temporal correlations that would otherwise be lost if single samples were
     resampled.
 
@@ -34,8 +34,8 @@ class Bootstrap:
 
     Parameters
     ----------
-    nmf : NMF
-       A completed NMF base model that used the same data and uncertainty datasets.
+    sa : SA
+       A completed SA base model that used the same data and uncertainty datasets.
     feature_labels : list
        The labels for the features, columns of the dataset, specified from the data handler.
     model_selected : int
@@ -53,7 +53,7 @@ class Bootstrap:
     """
 
     def __init__(self,
-                 nmf: NMF,
+                 sa: SA,
                  feature_labels: list,
                  model_selected: int = -1,
                  bootstrap_n: int = 20,
@@ -64,22 +64,22 @@ class Bootstrap:
         """
         Constructor method.
         """
-        self.nmf = nmf
+        self.sa = sa
         self.model_selected = model_selected
         self.feature_labels = feature_labels
-        self.data = nmf.V
-        self.uncertainty = nmf.U
+        self.data = sa.V
+        self.uncertainty = sa.U
 
         self.bootstrap_n = bootstrap_n
         self.block_size = block_size
         self.threshold = threshold
 
-        self.base_W = self.nmf.W
-        self.base_H = self.nmf.H
-        self.base_Q = self.nmf.Qrobust
+        self.base_W = self.sa.W
+        self.base_H = self.sa.H
+        self.base_Q = self.sa.Qrobust
         self.factors = self.base_H.shape[0]
 
-        self.base_seed = self.nmf.seed
+        self.base_seed = self.sa.seed
         self.bs_seed = seed if seed is not None else self.base_seed
 
         self.bs_results = {}
@@ -344,7 +344,7 @@ class Bootstrap:
         Parameters
         ----------
         keep_H : bool
-           When retraining the NMF models using the resampled input and uncertainty datasets, keep the base model H
+           When retraining the SA models using the resampled input and uncertainty datasets, keep the base model H
            matrix instead of reinitializing. The W matrix is always reinitialized when NMF is run on the BS datasets.
            Default = True
         reuse_seed : bool
@@ -370,12 +370,12 @@ class Bootstrap:
                overlapping: bool = False
                ):
         """
-        Train a new NMF model for each BS dataset.
+        Train a new SA model for each BS dataset.
 
         Parameters
         ----------
         keep_H : bool
-           When retraining the NMF models using the resampled input and uncertainty datasets, keep the base model H
+           When retraining the SA models using the resampled input and uncertainty datasets, keep the base model H
            matrix instead of reinitializing. The W matrix is always reinitialized when NMF is run on the BS datasets.
            Default = True
         reuse_seed : bool
@@ -409,16 +409,16 @@ class Bootstrap:
                 _H = None
             if reuse_seed:
                 train_seed = self.base_seed
-            bs_i_nmf = NMF(V=bs_data, U=bs_uncertainty, factors=self.factors, method=self.nmf.method, seed=train_seed,
-                           optimized=self.nmf.optimized, verbose=False)
-            bs_i_nmf.initialize(H=_H)
-            bs_i_nmf.train(max_iter=self.nmf.metadata["max_iterations"],
-                           converge_delta=self.nmf.metadata["converge_delta"],
-                           converge_n=self.nmf.metadata["converge_n"])
-            bs_i_mapping = self.map_contributions(W1=bs_i_nmf.W, H1=bs_i_nmf.H, W2=self.base_W, H2=self.base_H,
+            bs_i_sa = SA(V=bs_data, U=bs_uncertainty, factors=self.factors, method=self.sa.method, seed=train_seed,
+                           optimized=self.sa.optimized, verbose=False)
+            bs_i_sa.initialize(H=_H)
+            bs_i_sa.train(max_iter=self.sa.metadata["max_iterations"],
+                           converge_delta=self.sa.metadata["converge_delta"],
+                           converge_n=self.sa.metadata["converge_n"])
+            bs_i_mapping = self.map_contributions(W1=bs_i_sa.W, H1=bs_i_sa.H, W2=self.base_W, H2=self.base_H,
                                                   threshold=self.threshold)
             bs_i_results = {
-                "model": bs_i_nmf,
+                "model": bs_i_sa,
                 "index": bs_index,
                 "mapping": bs_i_mapping
             }
@@ -426,7 +426,7 @@ class Bootstrap:
 
     def _compile_results(self):
         """
-        Generate the statistics and results as shown in PMF5.
+        Generate the statistics and results.
         """
         self._build_table()
         self._factor_statistics()
@@ -486,7 +486,7 @@ class Bootstrap:
 
     def _factor_statistics(self):
         """
-        Assemble the factor statistics as shown in PMF5.
+        Assemble the factor statistics.
         """
         factor_tables = {}
         for i in range(self.factors):
@@ -498,9 +498,9 @@ class Bootstrap:
 
     def summary(self):
         """
-        Prints a summary of the BS parameters and results. Recreates the output provided in the PMF5 BS Summary.
+        Prints a summary of the BS parameters and results.
         """
-        print("NMF Bootstrap Error Estimation Summary")
+        print("ESAT Bootstrap Error Estimation Summary")
         print("----- Input Parameters -----")
         print(f"Base model run number: {self.model_selected}")
         print(f"Number of bootstrap runs: {self.bootstrap_n}")
@@ -690,37 +690,37 @@ class Bootstrap:
             if pickle_result:
                 with open(file_path, "wb") as save_file:
                     pickle.dump(self, save_file)
-                    logger.info(f"BS NMF output saved to pickle file: {file_path}")
+                    logger.info(f"BS SA output saved to pickle file: {file_path}")
             else:
                 file_path = output_directory
                 meta_file = os.path.join(output_directory, f"{bs_name}-metadata.json")
                 with open(meta_file, "w") as mfile:
                     json.dump(self.metadata, mfile, default=np_encoder)
-                    logger.info(f"BS NMF model metadata saved to file: {meta_file}")
+                    logger.info(f"BS SA model metadata saved to file: {meta_file}")
                 results_file = os.path.join(output_directory, f"{bs_name}-results.json")
                 with open(results_file, "w") as resfile:
                     json.dump(self.bs_results, resfile, default=np_encoder)
-                    logger.info(f"BS NMF results saved to file: {results_file}")
+                    logger.info(f"BS SA results saved to file: {results_file}")
                 mapping_file = os.path.join(output_directory, f"{bs_name}-mapping.csv")
                 with open(mapping_file, "w") as mapfile:
                     self.mapping_df.to_csv(mapfile)
-                    logger.info(f"BS NMF model mapping saved to file: {mapping_file}")
+                    logger.info(f"BS SA model mapping saved to file: {mapping_file}")
                 qtable_file = os.path.join(output_directory, f"{bs_name}-qtable.csv")
                 with open(qtable_file, "w") as qfile:
                     self.q_results.to_csv(qfile)
-                    logger.info(f"BS NMF q table saved to file: {qtable_file}")
+                    logger.info(f"BS SA q table saved to file: {qtable_file}")
                 ftables_file = os.path.join(output_directory, f"{bs_name}-ftables.json")
                 with open(ftables_file, "w") as f_file:
                     json.dump(self.factor_tables, f_file, default=np_encoder)
-                    logger.info(f"BS NMF factor tables saved to file: {ftables_file}")
+                    logger.info(f"BS SA factor tables saved to file: {ftables_file}")
                 profiles_file = os.path.join(output_directory, f"{bs_name}-profiles.json")
                 with open(profiles_file, "w") as p_file:
                     json.dump(self.bs_profiles, p_file, default=np_encoder)
-                    logger.info(f"BS NMF profiles saved to file: {profiles_file}")
+                    logger.info(f"BS SA profiles saved to file: {profiles_file}")
                 contr_file = os.path.join(output_directory, f"{bs_name}-contributions.json")
                 with open(contr_file, "w") as c_file:
                     json.dump(self.bs_factor_contributions, c_file, default=np_encoder)
-                    logger.info(f"BS NMF contributions saved to file: {contr_file}")
+                    logger.info(f"BS SA contributions saved to file: {contr_file}")
                 return file_path
         else:
             logger.error(f"Output directory does not exist. Specified directory: {output_directory}")
@@ -729,17 +729,17 @@ class Bootstrap:
     @staticmethod
     def load(file_path: str):
         """
-        Load a previously saved BS NMF pickle file.
+        Load a previously saved BS SA pickle file.
 
         Parameters
         ----------
         file_path : str
-           File path to a previously saved BS NMF pickle file
+           File path to a previously saved BS SA pickle file
 
         Returns
         -------
         Bootstrap
-           On successful load, will return a previously saved BS NMF object. Will return None on load fail.
+           On successful load, will return a previously saved BS SA object. Will return None on load fail.
         """
         file_path = Path(file_path)
         if not file_path.is_absolute():

@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Non-Negative Matrix Factorization &mdash; NMF 12/06/2023 documentation</title>
+  <title>Environmental Source Apportionment Toolkit (ESAT) &mdash; Environmental Source Apportionment Toolkit (ESAT) 02/26/2024 documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=92fd9be5" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
 
@@ -15,13 +15,13 @@
   
         <script src="_static/jquery.js?v=5d32c60e"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="_static/documentation_options.js?v=1640ae22"></script>
+        <script src="_static/documentation_options.js?v=775bfdcd"></script>
         <script src="_static/doctools.js?v=888ff710"></script>
         <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="prev" title="Welcome to NMF’s documentation!" href="index.html" /> 
+    <link rel="prev" title="Welcome to EPA ESAT’s Documentation!" href="index.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -33,7 +33,7 @@
           
           
           <a href="index.html" class="icon icon-home">
-            NMF
+            Environmental Source Apportionment Toolkit (ESAT)
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -45,18 +45,18 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Readme</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Non-Negative Matrix Factorization</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Environmental Source Apportionment Toolkit (ESAT)</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#summary">Summary</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#pmf5">PMF5</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#nmf-py">NMF-PY</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#project-products">Project Products</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#esat">ESAT</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#notebooks">Notebooks</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#requirements">Requirements</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#rust-requirements">Rust Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#creating-docs">Creating Docs</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#creating-docs">Creating Docs</a></li>
 </ul>
 </li>
 </ul>
@@ -67,7 +67,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="index.html">NMF</a>
+          <a href="index.html">Environmental Source Apportionment Toolkit (ESAT)</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -75,7 +75,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">Non-Negative Matrix Factorization</li>
+      <li class="breadcrumb-item active">Environmental Source Apportionment Toolkit (ESAT)</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/README.md.txt" rel="nofollow"> View page source</a>
       </li>
@@ -85,9 +85,9 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="non-negative-matrix-factorization">
-<h1>Non-Negative Matrix Factorization<a class="headerlink" href="#non-negative-matrix-factorization" title="Link to this heading"></a></h1>
-<p>Last Update: 12-11-2023</p>
+  <section id="environmental-source-apportionment-toolkit-esat">
+<h1>Environmental Source Apportionment Toolkit (ESAT)<a class="headerlink" href="#environmental-source-apportionment-toolkit-esat" title="Link to this heading"></a></h1>
+<p>Last Update: 02-26-2024</p>
 <section id="summary">
 <h2>Summary<a class="headerlink" href="#summary" title="Link to this heading"></a></h2>
 <section id="pmf5">
@@ -95,52 +95,56 @@
 <p>The EPA’s Positive Matrix Factorization (PMF) Model is a mathematical tool that processes a dataset of feature concentrations across many samples (and concentration uncertainties) to estimate a set of sources and their contributions. PMF5 can be used on a wide range of environmental data and is a powerful tool for estimating source apportionment: https://www.epa.gov/air-research/positive-matrix-factorization-model-environmental-data-analyses</p>
 <p>PMF version 5 was released in 2014 and is no longer being supported. PMF5 still has an active, international user community; making the development of a modern replacement a worthwhile effort. The primary goals for a PMF5 replacement would be to develop and release an open-source tool that replicates the functionality of PMF5 while also providing new data analytics features and techniques.</p>
 </section>
-<section id="nmf-py">
-<h3>NMF-PY<a class="headerlink" href="#nmf-py" title="Link to this heading"></a></h3>
-<p>The focus of the NMF-PY project is to replicate the results and performance of PMF5, using open-source packages and code. Existing mathematics and machine learning packages were investigated for use in the project, though none were able to satisfy the requirements of the project.</p>
-<p>Project Requirements:</p>
+<section id="esat">
+<h3>ESAT<a class="headerlink" href="#esat" title="Link to this heading"></a></h3>
+<p>The EPA’s Environmental Source Apportionment Toolkit (ESAT) project provides an open-source python package with which
+source apportionment workflows can be programmatically created and run. The features available in the ESAT package
+include data preprocessing and cleaning, non-negative matrix factorization (NMF) algorithms (currently two options are
+available), solution analytics and visualizations, error estimation methods, and customized constrained factorization models.
+These features reproduce and expand upon what is found in EPA’s PMF5 application, which is no longer being updated
+or maintained.</p>
+<p>ESAT python package focuses on source apportionment estimates using NMF algorithms. These
+algorithms are implemented both in python using numpy functions as well as in Rust for an optimization option. The
+two currently available are:</p>
 <ol class="arabic simple">
-<li><p>See high correlations (&gt; 0.95) of the new algorithm’s output to the PMF5 solutions</p></li>
-<li><p>Q of the new algorithms must be less than or comparable to PMF5 (&lt; 10%)</p></li>
-<li><p>Model runtime should be comparable to or faster than PMF5 (&lt; 10%)</p></li>
-<li><p>Use only open-source packages and produce readable code</p></li>
+<li><p>LS-NMF: Least-squares NMF, a well documented and widely uses NMF algorithm. The ls-nmf algorithm is available in the NMF R package.</p></li>
+<li><p>WS-NMF: Weight-Semi NMF, a variant of the NMF algorithm which allows for negative values in both the input data matrix and in the factor contribution matrix.</p></li>
 </ol>
-<p>NMF-PY also tested many different NMF algorithms, since we had to reverse engineer the ME2 solver or develop a comparable process. We have implemented two algorithms that were able to satisfy the constrains of the project.</p>
-<p>Additional features will be added to the python package as determined from the user-community and development team.</p>
+<p>Source apportionment solution error estimation methods are also available, which are the same methods that are found in PMF5.
+These are:</p>
+<ol class="arabic simple">
+<li><p>Bootstrap (BS): the input dataset is divided into multiple blocks and randomly reassembled to attempt to quantify the variability in the factor profiles and contributions.</p></li>
+<li><p>Displacement (DISP): the solution factor profiles are all individually shifted (both increased and decreased) to determine the amount of change required for the loss value to reach specific dQ (change in Q) values.</p></li>
+<li><p>Bootstrap-Displacement (BS-DISP): the combination of the two error estimation methods. Where for each Bootstrap dataset/model, all or targeted factor profile values are adjusted using the DISP method.</p></li>
+</ol>
+<p>Lastly, constrained models are able to be created where the user can define constraints and expressions which set or limit specific factor elements (single values from either the factor profile or factor contribution matrices), or define correlations between factor elements as linear expressions.</p>
 </section>
-<section id="project-products">
-<h3>Project Products<a class="headerlink" href="#project-products" title="Link to this heading"></a></h3>
-<p>The products from the NMF-PY project include the following:</p>
-<ol class="arabic simple">
-<li><p>Open-source python package (with minimal package dependencies)</p></li>
-<li><p>Jupyter Notebooks providing function and algorithm details, as well as complete workflows.</p></li>
-<li><p>Code documentation for users of the python package.</p></li>
-<li><p>Presentations/tutorials on how to use the python package and jupyter notebooks.</p></li>
-<li><p>Manuscript documenting the comparative analysis performed on the output of PMF5 vs the NMF-PY algorithms.</p></li>
-<li><p>Optional: Web/Desktop application wrapper of the python package.</p></li>
-</ol>
+<section id="notebooks">
+<h3>Notebooks<a class="headerlink" href="#notebooks" title="Link to this heading"></a></h3>
+<p>Code examples are available in the repository jupyter notebooks, which also provided detailed algorithm documentation and complete workflow examples.</p>
 </section>
 </section>
 <section id="requirements">
 <h2>Requirements<a class="headerlink" href="#requirements" title="Link to this heading"></a></h2>
-<p>Python = 3.11<br />
+<p>Python = 3.12<br />
 numpy &gt;= 1.24<br />
 pandas &gt;= 2.0.0<br />
 plotly &gt;= 5.14<br />
 scipy &gt;= 1.10</p>
 <section id="rust-requirements">
 <h3>Rust Requirements<a class="headerlink" href="#rust-requirements" title="Link to this heading"></a></h3>
-<p>The python package includes a Rust module for running the algorithm update procedures, which requires local compiling to operate.</p>
+<p>The python package includes a Rust module for running the algorithm update procedures, which requires local compiling to execute.</p>
 <p>To run the Rust functions that is specified by the optimized parameter, requires that Rust is installed (https://www.rust-lang.org/tools/install) and the python package maturin (https://pypi.org/project/maturin/) is installed to the py env.
 Then using the py env and from the project root running <i>maturin develop</i> or <i>maturin build</i> to compile the Rust functions to run from the python code. To compile the optimized Rust functions, add the <i>-r</i> or <i>–release</i> tags to compile with optimization.</p>
 <p>The rust functions are imported as python functions, under nmf_pyr.</p>
 </section>
-</section>
 <section id="creating-docs">
-<h2>Creating Docs<a class="headerlink" href="#creating-docs" title="Link to this heading"></a></h2>
+<h3>Creating Docs<a class="headerlink" href="#creating-docs" title="Link to this heading"></a></h3>
 <p>The documentation is created using sphinx and several extensions.</p>
-<p>To create, update or modify the existing documentation, run
+<p>If creating or adding new rst files run <i>sphinx-apidoc -o docs src</i>.</p>
+<p>To create, update or modify the existing documentation html, run
 <i>sphinx-build -M html . docs</i> from the command line at the project root directory running the python environment with the necessary sphinx packages.</p>
+</section>
 </section>
 </section>
 
@@ -148,13 +152,13 @@ Then using the py env and from the project root running <i>maturin develop</i> o
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to NMF’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to EPA ESAT’s Documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>&#169; Copyright 2023, EPA.</p>
+    <p>&#169; Copyright 2024, EPA.</p>
   </div>
 
   Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a

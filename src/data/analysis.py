@@ -8,11 +8,10 @@ import plotly.express as px
 import plotly.figure_factory as ff
 from plotly.subplots import make_subplots
 from src.data.datahandler import DataHandler
-from src.model.nmf import NMF
+from src.model.sa import SA
 
-
-logger = logging.getLogger("NMF")
-logger.setLevel(logging.INFO)
+logging.basicConfig(format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S', level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 class ModelAnalysis:
@@ -23,15 +22,15 @@ class ModelAnalysis:
     Parameters
     ----------
     datahandler : DataHandler
-        The datahandler instance used for processing the input and uncertainty datasets used by the NMF model.
-    model : NMF
-        A trained NMF model with output used for calculating model statistics and generating plots.
+        The datahandler instance used for processing the input and uncertainty datasets used by the SA model.
+    model : SAModel
+        A completed SA model with output used for calculating model statistics and generating plots.
     selected_model : int
-        If NMF model is part of a batch, the model id/index that will be used for plot labels.
+        If SA model is part of a batch, the model id/index that will be used for plot labels.
     """
     def __init__(self,
                  datahandler: DataHandler,
-                 model: NMF,
+                 model: SA,
                  selected_model: int = None
                  ):
         """

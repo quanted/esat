@@ -7,10 +7,9 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 from src.model.recombinator import optimal_block_length
-from datetime import datetime, timedelta
 
-logging.basicConfig(format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S', level=logging.DEBUG)
-logger = logging.getLogger()
+logging.basicConfig(format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S', level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 EPSILON = sys.float_info.min
 ROOT_DIR = os.path.join(os.path.abspath(__file__), "..", "..", "..")
@@ -18,14 +17,15 @@ ROOT_DIR = os.path.join(os.path.abspath(__file__), "..", "..", "..")
 
 class DataHandler:
     """
-    The class for cleaning and preparing input datasets for use in NMF.
+    The class for cleaning and preparing input datasets for use in ESAT.
 
-    The DataHandler class is intended to provide a standardized way of cleaning and preparing data from file to NMF
+    The DataHandler class is intended to provide a standardized way of cleaning and preparing data from file to ESAT
     models.
 
     The input and uncertainty data files are specified by their file paths. Input files can be .csv or tab separated
     text files. Other file formats are not supported at this time.
-    #TODO: Add additional supported file formats but expanding the __read_data function.
+
+    #TODO: Add additional supported file formats by expanding the __read_data function.
     #TODO: Add in weight adjustment for signal to noise ratio categories, using the same approach as the robust calculation.
 
     Parameters
@@ -83,10 +83,9 @@ class DataHandler:
         self.optimal_block = None
         self._determine_optimal_block()
 
-
     def get_data(self):
         """
-        Get the processed input and uncertainty dataset ready for use in NMF.
+        Get the processed input and uncertainty dataset ready for use in ESAT.
         Returns
         -------
         np.ndarray, np.ndarray
@@ -239,7 +238,7 @@ class DataHandler:
             optimal_block.append(opt.b_star_cb)
         self.optimal_block = math.floor(np.mean(optimal_block))
 
-    def data_uncertainty_plot(self, feature_idx):
+    def plot_data_uncertainty(self, feature_idx):
         """
         Create a plot of the data vs the uncertainty for a specified feature, by the feature index.
 
@@ -261,7 +260,7 @@ class DataHandler:
         du_plot.update_layout(title=f"Concentration/Uncertainty Scatter Plot - {feature_label}", width=800, height=600)
         du_plot.show()
 
-    def feature_data_plot(self, x_idx, y_idx):
+    def plot_feature_data(self, x_idx, y_idx):
         """
         Create a plot of a data feature, column, vs another data feature, column. Specified by the feature indices.
 
@@ -302,7 +301,7 @@ class DataHandler:
         xy_plot.update_yaxes(range=[0, y_data.max() + 0.5])
         xy_plot.show()
 
-    def feature_timeseries_plot(self, feature_selection):
+    def plot_feature_timeseries(self, feature_selection):
         """
         Create a plot of a feature, or list of features, as a timeseries.
 

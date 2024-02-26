@@ -5,9 +5,10 @@ import re
 module_path = os.path.abspath(os.path.join('..', "nmf_py"))
 sys.path.append(module_path)
 
-from src.model.nmf import NMF
+from src.model.sa import SA
 from src.data.datahandler import DataHandler
-from src.utils import q_loss, qr_loss, np_encoder
+from src.utils import np_encoder
+from src.metrics import q_loss, qr_loss
 from tqdm import trange
 from datetime import datetime
 from scipy import optimize
@@ -24,14 +25,13 @@ import pickle
 import json
 import time
 
-
-logger = logging.getLogger("NMF")
-logger.setLevel(logging.INFO)
+logging.basicConfig(format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S', level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 class Constraint:
     """
-    The constrained model takes a base NMF solution and finds a new solution that applies both constraints and
+    The constrained model takes a base SA solution and finds a new solution that applies both constraints and
     expressions. The Constraint class objects are created from the add_constraint method in the constrained model class.
     The constraint class does not need to be called directly.
 
@@ -120,27 +120,27 @@ class Constraint:
 
 class ConstrainedModel:
     """
-    The constrained model class that creates an instead of a constrained model using a base NMF model.
+    The constrained model class that creates an instead of a constrained model using a base SA model.
 
-    The constrained model takes as input a previously completed NMF instance, the solution of a base model run
-    (single NMF instance) is used for the initial conditions of a constrained model run. Additional inputs include
-    the instance of the DataHandler used to provided data to the NMF instance (used for plotting) and a 'softness'
+    The constrained model takes as input a previously completed SA instance, the solution of a base model run
+    (single SA instance) is used for the initial conditions of a constrained model run. Additional inputs include
+    the instance of the DataHandler used to provided data to the SA instance (used for plotting) and a 'softness'
     parameter that determines how soft, or how large, the Q(aux) value is in comparison to the Q(Robust) and
     Q(True) loss values.
 
     Parameters
     ----------
-    base_model : NMF
-       The completed base model instance of NMF.
+    base_model : SA
+       The completed base model instance of SA.
     data_handler : DataHandler
-       The instance of the DataHandler user to preprocess the input data for NMF.
+       The instance of the DataHandler user to preprocess the input data for SA.
     softness : float
        The softness parameter that determines how large the Q(aux) loss value is in comparison to the primary Q
        loss.
     """
 
     def __init__(self,
-                 base_model: NMF,
+                 base_model: SA,
                  data_handler: DataHandler,
                  softness: float = 1.0,
                  ):
@@ -163,14 +163,16 @@ class ConstrainedModel:
         self.expression_labeled = None
         self.expression_mapped = None
 
-        # Once the trained model is completed, an instance of NMF is created and set to this parameter which includes
+        # Once the trained model is completed, an instance of SA is created and set to this parameter which includes
         # all values of the solution. This constrained model can be passed as the nmf_model to the error methods.
         self.constrained_model = None
-        self.Qaux = None                        # The Q(aux) loss value, the difference between the current and target solutions.
+
+        # The Q(aux) loss value, the difference between the current and target solutions.
+        self.Qaux = None
 
         self.metadata = {}
 
-        # Constrained model uses the same update method as the base NMF instance (though not an optimized update step)
+        # Constrained model uses the same update method as the base SA instance (though not an optimized update step)
         self.update = self.base_model.update_step
 
     def add_constraint(self,
@@ -293,7 +295,6 @@ class ConstrainedModel:
         ----------
         expression : str
            A string expression to be added to the list of expressions for the constrained model.
-
 
         """
         #TODO: Add validation of expressions to make sure they are properly structured.
@@ -448,7 +449,7 @@ class ConstrainedModel:
         For each iteration, the constraint and expression target values are calculated and two matrices are created
         which contain the difference between the curren value in those matrices and the target value. The expression
         target values are calculated first and then followed by the constraint values. The difference matrices are added
-        to the solution matrices before being updated by the NMF update algorithm that is used in the base model.
+        to the solution matrices before being updated by the SA update algorithm that is used in the base model.
 
         The model is considered converged when Q(Main) changes by less than converge_delta over converge_n iterations,
         where Q(Main) is defined as Q(main) = Q(True) + Q(aux). Q(aux) is defined as
@@ -456,8 +457,8 @@ class ConstrainedModel:
         sum(square(H_base + Difference_to_Target_H - H_i)/S_H).
 
         The completed constrained model solution is assigned to the .constrained_model variable, which is an instance of
-        NMF. This constrained NMF solution can then be passed into any of the error estimation methods in the same way
-        as an NMF solution from the BatchNMF instance.
+        SA. This constrained SA solution can then be passed into any of the error estimation methods in the same way
+        as an SA solution from the BatchNMF instance.
 
         Parameters
         ----------
@@ -515,8 +516,8 @@ class ConstrainedModel:
                 if np.max(qm_list) - np.min(qm_list) <= converge_delta:
                     converged = True
                     break
-        self.constrained_model = NMF(V=V, U=U, factors=self.base_model.factors, method=self.base_model.method,
-                                     seed=self.base_model.seed)
+        self.constrained_model = SA(V=V, U=U, factors=self.base_model.factors, method=self.base_model.method,
+                                    seed=self.base_model.seed)
         self.constrained_model.initialize(H=H_i, W=W_i)
         self.constrained_model.metadata["max_iterations"] = max_iterations
         self.constrained_model.metadata["converge_delta"] = converge_delta
@@ -779,6 +780,10 @@ class ConstrainedModel:
         q_plot.show()
 
     def evaluate_constraints(self):
+        """
+        Evaluate and show the factor element constraint results of the constrained model run.
+
+        """
         constraint_values = []
         for k, c in self.constraints.items():
             value = self.constrained_model.H[c.index] if c.target == "feature" else self.constrained_model.W[c.index]
@@ -814,6 +819,10 @@ class ConstrainedModel:
         c_fig.show()
 
     def evaluate_expressions(self):
+        """
+        Evaluate and show the expression results of the constrained model run.
+
+        """
         exp_element = {}
         max_terms = np.max([len(i[0]) for i in self.expression_labeled])
         exp_table = [[""] * (max_terms + 3) for i in range(len(self.expression_labeled))]
@@ -856,14 +865,11 @@ class ConstrainedModel:
         term_fig.update_layout(height=25*len(exp_element.keys()), title="Expressions Evaluation Table",
                             margin={'t': 50, 'l': 25, 'b': 10, 'r': 25})
         term_fig.show()
-        # for i, ee in enumerate(eval_exp):
-        #     exp = self.expressions[i].split(",")
-        #     print(f"Expression: {exp[0]} evaluated to {ee}, base evaluated to {base_exp[i]}")
 
     def plot_profile_contributions(self, factor_idx):
         """
-        Plot the constrained model factor profile and factor contribution by index. The plots are similar to those available to NMF models
-        in the analysis module.
+        Plot the constrained model factor profile and factor contribution by index. The plots are similar to those
+        available to SA models in the analysis module.
 
         Parameters
         ----------
@@ -1144,6 +1150,6 @@ class ConstrainedModel:
 
             with open(meta_file, "w") as mfile:
                 json.dump(metadata, mfile, default=np_encoder)
-                logger.info(f"Constrained NMF model metadata saved to file: {meta_file}")
+                logger.info(f"Constrained SA model metadata saved to file: {meta_file}")
         else:
             logger.error(f"Output directory not found. Provided directory: {output_directory}")
