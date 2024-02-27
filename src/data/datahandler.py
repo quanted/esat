@@ -12,7 +12,7 @@ logging.basicConfig(format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:
 logger = logging.getLogger(__name__)
 
 EPSILON = sys.float_info.min
-ROOT_DIR = os.path.join(os.path.abspath(__file__), "..", "..", "..")
+ROOT_DIR = os.path.join(os.path.abspath(__file__), "..", "..")
 
 
 class DataHandler:
