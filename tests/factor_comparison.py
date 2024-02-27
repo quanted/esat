@@ -6,13 +6,22 @@ import pandas as pd
 from itertools import permutations, combinations
 import multiprocessing as mp
 from tqdm import tqdm
-from src.model.batch_nmf import BatchNMF
+from src.model.batch_sa import BatchSA
 
 
 class FactorComp:
 
-    def __init__(self, pmf_profile_file, pmf_contribution_file, factors, features, batch_nmf=None, nmf_output_file=None, residuals_path=None, method="all"):
-        self.nmf_output_file = nmf_output_file
+    def __init__(self,
+                 pmf_profile_file,
+                 pmf_contribution_file,
+                 factors,
+                 features,
+                 batch_sa=None,
+                 sa_output_file=None,
+                 residuals_path=None,
+                 method="all"
+                 ):
+        self.sa_output_file = sa_output_file
         self.pmf_profile_file = pmf_profile_file
         self.pmf_contribution_file = pmf_contribution_file
         self.factors = factors
@@ -31,11 +40,11 @@ class FactorComp:
         self._parse_pmf_output()
         self._calculate_pmf_wh()
 
-        self.batch_nmf = batch_nmf
-        self.nmf_model_dfs = {}
-        self.nmf_Q = {}
-        if nmf_output_file is not None or batch_nmf is not None:
-            self._parse_nmf_output()
+        self.batch_sa = batch_sa
+        self.sa_model_dfs = {}
+        self.sa_Q = {}
+        if sa_output_file is not None or batch_sa is not None:
+            self._parse_sa_output()
         self.factor_map = None
         self.best_model = None
         self.best_factor_r = None
@@ -150,48 +159,48 @@ class FactorComp:
                 pmf_WH_f = np.multiply(pmf_W_f, pmf_H_f)
                 self.pmf_WH[factor] = pmf_WH_f
 
-    def _parse_nmf_output(self):
-        if self.batch_nmf is None:
-            if not os.path.exists(self.nmf_output_file):
-                print(f"No nmf output found at: {self.nmf_output_file}")
+    def _parse_sa_output(self):
+        if self.batch_sa is None:
+            if not os.path.exists(self.sa_output_file):
+                print(f"No sa output found at: {self.sa_output_file}")
                 return
             else:
-                self.batch_nmf = BatchNMF.load(self.nmf_output_file)
+                self.batch_sa = BatchSA.load(self.sa_output_file)
         species_columns = self.features
-        for i, i_nmf in enumerate(self.batch_nmf.results):
-            if i_nmf is None:
+        for i, i_sa in enumerate(self.batch_sa.results):
+            if i_sa is None:
                 continue
-            nmf_h_data = i_nmf.H
-            nmf_w_data = i_nmf.W
-            nmf_wh_data = i_nmf.WH
-            nmf_wh_data = nmf_wh_data.reshape(nmf_wh_data.shape[1], nmf_wh_data.shape[0])
+            sa_h_data = i_sa.H
+            sa_w_data = i_sa.W
+            sa_wh_data = i_sa.WH
+            sa_wh_data = sa_wh_data.reshape(sa_wh_data.shape[1], sa_wh_data.shape[0])
 
-            nmf_h_df = pd.DataFrame(nmf_h_data, columns=species_columns, index=self.factor_columns)
-            nmf_w_df = pd.DataFrame(nmf_w_data, columns=self.factor_columns)
-            nmf_wh_df = pd.DataFrame(nmf_wh_data.T, columns=species_columns)
+            sa_h_df = pd.DataFrame(sa_h_data, columns=species_columns, index=self.factor_columns)
+            sa_w_df = pd.DataFrame(sa_w_data, columns=self.factor_columns)
+            sa_wh_df = pd.DataFrame(sa_wh_data.T, columns=species_columns)
 
-            nmf_wh_e = {}
+            sa_wh_e = {}
             for factor in self.factor_columns:
-                nmf_H_f = nmf_h_df.loc[factor].to_numpy()
-                nmf_W_f = nmf_w_df[factor].to_numpy()
-                nmf_W_f = nmf_W_f.reshape(len(nmf_W_f), 1)
-                nmf_WH_f = np.multiply(nmf_W_f, nmf_H_f)
-                nmf_wh_e[factor] = nmf_WH_f
+                sa_H_f = sa_h_df.loc[factor].to_numpy()
+                sa_W_f = sa_w_df[factor].to_numpy()
+                sa_W_f = sa_W_f.reshape(len(sa_W_f), 1)
+                sa_WH_f = np.multiply(sa_W_f, sa_H_f)
+                sa_wh_e[factor] = sa_WH_f
 
-            self.nmf_model_dfs[i] = {"WH": nmf_wh_df, "W": nmf_w_df, "H": nmf_h_df, 'WH-element': nmf_wh_e}
-            self.nmf_Q[i] = i_nmf.Qtrue
+            self.sa_model_dfs[i] = {"WH": sa_wh_df, "W": sa_w_df, "H": sa_h_df, 'WH-element': sa_wh_e}
+            self.sa_Q[i] = i_sa.Qtrue
 
     def compare(self, PMF_Q=None, verbose: bool = True):
         correlation_results = {}
         contribution_results = {}
         wh_results = {}
-        for m in tqdm(range(len(self.nmf_model_dfs)), desc="Calculating correlation between factors from each epoch"):
+        for m in tqdm(range(len(self.sa_model_dfs)), desc="Calculating correlation between factors from each epoch"):
             correlation_results[m] = {}
             contribution_results[m] = {}
             wh_results[m] = {}
-            nmf_m = self.nmf_model_dfs[m]["H"]
-            nmf_contribution_m = self.nmf_model_dfs[m]["W"]
-            nmf_wh = self.nmf_model_dfs[m]["WH-element"]
+            nmf_m = self.sa_model_dfs[m]["H"]
+            nmf_contribution_m = self.sa_model_dfs[m]["W"]
+            nmf_wh = self.sa_model_dfs[m]["WH-element"]
             for i in self.factor_columns:
                 pmf_i = self.pmf_profiles_df[i].astype(float)
                 pmf_contribution_i = self.pmf_contribution_df[i].astype(float)
@@ -224,7 +233,7 @@ class FactorComp:
 
         pool = mp.Pool()
 
-        for m in tqdm(range(len(self.nmf_model_dfs)), desc="Calculating average correlation for all permutations for each epoch"):
+        for m in tqdm(range(len(self.sa_model_dfs)), desc="Calculating average correlation for all permutations for each epoch"):
             # Each Model
             permutation_results = {}
             model_contribution_results = {}
@@ -278,7 +287,7 @@ class FactorComp:
                   f"Contribution R2: {self.best_contribution_r}, \n"
                   f"WH R2: {self.best_wh_r}\n"
                   )
-            print(f"PMF5 Q(true): {PMF_Q}, NMF-PY Model {best_model} Q(true): {self.nmf_Q[best_model]}")
+            print(f"PMF5 Q(true): {PMF_Q}, SA Model {best_model} Q(true): {self.sa_Q[best_model]}")
 
     @staticmethod
     def calculate_correlation(pmf_factor, nmf_factor):
