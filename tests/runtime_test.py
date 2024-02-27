@@ -3,7 +3,7 @@ import time
 import json
 import logging
 from src.data.datahandler import DataHandler
-from src.model.batch_nmf import BatchNMF
+from src.model.batch_SA import BatchSA
 
 
 if __name__ == "__main__":
@@ -12,9 +12,9 @@ if __name__ == "__main__":
     logging.getLogger('matplotlib').setLevel(logging.ERROR)
 
     t0 = time.time()
-    for dataset in ["b"]:           # "br", "sl", "b", "w"
-        for method in ["ls-nmf"]:     # "ls-nmf", "ws-nmf"
-            for factors in range(8, 9):
+    for dataset in ["br", "sl", "b"]:           # "br", "sl", "b", "w"
+        for method in ["ls-nmf", "ws-nmf"]:     # "ls-nmf", "ws-nmf"
+            for factors in range(3, 11):
                 for (parallel, optimized) in ((True, True), (True, False)):
                     init_method = "col_means"           # default is column means, "kmeans", "cmeans"
                     init_norm = True
@@ -75,11 +75,12 @@ if __name__ == "__main__":
                     V = dh.input_data_processed
                     U = dh.uncertainty_data_processed
 
-                    batch_nmf = BatchNMF(V=V, U=U, factors=factors, models=models, method=method, seed=seed, init_method=init_method,
-                                         init_norm=init_norm, fuzziness=5.0, max_iter=max_iterations, converge_delta=converge_delta,
-                                         converge_n=converge_n, parallel=parallel, optimized=optimized)
+                    batch_sa = BatchSA(V=V, U=U, factors=factors, models=models, method=method, seed=seed,
+                                       init_method=init_method, init_norm=init_norm, fuzziness=5.0,
+                                       max_iter=max_iterations, converge_delta=converge_delta, converge_n=converge_n,
+                                       parallel=parallel, optimized=optimized)
                     t0 = time.time()
-                    batch_nmf.train()
+                    batch_sa.train()
 
                     t1 = time.time()
                     runtime = round(t1-t0, 2)

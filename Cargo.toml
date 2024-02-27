@@ -1,16 +1,16 @@
 [package]
-name = "nmf_pyr"
+name = "esat_rust"
 version = "0.1.0"
 edition = "2021"
 authors = ["Deron Smith <smith.deron@epa.gov>"]
 description = "EPA Environmental Source Apportionment Toolkit (ESAT) Rust Algorithms"
 readme = "README.md"
 license = "Apache-2.0"
-license-file = "LICENSE.txt"
+license-file = "LICENSE"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [lib]
-name = "nmf_pyr"
+name = "esat_rust"
 crate-type = ["cdylib"]
 
 [dependencies]

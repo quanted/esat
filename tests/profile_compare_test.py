@@ -40,34 +40,34 @@ if __name__ == "__main__":
                 init_norm = True
                 seed = 42
                 models = 100
-                max_iterations = 50000
-                converge_delta = 0.01 if method == 'ws-nmf' else 0.001
+                max_iterations = 50000 if method == "ls-nmf" else 20000
+                converge_delta = 0.01 if method == 'ws-nmf' else 0.0001
                 converge_n = 20
                 index_col = "Date"
 
                 if dataset == "br":
-                    input_file = os.path.join("D:\\", "projects", "nmf_py", "data", "Dataset-BatonRouge-con.csv")
-                    uncertainty_file = os.path.join("D:\\", "projects", "nmf_py", "data", "Dataset-BatonRouge-unc.csv")
-                    output_path = os.path.join("D:\\", "projects", "nmf_py", "output", "BatonRouge")
-                    pmf_profile_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test", f"br{factors}f_profiles.txt")
-                    pmf_contribution_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test", f"br{factors}f_contributions.txt")
-                    pmf_residuals_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test",
+                    input_file = os.path.join("D:\\", "projects", "esat", "data", "Dataset-BatonRouge-con.csv")
+                    uncertainty_file = os.path.join("D:\\", "projects", "esat", "data", "Dataset-BatonRouge-unc.csv")
+                    output_path = os.path.join("D:\\", "projects", "esat", "output", "BatonRouge")
+                    pmf_profile_file = os.path.join("D:\\", "projects", "esat", "data", "factor_test", f"br{factors}f_profiles.txt")
+                    pmf_contribution_file = os.path.join("D:\\", "projects", "esat", "data", "factor_test", f"br{factors}f_contributions.txt")
+                    pmf_residuals_file = os.path.join("D:\\", "projects", "esat", "data", "factor_test",
                                                       f"br{factors}f_residuals.txt")
                 elif dataset == "b":
-                    input_file = os.path.join("D:\\", "projects", "nmf_py", "data", "Dataset-Baltimore_con.txt")
-                    uncertainty_file = os.path.join("D:\\", "projects", "nmf_py", "data", "Dataset-Baltimore_unc.txt")
-                    output_path = os.path.join("D:\\", "projects", "nmf_py", "output", "Baltimore")
-                    pmf_profile_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test", f"b{factors}f_profiles.txt")
-                    pmf_contribution_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test", f"b{factors}f_contributions.txt")
-                    pmf_residuals_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test",
+                    input_file = os.path.join("D:\\", "projects", "esat", "data", "Dataset-Baltimore_con.txt")
+                    uncertainty_file = os.path.join("D:\\", "projects", "esat", "data", "Dataset-Baltimore_unc.txt")
+                    output_path = os.path.join("D:\\", "projects", "esat", "output", "Baltimore")
+                    pmf_profile_file = os.path.join("D:\\", "projects", "esat", "data", "factor_test", f"b{factors}f_profiles.txt")
+                    pmf_contribution_file = os.path.join("D:\\", "projects", "esat", "data", "factor_test", f"b{factors}f_contributions.txt")
+                    pmf_residuals_file = os.path.join("D:\\", "projects", "esat", "data", "factor_test",
                                                       f"b{factors}f_residuals.txt")
                 elif dataset == "sl":
-                    input_file = os.path.join("D:\\", "projects", "nmf_py", "data", "Dataset-StLouis-con.csv")
-                    uncertainty_file = os.path.join("D:\\", "projects", "nmf_py", "data", "Dataset-StLouis-unc.csv")
-                    output_path = os.path.join("D:\\", "projects", "nmf_py", "output", "StLouis")
-                    pmf_profile_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test", f"sl{factors}f_profiles.txt")
-                    pmf_contribution_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test", f"sl{factors}f_contributions.txt")
-                    pmf_residuals_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test",
+                    input_file = os.path.join("D:\\", "projects", "esat", "data", "Dataset-StLouis-con.csv")
+                    uncertainty_file = os.path.join("D:\\", "projects", "esat", "data", "Dataset-StLouis-unc.csv")
+                    output_path = os.path.join("D:\\", "projects", "esat", "output", "StLouis")
+                    pmf_profile_file = os.path.join("D:\\", "projects", "esat", "data", "factor_test", f"sl{factors}f_profiles.txt")
+                    pmf_contribution_file = os.path.join("D:\\", "projects", "esat", "data", "factor_test", f"sl{factors}f_contributions.txt")
+                    pmf_residuals_file = os.path.join("D:\\", "projects", "esat", "data", "factor_test",
                                                       f"sl{factors}f_residuals.txt")
 
                 sn_threshold = 2.0
