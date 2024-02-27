@@ -8,9 +8,9 @@ use nalgebra::*;
 use rayon::prelude::*;
 
 
-/// NMF-PY Rust module
+/// ESAT Rust module
 #[pymodule]
-fn nmf_pyr(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
+fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
 
     const EPSILON: f64 = 1e-15;
 

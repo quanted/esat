@@ -4,7 +4,7 @@
    contain the root `toctree` directive.
 
 Welcome to EPA ESAT's Documentation!
-===============================
+====================================
 
 .. toctree::
    :maxdepth: 3

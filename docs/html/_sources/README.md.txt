@@ -37,19 +37,21 @@ Lastly, constrained models are able to be created where the user can define cons
 Code examples are available in the repository jupyter notebooks, which also provided detailed algorithm documentation and complete workflow examples.
 
 ## Requirements
-Python = 3.12\
-numpy >= 1.24\
-pandas >= 2.0.0\
-plotly >= 5.14\
-scipy >= 1.10
+Code has been developed and tested using Python 3.12
+
+Code runtime requirements can be found and installed using the requirements.txt file.
+
+Development environments requirements, for running jupyter notebooks, compiling Rust code, and running Sphinx for documentation can be in the requirements-dev.txt file.
 
 ### Rust Requirements
 The python package includes a Rust module for running the algorithm update procedures, which requires local compiling to execute.
 
-To run the Rust functions that is specified by the optimized parameter, requires that Rust is installed (https://www.rust-lang.org/tools/install) and the python package maturin (https://pypi.org/project/maturin/) is installed to the py env. 
-Then using the py env and from the project root running <i>maturin develop</i> or <i>maturin build</i> to compile the Rust functions to run from the python code. To compile the optimized Rust functions, add the <i>-r</i> or <i>--release</i> tags to compile with optimization.
+To run the Rust functions that is specified by the optimized parameter, requires that Rust is installed (https://www.rust-lang.org/tools/install) and the python package maturin (https://pypi.org/project/maturin/) is installed to the python development environment. 
+Then from the python env and the project root, executing <i>maturin develop</i> will compile the Rust code and place it in your python environment path. To compile optimized Rust code, include the <i>-r</i> or <i>--release</i> tags.
 
-The rust functions are imported as python functions, under nmf_pyr.
+The Rust code can also be compiled to the target directory inside of project root using <i>maturin build</i>.
+
+The rust functions are imported as python functions, with the 'from esat_rust import esat_rust'
 
 ### Creating Docs
 The documentation is created using sphinx and several extensions.

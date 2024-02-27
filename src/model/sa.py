@@ -130,14 +130,14 @@ class SA:
         self.optimized = optimized
         if self.optimized:
             # Attempt to load rust code for optimized model training
-            from nmf_pyr import nmf_pyr
+            from esat_rust import esat_rust
             if self.method == "ls-nmf" and not self.__has_neg:
-                self.optimized_update = nmf_pyr.ls_nmf
+                self.optimized_update = esat_rust.ls_nmf
             else:
                 if self.parallelized:
-                    self.optimized_update = nmf_pyr.ws_nmf_p
+                    self.optimized_update = esat_rust.ws_nmf_p
                 else:
-                    self.optimized_update = nmf_pyr.ws_nmf
+                    self.optimized_update = esat_rust.ws_nmf
 
     def __validate(self):
         """

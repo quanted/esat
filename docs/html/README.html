@@ -5,7 +5,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Environmental Source Apportionment Toolkit (ESAT) &mdash; Environmental Source Apportionment Toolkit (ESAT) 02/26/2024 documentation</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=92fd9be5" />
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
 
   
@@ -126,17 +126,16 @@ These are:</p>
 </section>
 <section id="requirements">
 <h2>Requirements<a class="headerlink" href="#requirements" title="Link to this heading"></a></h2>
-<p>Python = 3.12<br />
-numpy &gt;= 1.24<br />
-pandas &gt;= 2.0.0<br />
-plotly &gt;= 5.14<br />
-scipy &gt;= 1.10</p>
+<p>Code has been developed and tested using Python 3.12</p>
+<p>Code runtime requirements can be found and installed using the requirements.txt file.</p>
+<p>Development environments requirements, for running jupyter notebooks, compiling Rust code, and running Sphinx for documentation can be in the requirements-dev.txt file.</p>
 <section id="rust-requirements">
 <h3>Rust Requirements<a class="headerlink" href="#rust-requirements" title="Link to this heading"></a></h3>
 <p>The python package includes a Rust module for running the algorithm update procedures, which requires local compiling to execute.</p>
-<p>To run the Rust functions that is specified by the optimized parameter, requires that Rust is installed (https://www.rust-lang.org/tools/install) and the python package maturin (https://pypi.org/project/maturin/) is installed to the py env.
-Then using the py env and from the project root running <i>maturin develop</i> or <i>maturin build</i> to compile the Rust functions to run from the python code. To compile the optimized Rust functions, add the <i>-r</i> or <i>–release</i> tags to compile with optimization.</p>
-<p>The rust functions are imported as python functions, under nmf_pyr.</p>
+<p>To run the Rust functions that is specified by the optimized parameter, requires that Rust is installed (https://www.rust-lang.org/tools/install) and the python package maturin (https://pypi.org/project/maturin/) is installed to the python development environment.
+Then from the python env and the project root, executing <i>maturin develop</i> will compile the Rust code and place it in your python environment path. To compile optimized Rust code, include the <i>-r</i> or <i>–release</i> tags.</p>
+<p>The Rust code can also be compiled to the target directory inside of project root using <i>maturin build</i>.</p>
+<p>The rust functions are imported as python functions, with the ‘from esat_rust import esat_rust’</p>
 </section>
 <section id="creating-docs">
 <h3>Creating Docs<a class="headerlink" href="#creating-docs" title="Link to this heading"></a></h3>
