@@ -104,7 +104,7 @@ class BSDISP:
         }
 
     def run(self,
-            parallel: bool = False,
+            parallel: bool = True,
             keep_H: bool = True,
             reuse_seed: bool = True,
             block: bool = True,

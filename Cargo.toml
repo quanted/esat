@@ -11,17 +11,18 @@ license-file = "LICENSE"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [lib]
 name = "esat_rust"
+path = "src/lib.rs"
 crate-type = ["cdylib"]
 
 [dependencies]
-pyo3 = "0.18.1"
-numpy = "0.18.0"
-nalgebra = {version="0.32.2", features = ["rayon"]}
+pyo3 = "0.20.3"
+numpy = "0.20.0"
+nalgebra = {version="0.32.4", features = ["rayon"]}
 ndarray = "0.15.6"
-rayon = "1.7"
+rayon = "1.9.0"
 
 [profile.dev]
 opt-level = 0
 
 [profile.release]
-opt-level = 2
+opt-level = 3
