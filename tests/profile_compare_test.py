@@ -3,7 +3,7 @@ import sys
 
 cwd = os.getcwd()
 sys.path.append(cwd)
-sys.path.append(cwd + "..\src")
+sys.path.append(cwd + "..\\src")
 
 import time
 import json
