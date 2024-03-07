@@ -442,7 +442,10 @@ class Bootstrap:
             for r_k, r_v in self.bs_results.items():
                 p_f = r_v["model"].H
                 p_fn = p_f / p_f.sum(axis=0)
-                profile.append(p_fn[i])
+                pi = p_fn[i]
+                pi[pi < 1e-8] = 0.0
+                pi = np.round(pi, 4)
+                profile.append(list(pi))
             bs_profiles[i] = profile
         self.bs_profiles = bs_profiles
 
@@ -455,7 +458,9 @@ class Bootstrap:
                 i_W = i_W.reshape(len(i_W), 1)
                 i_WH = np.matmul(i_W, i_H)
                 i_sum = i_WH.sum(axis=0)
-                contributions.append(i_sum)
+                i_sum[i_sum < 1e-8] = 0
+                i_sum = np.round(i_sum, 4)
+                contributions.append(list(i_sum))
             bs_factor_contributions[i] = contributions
         self.bs_factor_contributions = bs_factor_contributions
 
@@ -492,7 +497,10 @@ class Bootstrap:
         for i in range(self.factors):
             factor_results = []
             for j_k, j_v in self.bs_results.items():
-                factor_results.append(j_v["model"].H[i])
+                Hi = j_v["model"].H[i]
+                Hi[Hi < 1e-8] = 0.0
+                Hi = np.round(Hi, 4)
+                factor_results.append(list(Hi))
             factor_tables[i] = factor_results
         self.factor_tables = factor_tables
 
@@ -500,13 +508,13 @@ class Bootstrap:
         """
         Prints a summary of the BS parameters and results.
         """
-        print("ESAT Bootstrap Error Estimation Summary")
-        print("----- Input Parameters -----")
-        print(f"Base model run number: {self.model_selected}")
-        print(f"Number of bootstrap runs: {self.bootstrap_n}")
-        print(f"Min. Correlation R-Value: {self.threshold}")
-        print(F"Number of Factors: {self.factors}")
-        print("\n")
+        logger.info("ESAT Bootstrap Error Estimation Summary")
+        logger.info("----- Input Parameters -----")
+        logger.info(f"Base model run number: {self.model_selected}")
+        logger.info(f"Number of bootstrap runs: {self.bootstrap_n}")
+        logger.info(f"Min. Correlation R-Value: {self.threshold}")
+        logger.info(F"Number of Factors: {self.factors}")
+        logger.info("\n")
         self.show_mapping_table()
         self.show_q_table()
         for i in range(1, self.factors+1):
@@ -547,7 +555,7 @@ class Bootstrap:
 
         """
         if factor > self.factors or factor < 1:
-            print(f"Invalid factor provided, must be between 1 and {self.factors}")
+            logger.info(f"Invalid factor provided, must be between 1 and {self.factors}")
             return
         factor_label = factor
         factor = factor - 1
@@ -586,7 +594,7 @@ class Bootstrap:
 
         """
         if factor > self.factors or factor < 1:
-            print(f"Invalid factor provided, must be between 1 and {self.factors}")
+            logger.info(f"Invalid factor provided, must be between 1 and {self.factors}")
             return
         factor_label = factor
         factor = factor - 1
@@ -620,7 +628,7 @@ class Bootstrap:
 
         """
         if factor > self.factors or factor < 1:
-            print(f"Invalid factor provided, must be between 1 and {self.factors}")
+            logger.info(f"Invalid factor provided, must be between 1 and {self.factors}")
             return
         factor_label = factor
         factor = factor - 1
@@ -703,7 +711,7 @@ class Bootstrap:
                     logger.info(f"BS SA results saved to file: {results_file}")
                 mapping_file = os.path.join(output_directory, f"{bs_name}-mapping.csv")
                 with open(mapping_file, "w") as mapfile:
-                    self.mapping_df.to_csv(mapfile)
+                    self.mapping_df.to_csv(mapfile, index=False, lineterminator='\n')
                     logger.info(f"BS SA model mapping saved to file: {mapping_file}")
                 qtable_file = os.path.join(output_directory, f"{bs_name}-qtable.csv")
                 with open(qtable_file, "w") as qfile:

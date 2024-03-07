@@ -249,7 +249,7 @@ class DataHandler:
 
         """
         if feature_idx > self.input_data.shape[1] - 1 or feature_idx < 0:
-            print(f"Invalid feature index provided, must be between 0 and {self.input_data.shape[1]}")
+            logger.info(f"Invalid feature index provided, must be between 0 and {self.input_data.shape[1]}")
             return
         feature_label = self.input_data.columns[feature_idx]
 
@@ -274,11 +274,11 @@ class DataHandler:
 
         """
         if x_idx > self.input_data.shape[1] - 1 or x_idx < 0:
-            print(f"Invalid x feature index provided, must be between 0 and {self.input_data.shape[1]}")
+            logger.info(f"Invalid x feature index provided, must be between 0 and {self.input_data.shape[1]}")
             return
         x_label = self.input_data.columns[x_idx]
         if y_idx > self.input_data.shape[1] - 1 or y_idx < 0:
-            print(f"Invalid y feature index provided, must be between 0 and {self.input_data.shape[1]}")
+            logger.info(f"Invalid y feature index provided, must be between 0 and {self.input_data.shape[1]}")
             return
         y_label = self.input_data.columns[y_idx]
 

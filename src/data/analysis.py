@@ -131,7 +131,7 @@ class ModelAnalysis:
                 The list of residuals that exceed the absolute value of the threshold, as a pd.DataFrame
         """
         if feature_idx > self.dh.input_data.shape[1] - 1 or feature_idx < 0:
-            print(f"Invalid feature index provided, must be between 0 and {self.dh.input_data.shape[1]}")
+            logger.info(f"Invalid feature index provided, must be between 0 and {self.dh.input_data.shape[1]}")
             return
         V = self.model.V[:, feature_idx]
         if est_V is None:
@@ -171,7 +171,7 @@ class ModelAnalysis:
 
         """
         if feature_idx > self.dh.input_data.shape[1] - 1 or feature_idx < 0:
-            print(f"Invalid feature index provided, must between 0 and {self.dh.input_data.shape[1]}")
+            logger.info(f"Invalid feature index provided, must between 0 and {self.dh.input_data.shape[1]}")
             return
         x_label = self.dh.input_data.columns[feature_idx]
 
@@ -206,7 +206,7 @@ class ModelAnalysis:
 
         """
         if feature_idx > self.dh.input_data.shape[1] - 1 or feature_idx < 0:
-            print(f"Invalid feature index provided, must be between 0 and {self.dh.input_data.shape[1]}")
+            logger.info(f"Invalid feature index provided, must be between 0 and {self.dh.input_data.shape[1]}")
             return
         x_label = self.dh.input_data.columns[feature_idx]
 
@@ -251,7 +251,7 @@ class ModelAnalysis:
 
         """
         if factor_idx > self.model.factors or factor_idx < 1:
-            print(f"Invalid factor provided, must be between 1 and {self.model.factors}")
+            logger.info(f"Invalid factor provided, must be between 1 and {self.model.factors}")
             return
         factor_label = f"Factor {factor_idx}"
         factor_idx_l = factor_idx
@@ -338,10 +338,10 @@ class ModelAnalysis:
 
         """
         if factor_1 > self.model.factors or factor_1 < 1:
-            print(f"Invalid factor_1 provided, must be between 1 and {self.model.factors}")
+            logger.info(f"Invalid factor_1 provided, must be between 1 and {self.model.factors}")
             return
         if factor_2 > self.model.factors or factor_2 < 1:
-            print(f"Invalid factor_2 provided, must be between 0 and {self.model.factors}")
+            logger.info(f"Invalid factor_2 provided, must be between 0 and {self.model.factors}")
             return
 
         factors_contr = self.model.W
@@ -373,10 +373,10 @@ class ModelAnalysis:
 
         """
         if feature_idx > self.dh.input_data.shape[1] - 1 or feature_idx < 0:
-            print(f"Invalid feature index provided, must not be negative and be less than {self.dh.input_data.shape[1]-1}")
+            logger.info(f"Invalid feature index provided, must not be negative and be less than {self.dh.input_data.shape[1]-1}")
             return
         if 50.0 > contribution_threshold < 0:
-            print(f"Invalid contribution threshold provided, must be between 0.0 and 50.0")
+            logger.info(f"Invalid contribution threshold provided, must be between 0.0 and 50.0")
             return
         x_label = self.dh.input_data.columns[feature_idx]
 

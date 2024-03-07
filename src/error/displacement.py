@@ -166,7 +166,7 @@ class Displacement:
 
         """
         if factor > self.factors or factor < 1:
-            print(f"Invalid factor provided, must be between 1 and {self.factors}")
+            logger.info(f"Invalid factor provided, must be between 1 and {self.factors}")
             return
         factor_label = factor
         factor = factor - 1
@@ -208,7 +208,7 @@ class Displacement:
 
         """
         if factor > self.factors or factor < 1:
-            print(f"Invalid factor provided, must be between 1 and {self.factors}")
+            logger.info(f"Invalid factor provided, must be between 1 and {self.factors}")
             return
         factor_label = factor
         factor = factor - 1
@@ -491,7 +491,7 @@ class Displacement:
                     json.dump(self.increase_results, incfile, default=np_encoder)
                     logger.info(f"DISP SA model increasing results saved to file: {increase_file}")
                 decrease_file = os.path.join(output_directory, f"{disp_name}-decrease-disp.json")
-                with open(increase_file, "w") as decfile:
+                with open(decrease_file, "w") as decfile:
                     json.dump(self.decrease_results, decfile, default=np_encoder)
                     logger.info(f"DISP SA model decreasing results saved to file: {decrease_file}")
                 swap_file = os.path.join(output_directory, f"{disp_name}-swaptable.csv")
@@ -503,12 +503,11 @@ class Displacement:
                     dq_list = list(reversed(self.dQmax))
                     dq_list = np.reshape(dq_list, newshape=(len(dq_list), 1))
                     table_data = np.hstack((dq_list, table_data))
-                    swap_comment = f"Swap % Table\nMetadata File: {meta_file}\n\n"
-                    np.savetxt(stfile, table_data, delimiter=',', header=table_labels, comments=swap_comment)
+                    np.savetxt(stfile, table_data, delimiter=',', header=", ".join(table_labels))
                     logger.info(f"DISP SA swap table saved to file: {swap_file}")
                 compiled_file = os.path.join(output_directory, f"{disp_name}-results.csv")
                 with open(compiled_file, 'w') as cfile:
-                    self.compiled_results.to_csv(cfile)
+                    self.compiled_results.to_csv(cfile, index=False, lineterminator='\n')
                     logger.info(f"DISP SA compiled results saved to file: {compiled_file}")
             return file_path
         else:

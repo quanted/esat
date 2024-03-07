@@ -13,7 +13,7 @@ EPSILON = 1e-12
 #  functions for connectivity, consensus, dispersion from https://github.com/yal054/snATAC/blob/master/snATAC.nmf.py
 def cal_connectivity(H, idx):
     """ calculate connectivity matrix """
-    print("=== calculate connectivity matrix ===")
+    # logger.info("=== calculate connectivity matrix ===")
     connectivity_mat = np.zeros((H.shape[1], H.shape[1]))
     classN = H.shape[0]
     for i in range(classN):
@@ -26,7 +26,7 @@ def cal_connectivity(H, idx):
 
 def cal_cophenetic(C):
     """ calculate cophenetic correlation coefficient """
-    print("=== calculate cophenetic correlation coefficient ===")
+    # logger.info("=== calculate cophenetic correlation coefficient ===")
     X = C
     Z = fc.linkage_vector(X)   # Clustering
     orign_dists = fc.pdist(X)  # Matrix of original distances between observations
@@ -37,7 +37,7 @@ def cal_cophenetic(C):
 
 def cal_dispersion(C):
     """ calculate dispersion coefficient """
-    print("=== calculate dispersion coefficient ===")
+    # logger.info("=== calculate dispersion coefficient ===")
     n = C.shape[1]
     corr_disp = np.sum(4 * np.square(np.concatenate(C - 1/2)))/(np.square(n))
     return corr_disp
