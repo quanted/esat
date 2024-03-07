@@ -14,6 +14,7 @@ import copy
 import pickle
 import json
 import time
+import os
 
 logging.basicConfig(format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S', level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -85,7 +86,7 @@ class SA:
 
         self.m, self.n = self.V.shape
 
-        self.factors = factors
+        self.factors = int(factors)
 
         self.H = None
         self.W = None
@@ -130,14 +131,18 @@ class SA:
         self.optimized = optimized
         if self.optimized:
             # Attempt to load rust code for optimized model training
-            from esat_rust import esat_rust
-            if self.method == "ls-nmf" and not self.__has_neg:
-                self.optimized_update = esat_rust.ls_nmf
-            else:
-                if self.parallelized:
-                    self.optimized_update = esat_rust.ws_nmf_p
+            try:
+                from esat_rust import esat_rust
+                if self.method == "ls-nmf" and not self.__has_neg:
+                    self.optimized_update = esat_rust.ls_nmf
                 else:
-                    self.optimized_update = esat_rust.ws_nmf
+                    if self.parallelized:
+                        self.optimized_update = esat_rust.ws_nmf_p
+                    else:
+                        self.optimized_update = esat_rust.ws_nmf
+            except ModuleNotFoundError:
+                logger.error("Unable to load optimized Rust module, reverting to python code.")
+                self.optimized = False
 
     def __validate(self):
         """
@@ -405,7 +410,7 @@ class SA:
         else:
             prior_q = []
             We_prime = copy.copy(self.We)
-            t_iter = trange(max_iter, desc=f"Model: {model_i}, Seed: {self.seed}, Q(true): NA, Q(robust): NA",
+            t_iter = trange(max_iter, desc=f"Model: {model_i}, Seed: {self.seed}, Q(true): NA, Q(robust): NA, dQ: NA",
                             position=0, leave=True, disable=not self.verbose)
             for i in t_iter:
                 W, H = self.update_step(V=V, We=We_prime, W=W, H=H)
@@ -421,6 +426,7 @@ class SA:
                     logger.error(f"Stopping SA model train due to loss value being NAN. Q(true): {q_true}, "
                                  f"Q(robust): {q_robust}")
                     break
+                delta_q = 0.0
                 if len(prior_q) > converge_n:
                     prior_q.pop(0)
                     delta_q_first = prior_q[0]
@@ -429,7 +435,7 @@ class SA:
                     if delta_q < converge_delta:
                         converged = True
                 t_iter.set_description(f"Model: {model_i}, Seed: {self.seed}, Q(true): {round(q_true, 2)}, "
-                                       f"Q(robust): {round(q_robust, 2)}")
+                                       f"Q(robust): {round(q_robust, 2)}, dQ: {round(delta_q, 4)}")
                 t_iter.refresh()
                 self.converge_steps += 1
 
@@ -452,7 +458,6 @@ class SA:
         if robust_mode:
             self.metadata["robust_n"] = int(robust_n)
             self.metadata["robust_alpha"] = float(robust_alpha)
-
 
     def save(self,
              model_name: str,
@@ -620,21 +625,21 @@ if __name__ == "__main__":
     U = dh.uncertainty_data_processed
 
     t0 = time.time()
-    print("Running python code")
+    logger.info("Running python code")
     sa = SA(V=V, U=U, factors=factors, method=method, seed=seed, optimized=False, verbose=verbose)
     sa.initialize(init_method=init_method, init_norm=init_norm, fuzziness=5.0)
     sa.train(max_iter=max_iterations, converge_delta=converge_delta, converge_n=converge_n,
               robust_alpha=robust_alpha, robust_n=robust_n, robust_mode=robust_mode)
     t1 = time.time()
-    print(f"Runtime: {round((t1 - t0) / 60, 2)} min(s)")
+    logger.info(f"Runtime: {round((t1 - t0) / 60, 2)} min(s)")
 
-    print("Running rust code")
+    logger.info("Running rust code")
     sa2 = SA(V=V, U=U, factors=factors, method=method, seed=seed, optimized=True, verbose=verbose)
     sa2.initialize(init_method=init_method, init_norm=init_norm, fuzziness=5.0)
     sa2.train(max_iter=max_iterations, converge_delta=converge_delta, converge_n=converge_n,
               robust_alpha=robust_alpha, robust_n=robust_n, robust_mode=robust_mode)
     t2 = time.time()
-    print(f"Runtime: {round((t2 - t1) / 60, 2)} min(s)")
+    logger.info(f"Runtime: {round((t2 - t1) / 60, 2)} min(s)")
 
     sa2.save(model_name="test", output_directory=os.path.join(data_directory,"output"), pickle_model=False,
              header=list(dh.features))

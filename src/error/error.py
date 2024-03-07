@@ -67,7 +67,7 @@ class Error:
             logging.error("Must complete and provide an instance of either displacement or bootstrap or both")
             return
         if factor > self.factors or factor < 1:
-            print(f"Invalid factor provided, must be between 1 and {self.factors}")
+            logger.info(f"Invalid factor provided, must be between 1 and {self.factors}")
             return
         factor_i = factor-1
 

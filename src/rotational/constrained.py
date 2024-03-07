@@ -1,10 +1,6 @@
 import sys
 import os
 import re
-
-module_path = os.path.abspath(os.path.join('..', "nmf_py"))
-sys.path.append(module_path)
-
 from src.model.sa import SA
 from src.data.datahandler import DataHandler
 from src.utils import np_encoder
@@ -90,7 +86,7 @@ class Constraint:
            The label or title of the constraint, created by the ConstrainedModel class.
 
         """
-        print(self.tostring(label=label))
+        logger.info(self.tostring(label=label))
 
     def tostring(self, label: str = None):
         """
@@ -271,7 +267,7 @@ class ConstrainedModel:
         List all the constraints that are currently set for this constrained model.
 
         """
-        print(f"Constraint List - Count: {len(self.constraints.keys())}")
+        logger.info(f"Constraint List - Count: {len(self.constraints.keys())}")
         for c_key, constraint in self.constraints.items():
             constraint.describe(label=c_key)
 
@@ -305,8 +301,9 @@ class ConstrainedModel:
         List all the current expressions assigned to the constrained model.
 
         """
+        logger.info(f"Expression List - Count: {len(self.expressions)}")
         for i, exp in enumerate(self.expressions):
-            print(f"{i}: {exp}")
+            logger.info(f"{i}: {exp}")
 
     def remove_expression(self, expression_idx):
         """
@@ -437,7 +434,7 @@ class ConstrainedModel:
         D_w, D_h = self._apply_constraints(iW=iW, iH=iH, D_w=D_w, D_h=D_h)
         return D_w, D_h
 
-    def train(self, max_iterations: int = None, converge_delta: float = None, converge_n: int = None):
+    def train(self, max_iterations: int = 20000, converge_delta: float = 1e-2, converge_n: int = 10):
         """
         Retrain the specified nmf model applying the constraints and expressions conditions on the solution and finding
         to calculate a new solution. If no arguments are provided, the values used in the base nmf model will be
@@ -471,9 +468,14 @@ class ConstrainedModel:
            converged.
 
         """
-        max_iterations = self.base_model.metadata["max_iterations"] if max_iterations is None else max_iterations
-        converge_delta = self.base_model.metadata["converge_delta"] if converge_delta is None else converge_delta
-        converge_n = self.base_model.metadata["converge_n"] if converge_n is None else converge_n
+        if len(self.constraints.keys()) == 0 and len(self.expressions) == 0:
+            logger.info("No constraints or expressions have been added. Add at least one constraint or expression "
+                        "before training the constrained model.")
+            return
+
+        # max_iterations = self.base_model.metadata["max_iterations"] if max_iterations is None else max_iterations
+        # converge_delta = self.base_model.metadata["converge_delta"] if converge_delta is None else converge_delta
+        # converge_n = self.base_model.metadata["converge_n"] if converge_n is None else converge_n
 
         self._map_expressions()
 
@@ -504,21 +506,24 @@ class ConstrainedModel:
             Qaux_i = self._Qaux_loss(W=self.base_model.W, Wp=W_i, Dw=D_w, H=self.base_model.H, Hp=H_i, Dh=D_h)
             Qmain_i = Qtrue_i + Qaux_i
 
-            t_iter.set_description(f"Q(Robust): {round(Qrobust_i, 3)}, "
-                                   f"Q(Main): {round(Qmain_i, 3)}, Q(aux): {round(Qaux_i, 3)}")
             Q_list[0].append(Qtrue_i)
             Q_list[1].append(Qrobust_i)
             Q_list[2].append(Qaux_i)
 
             qm_list.append(Qmain_i)
+            dQ = 0.0
             if len(qm_list) > converge_n:
                 qm_list.pop(0)
-                if np.max(qm_list) - np.min(qm_list) <= converge_delta:
+                dQ = np.max(qm_list) - np.min(qm_list)
+                if dQ <= converge_delta:
                     converged = True
                     break
+            t_iter.set_description(f"Q(Robust): {round(Qrobust_i, 3)}, "
+                                   f"Q(Main): {round(Qmain_i, 3)}, Q(aux): {round(Qaux_i, 3)}, dQ: {round(dQ, 4)}")
         self.constrained_model = SA(V=V, U=U, factors=self.base_model.factors, method=self.base_model.method,
                                     seed=self.base_model.seed)
         self.constrained_model.initialize(H=H_i, W=W_i)
+        self.constrained_model.WH = np.matmul(W_i, H_i)
         self.constrained_model.metadata["max_iterations"] = max_iterations
         self.constrained_model.metadata["converge_delta"] = converge_delta
         self.constrained_model.metadata["converge_n"] = converge_n
@@ -550,7 +555,7 @@ class ConstrainedModel:
             expression_labeled = []
             for e in expression:
                 if len(e) > 1:
-                    e_terms0 = re.findall('\[(.*?)\]', e)[0]
+                    e_terms0 = re.findall(r'\[(.*?)]', e)[0]
                     e_terms1 = re.split(r"[:|]+", e_terms0)
                     e_index = (int(e_terms1[1]), int(e_terms1[3]))
                     e_coef = float(e.split("*")[0]) * (-1.0 if neg_term else 1.0)
@@ -733,6 +738,8 @@ class ConstrainedModel:
         Print the results of the constrained model run.
 
         """
+        if self.constrained_model is None:
+            return
         logger.info(f"dQ(Robust): {round(self.constrained_model.Qrobust - self.base_model.Qrobust, 2)}, "
                     f"Q(Robust): {round(self.constrained_model.Qrobust, 2)}, "
                     f"Base Q(Robust): {round(self.base_model.Qrobust, 2)}, "
@@ -782,7 +789,7 @@ class ConstrainedModel:
     def evaluate_constraints(self):
         """
         Evaluate and show the factor element constraint results of the constrained model run.
-
+        TODO: Perform factor mapping between the base solution and the constrained solution.
         """
         constraint_values = []
         for k, c in self.constraints.items():
@@ -821,6 +828,7 @@ class ConstrainedModel:
     def evaluate_expressions(self):
         """
         Evaluate and show the expression results of the constrained model run.
+        TODO: Perform factor mapping between the base solution and the constrained solution.
 
         """
         exp_element = {}
@@ -1130,7 +1138,7 @@ class ConstrainedModel:
         contr_fig.update_yaxes(title_text="Normalized Contribution")
         contr_fig.show()
 
-    def save(self, model_name: str, output_directory: str, pickle_model: bool = False, header: list = None):
+    def save(self, model_name: str, output_directory: str, pickle_model: bool = False):
         model_name = f"constrained_model-{model_name}"
         output_directory = Path(output_directory)
         if not output_directory.is_absolute():
@@ -1141,7 +1149,7 @@ class ConstrainedModel:
                 model_name=model_name,
                 output_directory=output_directory,
                 pickle_model=pickle_model,
-                header=header)
+                header=self.dh.features)
             meta_file = os.path.join(output_directory, f"{model_name}-metadata.json")
             metadata = self.metadata
             metadata["constraints"] = [c.tostring(label=k) for k, c in self.constraints.items()]
@@ -1153,3 +1161,34 @@ class ConstrainedModel:
                 logger.info(f"Constrained SA model metadata saved to file: {meta_file}")
         else:
             logger.error(f"Output directory not found. Provided directory: {output_directory}")
+
+    @staticmethod
+    def load(file_path: str):
+        """
+        Load a previously saved Constrained SA pickle file.
+
+        Parameters
+        ----------
+        file_path : str
+           File path to a previously saved Constrained SA pickle file
+
+        Returns
+        -------
+        ConstrainedModel
+           On successful load, will return a previously saved Constrained SA object. Will return None on load fail.
+        """
+        file_path = Path(file_path)
+        if not file_path.is_absolute():
+            current_directory = os.path.abspath(__file__)
+            file_path = Path(os.path.join(current_directory, file_path)).resolve()
+        if os.path.exists(file_path):
+            try:
+                with open(file_path, "rb") as pfile:
+                    c_solution = pickle.load(pfile)
+                    return c_solution
+            except pickle.PickleError as p_error:
+                logger.error(f"Failed to load constrained solution pickle file {file_path}. \nError: {p_error}")
+                return None
+        else:
+            logger.error(f"Constrained solution load file failed, specified pickle file does not exist. File Path: {file_path}")
+            return None

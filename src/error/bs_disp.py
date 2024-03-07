@@ -4,6 +4,7 @@ import pickle
 import os
 import copy
 import time
+import json
 import numpy as np
 import multiprocessing as mp
 from tqdm import tqdm
@@ -12,6 +13,7 @@ from pathlib import Path
 from src.model.sa import SA
 from src.error.bootstrap import Bootstrap
 from src.error.displacement import Displacement
+from src.utils import np_encoder
 
 logging.basicConfig(format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S', level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -309,7 +311,7 @@ class BSDISP:
 
         """
         if factor > self.factors or factor < 1:
-            print(f"Invalid factor provided, must be between 1 and {self.factors}")
+            logger.info(f"Invalid factor provided, must be between 1 and {self.factors}")
             return
         factor_label = factor
         factor = factor - 1
@@ -351,7 +353,7 @@ class BSDISP:
 
         """
         if factor > self.factors or factor < 1:
-            print(f"Invalid factor provided, must be between 1 and {self.factors}")
+            logger.info(f"Invalid factor provided, must be between 1 and {self.factors}")
             return
         factor_label = factor
         factor = factor - 1
@@ -410,8 +412,17 @@ class BSDISP:
                     pickle.dump(self, save_file)
                     logger.info(f"BS-DISP SA output saved to pickle file: {file_path}")
             else:
-
-                logger.error("Not yet implemented.")
+                meta_file = os.path.join(output_directory, f"{bsdisp_name}-metadata.json")
+                with open(meta_file, "w") as mfile:
+                    json.dump(self.metadata, mfile, default=np_encoder)
+                    logger.info(f"BSDISP SA model metadata saved to file: {meta_file}")
+                self.bootstrap.save(bs_name=bsdisp_name, output_directory=str(output_directory), pickle_result=False)
+                for k, disp in self.disp_results.items():
+                    disp.save(disp_name=bsdisp_name + "-" + str(k), output_directory=str(output_directory),
+                              pickle_result=False)
+                compiled_file = os.path.join(output_directory, f"{bsdisp_name}-results.csv")
+                with open(compiled_file, 'w') as cfile:
+                    self.compiled_results.to_csv(cfile, index=False, lineterminator='\n')
             return file_path
         else:
             logger.error(f"Output directory does not exist. Specified directory: {output_directory}")

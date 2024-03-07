@@ -1,9 +1,5 @@
 import datetime
-import sys
 import os
-module_path = os.path.abspath(os.path.join('..', "nmf_py"))
-sys.path.append(module_path)
-
 import logging
 import time
 import pickle
@@ -105,15 +101,13 @@ class BatchSA:
         self.V = V
         self.U = U
 
-        self.seed = seed
-
-        self.models = models
-        self.max_iter = max_iter
-        self.converge_delta = converge_delta
-        self.converge_n = converge_n
+        self.models = int(models)
+        self.max_iter = int(max_iter)
+        self.converge_delta = float(converge_delta)
+        self.converge_n = int(converge_n)
         self.best_robust = best_robust
 
-        self.seed = 42 if seed is None else seed
+        self.seed = 42 if seed is None else int(seed)
         self.rng = np.random.default_rng(self.seed)
         self.init_method = init_method
         self.init_norm = init_norm
@@ -164,7 +158,7 @@ class BatchSA:
                     U=self.U,
                     seed=_seed,
                     optimized=self.optimized,
-                    verbose=self.verbose
+                    verbose=False
                 )
                 _sa.initialize(init_method=self.init_method, init_norm=self.init_norm, fuzziness=self.fuzziness)
                 input_parameters.append((_sa, i))
@@ -182,13 +176,12 @@ class BatchSA:
                 if _nmf_q < best_q:
                     best_q = _nmf_q
                     best_model = model_i
-            if self.verbose:
-                for i, result in enumerate(ordered_results):
-                    if result is None:
-                        continue
-                    logger.info(f"Model: {i+1}, Q(true): {round(result.Qtrue, 4)}, "
-                                f"Q(robust): {round(result.Qrobust, 4)}, Seed: {result.seed}, "
-                                f"Converged: {result.converged}, Steps: {result.converge_steps}/{self.max_iter}")
+            for i, result in enumerate(ordered_results):
+                if result is None:
+                    continue
+                logger.info(f"Model: {i + 1}, Q(true): {round(result.Qtrue, 4)}, "
+                            f"Q(robust): {round(result.Qrobust, 4)}, Seed: {result.seed}, "
+                            f"Converged: {result.converged}, Steps: {result.converge_steps}/{self.max_iter}")
             self.results = ordered_results
         else:
             self.results = []
@@ -302,9 +295,10 @@ class BatchSA:
             else:
                 file_path = output_directory
                 for i, _nmf in enumerate(self.results):
-                    file_name = f"{batch_name}-model-{i}"
-                    _nmf.save(model_name=file_name, output_directory=output_directory,
-                              pickle_model=pickle_model, header=header)
+                    if _nmf is not None:
+                        file_name = f"{batch_name}-model-{i}"
+                        _nmf.save(model_name=file_name, output_directory=output_directory,
+                                  pickle_model=pickle_model, header=header)
             logger.info(f"All batch SA models saved. Name: {batch_name}, Directory: {output_directory}")
             return file_path
         else:

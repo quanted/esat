@@ -24,7 +24,7 @@ if __name__ == "__main__":
     if os.path.exists(analysis_file):
         with open(analysis_file, 'r') as a_file:
             completed = json.load(a_file)
-            completed_solutions = completed.keys()
+            completed_solutions = list(completed.keys())
 
     t0 = time.time()
     for dataset in ["br", "sl", "b"]:           # "br", "sl", "b"
@@ -32,6 +32,7 @@ if __name__ == "__main__":
             for factors in range(3, 11):
                 run_key = f"{dataset}-{factors}-{method}"
                 if run_key in completed_solutions:
+                    print(f"{run_key} already completed.")
                     continue
 
                 optimized = True
@@ -41,7 +42,7 @@ if __name__ == "__main__":
                 seed = 42
                 models = 100
                 max_iterations = 50000 if method == "ls-nmf" else 20000
-                converge_delta = 0.01 if method == 'ws-nmf' else 0.0001
+                converge_delta = 0.01 if method == 'ws-nmf' else 0.001
                 converge_n = 20
                 index_col = "Date"
 
