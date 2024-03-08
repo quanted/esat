@@ -29,7 +29,7 @@ if __name__ == "__main__":
     t0 = time.time()
     for dataset in ["br", "sl", "b"]:           # "br", "sl", "b"
         for method in ["ls-nmf", "ws-nmf"]:     # "ls-nmf", "ws-nmf"
-            for factors in range(3, 11):
+            for factors in range(3, 10):
                 run_key = f"{dataset}-{factors}-{method}"
                 if run_key in completed_solutions:
                     print(f"{run_key} already completed.")
@@ -42,7 +42,7 @@ if __name__ == "__main__":
                 seed = 42
                 models = 100
                 max_iterations = 50000 if method == "ls-nmf" else 20000
-                converge_delta = 0.01 if method == 'ws-nmf' else 0.001
+                converge_delta = 0.1 if method == 'ws-nmf' else 0.01
                 converge_n = 20
                 index_col = "Date"
 

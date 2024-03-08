@@ -39,6 +39,40 @@ def get_config(project_directory, error=False, constrained=False):
     return config
 
 
+def get_model_analysis(project_directory, selected_model):
+    config = get_config(project_directory=project_directory)
+    dh = DataHandler(**config["data"])
+    batch_pkl = os.path.join(config["project"]["directory"], "output", f"{config['project']['name']}.pkl")
+    sa_models = BatchSA.load(file_path=batch_pkl)
+    selected_i = sa_models.best_model if selected_model == -1 else selected_model
+    i_model = sa_models.results[selected_i]
+    ma = ModelAnalysis(datahandler=dh, model=i_model, selected_model=selected_i)
+    return ma, selected_i
+
+
+def get_error_model(project_directory, disp: bool = False, bs: bool = False, bsdisp: bool = False):
+    config = get_config(project_directory=project_directory)
+    error_dir = os.path.join(project_directory, "error")
+    if disp:
+        file_name = f"disp-{config['project']['name']}.pkl"
+        return Displacement.load(os.path.join(error_dir, file_name))
+    elif bs:
+        file_name = f"bs-{config['project']['name']}.pkl"
+        return Bootstrap.load(os.path.join(error_dir, file_name))
+    elif bsdisp:
+        file_name = f"bsdisp-{config['project']['name']}.pkl"
+        return BSDISP.load(os.path.join(error_dir, file_name))
+    else:
+        return None
+
+
+def get_constrained_model(project_directory):
+    config = get_config(project_directory=project_directory)
+    constrained_dir = os.path.join(project_directory, "constrained")
+    file_name = f"constrained_model-{config['project']['name']}.pkl"
+    return ConstrainedModel.load(os.path.join(constrained_dir, file_name))
+
+
 @click.group()
 def esat():
     """
@@ -196,161 +230,107 @@ def run(project_directory):
                    pickle_model=False, header=dh.features)
 
 
-@esat.group()
-def solution_analysis():
-    pass
-
-
-@solution_analysis.command()
+@esat.command()
 @click.argument("project_directory", type=click.Path(exists=True))
 @click.option("--selected_model", default=-1, type=int)
 @click.option("--feature_idx", default=0, type=int)
-def plot_residual_histogram(project_directory, selected_model, feature_idx):
-    config = get_config(project_directory=project_directory)
-    dh = DataHandler(**config["data"])
-
-    batch_pkl = os.path.join(config["project"]["directory"], "output", f"{config['project']['name']}.pkl")
-    sa_models = BatchSA.load(file_path=batch_pkl)
-    selected_i = sa_models.best_model if selected_model == -1 else selected_model
-    i_model = sa_models.results[selected_i]
+def solution_residual_histogram(project_directory, selected_model, feature_idx):
+    ma, selected_i = get_model_analysis(project_directory=project_directory, selected_model=selected_model)
     logger.info(f"ESAT Solution Residual Histogram for model: {selected_i}, feature index: {feature_idx}")
-    ma = ModelAnalysis(datahandler=dh, model=i_model, selected_model=selected_i)
     ma.plot_residual_histogram(feature_idx=feature_idx)
 
 
-@solution_analysis.command()
+@esat.command()
 @click.argument("project_directory", type=click.Path(exists=True))
 @click.option("--selected_model", default=-1, type=int)
-def statistics(project_directory, selected_model):
-    config = get_config(project_directory=project_directory)
-    dh = DataHandler(**config["data"])
-
-    batch_pkl = os.path.join(config["project"]["directory"], "output", f"{config['project']['name']}.pkl")
-    sa_models = BatchSA.load(file_path=batch_pkl)
-    selected_i = sa_models.best_model if selected_model == -1 else selected_model
-    i_model = sa_models.results[selected_i]
+def solution_statistics(project_directory, selected_model):
+    ma, selected_i = get_model_analysis(project_directory=project_directory, selected_model=selected_model)
     logger.info(f"ESAT Solution Statistics. Model selected: {selected_i}")
-    ma = ModelAnalysis(datahandler=dh, model=i_model, selected_model=selected_i)
     ma.calculate_statistics()
     logger.info(ma.statistics)
 
 
-@solution_analysis.command()
+@esat.command()
 @click.argument("project_directory", type=click.Path(exists=True))
 @click.option("--selected_model", default=-1, type=int)
 @click.option("--feature_idx", default=0, type=int)
-def plot_estimated_observed(project_directory, selected_model, feature_idx):
-    config = get_config(project_directory=project_directory)
-    dh = DataHandler(**config["data"])
-
-    batch_pkl = os.path.join(config["project"]["directory"], "output", f"{config['project']['name']}.pkl")
-    sa_models = BatchSA.load(file_path=batch_pkl)
-    selected_i = sa_models.best_model if selected_model == -1 else selected_model
-    i_model = sa_models.results[selected_i]
+def solution_estimated_observed(project_directory, selected_model, feature_idx):
+    ma, selected_i = get_model_analysis(project_directory=project_directory, selected_model=selected_model)
     logger.info(f"ESAT Solution Estimated/Observed for model: {selected_i}, feature index: {feature_idx}")
-    ma = ModelAnalysis(datahandler=dh, model=i_model, selected_model=selected_i)
     ma.plot_estimated_observed(feature_idx=feature_idx)
 
 
-@solution_analysis.command()
+@esat.command()
 @click.argument("project_directory", type=click.Path(exists=True))
 @click.option("--selected_model", default=-1, type=int)
 @click.option("--feature_idx", default=0, type=int)
-def plot_estimated_timeseries(project_directory, selected_model, feature_idx):
-    config = get_config(project_directory=project_directory)
-    dh = DataHandler(**config["data"])
-
-    batch_pkl = os.path.join(config["project"]["directory"], "output", f"{config['project']['name']}.pkl")
-    sa_models = BatchSA.load(file_path=batch_pkl)
-    selected_i = sa_models.best_model if selected_model == -1 else selected_model
-    i_model = sa_models.results[selected_i]
+def solution_estimated_timeseries(project_directory, selected_model, feature_idx):
+    ma, selected_i = get_model_analysis(project_directory=project_directory, selected_model=selected_model)
     logger.info(f"ESAT Solution Estimated Timeseries for model: {selected_i}, feature index: {feature_idx}")
-    ma = ModelAnalysis(datahandler=dh, model=i_model, selected_model=selected_i)
     ma.plot_estimated_timeseries(feature_idx=feature_idx)
 
 
-@solution_analysis.command()
+@esat.command()
 @click.argument("project_directory", type=click.Path(exists=True))
 @click.option("--selected_model", default=-1, type=int)
 @click.option("--factor_idx", default=0, type=int)
-def plot_residual_histogram(project_directory, selected_model, factor_idx):
-    config = get_config(project_directory=project_directory)
-    dh = DataHandler(**config["data"])
-
-    batch_pkl = os.path.join(config["project"]["directory"], "output", f"{config['project']['name']}.pkl")
-    sa_models = BatchSA.load(file_path=batch_pkl)
-    selected_i = sa_models.best_model if selected_model == -1 else selected_model
-    i_model = sa_models.results[selected_i]
+def solution_factor_profile(project_directory, selected_model, factor_idx):
+    ma, selected_i = get_model_analysis(project_directory=project_directory, selected_model=selected_model)
     logger.info(f"ESAT Solution Factor Profile for model: {selected_i}, factor index: {factor_idx}")
-    ma = ModelAnalysis(datahandler=dh, model=i_model, selected_model=selected_i)
     ma.plot_factor_profile(factor_idx=factor_idx)
 
 
-@solution_analysis.command()
+@esat.command()
 @click.argument("project_directory", type=click.Path(exists=True))
 @click.option("--selected_model", default=-1, type=int)
-def plot_factor_fingerprints(project_directory, selected_model):
-    config = get_config(project_directory=project_directory)
-    dh = DataHandler(**config["data"])
-
-    batch_pkl = os.path.join(config["project"]["directory"], "output", f"{config['project']['name']}.pkl")
-    sa_models = BatchSA.load(file_path=batch_pkl)
-    selected_i = sa_models.best_model if selected_model == -1 else selected_model
-    i_model = sa_models.results[selected_i]
+def solution_factor_fingerprints(project_directory, selected_model):
+    ma, selected_i = get_model_analysis(project_directory=project_directory, selected_model=selected_model)
     logger.info(f"ESAT Solution Factor Fingerprints for model: {selected_i}")
-    ma = ModelAnalysis(datahandler=dh, model=i_model, selected_model=selected_i)
     ma.plot_factor_fingerprints()
 
 
-@solution_analysis.command()
+@esat.command()
 @click.argument("project_directory", type=click.Path(exists=True))
 @click.option("--selected_model", default=-1, type=int)
 @click.option("--factor_idx1", default=0, type=int)
 @click.option("--factor_idx2", default=1, type=int)
-def plot_g_space(project_directory, selected_model, factor_idx1, factor_idx2):
-    config = get_config(project_directory=project_directory)
-    dh = DataHandler(**config["data"])
-
-    batch_pkl = os.path.join(config["project"]["directory"], "output", f"{config['project']['name']}.pkl")
-    sa_models = BatchSA.load(file_path=batch_pkl)
-    selected_i = sa_models.best_model if selected_model == -1 else selected_model
-    i_model = sa_models.results[selected_i]
+def solution_g_space(project_directory, selected_model, factor_idx1, factor_idx2):
+    ma, selected_i = get_model_analysis(project_directory=project_directory, selected_model=selected_model)
     logger.info(f"ESAT Solution G-Space Plot for model: {selected_i}, factor 1: {factor_idx1}, factor 2: {factor_idx2}")
-    ma = ModelAnalysis(datahandler=dh, model=i_model, selected_model=selected_i)
     ma.plot_g_space(factor_1=factor_idx1, factor_2=factor_idx2)
 
 
-@solution_analysis.command()
+@esat.command()
 @click.argument("project_directory", type=click.Path(exists=True))
 @click.option("--selected_model", default=-1, type=int)
 @click.option("--feature_idx", default=0, type=int)
-def plot_factor_contributions(project_directory, selected_model, feature_idx):
-    config = get_config(project_directory=project_directory)
-    dh = DataHandler(**config["data"])
-
-    batch_pkl = os.path.join(config["project"]["directory"], "output", f"{config['project']['name']}.pkl")
-    sa_models = BatchSA.load(file_path=batch_pkl)
-    selected_i = sa_models.best_model if selected_model == -1 else selected_model
-    i_model = sa_models.results[selected_i]
+def solution_factor_contributions(project_directory, selected_model, feature_idx):
+    ma, selected_i = get_model_analysis(project_directory=project_directory, selected_model=selected_model)
     logger.info(f"ESAT Solution Factor Contributions for model: {selected_i}, feature index: {feature_idx}")
-    ma = ModelAnalysis(datahandler=dh, model=i_model, selected_model=selected_i)
     ma.plot_factor_contributions(feature_idx=feature_idx)
 
 
-@solution_analysis.command()
+@esat.command()
 @click.argument("project_directory", type=click.Path(exists=True))
 @click.option("--selected_model", default=-1, type=int)
-def plot_factor_contributions(project_directory, selected_model):
-    config = get_config(project_directory=project_directory)
-    dh = DataHandler(**config["data"])
-
-    batch_pkl = os.path.join(config["project"]["directory"], "output", f"{config['project']['name']}.pkl")
-    sa_models = BatchSA.load(file_path=batch_pkl)
-    selected_i = sa_models.best_model if selected_model == -1 else selected_model
-    i_model = sa_models.results[selected_i]
+def solution_factor_composition(project_directory, selected_model):
+    ma, selected_i = get_model_analysis(project_directory=project_directory, selected_model=selected_model)
     logger.info(f"ESAT Solution Factor Composition for model: {selected_i}")
-    ma = ModelAnalysis(datahandler=dh, model=i_model, selected_model=selected_i)
     ma.plot_factor_composition()
+
+
+@esat.command()
+@click.argument("project_directory", type=click.Path(exists=True))
+@click.option("--selected_model", default=-1, type=int)
+@click.option("--factor_idx", default=0, type=int)
+@click.option("--feature_idx", default=-1, type=int)
+def solution_factor_surface(project_directory, selected_model, factor_idx, feature_idx):
+    ma, selected_i = get_model_analysis(project_directory=project_directory, selected_model=selected_model)
+    factor_idx = factor_idx if factor_idx != -1 else None
+    feature_idx = feature_idx if feature_idx != -1 else None
+    logger.info(f"ESAT Solution Factor Surface for model: {selected_i}, factor index: {factor_idx}, "
+                f"feature index: {feature_idx}")
+    ma.plot_factor_surface(feature_idx=feature_idx, factor_idx=factor_idx)
 
 
 @esat.command()
@@ -483,6 +463,43 @@ def run_error(project_directory, disp, bs, bsdisp):
 
 @esat.command()
 @click.argument("project_directory", type=click.Path(exists=True))
+@click.option("--disp", prompt=True, prompt_required=False, default=False,
+              help="Summarize the displacement (DISP) error estimation results.")
+@click.option("--bs", prompt=True, prompt_required=False, default=False,
+              help="Summarize the bootstrap (BS) error estimation results.")
+@click.option("--bsdisp", prompt=True, prompt_required=False, default=False,
+              help="Summarize the bootstrap-displacement (BSDISP) error estimation results.")
+def error_summary(project_directory, disp, bs, bsdisp):
+    error_solution = get_error_model(
+        project_directory=project_directory,
+        disp=disp,
+        bs=bs,
+        bsdisp=bsdisp
+    )
+    error_solution.summary()
+
+
+@esat.command()
+@click.argument("project_directory", type=click.Path(exists=True))
+@click.option("--disp", prompt=True, prompt_required=False, default=False,
+              help="Summarize the displacement (DISP) error estimation results.")
+@click.option("--bs", prompt=True, prompt_required=False, default=False,
+              help="Summarize the bootstrap (BS) error estimation results.")
+@click.option("--bsdisp", prompt=True, prompt_required=False, default=False,
+              help="Summarize the bootstrap-displacement (BSDISP) error estimation results.")
+@click.option("--factor_idx", default=0, type=int)
+def error_results(project_directory, disp, bs, bsdisp, factor_idx):
+    error_solution = get_error_model(
+        project_directory=project_directory,
+        disp=disp,
+        bs=bs,
+        bsdisp=bsdisp
+    )
+    error_solution.plot_results(factor=factor_idx)
+
+
+@esat.command()
+@click.argument("project_directory", type=click.Path(exists=True))
 def setup_constrained(project_directory):
     """
     Create a configuration file for executing a constrained model run on a specified project.
@@ -560,6 +577,70 @@ def run_constrained(project_directory):
         logger.info("Constrained model run completed.")
     else:
         logger.error("Unable to complete constrained model run.")
+
+
+@esat.command()
+@click.argument("project_directory", type=click.Path(exists=True))
+def constrained_results(project_directory):
+    c_model = get_constrained_model(project_directory=project_directory)
+    c_model.display_results()
+
+
+@esat.command()
+@click.argument("project_directory", type=click.Path(exists=True))
+@click.option("--qtype", prompt=True, prompt_required=False, default='Aux',
+              help="Plot the loss value for qtype: True, Robust, Aux")
+def constrained_plot_q(project_directory, qtype):
+    c_model = get_constrained_model(project_directory=project_directory)
+    c_model.plot_Q(Qtype=qtype)
+
+
+@esat.command()
+@click.argument("project_directory", type=click.Path(exists=True))
+def constrained_evaluate_constraints(project_directory):
+    c_model = get_constrained_model(project_directory=project_directory)
+    c_model.evaluate_constraints()
+
+
+@esat.command()
+@click.argument("project_directory", type=click.Path(exists=True))
+def constrained_evaluate_expressions(project_directory):
+    c_model = get_constrained_model(project_directory=project_directory)
+    c_model.evaluate_expressions()
+
+
+@esat.command()
+@click.argument("project_directory", type=click.Path(exists=True))
+@click.option("--factor_idx", default=0, type=int)
+def constrained_profile_contributions(project_directory, factor_idx):
+    c_model = get_constrained_model(project_directory=project_directory)
+    c_model.plot_profile_contributions(factor_idx=factor_idx)
+
+
+@esat.command()
+@click.argument("project_directory", type=click.Path(exists=True))
+def constrained_factor_fingerprints(project_directory):
+    c_model = get_constrained_model(project_directory=project_directory)
+    c_model.plot_factor_fingerprints()
+
+
+@esat.command()
+@click.argument("project_directory", type=click.Path(exists=True))
+@click.option("--factor_idx1", default=0, type=int)
+@click.option("--factor_idx2", default=0, type=int)
+@click.option("--show_base", default=True, type=bool)
+@click.option("--show_delta", default=True, type=bool)
+def constrained_g_space(project_directory, factor_idx1, factor_idx2, show_base, show_delta):
+    c_model = get_constrained_model(project_directory=project_directory)
+    c_model.plot_g_space(factor_idx1=factor_idx1, factor_idx2=factor_idx2, show_base=show_base, show_delta=show_delta)
+
+
+@esat.command()
+@click.argument("project_directory", type=click.Path(exists=True))
+@click.option("--feature_idx", default=0, type=int)
+def constrained_profile_contributions(project_directory, feature_idx):
+    c_model = get_constrained_model(project_directory=project_directory)
+    c_model.plot_factor_contributions(feature_idx=feature_idx)
 
 
 if __name__ == "__main__":

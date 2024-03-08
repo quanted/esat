@@ -27,7 +27,7 @@ extension-module = ["pyo3/extension-module"]
 default = ["extension-module"]
 
 [profile.dev]
-opt-level = 2
+opt-level = 3
 
 [profile.release]
-opt-level = 2
+opt-level = 3

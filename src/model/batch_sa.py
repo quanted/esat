@@ -146,7 +146,7 @@ class BatchSA:
         if self.parallel:
             # TODO: Add batch processing for large datasets and large number of epochs to reduce memory requirements.
             cpus = mp.cpu_count()
-            cpus = cpus - 1 if cpus > 1 else 1
+            cpus = cpus - 2 if cpus > 3 else 1
             pool = mp.Pool(processes=cpus)
             input_parameters = []
             for i in range(1, self.models+1):
