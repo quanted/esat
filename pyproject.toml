@@ -1,7 +1,5 @@
 # esat pyproject.toml for setuptools and setuptools-rust
 [build-system]
-# requires = ["setuptools", "setuptools-rust"]
-# build-backend = "setuptools.build_meta"
 requires = ["setuptools", "maturin>=1.0,<2.0"]
 build-backend = "maturin"
 
