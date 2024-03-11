@@ -26,8 +26,11 @@ dependencies = [
 [project.scripts]
 esat = "cli:main"
 
-# [tool.setuptools.packages]
-# find = { where = ["python"]}
+[tool.maturin]
+features = ["pyo3/extension-module"]
+
+[tool.setuptools.packages]
+find = { where = ["python"]}
 
 [[tool.setup-rust.ext-modules]]
 target = "esat.esat_rust"

@@ -51,11 +51,3 @@ src.model.ws\_nmf module
    :members:
    :undoc-members:
    :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: src.model
-   :members:
-   :undoc-members:
-   :show-inheritance:

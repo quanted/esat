@@ -37,10 +37,13 @@ Code examples are available in the repository jupyter notebooks, which also prov
 
 
 .. toctree::
-   :maxdepth: 3
-   :caption: Readme
+   :maxdepth: 1
+   :caption: Documentation
 
+   self
    README.md
+   docs/modules.rst
+   docs/cli.rst
 
 
 Indices and Tables

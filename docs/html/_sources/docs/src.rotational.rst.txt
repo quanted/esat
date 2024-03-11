@@ -11,11 +11,3 @@ src.rotational.constrained module
    :members:
    :undoc-members:
    :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: src.rotational
-   :members:
-   :undoc-members:
-   :show-inheritance:
