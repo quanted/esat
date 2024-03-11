@@ -35,11 +35,3 @@ src.error.error module
    :members:
    :undoc-members:
    :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: src.error
-   :members:
-   :undoc-members:
-   :show-inheritance:

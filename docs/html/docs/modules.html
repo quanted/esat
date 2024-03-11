@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>src &mdash; Environmental Source Apportionment Toolkit (ESAT) 02/26/2024 documentation</title>
+  <title>Python API &mdash; Environmental Source Apportionment Toolkit (ESAT) 03/11/2024 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
 
@@ -15,12 +15,14 @@
   
         <script src="../_static/jquery.js?v=5d32c60e"></script>
         <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../_static/documentation_options.js?v=775bfdcd"></script>
+        <script src="../_static/documentation_options.js?v=50c005c0"></script>
         <script src="../_static/doctools.js?v=888ff710"></script>
         <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" /> 
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="src.data package" href="src.data.html" />
+    <link rel="prev" title="Environmental Source Apportionment Toolkit (ESAT)" href="../README.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -42,9 +44,18 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Readme</span></p>
-<ul>
+              <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Welcome to EPA ESAT’s Documentation!</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../README.html">Environmental Source Apportionment Toolkit (ESAT)</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Python API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="src.data.html">src.data package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.error.html">src.error package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.model.html">src.model package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.rotational.html">src.rotational package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">Command Line Interface</a></li>
 </ul>
 
         </div>
@@ -61,7 +72,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">src</li>
+      <li class="breadcrumb-item active">Python API</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/docs/modules.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -71,65 +82,37 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="src">
-<h1>src<a class="headerlink" href="#src" title="Link to this heading"></a></h1>
+  <section id="python-api">
+<h1>Python API<a class="headerlink" href="#python-api" title="Link to this heading"></a></h1>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="src.html">src package</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="src.html#subpackages">Subpackages</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="src.data.html">src.data package</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="src.data.html#submodules">Submodules</a></li>
-<li class="toctree-l4"><a class="reference internal" href="src.data.html#module-src.data.analysis">src.data.analysis module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="src.data.html#module-src.data.datahandler">src.data.datahandler module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="src.data.html#module-src.data.test_tools">src.data.test_tools module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="src.data.html#module-src.data">Module contents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src.data.html">src.data package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="src.data.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.data.html#module-src.data.analysis">src.data.analysis module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.data.html#module-src.data.datahandler">src.data.datahandler module</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="src.error.html">src.error package</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="src.error.html#submodules">Submodules</a></li>
-<li class="toctree-l4"><a class="reference internal" href="src.error.html#module-src.error.bootstrap">src.error.bootstrap module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="src.error.html#module-src.error.bs_disp">src.error.bs_disp module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="src.error.html#module-src.error.displacement">src.error.displacement module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="src.error.html#module-src.error.error">src.error.error module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="src.error.html#module-src.error">Module contents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src.error.html">src.error package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="src.error.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.error.html#module-src.error.bootstrap">src.error.bootstrap module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.error.html#module-src.error.bs_disp">src.error.bs_disp module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.error.html#module-src.error.displacement">src.error.displacement module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.error.html#module-src.error.error">src.error.error module</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="src.model.html">src.model package</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="src.model.html#submodules">Submodules</a></li>
-<li class="toctree-l4"><a class="reference internal" href="src.model.html#module-src.model.batch_sa">src.model.batch_sa module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="src.model.html#module-src.model.ls_nmf">src.model.ls_nmf module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="src.model.html#module-src.model.optimization">src.model.optimization module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="src.model.html#module-src.model.recombinator">src.model.recombinator module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="src.model.html#module-src.model.sa">src.model.sa module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="src.model.html#module-src.model.ws_nmf">src.model.ws_nmf module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="src.model.html#module-src.model">Module contents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src.model.html">src.model package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="src.model.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.model.html#module-src.model.batch_sa">src.model.batch_sa module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.model.html#module-src.model.ls_nmf">src.model.ls_nmf module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.model.html#module-src.model.optimization">src.model.optimization module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.model.html#module-src.model.recombinator">src.model.recombinator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.model.html#module-src.model.sa">src.model.sa module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.model.html#module-src.model.ws_nmf">src.model.ws_nmf module</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="src.rotational.html">src.rotational package</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="src.rotational.html#submodules">Submodules</a></li>
-<li class="toctree-l4"><a class="reference internal" href="src.rotational.html#module-src.rotational.constrained">src.rotational.constrained module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="src.rotational.html#module-src.rotational">Module contents</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="src.html#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="src.html#module-src.metrics">src.metrics module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="src.html#src.metrics.cal_connectivity"><code class="docutils literal notranslate"><span class="pre">cal_connectivity()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="src.html#src.metrics.cal_cophenetic"><code class="docutils literal notranslate"><span class="pre">cal_cophenetic()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="src.html#src.metrics.cal_dispersion"><code class="docutils literal notranslate"><span class="pre">cal_dispersion()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="src.html#src.metrics.calculate_Q"><code class="docutils literal notranslate"><span class="pre">calculate_Q()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="src.html#src.metrics.q_loss"><code class="docutils literal notranslate"><span class="pre">q_loss()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="src.html#src.metrics.qr_loss"><code class="docutils literal notranslate"><span class="pre">qr_loss()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="src.html#module-src.utils">src.utils module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="src.html#src.utils.calculate_factor_correlation"><code class="docutils literal notranslate"><span class="pre">calculate_factor_correlation()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="src.html#src.utils.compare_all_factors"><code class="docutils literal notranslate"><span class="pre">compare_all_factors()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="src.html#src.utils.np_encoder"><code class="docutils literal notranslate"><span class="pre">np_encoder()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="src.html#module-src">Module contents</a></li>
+<li class="toctree-l1"><a class="reference internal" href="src.rotational.html">src.rotational package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="src.rotational.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="src.rotational.html#module-src.rotational.constrained">src.rotational.constrained module</a></li>
 </ul>
 </li>
 </ul>
@@ -139,7 +122,10 @@
 
            </div>
           </div>
-          <footer>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../README.html" class="btn btn-neutral float-left" title="Environmental Source Apportionment Toolkit (ESAT)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="src.data.html" class="btn btn-neutral float-right" title="src.data package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
 
   <hr/>
 

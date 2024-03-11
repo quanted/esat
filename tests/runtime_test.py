@@ -3,7 +3,7 @@ import time
 import json
 import logging
 from src.data.datahandler import DataHandler
-from src.model.batch_SA import BatchSA
+from src.model.batch_sa import BatchSA
 
 
 if __name__ == "__main__":

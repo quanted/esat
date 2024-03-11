@@ -19,19 +19,3 @@ src.data.datahandler module
    :members:
    :undoc-members:
    :show-inheritance:
-
-src.data.test\_tools module
----------------------------
-
-.. automodule:: src.data.test_tools
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: src.data
-   :members:
-   :undoc-members:
-   :show-inheritance:
