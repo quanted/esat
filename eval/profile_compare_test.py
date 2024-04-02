@@ -8,10 +8,10 @@ sys.path.append(cwd + "..\\src")
 import time
 import json
 import logging
-from src.data.datahandler import DataHandler
-from src.model.batch_sa import BatchSA
+from python.data.datahandler import DataHandler
+from python.model.batch_sa import BatchSA
 from tests.factor_comparison import FactorComp
-from src.metrics import calculate_Q
+from python.metrics import calculate_Q
 
 
 if __name__ == "__main__":

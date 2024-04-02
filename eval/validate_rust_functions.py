@@ -10,10 +10,10 @@ import time
 import logging
 import numpy as np
 import pandas as pd
-from src.model.sa import SA
-from src.data.datahandler import DataHandler
-from src.metrics import calculate_Q, q_loss, qr_loss
-from esat_rust import esat_rust
+from python.model.sa import SA
+from python.data.datahandler import DataHandler
+from python.metrics import calculate_Q, q_loss, qr_loss
+from esat import esat_rust
 
 logging.getLogger('matplotlib.font_manager').setLevel(logging.ERROR)
 logging.getLogger('matplotlib').setLevel(logging.ERROR)
@@ -116,34 +116,34 @@ if __name__ == "__main__":
     q1 = q_loss(V=V, U=U, W=W1, H=H1)
     print(f"NMF KL 1 step - Q Difference: {round(np.abs(q1 - q2), 2)}, W Difference: {round(np.sum(np.abs(W1 - W2)), 2)}, H Difference: {round(np.sum(np.abs(H1 - H2)), 2)}")
 
-    # max_iter = 2000
-    # for n_factors in range(3, 8):
-    #     for method in ('ls-nmf', 'ws-nmf'):
-    #         converge_delta = 0.01 if method == 'ls-nmf' else 0.1
-    #         converge_n = 20 if method == 'ls-nmf' else 10
-    #         _index = list(range(0, V.shape[0]))
-    #         _V = copy.deepcopy(V[_index])
-    #         _U = copy.deepcopy(U[_index])
-    #         for i in _index:
-    #             for j in range(0, V.shape[1]):
-    #                 V[i,j] = _V[i, j]
-    #                 U[i,j] = _U[i, j]
-    #         ta0 = time.time()
-    #         sa_py = SA(factors=n_factors, V=V, U=U, seed=seed, method=method, optimized=False)
-    #         sa_py.initialize()
-    #         sa_py.train(max_iter=max_iter, converge_delta=converge_delta, converge_n=converge_n)
-    #         ta1 = time.time()
-    #         _index = list(range(0, V.shape[0]))
-    #         _V = copy.deepcopy(V[_index])
-    #         _U = copy.deepcopy(U[_index])
-    #         for i in _index:
-    #             for j in range(0, V.shape[1]):
-    #                 V[i, j] = _V[i, j]
-    #                 U[i, j] = _U[i, j]
-    #         tb0 = time.time()
-    #         sa_r = SA(factors=n_factors, V=V, U=U, seed=seed, method=method, optimized=True, parallelized=True)
-    #         sa_r.initialize()
-    #         sa_r.train(max_iter=max_iter, converge_delta=converge_delta, converge_n=converge_n)
-    #         tb1 = time.time()
-    #         # print(f"{method} {n_factors} - Python Q: {sa_py.Qtrue}, Rust Q: {sa_r.Qtrue}")
-    #         print(f"{method} {n_factors} - Python runtime: {round((ta1-ta0), 2)} secs, Rust runtime: {round((tb1-tb0), 2)} secs")
+    max_iter = 2000
+    for n_factors in range(3, 8):
+        for method in ('ls-nmf', 'ws-nmf'):
+            converge_delta = 0.01 if method == 'ls-nmf' else 0.1
+            converge_n = 20 if method == 'ls-nmf' else 10
+            _index = list(range(0, V.shape[0]))
+            _V = copy.deepcopy(V[_index])
+            _U = copy.deepcopy(U[_index])
+            for i in _index:
+                for j in range(0, V.shape[1]):
+                    V[i,j] = _V[i, j]
+                    U[i,j] = _U[i, j]
+            ta0 = time.time()
+            sa_py = SA(factors=n_factors, V=V, U=U, seed=seed, method=method, optimized=False)
+            sa_py.initialize()
+            sa_py.train(max_iter=max_iter, converge_delta=converge_delta, converge_n=converge_n)
+            ta1 = time.time()
+            # _index = list(range(0, V.shape[0]))
+            _V = copy.deepcopy(V[_index])
+            _U = copy.deepcopy(U[_index])
+            for i in _index:
+                for j in range(0, V.shape[1]):
+                    V[i, j] = _V[i, j]
+                    U[i, j] = _U[i, j]
+            tb0 = time.time()
+            sa_r = SA(factors=n_factors, V=V, U=U, seed=seed, method=method, optimized=True, parallelized=True)
+            sa_r.initialize()
+            sa_r.train(max_iter=max_iter, converge_delta=converge_delta, converge_n=converge_n)
+            tb1 = time.time()
+            # print(f"{method} {n_factors} - Python Q: {sa_py.Qtrue}, Rust Q: {sa_r.Qtrue}")
+            print(f"{method} {n_factors} - Python runtime: {round((ta1-ta0), 2)} secs, Rust runtime: {round((tb1-tb0), 2)} secs")

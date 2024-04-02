@@ -8,8 +8,8 @@ sys.path.append(cwd + "..\\src")
 import time
 import logging
 import numpy as np
-from src.model.batch_sa import BatchSA
-from src.data.datahandler import DataHandler
+from python.model.batch_sa import BatchSA
+from python.data.datahandler import DataHandler
 
 
 logging.getLogger('matplotlib.font_manager').setLevel(logging.ERROR)

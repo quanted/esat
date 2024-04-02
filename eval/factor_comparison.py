@@ -6,7 +6,7 @@ import pandas as pd
 from itertools import permutations, combinations
 import multiprocessing as mp
 from tqdm import tqdm
-from src.model.batch_sa import BatchSA
+from python.model.batch_sa import BatchSA
 
 
 class FactorComp:
