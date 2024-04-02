@@ -408,7 +408,7 @@ class SA:
             q_robust, U_robust = qr_loss(V=V, U=U, W=W, H=H, alpha=robust_alpha)
             t1 = time.time()
             if self.verbose:
-                logger.info(f"Model: {model_i}, Seed: {self.seed}, Q(true): {round(q_true, 4)}, "
+                logger.info(f"R - Model: {model_i}, Seed: {self.seed}, Q(true): {round(q_true, 4)}, "
                             f"Q(robust): {round(q_robust, 4)}, Steps: {self.converge_steps}/{max_iter}, "
                             f"Converged: {self.converged}, Runtime: {round(t1 - t0, 2)} sec")
         else:
