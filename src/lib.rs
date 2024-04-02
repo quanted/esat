@@ -55,6 +55,8 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         let mut w_den: DMatrix<f64>;
         let mut wev: DMatrix<f64>;
 
+        let mut robust_results = calculate_q_robust(&v, &u, &new_w, &new_h, robust_alpha);
+
         for i in 0..max_iter{
             wev = new_we.component_mul(&v);
             wh = &new_w * &new_h;
@@ -68,7 +70,7 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
             new_w = new_w.component_mul(&w_num.component_div(&w_den));
 
             qtrue = calculate_q(&v, &u, &new_w, &new_h);
-            let robust_results = calculate_q_robust(&v, &u, &new_w, &new_h, robust_alpha);
+            robust_results = calculate_q_robust(&v, &u, &new_w, &new_h, robust_alpha);
             qrobust = robust_results.0;
             q = qtrue;
 
