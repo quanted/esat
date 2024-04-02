@@ -23,7 +23,7 @@ rayon = "1.9.0"
 version="0.20.3"
 
 [features]
-extension-module = ["pyo3/extension-module"]
+extension-module = ["pyo3/extension-module", "pyo3/generate-import-lib"]
 default = ["extension-module"]
 
 [profile.dev]

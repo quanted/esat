@@ -1,13 +1,17 @@
 # esat pyproject.toml for setuptools and setuptools-rust
 [build-system]
-requires = ["setuptools", "maturin>=1.0,<2.0"]
-build-backend = "maturin"
+requires = ["setuptools", "setuptools-rust"]
+#requires = ["maturin>=1.0,<2.0"]
+#build-backend = "maturin"
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "esat"
 version = "2024.0.1"
 requires-python = ">=3.11"
+description = "EPA's Environmental Source Apportionment Toolkit python package."
 classifiers = [
+    "Programming Language :: Python",
     "Programming Language :: Rust",
     "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Python :: Implementation :: PyPy",
@@ -23,16 +27,25 @@ dependencies = [
     "tqdm>=4.66"
 ]
 
-[project.scripts]
-esat = "cli:main"
+[tool.setuptools]
+include-package-data = true
 
-[tool.maturin]
-features = ["pyo3/extension-module"]
+[project.scripts]
+esat = "cli.esat_cli:esat_cli"
+
+#[tool.maturin]
+#features = ["pyo3/extension-module"]
+#find = { where = ["python"]}
 
 [tool.setuptools.packages]
 find = { where = ["python"]}
 
-[[tool.setup-rust.ext-modules]]
+[[tool.setuptools-rust.ext-modules]]
 target = "esat.esat_rust"
 path = "Cargo.toml"
 binding = "PyO3"
+
+#[[tool.setup-rust.ext-modules]]
+#target = "esat.esat_rust"
+#path = "Cargo.toml"
+#binding = "PyO3"
