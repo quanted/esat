@@ -8,8 +8,8 @@ sys.path.append(cwd + "..\\src")
 import time
 import json
 import logging
-from src.data.datahandler import DataHandler
-from src.model.batch_sa import BatchSA
+from python.data.datahandler import DataHandler
+from python.model.batch_sa import BatchSA
 
 
 if __name__ == "__main__":
