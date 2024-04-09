@@ -1,9 +1,9 @@
 import logging
 import numpy as np
 import plotly.graph_objects as go
-from python.error.bootstrap import Bootstrap
-from python.error.displacement import Displacement
-from python.error.bs_disp import BSDISP
+from esat.error.bootstrap import Bootstrap
+from esat.error.displacement import Displacement
+from esat.error.bs_disp import BSDISP
 
 logging.basicConfig(format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S', level=logging.INFO)
 logger = logging.getLogger(__name__)

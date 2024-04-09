@@ -10,10 +10,10 @@ import multiprocessing as mp
 from tqdm import tqdm
 import plotly.graph_objects as go
 from pathlib import Path
-from python.model.sa import SA
-from python.error.bootstrap import Bootstrap
-from python.error.displacement import Displacement
-from python.utils import np_encoder
+from esat.model.sa import SA
+from esat.error.bootstrap import Bootstrap
+from esat.error.displacement import Displacement
+from esat.utils import np_encoder
 
 logging.basicConfig(format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S', level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -225,7 +225,7 @@ class BSDISP:
             dQ_drop = np.min([dQ_drop, dQ_drop_i.values], axis=0)
             if any(dQ_drop_i < 0.0):
                 self.n_drops += 1
-        self.compiled_results = copy.copy(self.disp_results[key0].compiled_results)
+        self.compiled_results =  copy.copy(self.disp_results[key0].compiled_results)
         self.compiled_results["profiles"] = np.mean(disp_profiles, axis=0)
         self.compiled_results["profile_max"] = profiles_max
         self.compiled_results["profile_min"] = profiles_min

@@ -1,7 +1,7 @@
-from python.model.ls_nmf import LSNMF
-from python.model.ws_nmf import WSNMF
-from python.utils import np_encoder, solution_bump
-from python.metrics import q_loss, qr_loss, EPSILON, q_factor
+from esat.model.ls_nmf import LSNMF
+from esat.model.ws_nmf import WSNMF
+from esat.utils import np_encoder, solution_bump
+from esat.metrics import q_loss, qr_loss, EPSILON, q_factor
 from scipy.cluster.vq import kmeans2, whiten
 from fcmeans import FCM
 from tqdm import trange
@@ -102,6 +102,7 @@ class SA:
         self.Qtrue = None
         self.WH = None
         self.factor_Q = None
+        self.q_list = None
 
         self.model_i = -1
         self.metadata = {
@@ -398,6 +399,7 @@ class SA:
         H = self.H
         We = self.We
         converged = False
+        q_list = []
 
         if self.optimized:
             t0 = time.time()
@@ -413,7 +415,7 @@ class SA:
                             f"Converged: {self.converged}, Runtime: {round(t1 - t0, 2)} sec")
         else:
             prior_q = []
-            We_prime = copy.copy(self.We)
+            We_prime =  copy.copy(self.We)
             t_iter = trange(max_iter, desc=f"Model: {model_i}, Seed: {self.seed}, Q(true): NA, Q(robust): NA, dQ: NA",
                             position=0, leave=True, disable=not self.verbose)
             for i in t_iter:
@@ -426,6 +428,7 @@ class SA:
                         q = q_robust
                         We_prime = np.divide(1, U_robust ** 2).astype(np.float64)
                 prior_q.append(q)
+                q_list.append(q)
                 if np.isnan(q) or np.isnan(q_robust):
                     logger.error(f"Stopping SA model train due to loss value being NAN. Q(true): {q_true}, "
                                  f"Q(robust): {q_robust}")
@@ -441,11 +444,11 @@ class SA:
                 t_iter.set_description(f"Model: {model_i}, Seed: {self.seed}, Q(true): {round(q_true, 2)}, "
                                        f"Q(robust): {round(q_robust, 2)}, dQ: {round(delta_q, 4)}")
                 t_iter.refresh()
-                self.converge_steps += 1
 
                 if converged:
                     self.converged = True
                     break
+                self.converge_steps += 1
 
         self.model_i = model_i
         self.H = H
@@ -454,35 +457,36 @@ class SA:
         self.Qtrue = q_loss(V=V, U=U, W=W, H=H)
         self.Qrobust, _ = qr_loss(V=V, U=U, W=W, H=H, alpha=robust_alpha)
         self.factor_Q = q_factor(V=V, U=U, W=W, H=H)
-        if bump:
-            logger.info(f"Solution bump test, n: {bump_n}, range: {bump_range}")
-            bump_found = False
-            bump_q = self.Qtrue
-            bump_solution = None
-            for j in range(bump_n):
-
-                _H, _W = solution_bump(profile=H, contribution=W, bump_range=bump_range,
-                                       seed=self.rng.integers(low=1, high=1e10, size=1))
-                _q = q_loss(V=V, U=U, W=_W, H=_H)
-                if bump_q > _q:
-                    bump_found = True
-                    bump_q = _q
-                    bump_solution = (_H, _W)
-            if bump_found:
-                logger.info(f"A more optimal solution found from bump. "
-                            f"Prior Q(true): {self.Qtrue}, bump Q(true): {bump_q}")
-                if "bumped" in self.metadata.keys():
-                    self.metadata["bumped_count"] = self.metadata["bumped_count"] + 1
-                else:
-                    self.metadata["bumped_count"] = 1
-                self.metadata["bumped"] = "Solution bumped"
-                self.H = bump_solution[0]
-                self.W = bump_solution[1]
-                self.Qtrue = bump_q
-                self.Qrobust, _ = qr_loss(V=V, U=U, W=self.W, H=self.H, alpha=robust_alpha)
-                self.train(max_iter=max_iter, converge_delta=converge_delta, converge_n=converge_n, model_i=model_i,
-                           robust_mode=robust_mode, robust_alpha=robust_alpha, update_step=update_step, bump=bump,
-                           bump_n=bump_n, bump_range=bump_range)
+        self.q_list = q_list
+        # if bump:
+        #     logger.info(f"Solution bump test, n: {bump_n}, range: {bump_range}")
+        #     bump_found = False
+        #     bump_q = self.Qtrue
+        #     bump_solution = None
+        #     for j in range(bump_n):
+        #
+        #         _H, _W = solution_bump(profile=H, contribution=W, bump_range=bump_range,
+        #                                seed=self.rng.integers(low=1, high=1e10, size=1))
+        #         _q = q_loss(V=V, U=U, W=_W, H=_H)
+        #         if bump_q > _q:
+        #             bump_found = True
+        #             bump_q = _q
+        #             bump_solution = (_H, _W)
+        #     if bump_found:
+        #         logger.info(f"A more optimal solution found from bump. "
+        #                     f"Prior Q(true): {self.Qtrue}, bump Q(true): {bump_q}")
+        #         if "bumped" in self.metadata.keys():
+        #             self.metadata["bumped_count"] = self.metadata["bumped_count"] + 1
+        #         else:
+        #             self.metadata["bumped_count"] = 1
+        #         self.metadata["bumped"] = "Solution bumped"
+        #         self.H = bump_solution[0]
+        #         self.W = bump_solution[1]
+        #         self.Qtrue = bump_q
+        #         self.Qrobust, _ = qr_loss(V=V, U=U, W=self.W, H=self.H, alpha=robust_alpha)
+        #         self.train(max_iter=max_iter, converge_delta=converge_delta, converge_n=converge_n, model_i=model_i,
+        #                    robust_mode=robust_mode, robust_alpha=robust_alpha, update_step=update_step, bump=bump,
+        #                    bump_n=bump_n, bump_range=bump_range)
         self.metadata["completion_date"] = datetime.now().strftime("%m/%d/%Y, %H:%M:%S %Z")
         self.metadata["max_iterations"] = int(max_iter)
         self.metadata["converge_delta"] = float(converge_delta)
@@ -607,7 +611,7 @@ if __name__ == "__main__":
     # Test code for running a single SA model, using both the python and Rust functions, includes model save and loads.
     import time
     import os
-    from python.data.datahandler import DataHandler
+    from esat.data.datahandler import DataHandler
 
     logging.getLogger('matplotlib.font_manager').setLevel(logging.ERROR)
     logging.getLogger('matplotlib').setLevel(logging.ERROR)

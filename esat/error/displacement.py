@@ -8,9 +8,9 @@ import pandas as pd
 from pathlib import Path
 import plotly.graph_objects as go
 from tqdm import tqdm
-from python.utils import compare_all_factors, np_encoder
-from python.metrics import q_loss, EPSILON
-from python.model.sa import SA
+from esat.utils import compare_all_factors, np_encoder
+from esat.metrics import q_loss, EPSILON
+from esat.model.sa import SA
 
 logging.basicConfig(format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S', level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -248,7 +248,7 @@ class Displacement:
         for factor_i in tqdm(range(self.H.shape[0]), desc="Increasing value for factors", position=0, leave=True):
             factor_results = {}
             for feature_j in tqdm(self.features, desc=f"+ : Batch {batch}, Factor {factor_i+1} - Features", position=0, leave=True):
-                new_H = copy.copy(self.H)
+                new_H =  copy.copy(self.H)
                 high_modifier = 2.0
                 high_found = False
                 i_results = {}
@@ -280,7 +280,7 @@ class Displacement:
                     value_found = False
                     search_i = 0
                     while not value_found:
-                        new_H = copy.copy(self.H)
+                        new_H =  copy.copy(self.H)
                         new_value = self.H[factor_i, feature_j] * modifier
                         new_H[factor_i, feature_j] = new_value
                         disp_i_Q = q_loss(V=self.V, U=self.U, W=self.W, H=new_H)
@@ -342,7 +342,7 @@ class Displacement:
                     p_mod = 0.0
                     max_search_i = 50
                     while not value_found:
-                        new_H = copy.copy(self.H)
+                        new_H =  copy.copy(self.H)
                         new_value = self.H[factor_i, feature_j] * modifier
                         new_H[factor_i, feature_j] = new_value
                         disp_i_Q = q_loss(V=self.V, U=self.U, W=self.W, H=new_H)

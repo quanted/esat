@@ -6,13 +6,13 @@ import copy
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
-from python.model.recombinator import optimal_block_length
+from esat.model.recombinator import optimal_block_length
 
 logging.basicConfig(format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 EPSILON = sys.float_info.min
-ROOT_DIR = os.path.join(os.path.abspath(__file__), "..", "..", "..")
+# ROOT_DIR = os.path.join(os.path.abspath(__file__), "..", "..", "..")
 
 
 class DataHandler:
@@ -98,9 +98,11 @@ class DataHandler:
         Check all file paths to make sure they exist.
         """
         if not os.path.isabs(self.input_path):
-            self.input_path = os.path.join(ROOT_DIR, self.input_path)
+            logger.error(f"Input file path is not absolute: {self.input_path}")
+            # self.input_path = os.path.join(ROOT_DIR, self.input_path)
         if not os.path.isabs(self.uncertainty_path):
-            self.uncertainty_path = os.path.join(ROOT_DIR, self.uncertainty_path)
+            logger.error(f"Uncertainty file path is not absolute: {self.uncertainty_path}")
+            # self.uncertainty_path = os.path.join(ROOT_DIR, self.uncertainty_path)
 
         if not os.path.exists(self.input_path):
             self.error = True

@@ -7,8 +7,9 @@ import plotly.graph_objects as go
 import plotly.express as px
 import plotly.figure_factory as ff
 from plotly.subplots import make_subplots
-from python.data.datahandler import DataHandler
-from python.model.sa import SA
+from esat.data.datahandler import DataHandler
+from esat.model.sa import SA
+from esat.model.batch_sa import BatchSA
 
 logging.basicConfig(format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S', level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -62,7 +63,7 @@ class ModelAnalysis:
                       "Anderson Normal Residual": [], "Anderson Statistic": [],
                       "Shapiro Normal Residuals": [], "Shapiro PValue": [],
                       "KS Normal Residuals": [], "KS PValue": [], "KS Statistic": []}
-        cats = copy.copy(self.dh.metrics['Category'])
+        cats =  copy.copy(self.dh.metrics['Category'])
         results = self.model.WH if results is None else results
         residuals = self.dh.input_data - results
         scaled_residuals = residuals / self.dh.uncertainty_data
@@ -521,3 +522,65 @@ class ModelAnalysis:
                                   title=plot_title, width=1200, height=1200,
                                   margin=dict(l=65, r=50, b=65, t=60))
         matrix_plot.show()
+
+
+class BatchAnalysis:
+    """
+    Class for running batch solution analysis.
+
+    Parameters
+    ----------
+    batch_sa : BatchSA
+        A completed ESAT batch source apportionment to run solution analysis on.
+    """
+    def __init__(self, batch_sa: BatchSA):
+        self.batch_sa = batch_sa
+
+    def plot_loss(self):
+        """
+        Plot the loss value for each model in the batch solution as it changes over time.
+
+        A model will stop updating if the convergence criteria is met, which can be identified by the models that stop
+        before reaching max iterations. The ideal loss curve should represent a y=1/x hyperbola, but because of the
+        data uncertainty the curve may not be entirely smooth.
+        """
+        q_fig = go.Figure()
+        for i, result in enumerate(self.batch_sa.results):
+            if result is not None:
+                q_fig.add_trace(
+                    go.Scatter(x=list(range(len(result.q_list))), y=result.q_list, name=f"Model {i + 1}", mode='lines'))
+        q_fig.update(layout_title_text=f"Batch Q(True) vs Iterations. Max Iterations: {self.batch_sa.max_iter}")
+        q_fig.update_layout(width=1200, height=600, hovermode='x')
+        q_fig.update_xaxes(title_text="Iterations")
+        q_fig.update_yaxes(title_text="Q(True)")
+        q_fig.show()
+
+    def plot_loss_distribution(self):
+        """
+        Plot the distribution of batch model Q(True) and Q(Robust).
+
+        A very broad distribution is often a result of a 'loose' convergence criteria, increasing converge_n and
+        decreasing converge_delta will narrow the criteria. If the Q(True) and Q(Robust) distributions are very similar
+        the solution may be overfit, where enough sources/factors are available to capture the majority of outline
+        behavior. In this case, reducing the number of factors can resolve overfitting the model.
+        """
+        qt_list = []
+        qr_list = []
+        model = []
+        for i, result in enumerate(self.batch_sa.results):
+            if result is not None:
+                model.append(i)
+                qt_list.append(result.Qtrue)
+                qr_list.append(result.Qrobust)
+
+        b_q_df = pd.DataFrame(data={"Q(True)": qt_list, "Q(Robust)": qr_list, 'Model': model})
+        b_q_fig = go.Figure(data=[
+            go.Box(y=b_q_df['Q(True)'], boxpoints="all", notched=True, name="Q(True)", marker_size=3, text=model),
+            go.Box(y=b_q_df["Q(Robust)"], boxpoints="all", notched=True, name="Q(Robust)", marker_size=3, text=model)
+        ])
+        b_q_fig.update(layout_title_text="Batch Models Loss Distribution")
+        b_q_fig.update_yaxes(title_text="Loss (Q)")
+        b_q_fig.update_xaxes(title_text="")
+        b_q_fig.update_traces(hovertemplate='Model: %{text}<br>%{x}: %{y:.2f}<extra></extra>')
+        b_q_fig.update_layout(width=800, height=800)
+        b_q_fig.show()
