@@ -6,7 +6,7 @@ import pickle
 import numpy as np
 from pathlib import Path
 import multiprocessing as mp
-from python.model.sa import SA
+from esat.model.sa import SA
 
 logging.basicConfig(format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S', level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -146,7 +146,7 @@ class BatchSA:
         if self.parallel:
             # TODO: Add batch processing for large datasets and large number of epochs to reduce memory requirements.
             cpus = mp.cpu_count()
-            cpus = cpus - 2 if cpus > 3 else 1
+            cpus = cpus - 1 if cpus > 3 else 1
             pool = mp.Pool(processes=cpus)
             input_parameters = []
             for i in range(1, self.models+1):

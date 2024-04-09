@@ -1,7 +1,7 @@
 import logging
 import numpy as np
-from python.model.batch_sa import BatchSA
-from python.metrics import cal_cophenetic, cal_dispersion, cal_connectivity
+from esat.model.batch_sa import BatchSA
+from esat.metrics import cal_cophenetic, cal_dispersion, cal_connectivity
 from numpy import linalg as LA
 
 logging.basicConfig(format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S', level=logging.INFO)

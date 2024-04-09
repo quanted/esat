@@ -1,22 +1,22 @@
 import sys
 import os
 
-cwd = os.getcwd()
-sys.path.append(cwd)
-sys.path.append(cwd + "..\\src")
+# cwd = os.getcwd()
+# sys.path.append(cwd)
+# sys.path.append(cwd + "..\\src")
 
 import click
 import json
 import configparser
 import logging
-from python.data.datahandler import DataHandler
-from python.model.batch_sa import BatchSA
-from python.data.analysis import ModelAnalysis
-from python.error.displacement import Displacement
-from python.error.bootstrap import Bootstrap
-from python.error.bs_disp import BSDISP
-from python.rotational.constrained import ConstrainedModel
-from python.configs import run_config, error_config, constrained_config
+from esat.data.datahandler import DataHandler
+from esat.model.batch_sa import BatchSA
+from esat.data.analysis import ModelAnalysis
+from esat.error.displacement import Displacement
+from esat.error.bootstrap import Bootstrap
+from esat.error.bs_disp import BSDISP
+from esat.rotational.constrained import ConstrainedModel
+from esat.configs import run_config, error_config, constrained_config
 
 logging.basicConfig(format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S', level=logging.INFO)
 logger = logging.getLogger(__name__)

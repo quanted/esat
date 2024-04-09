@@ -47,6 +47,7 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         let mut converged: bool = false;
         let mut converge_i: i32 = 0;
         let mut q_list: VecDeque<f64> = VecDeque::new();
+        let mut q_list_full: VecDeque<f64> = VecDeque::new();
 
         let mut wh: DMatrix<f64>;
         let mut h_num: DMatrix<f64>;
@@ -83,6 +84,7 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
             }
 
             q_list.push_back(q);
+            q_list_full.push_back(q);
             converge_i = i;
             if (q_list.len() as i32) >= converge_n {
                 if q_list.front().unwrap() - q_list.back().unwrap() < converge_delta {
@@ -99,7 +101,7 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         let final_w = w_matrix.to_pyarray(py).reshape(w.dims()).unwrap().to_dyn();
         let final_h = h_matrix.to_pyarray(py).reshape(h.dims()).unwrap().to_dyn();
 
-        let values: PyObject = (final_w, final_h, q, converged, converge_i, Vec::from(q_list)).into_py(py);
+        let values: PyObject = (final_w, final_h, q, converged, converge_i, Vec::from(q_list_full)).into_py(py);
         let results: &PyTuple = PyTuple::new(py, values.downcast::<PyTuple>(py).iter());
         PyResult::Ok(results)
     }
@@ -135,6 +137,7 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         let mut converged: bool = false;
         let mut converge_i: i32 = 0;
         let mut q_list: VecDeque<f64> = VecDeque::new();
+        let mut q_list_full: VecDeque<f64> = VecDeque::new();
 
         let mut we_j_diag: DMatrix<f64>;
         let mut v_j;
@@ -193,10 +196,11 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
                 if i > robust_n {
                     q = qrobust;
                     let updated_uncertainty = robust_results.1;
-                    new_we = updated_uncertainty.map(|x| (1.0/x).powi(2));
+                    new_we = updated_uncertainty.map(|x| (1.0 / x).powi(2));
                 }
             }
             q_list.push_back(q);
+            q_list_full.push_back(q);
             converge_i = i;
             if (q_list.len() as i32) >= converge_n {
                 if q_list.front().unwrap() - q_list.back().unwrap() < converge_delta {
@@ -213,7 +217,7 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         let final_w = w_matrix.to_pyarray(py).reshape(w.dims()).unwrap().to_dyn();
         let final_h = h_matrix.to_pyarray(py).reshape(h.dims()).unwrap().to_dyn();
 
-        let values: PyObject = (final_w, final_h, q, converged, converge_i, Vec::from(q_list)).into_py(py);
+        let values: PyObject = (final_w, final_h, q, converged, converge_i, Vec::from(q_list_full)).into_py(py);
         let results: &PyTuple = PyTuple::new(py, values.downcast::<PyTuple>(py).iter());
         PyResult::Ok(results)
     }
@@ -250,6 +254,7 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         let mut converged: bool = false;
         let mut converge_i: i32 = 0;
         let mut q_list: VecDeque<f64> = VecDeque::new();
+        let mut q_list_full: VecDeque<f64> = VecDeque::new();
 
         let m = v.nrows();
         let n = v.ncols();
@@ -323,6 +328,7 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
                 }
             }
             q_list.push_back(q);
+            q_list_full.push_back(q);
             converge_i = i;
             if (q_list.len() as i32) >= converge_n {
                 if q_list.front().unwrap() - q_list.back().unwrap() < converge_delta {
@@ -339,7 +345,7 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         let final_w = w_matrix.to_pyarray(py).reshape(w.dims()).unwrap().to_dyn();
         let final_h = h_matrix.to_pyarray(py).reshape(h.dims()).unwrap().to_dyn();
 
-        let values: PyObject = (final_w, final_h, q, converged, converge_i, Vec::from(q_list)).into_py(py);
+        let values: PyObject = (final_w, final_h, q, converged, converge_i, Vec::from(q_list_full)).into_py(py);
         let results: &PyTuple = PyTuple::new(py, values.downcast::<PyTuple>(py).iter());
         PyResult::Ok(results)
     }

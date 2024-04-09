@@ -8,8 +8,8 @@ sys.path.append(cwd + "..\\src")
 import time
 import json
 import logging
-from python.data.datahandler import DataHandler
-from python.model.batch_sa import BatchSA
+from  esat.data.datahandler import DataHandler
+from  esat.model.batch_sa import BatchSA
 
 
 if __name__ == "__main__":
@@ -35,7 +35,7 @@ if __name__ == "__main__":
             q_targets[k] = v["pmf-Q"]
 
     t0 = time.time()
-    for dataset in ["b", "sl", "br"]:           # "br", "sl", "b", "w"
+    for dataset in ["b"]:           # "br", "sl", "b", "w"
         init_method = "col_means"  # default is column means, "kmeans", "cmeans"
         init_norm = True
         seed = 42
@@ -84,18 +84,20 @@ if __name__ == "__main__":
         V = dh.input_data_processed
         U = dh.uncertainty_data_processed
 
-        for method in ["ls-nmf", "ws-nmf"]:     # "ls-nmf", "ws-nmf"
+        for method in ["ws-nmf"]:     # "ls-nmf", "ws-nmf"
             if method == "ws-nmf":
                 max_iterations = 10000
             else:
                 max_iterations = 50000
-            converge_delta = 0.1 if method == "ls-nmf" else 1.0
-            converge_n = 20 if method == "ls-nmf" else 10
+            # converge_delta = 0.01 if method == "ls-nmf" else 1.0 if dataset != "sl" else 0.1
+            # converge_n = 50 if method == "ls-nmf" else 20
+            converge_delta = 1.0
+            converge_n = 10
             for factors in range(3, 13):
                 run_key = f"{dataset}-{factors}"
                 if run_key not in q_targets.keys():
                     continue
-                for (parallel, optimized) in ((True, True), (True, False)):
+                for (parallel, optimized) in ((True, True),(True, False)):
                     batch_sa = BatchSA(V=V, U=U, factors=factors, models=models, method=method, seed=seed,
                                        init_method=init_method, init_norm=init_norm, fuzziness=5.0,
                                        max_iter=max_iterations, converge_delta=converge_delta, converge_n=converge_n,
@@ -123,7 +125,7 @@ if __name__ == "__main__":
                             }
                     }
                     current_results = {}
-                    analysis_file = "type_runtime_analysis.json"
+                    analysis_file = "type_runtime_analysis2.json"
                     analysis_file_path = os.path.join(cwd, "eval", "results", analysis_file)
                     if os.path.exists(analysis_file_path):
                         with open(analysis_file_path, 'r') as json_file:

@@ -1,10 +1,10 @@
 import sys
 import os
 import re
-from python.model.sa import SA
-from python.data.datahandler import DataHandler
-from python.utils import np_encoder
-from python.metrics import q_loss, qr_loss
+from esat.model.sa import SA
+from esat.data.datahandler import DataHandler
+from esat.utils import np_encoder
+from esat.metrics import q_loss, qr_loss
 from tqdm import trange
 from datetime import datetime
 from scipy import optimize
@@ -386,7 +386,7 @@ class ConstrainedModel:
                     exp_A[i, coef_index] = coef_value
                 exp_B[i] = exp_b
 
-            # Solve the expression matrices using a least squares solver from scipy.optimize (with solutions bounded between 0.0 and the max value of the total vector)
+            # Solve the expression matrices using a least squares solver from scisrc.optimize (with solutions bounded between 0.0 and the max value of the total vector)
             exp_bounds = (1e-8, np.max(exp_B))
             exp_X = optimize.lsq_linear(exp_A, exp_B, bounds=exp_bounds)
 
@@ -482,8 +482,8 @@ class ConstrainedModel:
         V = self.base_model.V
         U = self.base_model.U
         We = self.base_model.We
-        W_i = copy.copy(self.base_model.W)
-        H_i = copy.copy(self.base_model.H)
+        W_i =  copy.copy(self.base_model.W)
+        H_i =  copy.copy(self.base_model.H)
 
         t_iter = trange(max_iterations, desc="Q(Robust): NA, Q(Main): NA, Q(aux): NA", position=0, leave=True)
         qm_list = []
@@ -575,8 +575,8 @@ class ConstrainedModel:
         self.expression_mapped = exp_mapping
 
     def _pull_down_value(self, iW, iH, target, index, dQ_limit):
-        _H = copy.copy(iH)
-        _W = copy.copy(iW)
+        _H =  copy.copy(iH)
+        _W =  copy.copy(iW)
         iQ = q_loss(V=self.base_model.V, U=self.base_model.U, W=_W, H=_H)
 
         high_mod = 1.0
@@ -617,8 +617,8 @@ class ConstrainedModel:
         return new_value
 
     def _pull_up_value(self, iW, iH, target, index, dQ_limit):
-        _H = copy.copy(iH)
-        _W = copy.copy(iW)
+        _H =  copy.copy(iH)
+        _W =  copy.copy(iW)
         iQ = q_loss(V=self.base_model.V, U=self.base_model.U, W=iW, H=iH)
 
         high_modifier = 2.0
@@ -671,8 +671,8 @@ class ConstrainedModel:
         return new_value
 
     def _pull_to_value(self, iW, iH, target, index, target_value, dQ_limit):
-        _H = copy.copy(iH)
-        _W = copy.copy(iW)
+        _H =  copy.copy(iH)
+        _W =  copy.copy(iW)
         iQ = q_loss(V=self.base_model.V, U=self.base_model.U, W=_W, H=_H)
 
         # Check if target value is within dQ_limit, if true return.
@@ -971,14 +971,14 @@ class ConstrainedModel:
         i_W = self.constrained_model.W[:, factor_idx]
 
         b_norm_contr = b_W / b_W.mean()
-        b_data_df = copy.copy(self.dh.input_data)
+        b_data_df =  copy.copy(self.dh.input_data)
         b_data_df[factor_label] = b_norm_contr
         b_data_df.index = pd.to_datetime(b_data_df.index)
         b_data_df = b_data_df.sort_index()
         b_data_df = b_data_df.resample('D').mean()
 
         i_norm_contr = i_W / i_W.mean()
-        i_data_df = copy.copy(self.dh.input_data)
+        i_data_df =  copy.copy(self.dh.input_data)
         i_data_df[factor_label] = i_norm_contr
         i_data_df.index = pd.to_datetime(i_data_df.index)
         i_data_df = i_data_df.sort_index()

@@ -8,8 +8,8 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 import plotly.graph_objects as go
-from python.model.sa import SA
-from python.utils import np_encoder
+from esat.model.sa import SA
+from esat.utils import np_encoder
 from pathlib import Path
 
 
@@ -389,10 +389,10 @@ class Bootstrap:
         #TODO: Implement parallelization
         for i in tqdm(range(1, self.bootstrap_n+1), desc="Bootstrap resampling, training and mapping"):
             sample_seed = self.rng.integers(low=0, high=1e10, size=1)
-            _V = copy.deepcopy(self.data)
-            _U = copy.deepcopy(self.uncertainty)
-            _W = copy.deepcopy(self.base_W)
-            _H = copy.deepcopy(self.base_H)
+            _V =  copy.deepcopy(self.data)
+            _U =  copy.deepcopy(self.uncertainty)
+            _W =  copy.deepcopy(self.base_W)
+            _H =  copy.deepcopy(self.base_H)
             train_seed = sample_seed
             if block:
                 bs_data, bs_uncertainty, bs_W, bs_index = self._block_resample(data=_V,

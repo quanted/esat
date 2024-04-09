@@ -10,9 +10,9 @@ import time
 import logging
 import numpy as np
 import pandas as pd
-from python.model.sa import SA
-from python.data.datahandler import DataHandler
-from python.metrics import calculate_Q, q_loss, qr_loss
+from  esat.model.sa import SA
+from  esat.data.datahandler import DataHandler
+from  esat.metrics import calculate_Q, q_loss, qr_loss
 from esat import esat_rust
 
 logging.getLogger('matplotlib.font_manager').setLevel(logging.ERROR)
