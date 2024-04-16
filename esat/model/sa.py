@@ -134,7 +134,8 @@ class SA:
         if self.optimized:
             # Attempt to load rust code for optimized model training
             try:
-                from esat import esat_rust
+                # from esat import esat_rust
+                import esat_rust
                 if self.method == "ls-nmf" and not self.__has_neg:
                     self.optimized_update = esat_rust.ls_nmf
                 else:

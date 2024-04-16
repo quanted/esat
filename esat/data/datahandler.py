@@ -12,7 +12,6 @@ logging.basicConfig(format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:
 logger = logging.getLogger(__name__)
 
 EPSILON = sys.float_info.min
-# ROOT_DIR = os.path.join(os.path.abspath(__file__), "..", "..", "..")
 
 
 class DataHandler:
@@ -42,13 +41,16 @@ class DataHandler:
             A list of columns to drop from the dataset. Default = None.
     sn_threshold : float
         The threshold for the signal to noise ratio values.
+    load: bool
+        Load the input and uncertainty data files, used internally for load_dataframe.
     """
     def __init__(self,
                  input_path: str,
                  uncertainty_path: str,
                  index_col: str = None,
                  drop_col: list = None,
-                 sn_threshold: float = 2.0):
+                 sn_threshold: float = 2.0,
+                 load: bool = True):
         """
         Constructor method.
         """
@@ -77,11 +79,12 @@ class DataHandler:
         self.features = None
         self.metadata = {}
 
-        self._check_paths()
-        self._load_data()
-
         self.optimal_block = None
-        self._determine_optimal_block()
+
+        if load:
+            self._check_paths()
+            self._load_data()
+            self._determine_optimal_block()
 
     def get_data(self):
         """
@@ -325,6 +328,7 @@ class DataHandler:
         data_df = copy.copy(self.input_data)
         data_df.index = pd.to_datetime(data_df.index)
         data_df = data_df.sort_index()
+        #TODO: Enforce datetime steps for index or check and only resample if so.
         data_df = data_df.resample('D').mean()
         x = list(data_df.index)
         ts_plot = go.Figure()
@@ -336,3 +340,26 @@ class DataHandler:
         if len(feature_label) == 1:
             ts_plot.update_layout(showlegend=True)
         ts_plot.show()
+
+    @staticmethod
+    def load_dataframe(input_df: pd.DataFrame, uncertainty_df: pd.DataFrame):
+        """
+        Pass in pandas dataframes for the input and uncertainty datasets, instead of using files.
+
+        Parameters
+        ----------
+        input_df
+        uncertainty_df
+
+        Returns
+        -------
+        DataHandler
+            Instance of DataHandler using dataframes as input.
+        """
+        dh = DataHandler(input_path="", uncertainty_path="", load=False)
+        dh.input_data = input_df
+        dh.uncertainty_data = uncertainty_df
+        dh.features = input_df.columns
+        dh._load_data(existing_data=True)
+        dh._determine_optimal_block()
+        return dh

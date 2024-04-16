@@ -8,8 +8,8 @@ sys.path.append(cwd + "..\\src")
 import time
 import json
 import logging
-from  esat.data.datahandler import DataHandler
-from  esat.model.batch_sa import BatchSA
+from esat.data.datahandler import DataHandler
+from esat.model.batch_sa import BatchSA
 
 
 if __name__ == "__main__":
@@ -27,15 +27,15 @@ if __name__ == "__main__":
     logging.getLogger('matplotlib.font_manager').setLevel(logging.ERROR)
     logging.getLogger('matplotlib').setLevel(logging.ERROR)
 
-    q_targets_file = os.path.join(cwd, "eval", "results", "type_runtime_analysis.json")
-    q_targets = {}
-    with open(q_targets_file, 'r') as q_file:
-        q_ = json.load(q_file)
-        for k, v in q_.items():
-            q_targets[k] = v["pmf-Q"]
+    # q_targets_file = os.path.join(cwd, "eval", "results", "type_runtime_analysis.json")
+    # q_targets = {}
+    # with open(q_targets_file, 'r') as q_file:
+    #     q_ = json.load(q_file)
+    #     for k, v in q_.items():
+    #         q_targets[k] = v["pmf-Q"]
 
     t0 = time.time()
-    for dataset in ["b"]:           # "br", "sl", "b", "w"
+    for dataset in ["sl"]:           # "br", "sl", "b", "w"
         init_method = "col_means"  # default is column means, "kmeans", "cmeans"
         init_norm = True
         seed = 42
@@ -91,13 +91,13 @@ if __name__ == "__main__":
                 max_iterations = 50000
             # converge_delta = 0.01 if method == "ls-nmf" else 1.0 if dataset != "sl" else 0.1
             # converge_n = 50 if method == "ls-nmf" else 20
-            converge_delta = 1.0
-            converge_n = 10
+            converge_delta = 0.1
+            converge_n = 25
             for factors in range(3, 13):
                 run_key = f"{dataset}-{factors}"
-                if run_key not in q_targets.keys():
-                    continue
-                for (parallel, optimized) in ((True, True),(True, False)):
+                # if run_key not in q_targets.keys():
+                #     continue
+                for (parallel, optimized) in ((True, True),):
                     batch_sa = BatchSA(V=V, U=U, factors=factors, models=models, method=method, seed=seed,
                                        init_method=init_method, init_norm=init_norm, fuzziness=5.0,
                                        max_iter=max_iterations, converge_delta=converge_delta, converge_n=converge_n,
