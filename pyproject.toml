@@ -27,13 +27,17 @@ dependencies = [
 ]
 
 [tool.setuptools]
-package-dir = {"esat" = "esat"}
+package-dir = {"esat" = "esat", "esat_eval" = "eval"}
 include-package-data = true
+
+[tool.setuptools-rust]
+profile = "release"
 
 [project.scripts]
 esat = "esat.cli.esat_cli:esat_cli"
 
 [[tool.setuptools-rust.ext-modules]]
-target = "esat.esat_rust"
+target = "esat_rust"
 path = "Cargo.toml"
 binding = "PyO3"
+debug = false

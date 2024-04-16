@@ -8,10 +8,10 @@ sys.path.append(cwd + "..\\src")
 import time
 import json
 import logging
-from  esat.data.datahandler import DataHandler
-from  esat.model.batch_sa import BatchSA
-from tests.factor_comparison import FactorComp
-from  esat.metrics import calculate_Q
+from esat.data.datahandler import DataHandler
+from esat.model.batch_sa import BatchSA
+from eval.factor_comparison import FactorComp
+from esat.metrics import calculate_Q, q_loss
 
 
 if __name__ == "__main__":
@@ -20,30 +20,30 @@ if __name__ == "__main__":
     logging.getLogger('matplotlib').setLevel(logging.ERROR)
 
     completed_solutions = []
-    analysis_file = "pc_analysis.json"
+    analysis_file = os.path.join("results", "pc_analysis_2024_2.json")
     if os.path.exists(analysis_file):
         with open(analysis_file, 'r') as a_file:
             completed = json.load(a_file)
             completed_solutions = list(completed.keys())
 
     t0 = time.time()
-    for dataset in ["br", "sl", "b"]:           # "br", "sl", "b"
-        for method in ["ls-nmf", "ws-nmf"]:     # "ls-nmf", "ws-nmf"
-            for factors in range(3, 10):
+    for dataset in ["br"]:           # "br", "sl", "b"
+        for method in ["ls-nmf"]:     # "ls-nmf", "ws-nmf"
+            for factors in range(6, 7):
                 run_key = f"{dataset}-{factors}-{method}"
-                if run_key in completed_solutions:
-                    print(f"{run_key} already completed.")
-                    continue
+                # if run_key in completed_solutions:
+                #     print(f"{run_key} already completed.")
+                #     continue
 
                 optimized = True
                 parallel = True
                 init_method = "col_means"
                 init_norm = True
-                seed = 42
-                models = 100
+                seed = 4
+                models = 5
                 max_iterations = 50000 if method == "ls-nmf" else 20000
-                converge_delta = 0.1 if method == 'ws-nmf' else 0.01
-                converge_n = 20
+                converge_delta = 0.01 if method == 'ws-nmf' else 0.001
+                converge_n = 50
                 index_col = "Date"
 
                 if dataset == "br":
@@ -92,12 +92,14 @@ if __name__ == "__main__":
                 runtime = round(t1-t0, 2)
                 print(f"Runtime: {round((t1-t0)/60, 2)} min(s)")
 
-                profile_comparison = FactorComp(batch_sa=batch_sa, pmf_profile_file=pmf_profile_file,
-                                                pmf_contribution_file=pmf_contribution_file, factors=factors,
-                                                features=dh.features, residuals_path=pmf_residuals_file)
-                pmf_q = calculate_Q(profile_comparison.pmf_residuals.values, dh.uncertainty_data_processed)
-                profile_comparison.compare(PMF_Q=pmf_q)
-
+                profile_comparison = FactorComp.load_pmf_output(factors=factors, input_df=dh.input_data,
+                                                                uncertainty_df=dh.uncertainty_data,
+                                                                pmf_profile_file=pmf_profile_file,
+                                                                pmf_contribution_file=pmf_contribution_file,
+                                                                batch_sa=batch_sa)
+                profile_comparison.compare()
+                pmf_Q = calculate_Q(profile_comparison.input_df.to_numpy() - profile_comparison.base_V_estimate.to_numpy(),
+                                    profile_comparison.uncertainty_df.to_numpy())
                 run_type = "rust" if optimized else "py"
 
                 analysis_results = {
@@ -107,7 +109,7 @@ if __name__ == "__main__":
                             "factors": factors,
                             "method": method,
                             "Q(True)": float(profile_comparison.sa_Q[profile_comparison.best_model]),
-                            "PMF(Q)": float(pmf_q),
+                            "PMF(Q)": float(pmf_Q),
                             "best_model": profile_comparison.best_model,
                             "factor_mapping": profile_comparison.factor_map,
                             # "model_profiles": profile_comparison.sa_model_dfs[profile_comparison.best_model]["H"].values.tolist(),
@@ -123,8 +125,12 @@ if __name__ == "__main__":
                     with open(analysis_file, 'r') as json_file:
                         current_results = json.load(json_file)
                         if run_key in current_results.keys():
-                            for k, v in analysis_results[run_key].items():
-                                current_results[run_key].update({k: v})
+                            print(f"Previous profile R2: {analysis_results[run_key]['model_profile_r2']}, new "
+                                  f"profile R2: {float(profile_comparison.best_factor_r_avg)}")
+                            if analysis_results[run_key]['model_profile_r2'] < float(profile_comparison.best_factor_r_avg):
+                                print(f"Replacing existing results with better correlated model")
+                                for k, v in analysis_results[run_key].items():
+                                    current_results[run_key].update({k: v})
                         else:
                             current_results[run_key] = analysis_results[run_key]
                 else:
