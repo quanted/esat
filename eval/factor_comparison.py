@@ -10,7 +10,7 @@ from esat.model.batch_sa import BatchSA
 from esat.metrics import q_loss
 
 
-class FactorComp:
+class FactorCompare:
 
     def __init__(self,
                  input_df,
@@ -140,7 +140,7 @@ class FactorComp:
         for f in pmf_contribution_columns:
             factor_types[f] = 'float'
         pmf_contribution_df = pmf_contribution_df.astype(factor_types)
-        fc = FactorComp(input_df=input_df,
+        fc = FactorCompare(input_df=input_df,
                         uncertainty_df=uncertainty_df,
                         base_profile_df=pmf_profiles_df,
                         base_contribution_df=pmf_contribution_df,
