@@ -21,7 +21,8 @@ class FactorCompare:
                  features,
                  batch_sa,
                  sa_output_file=None,
-                 method="all"
+                 method="all",
+                 selected_model=None,
                  ):
 
         self.input_df = input_df
@@ -43,6 +44,8 @@ class FactorCompare:
         self.sa_model_dfs = {}
         self.sa_Q = {}
         self._parse_sa_output()
+
+        self.selected_model = selected_model
 
         self.factor_map = None
         self.best_model = None
@@ -202,7 +205,10 @@ class FactorCompare:
         correlation_results = {}
         contribution_results = {}
         wh_results = {}
-        for m in tqdm(range(len(self.sa_model_dfs)), desc="Calculating correlation between factors from each epoch"):
+        for m in tqdm(range(len(self.sa_model_dfs)), desc="Calculating correlation between factors from each model"):
+            if self.selected_model is not None:
+                if m not in self.selected_model:
+                    continue
             correlation_results[m] = {}
             contribution_results[m] = {}
             wh_results[m] = {}
@@ -241,8 +247,11 @@ class FactorCompare:
 
         pool = mp.Pool()
 
-        for m in tqdm(range(len(self.sa_model_dfs)), desc="Calculating average correlation for all permutations for each epoch"):
+        for m in tqdm(range(len(self.sa_model_dfs)), desc="Calculating average correlation for all permutations for each model"):
             # Each Model
+            if self.selected_model is not None:
+                if m not in self.selected_model:
+                    continue
             permutation_results = {}
             model_contribution_results = {}
             factor_contribution_results = {}

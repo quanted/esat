@@ -472,7 +472,6 @@ class ModelAnalysis:
                 return
             feature_idx = feature_idx - 1
 
-
         factor_matrices = []
         percent_matrices = []
         for f in range(self.model.factors):
