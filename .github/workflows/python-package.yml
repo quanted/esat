@@ -27,14 +27,16 @@ jobs:
             python -m pip install --upgrade pip
             curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain=stable
             echo "${HOME}/.cargo/env" >> $GITHUB_PATH
+            . "$HOME/.cargo/env"
             python -m pip install cibuildwheel==2.17.0 setuptools setuptools-rust
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
 
       - uses: actions/upload-artifact@v4
         with:
-          name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
+          name: esat-wheels-${{ matrix.os }}-${{ strategy.job-index }}
           path: ./wheelhouse/*.whl
+
   build_windows_wheel:
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
@@ -59,5 +61,5 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
+          name: esat-wheels-${{ matrix.os }}-${{ strategy.job-index }}
           path: ./wheelhouse/*.whl
