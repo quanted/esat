@@ -19,16 +19,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-      - name: Install cibuildwheel
+      - name: Install setuptools
         run: |
             python -m pip install --upgrade pip
-            python -m pip install cibuildwheel==2.17.0 setuptools setuptools-rust
-      - name: Build wheels
-        run: |
             curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain=stable
             echo "PATH=${PATH}:${HOME}/.cargo/bin" >> "$GITHUB_ENV"
             rustc --version
-            python -m cibuildwheel --output-dir wheelhouse
+            python -m pip install setuptools setuptools-rust
+      - name: Build wheels
+        run:
+            python -m build --output-dir wheelhouse
 
       - uses: actions/upload-artifact@v4
         with:
@@ -36,27 +36,20 @@ jobs:
           path: ./wheelhouse/*.whl
 
   build_windows_wheel:
-    name: Build wheels on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [windows-latest]
-
+    name: Build wheels on windows-latest
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-
-      # Used to host cibuildwheel
       - uses: actions/setup-python@v5
-      - name: Install cibuildwheel
+      - name: Install setuptools
         run: |
           python -m pip install --upgrade pip
           curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain=stable
           echo "${HOME}/.cargo/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-          python -m pip install cibuildwheel==2.17.0 setuptools setuptools-rust
+          python -m pip install setuptools setuptools-rust
       - name: Build wheels
-        run: python -m cibuildwheel --output-dir wheelhouse
-
+        run: python -m build --output-dir wheelhouse
       - uses: actions/upload-artifact@v4
         with:
-          name: esat-wheels-${{ matrix.os }}-${{ strategy.job-index }}
+          name: esat-wheels-windows-${{ strategy.job-index }}
           path: ./wheelhouse/*.whl
