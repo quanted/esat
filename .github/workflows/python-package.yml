@@ -25,7 +25,7 @@ jobs:
             curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain=stable
             echo "PATH=${PATH}:${HOME}/.cargo/bin" >> "$GITHUB_ENV"
             rustc --version
-            python -m pip install setuptools setuptools-rust
+            python -m pip install build setuptools setuptools-rust
       - name: Build wheels
         run:
             python -m build --output-dir wheelhouse
@@ -46,7 +46,7 @@ jobs:
           python -m pip install --upgrade pip
           curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain=stable
           echo "${HOME}/.cargo/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-          python -m pip install setuptools setuptools-rust
+          python -m pip install build setuptools setuptools-rust
       - name: Build wheels
         run: python -m build --output-dir wheelhouse
       - uses: actions/upload-artifact@v4
