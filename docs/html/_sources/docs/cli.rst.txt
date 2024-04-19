@@ -1,6 +1,6 @@
 Command Line Interface
 ======================
 
-.. click:: src.cli:esat
+.. click:: esat.cli.esat_cli:esat_cli
    :prog: esat
    :nested: full

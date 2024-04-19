@@ -56,7 +56,7 @@ The rust functions are imported as python functions, with the 'from esat_rust im
 ### Creating Docs
 The documentation is created using sphinx and several extensions.
 
-If creating or adding new rst files run <i>sphinx-apidoc -o docs src</i>.
+If creating or adding new rst files run <i>sphinx-apidoc -o docs esat</i>.
 
 To create, update or modify the existing documentation html, run 
 <i>sphinx-build -M html . docs</i> from the command line at the project root directory running the python environment with the necessary sphinx packages.
