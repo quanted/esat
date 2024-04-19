@@ -14,7 +14,7 @@ jobs:
     strategy:
       matrix:
         # macos-13 is an intel runner, macos-14 is apple silicon
-        os: [ubuntu-latest, windows-latest, macos-13, macos-14]
+        os: [ubuntu-latest, macos-13, macos-14]
 
     steps:
       - uses: actions/checkout@v4
@@ -26,7 +26,7 @@ jobs:
         run: |
             python -m pip install --upgrade pip
             curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain=stable
-            . "$HOME/.cargo/env"
+            echo "${HOME}/.cargo/env" >> $GITHUB_PATH
             python -m pip install cibuildwheel==2.17.0 setuptools setuptools-rust
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
@@ -52,7 +52,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain=stable
-          echo PATH=$PATH:%USERPROFILE%\.cargo\bin
+          echo "${HOME}/.cargo/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
           python -m pip install cibuildwheel==2.17.0 setuptools setuptools-rust
       - name: Build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
