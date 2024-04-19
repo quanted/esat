@@ -1,6 +1,6 @@
 # esat pyproject.toml for setuptools and setuptools-rust
 [build-system]
-requires = ["setuptools", "setuptools-rust"]
+requires = ["setuptools >=61.0", "setuptools-rust"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -8,6 +8,12 @@ name = "esat"
 version = "2024.0.1"
 requires-python = ">=3.11"
 description = "EPA's Environmental Source Apportionment Toolkit python package."
+authors = [
+    {name = "Deron Smith", email = "smith.deron@epa.gov"}
+]
+maintainers = [
+    {name = "Deron Smith", email = "smith.deron@epa.gov"}
+]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Programming Language :: Python",
@@ -25,6 +31,10 @@ dependencies = [
     "scipy>=1.12",
     "tqdm>=4.66"
 ]
+
+[project.urls]
+Repository = "https://github.com/quanted/esat.git"
+Issues = "https://github.com/quanted/esat/issues"
 
 [tool.setuptools]
 package-dir = {"esat" = "esat", "esat_eval" = "eval"}
