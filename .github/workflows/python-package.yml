@@ -18,19 +18,17 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-
-      # Used to host cibuildwheel
-      - uses: actions/setup-python@v3
-
+      - uses: actions/setup-python@v5
       - name: Install cibuildwheel
         run: |
             python -m pip install --upgrade pip
             curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain=stable
-            echo "${HOME}/.cargo/env" >> $GITHUB_PATH
-            . "$HOME/.cargo/env"
             python -m pip install cibuildwheel==2.17.0 setuptools setuptools-rust
       - name: Build wheels
-        run: python -m cibuildwheel --output-dir wheelhouse
+        run: |
+          . "$HOME/.cargo/env"
+          echo "${HOME}/.cargo/env" >> $GITHUB_PATH
+          python -m cibuildwheel --output-dir wheelhouse
 
       - uses: actions/upload-artifact@v4
         with:
@@ -48,8 +46,7 @@ jobs:
       - uses: actions/checkout@v4
 
       # Used to host cibuildwheel
-      - uses: actions/setup-python@v3
-
+      - uses: actions/setup-python@v5
       - name: Install cibuildwheel
         run: |
           python -m pip install --upgrade pip
