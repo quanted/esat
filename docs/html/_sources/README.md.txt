@@ -56,9 +56,15 @@ The rust functions are imported as python functions, with the 'from esat_rust im
 ### Creating Docs
 The documentation is created using sphinx and several extensions.
 
-If creating or adding new rst files run <i>sphinx-apidoc -o docs src</i>.
+If creating or adding new rst files run <i>sphinx-apidoc -o docs esat</i>.
 
 To create, update or modify the existing documentation html, run 
 <i>sphinx-build -M html . docs</i> from the command line at the project root directory running the python environment with the necessary sphinx packages.
 
+### Building Wheels and Compiling Rust
+The ESAT python package and cli are built using setuptools and setuptools-rust, with configuration details defined in pyproject.toml and Cargo.toml. 
 
+The python package can be built with the standard <i>python -m build</i> from the project root directory. 
+
+Build will compile the rust code and package up the python
+code combining them into the wheel for distribution. The resulting wheel and compressed file will be found in the project dist directory.

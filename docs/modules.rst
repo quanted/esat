@@ -4,7 +4,8 @@ Python API
 .. toctree::
    :maxdepth: 2
 
-   src.data.rst
-   src.error.rst
-   src.model.rst
-   src.rotational.rst
+   esat.data.rst
+   esat.error.rst
+   esat.model.rst
+   esat.rotational.rst
+   eval.rst
