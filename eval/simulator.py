@@ -227,8 +227,8 @@ class Simulator:
                                                 base_contribution_df=self.syn_contributions_df,
                                                 factors_columns=self.syn_factor_columns,
                                                 features=self.syn_columns,
-                                                batch_sa=self.batch_sa,
-                                                selected_model=selected_model)
+                                                batch_sa=self.batch_sa
+                                                )
             self.factor_compare.compare()
             logger.info("\n")
             if self.factor_compare.best_model == self.batch_sa.best_model:
