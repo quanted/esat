@@ -25,7 +25,6 @@ class DataHandler:
     text files. Other file formats are not supported at this time.
 
     #TODO: Add additional supported file formats by expanding the __read_data function.
-    #TODO: Add in weight adjustment for signal to noise ratio categories, using the same approach as the robust calculation.
 
     Parameters
     ----------
@@ -67,6 +66,9 @@ class DataHandler:
 
         self.metrics = None
 
+        # Processed data that is passed to a model, dataframes are used for analysis
+        self.input_data_df = None
+        self.uncertainty_data_df = None
         self.input_data_processed = None
         self.uncertainty_data_processed = None
 
@@ -94,7 +96,36 @@ class DataHandler:
         np.ndarray, np.ndarray
             The processed input dataset and the processed uncertainty dataset as numpy arrays.
         """
+        self._set_dataset()
         return self.input_data_processed, self.uncertainty_data_processed
+
+    def set_category(self, feature: str, category: str = "strong"):
+        """
+        Set the S/N category for the feature, options are 'strong', 'weak' or 'bad'. All features are set to 'strong'
+        by default, which doesn't modify the feature's behavior in models. Features categorized as 'weak' triples their
+        uncertainty and 'bad' features are excluded from analysis.
+
+        Parameters
+        ----------
+        feature : str
+            The name or label of the feature.
+        category : str
+            The new category of the feature
+
+        Returns
+        -------
+        bool
+            True if the change was successful, otherwise False.
+        """
+        if feature is None:
+            logger.error("A feature name must be provided to update feature category")
+            return False
+        if category not in ("strong", "weak", "bad"):
+            logger.error("The feature category must be set to 'strong', 'weak', or 'bad'")
+            return False
+        self.metrics.loc[feature, "Category"] = category.lower()
+        logger.info(f"Feature: {feature} category set to {category}")
+        return True
 
     def _check_paths(self):
         """
@@ -119,36 +150,50 @@ class DataHandler:
         else:
             logger.info("Input and output configured successfully")
 
-    def _set_dataset(self, data, uncertainty):
+    def _set_dataset(self):
         """
         Sets the processed input and uncertainty datasets.
-
-        Parameters
-        ----------
-        data : np.ndarray
-            The input dataset.
-        uncertainty : np.ndarray
-            The uncertainty dataset.
-
         """
-        if isinstance(data, pd.DataFrame) and isinstance(uncertainty, pd.DataFrame):
-            sn = data/uncertainty
-            data_mask = data.mask(sn < self.sn_threshold, 0.5)
-            data_mask = data_mask.mask(sn >= self.sn_threshold, 1.0)
-            self.sn_mask = data_mask.to_numpy()
+        # Drop columns if specified
+        if self.drop_col is not None:
+            _input_data = copy.copy(self.input_data.drop(labels=self.drop_col, axis=1))
+            _uncertainty_data = copy.copy(self.uncertainty_data.drop(labels=self.drop_col, axis=1))
+        else:
+            _input_data = copy.copy(self.input_data)
+            _uncertainty_data = copy.copy(self.uncertainty_data)
 
-        if isinstance(data, pd.DataFrame) or isinstance(data, pd.Series):
-            data = data.to_numpy()
-        if isinstance(uncertainty, pd.DataFrame) or isinstance(uncertainty, pd.Series):
-            uncertainty = uncertainty.to_numpy()
+        # Drop bad category features
+        bad_features = list(self.metrics.loc[self.metrics["Category"] == "bad"].index)
+        for bf in bad_features:
+            _input_data = self.input_data.drop(labels=bf, axis=1)
+            _uncertainty_data = self.uncertainty_data.drop(labels=bf, axis=1)
+        # Triple weak category features
+        weak_features = list(self.metrics.loc[self.metrics["Category"] == "weak"].index)
+        for wf in weak_features:
+            _uncertainty_data[wf] = _uncertainty_data[wf] * 3.0
 
-        data[data == 0] = EPSILON
-        uncertainty[uncertainty < 0] = EPSILON
+        self.features = _input_data.columns
+        # Ensure data and uncertainty values are numeric
+        for f in self.features:
+            _input_data[f] = pd.to_numeric(_input_data[f])
+            _uncertainty_data[f] = pd.to_numeric(_uncertainty_data[f])
 
-        self.input_data_processed = data.astype("float32")
-        self.uncertainty_data_processed = uncertainty.astype("float32")
+        self.input_data_df = _input_data
+        self.uncertainty_data_df = _uncertainty_data
 
-    def __read_data(self, filepath, index_col=None):
+        if isinstance(_input_data, pd.DataFrame) or isinstance(_input_data, pd.Series):
+            _input_data = _input_data.to_numpy()
+        if isinstance(_uncertainty_data, pd.DataFrame) or isinstance(_uncertainty_data, pd.Series):
+            _uncertainty_data = _uncertainty_data.to_numpy()
+
+        _input_data[_input_data == 0] = EPSILON
+        _uncertainty_data[_uncertainty_data < 0] = EPSILON
+
+        self.input_data_processed = _input_data.astype("float32")
+        self.uncertainty_data_processed = _uncertainty_data.astype("float32")
+        self._determine_optimal_block(input_data=_input_data)
+
+    def _read_data(self, filepath, index_col=None):
         """
         Read in a data file into a pandas dataframe.
 
@@ -189,29 +234,15 @@ class DataHandler:
             logger.warn("Unable to load data because of setup errors.")
             return
         if not existing_data:
-            self.input_data = self.__read_data(filepath=self.input_path, index_col=self.index_col)
-            self.uncertainty_data = self.__read_data(filepath=self.uncertainty_path, index_col=self.index_col)
+            self.input_data = self._read_data(filepath=self.input_path, index_col=self.index_col)
+            self.uncertainty_data = self._read_data(filepath=self.uncertainty_path, index_col=self.index_col)
             self.features = list(self.input_data.columns) if self.features is None else self.features
 
-        if self.drop_col is not None:
-            _input_data = self.input_data.drop(self.drop_col, axis=1)
-            _uncertainty_data = self.uncertainty_data.drop(self.drop_col, axis=1)
-        else:
-            _input_data = self.input_data
-            _uncertainty_data = self.uncertainty_data
+        self.min_values = self.input_data.min(axis=0)
+        self.max_values = self.input_data.max(axis=0)
 
-        for f in self.features:
-            _input_data[f] = pd.to_numeric(_input_data[f])
-            _uncertainty_data[f] = pd.to_numeric(_uncertainty_data[f])
-
-        input_nans = _input_data.isna()
-        self._set_dataset(_input_data, _uncertainty_data)
-
-        self.min_values = _input_data.min(axis=0)
-        self.max_values = _input_data.max(axis=0)
-
-        c_df = _input_data.copy()
-        u_df = _uncertainty_data.copy()
+        c_df = self.input_data.copy()
+        u_df = self.uncertainty_data.copy()
 
         min_con = c_df.min()
         p25 = c_df.quantile(q=0.25, numeric_only=True)
@@ -224,20 +255,22 @@ class DataHandler:
         d.mask(mask, 0, inplace=True)
         sn = (1 / d.shape[0]) * d.sum(axis=0)
 
-        categories = ["Strong"] * d.shape[1]
+        categories = ["strong"] * d.shape[1]
 
         self.metrics = pd.DataFrame(
             data={"Category": categories, "S/N": sn, "Min": min_con, "25th": p25, "50th": median_con, "75th": p75,
                   "Max": max_con})
 
-    def _determine_optimal_block(self):
+    def _determine_optimal_block(self, input_data=None):
         """
         Runs the recombinator code to obtain the optimal block size for Bootstrap based upon the Politis and White 2004
         algorithm. https://web.archive.org/web/20040726091553id_/http://1cj3301.ucsd.edu:80/hwcv-093.pdf
 
         Sets the self.optimal_block parameter by taking the average value of b_star_cb of each feature.
         """
-        optimal_blocks = optimal_block_length(self.input_data_processed)
+        if input_data is None:
+            input_data = self.input_data.to_numpy()
+        optimal_blocks = optimal_block_length(input_data)
         optimal_block = []
         for opt in optimal_blocks:
             optimal_block.append(opt.b_star_cb)

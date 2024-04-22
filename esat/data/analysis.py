@@ -65,10 +65,10 @@ class ModelAnalysis:
                       "KS Normal Residuals": [], "KS PValue": [], "KS Statistic": []}
         cats =  copy.copy(self.dh.metrics['Category'])
         results = self.model.WH if results is None else results
-        residuals = self.dh.input_data - results
+        residuals = self.dh.input_data_df - results
         scaled_residuals = residuals / self.dh.uncertainty_data
         for feature_idx, x_label in enumerate(self.dh.features):
-            observed_data = self.dh.input_data[x_label]
+            observed_data = self.dh.input_data_df[x_label]
             predicted_data = results[:, feature_idx]
 
             i_residuals = residuals[x_label]
@@ -131,8 +131,8 @@ class ModelAnalysis:
             pd.DataFrame
                 The list of residuals that exceed the absolute value of the threshold, as a pd.DataFrame
         """
-        if feature_idx > self.dh.input_data.shape[1] - 1 or feature_idx < 0:
-            logger.info(f"Invalid feature index provided, must be between 0 and {self.dh.input_data.shape[1]}")
+        if feature_idx > self.dh.input_data_df.shape[1] - 1 or feature_idx < 0:
+            logger.info(f"Invalid feature index provided, must be between 0 and {self.dh.input_data_df.shape[1]}")
             return
         V = self.model.V[:, feature_idx]
         if est_V is None:
@@ -142,7 +142,7 @@ class ModelAnalysis:
         U = self.model.U[:, feature_idx]
         feature = self.dh.features[feature_idx]
 
-        residuals = pd.DataFrame(data={f'{feature}': (V - est_V)/U, 'datetime': self.dh.input_data.index})
+        residuals = pd.DataFrame(data={f'{feature}': (V - est_V)/U, 'datetime': self.dh.input_data_df.index})
         residuals_data = [residuals[feature].values]
         dist_fig = ff.create_distplot(residuals_data, ['distplot'], curve_type='normal')
         normal_x = dist_fig.data[1]['x']
@@ -171,12 +171,12 @@ class ModelAnalysis:
             The index of the feature to plot.
 
         """
-        if feature_idx > self.dh.input_data.shape[1] - 1 or feature_idx < 0:
-            logger.info(f"Invalid feature index provided, must between 0 and {self.dh.input_data.shape[1]}")
+        if feature_idx > self.dh.input_data_df.shape[1] - 1 or feature_idx < 0:
+            logger.info(f"Invalid feature index provided, must between 0 and {self.dh.input_data_df.shape[1]}")
             return
-        x_label = self.dh.input_data.columns[feature_idx]
+        x_label = self.dh.input_data_df.columns[feature_idx]
 
-        observed_data = self.dh.input_data[x_label]
+        observed_data = self.dh.input_data_df[x_label]
         predicted_data = self.model.WH[:, feature_idx]
 
         A = np.vstack([observed_data.values, np.ones(len(observed_data))]).T
@@ -206,16 +206,16 @@ class ModelAnalysis:
             The index of the feature to plot.
 
         """
-        if feature_idx > self.dh.input_data.shape[1] - 1 or feature_idx < 0:
-            logger.info(f"Invalid feature index provided, must be between 0 and {self.dh.input_data.shape[1]}")
+        if feature_idx > self.dh.input_data_df.shape[1] - 1 or feature_idx < 0:
+            logger.info(f"Invalid feature index provided, must be between 0 and {self.dh.input_data_df.shape[1]}")
             return
-        x_label = self.dh.input_data.columns[feature_idx]
+        x_label = self.dh.input_data_df.columns[feature_idx]
 
-        observed_data = self.dh.input_data[x_label].values
+        observed_data = self.dh.input_data_df[x_label].values
         predicted_data = self.model.WH[:, feature_idx]
 
         data_df = pd.DataFrame(data={"observed": observed_data, "predicted": predicted_data},
-                               index=self.dh.input_data.index)
+                               index=self.dh.input_data_df.index)
         data_df.index = pd.to_datetime(data_df.index)
         data_df = data_df.sort_index()
         data_df = data_df.resample('D').mean()
@@ -277,7 +277,7 @@ class ModelAnalysis:
 
         norm_contr = factor_contribution / factor_contribution.mean()
         #
-        data_df = pd.DataFrame(data={factor_label: norm_contr}, index=self.dh.input_data.index)
+        data_df = pd.DataFrame(data={factor_label: norm_contr}, index=self.dh.input_data_df.index)
         data_df[factor_label] = norm_contr
         data_df.index = pd.to_datetime(data_df.index)
         data_df = data_df.sort_index()
@@ -373,13 +373,13 @@ class ModelAnalysis:
             The contribution percentage of a factor above which to include on the plot.
 
         """
-        if feature_idx > self.dh.input_data.shape[1] - 1 or feature_idx < 0:
-            logger.info(f"Invalid feature index provided, must not be negative and be less than {self.dh.input_data.shape[1]-1}")
+        if feature_idx > self.dh.input_data_df.shape[1] - 1 or feature_idx < 0:
+            logger.info(f"Invalid feature index provided, must not be negative and be less than {self.dh.input_data_df.shape[1]-1}")
             return
         if 50.0 > contribution_threshold < 0:
             logger.info(f"Invalid contribution threshold provided, must be between 0.0 and 50.0")
             return
-        x_label = self.dh.input_data.columns[feature_idx]
+        x_label = self.dh.input_data_df.columns[feature_idx]
 
         factors_data = self.model.H
         normalized_factors_data = 100 * (factors_data / factors_data.sum(axis=0))
@@ -404,7 +404,7 @@ class ModelAnalysis:
         normalized_factors_contr = 100 * (factors_contr / factors_contr.sum(axis=0))
         factor_labels = [f"Factor {i}" for i in range(1, normalized_factors_contr.shape[1]+1)]
         contr_df = pd.DataFrame(normalized_factors_contr, columns=factor_labels)
-        contr_df.index = pd.to_datetime(self.dh.input_data.index)
+        contr_df.index = pd.to_datetime(self.dh.input_data_df.index)
         contr_df = contr_df.sort_index()
         contr_df = contr_df.resample('D').mean()
 
@@ -482,7 +482,7 @@ class ModelAnalysis:
             factor_matrices.append(f_matrix)
             percent_matrices.append(f_matrix / self.model.V)
 
-        _y = self.dh.input_data.index
+        _y = self.dh.input_data_df.index
         z_title = "Percentage (%)" if percentage else "Mass"
         x_labels = []
         x_label_values = []
