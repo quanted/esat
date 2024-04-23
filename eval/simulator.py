@@ -1,4 +1,7 @@
 import logging
+import os
+import pickle
+from pathlib import Path
 import numpy as np
 import pandas as pd
 from datetime import datetime
@@ -73,24 +76,24 @@ class Simulator:
                  uncertainty_mean: float = 0.05,
                  uncertainty_scale: float = 0.01
                  ):
-        self.seed = seed
-        self.rng = np.random.default_rng(seed)
-        self.factors_n = factors_n
-        self.features_n = features_n
-        self.samples_n = samples_n
+        self.seed = int(seed)
+        self.rng = np.random.default_rng(self.seed)
+        self.factors_n = int(factors_n)
+        self.features_n = int(features_n)
+        self.samples_n = int(samples_n)
         self.syn_columns = [f"Feature {i}" for i in range(1, self.features_n+1)]
         self.syn_factor_columns = [f"Factor {i}" for i in range(1, self.factors_n+1)]
 
         self.outliers = outliers
-        self.outlier_p = outlier_p
-        self.outlier_mag = outlier_mag
-        self.noise_mean = noise_mean
-        self.noise_scale = noise_scale
-        self.uncertainty_mean = uncertainty_mean
-        self.uncertainty_scale = uncertainty_scale
+        self.outlier_p = float(outlier_p)
+        self.outlier_mag = float(outlier_mag)
+        self.noise_mean = float(noise_mean)
+        self.noise_scale = float(noise_scale)
+        self.uncertainty_mean = float(uncertainty_mean)
+        self.uncertainty_scale = float(uncertainty_scale)
 
         self.syn_profiles = None
-        self.syn_contributions = self.rng.random(size=(self.samples_n, self.factors_n)) * contribution_max
+        self.syn_contributions = self.rng.random(size=(self.samples_n, self.factors_n)) * float(contribution_max)
 
         self.syn_data = None
         self.syn_uncertainty = None
@@ -243,7 +246,7 @@ class Simulator:
             logger.info(f"Mappings for the most selected model in the batch. Model: {selected_model}")
             self.factor_compare.print_results(model=selected_model)
 
-    def plot_comparison(self, grouped=False, model_i: int = None):
+    def plot_comparison(self, grouped: bool = False, model_i: int = None):
         """
         Plot the results of the output comparison for the model with the highest correlated mapping, if model_i is not
         specified. Otherwise, plots the output comparison of model_i to the synthetic profiles.
@@ -335,3 +338,79 @@ class Simulator:
                 h_fig.update_layout(title_text=f"Factor Profile Comparison - Model: {model_i + 1}",
                                     width=1000, height=600, hovermode='x', showlegend=True)
                 h_fig.show()
+
+    def save(self, sim_name: str = "synthetic", output_directory: str = "."):
+        """
+        Save the generated synthetic data and uncertainty datasets, and the simulator instance binary.
+
+        Parameters
+        ----------
+        sim_name : str
+            The name for the data and uncertainty dataset files.
+        output_directory : str
+            The path to the directory where the files will be saved.
+
+        Returns
+        -------
+        bool
+            True if save is successful, otherwise False.
+        """
+        output_directory = Path(output_directory)
+        if not output_directory.is_absolute():
+            logger.error("Provided output directory is not an absolute path. Must provide an absolute path.")
+            return False
+        if os.path.exists(output_directory):
+            file_path = os.path.join(output_directory, "esat_simulator.pkl")
+            with open(file_path, "wb") as save_file:
+                pickle.dump(self, save_file)
+                logger.info(f"ESAT Simulator instance saved to pickle file: {file_path}")
+
+            data_file_path = os.path.join(output_directory, f"{sim_name}_data.csv")
+            self.syn_data_df.to_csv(data_file_path)
+            logger.info(f"ESAT synthetic data saved to file: {data_file_path}")
+
+            uncertainty_file_path = os.path.join(output_directory, f"{sim_name}_uncertainty.csv")
+            self.syn_uncertainty_df.to_csv(uncertainty_file_path)
+            logger.info(f"ESAT synthetic uncertainty saved to file: {uncertainty_file_path}")
+
+            profiles_file_path = os.path.join(output_directory, f"{sim_name}_profiles.csv")
+            self.syn_profiles_df.to_csv(profiles_file_path)
+            logger.info(f"ESAT synthetic profiles saved to file: {profiles_file_path}")
+
+            contribution_file_path = os.path.join(output_directory, f"{sim_name}_contributions.csv")
+            self.syn_contributions_df.to_csv(contribution_file_path)
+            logger.info(f"ESAT synthetic contributions saved to file: {contribution_file_path}")
+            return True
+        return False
+
+    @staticmethod
+    def load(file_path: str):
+        """
+        Load a previously saved ESAT Simulator pickle file.
+
+        Parameters
+        ----------
+        file_path : str
+           File path to a previously saved ESAT Simulator pickle file
+
+        Returns
+        -------
+        Simulator
+           On successful load, will return a previously saved Simulator object. Will return None on load fail.
+        """
+        file_path = Path(file_path)
+        if not file_path.is_absolute():
+            if not file_path.is_absolute():
+                logger.error("Provided directory is not an absolute path. Must provide an absolute path.")
+                return None
+        if os.path.exists(file_path):
+            try:
+                with open(file_path, "rb") as pfile:
+                    sim = pickle.load(pfile)
+                    return sim
+            except pickle.PickleError as p_error:
+                logger.error(f"Failed to load Simulator pickle file {file_path}. \nError: {p_error}")
+                return None
+        else:
+            logger.error(f"Simulator file load failed, specified pickle file does not exist. File Path: {file_path}")
+            return None

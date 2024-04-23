@@ -403,8 +403,8 @@ class BSDISP:
         """
         output_directory = Path(output_directory)
         if not output_directory.is_absolute():
-            current_directory = os.path.abspath(__file__)
-            output_directory = Path(os.path.join(current_directory, output_directory)).resolve()
+            logger.error("Provided output directory is not an absolute path. Must provide an absolute path.")
+            return None
         if os.path.exists(output_directory):
             file_path = os.path.join(output_directory, f"{bsdisp_name}.pkl")
             if pickle_result:
@@ -445,8 +445,8 @@ class BSDISP:
         """
         file_path = Path(file_path)
         if not file_path.is_absolute():
-            current_directory = os.path.abspath(__file__)
-            file_path = Path(os.path.join(current_directory, file_path)).resolve()
+            logger.error("Provided path is not an absolute path. Must provide an absolute path.")
+            return None
         if os.path.exists(file_path):
             try:
                 with open(file_path, "rb") as pfile:

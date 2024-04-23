@@ -1139,11 +1139,28 @@ class ConstrainedModel:
         contr_fig.show()
 
     def save(self, model_name: str, output_directory: str, pickle_model: bool = False):
+        """
+        Save the constrained model instance.
+
+        Parameters
+        ----------
+        model_name : str
+            The name to use for the constrained model save files.
+        output_directory :
+            The output directory to save the constrained model instance to.
+        pickle_model : bool
+            Pickle the constrained model, useful for reloading the instance. Default = False.
+        Returns
+        -------
+        str
+           The path to the output directory, if pickle=False or the path to the pickle file. If save fails returns None
+
+        """
         model_name = f"constrained_model-{model_name}"
         output_directory = Path(output_directory)
         if not output_directory.is_absolute():
-            current_directory = os.path.abspath(__file__)
-            output_directory = Path(os.path.join(current_directory, output_directory)).resolve()
+            logger.error("Provided output directory is not an absolute path. Must provide an absolute path.")
+            return None
         if os.path.exists(output_directory):
             self.constrained_model.save(
                 model_name=model_name,
@@ -1179,8 +1196,8 @@ class ConstrainedModel:
         """
         file_path = Path(file_path)
         if not file_path.is_absolute():
-            current_directory = os.path.abspath(__file__)
-            file_path = Path(os.path.join(current_directory, file_path)).resolve()
+            logger.error("Provided path is not an absolute path. Must provide an absolute path.")
+            return None
         if os.path.exists(file_path):
             try:
                 with open(file_path, "rb") as pfile:
