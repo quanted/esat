@@ -11,12 +11,14 @@ import configparser
 import logging
 from esat.data.datahandler import DataHandler
 from esat.model.batch_sa import BatchSA
-from esat.data.analysis import ModelAnalysis
+from esat.data.analysis import ModelAnalysis, BatchAnalysis
 from esat.error.displacement import Displacement
 from esat.error.bootstrap import Bootstrap
 from esat.error.bs_disp import BSDISP
 from esat.rotational.constrained import ConstrainedModel
-from esat.configs import run_config, error_config, constrained_config
+from esat.configs import run_config, sim_config, error_config, constrained_config
+from esat_eval.simulator import Simulator
+
 
 logging.basicConfig(format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S', level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -27,11 +29,22 @@ def get_dh(input_path, uncertainty_path, index_col):
     return dh
 
 
-def get_config(project_directory, error=False, constrained=False):
+def get_sim(sim_path, sim_parameters):
+    if "esat_simulator.pkl" in os.listdir(sim_path):
+        sim = Simulator.load(os.path.join(sim_path, "esat_simulator.pkl"))
+    else:
+        sim = Simulator(**sim_parameters)
+        sim.save(output_directory=sim_path)
+    return sim
+
+
+def get_config(project_directory, error=False, constrained=False, sim=False):
     if error:
         config_file = os.path.join(project_directory, "error_config.toml")
     elif constrained:
         config_file = os.path.join(project_directory, "constrained_config.toml")
+    elif sim:
+        config_file = os.path.join(project_directory, "sim_config.toml")
     else:
         config_file = os.path.join(project_directory, "run_config.toml")
     config = configparser.ConfigParser()
@@ -39,11 +52,17 @@ def get_config(project_directory, error=False, constrained=False):
     return config
 
 
+def get_batchsa(project_directory):
+    config = get_config(project_directory=project_directory)
+    batch_pkl = os.path.join(config["project"]["directory"], "output", f"{config['project']['name']}.pkl")
+    batch_sa = BatchSA.load(file_path=batch_pkl)
+    return batch_sa
+
+
 def get_model_analysis(project_directory, selected_model):
     config = get_config(project_directory=project_directory)
     dh = DataHandler(**config["data"])
-    batch_pkl = os.path.join(config["project"]["directory"], "output", f"{config['project']['name']}.pkl")
-    sa_models = BatchSA.load(file_path=batch_pkl)
+    sa_models = get_batchsa(project_directory=project_directory)
     selected_i = sa_models.best_model if selected_model == -1 else selected_model
     i_model = sa_models.results[selected_i]
     ma = ModelAnalysis(datahandler=dh, model=i_model, selected_model=selected_i)
@@ -77,8 +96,8 @@ def get_constrained_model(project_directory):
 def esat_cli():
     """
     \b
-    The EPA's Environmental Source Apportionment Toolkit (ESAT) CLI provides access to the ESAT workflow available in the
-    Jupyter notebooks. The workflow sequence is as follows:
+    The EPA's Environmental Source Apportionment Toolkit (ESAT) CLI provides access to the ESAT workflow available in
+    the Jupyter notebooks. The workflow sequence is as follows:
     \b
     1) setup : specify where you want your project directory for all solution outputs.
     2) analysis-input : (optional) review your input/uncertainty data with metric tables and plots.
@@ -94,6 +113,12 @@ def esat_cli():
     model run can be used in an error estimation run by adding the path to the constrained model run configuration file
     in the error method configuration. If left empty, the error estimation run will default to the base solution from
     run.
+
+    The ESAT simulator and synthetic datasets can be used by running the 'setup-sim' command in place of 'setup'. To
+    generate the synthetic dataset for analysis run 'generate-sim', if this is not executed prior to 'run' the command
+    will be executed in the run command sequence. The 'run' command will use the generated synthetic data as it would
+    real data. The model outputs can then be compared to the synthetic profiles with the 'sim-analysis' command.
+    All other commands are available on the simulated data.
 
     """
     pass
@@ -123,6 +148,169 @@ def setup(project_directory):
     with open(new_config_file, 'w') as configfile:
         new_config.write(configfile)
     logger.info(f"New run configuration file created. File path: {new_config_file}")
+
+
+@esat_cli.group()
+def simulator():
+    """
+    The collection of commands for managing ESAT simulator instances.
+    """
+    pass
+
+
+@simulator.command(name='setup')
+@click.argument("project_directory", type=click.Path())
+def setup_sim(project_directory):
+    """
+    Create the configuration file for a batch source apportionment simulated run in the provided directory.
+
+    Parameters
+
+    project_directory : The project directory where all configuration output files are saved.
+
+    """
+    try:
+        if not os.path.exists(project_directory):
+            os.mkdir(project_directory)
+    except FileNotFoundError:
+        logger.error("Unable to create workflow directory, make sure the path is correct.")
+        return
+    logger.info(f"Creating new ESAT simulator project")
+    new_sim_config = sim_config
+    new_sim_config['project']['directory'] = project_directory
+    new_sim_config_file = os.path.join(project_directory, "sim_config.toml")
+    with open(new_sim_config_file, 'w') as configfile:
+        new_sim_config.write(configfile)
+    logger.info(f"New simulator configuration file created. File path: {new_sim_config_file}")
+    new_config = run_config
+    new_config['project']['directory'] = project_directory
+    new_config['data']['input_path'] = new_sim_config['data']['input_path']
+    new_config['data']['uncertainty_path'] = new_sim_config['data']['uncertainty_path']
+    new_config_file = os.path.join(project_directory, "run_config.toml")
+    with open(new_config_file, 'w') as configfile:
+        new_config.write(configfile)
+    logger.info(f"New run configuration file created. File path: {new_config_file}")
+
+
+@simulator.command(name="generate")
+@click.argument("project_directory", type=click.Path())
+def generate_sim(project_directory):
+    """
+    Generate the synthetic data and uncertainty datasets as defined in the sim_config.toml. Only required for data
+    analysis functions, run will check for a simulated config if no file is found in the project_directory and generate
+    if required.
+
+    Parameters
+
+    project_directory : The project directory where all configuration output files are saved.
+    """
+    try:
+        if not os.path.exists(project_directory):
+            os.mkdir(project_directory)
+    except FileNotFoundError:
+        logger.error("Unable to create workflow directory, make sure the path is correct.")
+        return
+    config = get_config(project_directory=project_directory, sim=True)
+    logger.info("Generating synthetic data")
+    _ = get_sim(sim_path=project_directory, sim_parameters=config['parameters'])
+    logger.info("ESAT Simulator setup complete")
+
+
+@simulator.command(name="compare")
+@click.argument("project_directory", type=click.Path())
+def compare_sim(project_directory):
+    """
+    Compares the models generated from the synthetic data to show how similar the modelled profiles are to the known
+    synthetic profiles.
+
+    Parameters
+
+    project_directory : The project directory where all configuration output files are saved.
+    """
+    try:
+        if not os.path.exists(project_directory):
+            os.mkdir(project_directory)
+    except FileNotFoundError:
+        logger.error("Unable to create workflow directory, make sure the path is correct.")
+        return
+    config = get_config(project_directory=project_directory, sim=True)
+    logger.info("Generating synthetic data")
+    sim = get_sim(sim_path=project_directory, sim_parameters=config['parameters'])
+    batch_sa = get_batchsa(project_directory=project_directory)
+    sim.compare(batch_sa=batch_sa)
+    sim.save(output_directory=project_directory)
+
+
+@simulator.command(name="plot")
+@click.argument("project_directory", type=click.Path())
+def plot_sim(project_directory):
+    """
+    Plots the results of the simulator output comparison to the synthetic profiles.
+
+    Parameters
+
+    project_directory : The project directory where all configuration output files are saved.
+    """
+    try:
+        if not os.path.exists(project_directory):
+            os.mkdir(project_directory)
+    except FileNotFoundError:
+        logger.error("Unable to create workflow directory, make sure the path is correct.")
+        return
+    config = get_config(project_directory=project_directory, sim=True)
+    logger.info("Generating synthetic data")
+    sim = get_sim(sim_path=project_directory, sim_parameters=config['parameters'])
+    sim.plot_comparison()
+
+
+@esat_cli.group()
+def analysis_batch():
+    """
+    The collection of commands for batch model analysis.
+    """
+    pass
+
+
+@analysis_batch.command()
+@click.argument("project_directory", type=click.Path())
+def plot_loss(project_directory):
+    """
+    Plots the loss value Q(true) over the training iterations for the batch solution.
+
+    Parameters
+    ----------
+    project_directory : The project directory where all configuration output files are saved.
+    """
+    try:
+        if not os.path.exists(project_directory):
+            os.mkdir(project_directory)
+    except FileNotFoundError:
+        logger.error("Unable to create workflow directory, make sure the path is correct.")
+        return
+    batch_sa = get_batchsa(project_directory=project_directory)
+    batch_analysis = BatchAnalysis(batch_sa=batch_sa)
+    batch_analysis.plot_loss()
+
+
+@analysis_batch.command()
+@click.argument("project_directory", type=click.Path())
+def plot_distribution(project_directory):
+    """
+    Plots the loss value distribution Q(true) and Q(robust) for the batch solution.
+
+    Parameters
+    ----------
+    project_directory : The project directory where all configuration output files are saved.
+    """
+    try:
+        if not os.path.exists(project_directory):
+            os.mkdir(project_directory)
+    except FileNotFoundError:
+        logger.error("Unable to create workflow directory, make sure the path is correct.")
+        return
+    batch_sa = get_batchsa(project_directory=project_directory)
+    batch_analysis = BatchAnalysis(batch_sa=batch_sa)
+    batch_analysis.plot_loss_distribution()
 
 
 @esat_cli.group()
@@ -218,7 +406,13 @@ def run(project_directory):
 
     """
     config = get_config(project_directory=project_directory)
-    dh = DataHandler(**config["data"])
+    if "sim_config.toml" in os.listdir(project_directory):
+        _sim_config = get_config(project_directory=project_directory, sim=True)
+        sim = get_sim(sim_path=project_directory, sim_parameters=_sim_config['parameters'])
+        data_df, uncertainty_df = sim.get_data()
+        dh = DataHandler.load_dataframe(input_df=data_df, uncertainty_df=uncertainty_df)
+    else:
+        dh = DataHandler(**config["data"])
     V, U = dh.get_data()
 
     sa_models = BatchSA(V=V, U=U, **config["parameters"])

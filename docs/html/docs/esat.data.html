@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>esat.data package &mdash; Environmental Source Apportionment Toolkit (ESAT) 04/19/2024 documentation</title>
+  <title>esat.data package &mdash; Environmental Source Apportionment Toolkit (ESAT) 04/23/2024 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
 
@@ -15,7 +15,7 @@
   
         <script src="../_static/jquery.js?v=5d32c60e"></script>
         <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../_static/documentation_options.js?v=d8e30c96"></script>
+        <script src="../_static/documentation_options.js?v=2ceadbe7"></script>
         <script src="../_static/doctools.js?v=9a2dae69"></script>
         <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
@@ -298,8 +298,7 @@ Default = True.</p></li>
 models.</p>
 <p>The input and uncertainty data files are specified by their file paths. Input files can be .csv or tab separated
 text files. Other file formats are not supported at this time.</p>
-<p>#TODO: Add additional supported file formats by expanding the __read_data function.
-#TODO: Add in weight adjustment for signal to noise ratio categories, using the same approach as the robust calculation.</p>
+<p>#TODO: Add additional supported file formats by expanding the __read_data function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -374,6 +373,28 @@ the 1st column.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>feature_selection</strong> (<em>int</em><em> or </em><em>list</em>) – A single or list of feature indices to plot as a timeseries.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.data.datahandler.DataHandler.set_category">
+<span class="sig-name descname"><span class="pre">set_category</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">category</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'strong'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.data.datahandler.DataHandler.set_category" title="Link to this definition"></a></dt>
+<dd><p>Set the S/N category for the feature, options are ‘strong’, ‘weak’ or ‘bad’. All features are set to ‘strong’
+by default, which doesn’t modify the feature’s behavior in models. Features categorized as ‘weak’ triples their
+uncertainty and ‘bad’ features are excluded from analysis.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>feature</strong> (<em>str</em>) – The name or label of the feature.</p></li>
+<li><p><strong>category</strong> (<em>str</em>) – The new category of the feature</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if the change was successful, otherwise False.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
 </dd></dl>

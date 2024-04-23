@@ -1,5 +1,30 @@
 import configparser
 
+
+# ------- SIMULATOR Configuration -------- #
+sim_config = configparser.ConfigParser()
+sim_config['project'] = {
+    "directory": "."
+}
+sim_config['data'] = {
+    'input_path': 'synthetic_data.csv',
+    'uncertainty_path': 'synthetic_uncertainty.csv'
+}
+sim_config['parameters'] = {
+    'seed': 42,
+    'factors_n': 6,                  # Number of factors in the synthetic dataset
+    'features_n': 40,                # Number of features in the synthetic dataset
+    'samples_n': 200,                # Number of samples in the synthetic dataset
+    'outliers': True,                # Add outliers to the dataset
+    'outlier_p': 0.10,               # Decimal percent of outliers in the dataset
+    'outlier_mag': 2,                # Magnitude of outliers
+    'contribution_max': 10,          # Maximum value of the contribution matrix (W) (Randomly sampled from a uniform distribution)
+    'noise_mean': 0.1,               # Mean of noise added to the synthetic dataset (Randomly sampled from a normal distribution)
+    'noise_scale': 0.02,             # Scale of the noise added to the synthetic dataset
+    'uncertainty_mean': 0.05,        # Mean of the uncertainty matrix, percentage of the input dataset (Randomly sampled from a normal distribution)
+    'uncertainty_scale': 0.01        # Scale of the uncertainty matrix
+}
+
 # ------- RUN Configuration --------- #
 run_config = configparser.ConfigParser()
 run_config['project'] = {

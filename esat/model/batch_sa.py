@@ -57,10 +57,10 @@ class BatchSA:
     robust_n : int
        When robust_mode=True, the number of iterations to use the default mode before turning on the robust mode to
        prevent reducing the impact of non-outliers. Default: 200
-    robust_alpha : int
+    robust_alpha : float
        When robust_mode=True, the cutoff of the uncertainty scaled residuals to decrease the weights. Robust weights
        are calculated as the uncertainty multiplied by the square root of the scaled residuals over robust_alpha.
-       Default: 4
+       Default: 4.0
     parallel : bool
         Run the individual models in parallel, not the same as the optimized parallelized option for an SA ws-nmf
         model. Default = True.
@@ -269,7 +269,7 @@ class BatchSA:
         batch_name : str
             The name to use for the batch save files.
         output_directory :
-            The output directory to save the batch nmf files to.
+            The output directory to save the batch sa files to.
         pickle_model : bool
             Pickle the individual models, creating a separate pickle file for each SA model. Default = False.
         pickle_batch : bool
@@ -285,8 +285,8 @@ class BatchSA:
         """
         output_directory = Path(output_directory)
         if not output_directory.is_absolute():
-            current_directory = os.path.abspath(__file__)
-            output_directory = Path(os.path.join(current_directory, output_directory)).resolve()
+            logger.error("Provided output directory is not an absolute path. Must provide an absolute path.")
+            return None
         if os.path.exists(output_directory):
             if pickle_batch:
                 file_path = os.path.join(output_directory, f"{batch_name}.pkl")
@@ -323,8 +323,8 @@ class BatchSA:
         """
         file_path = Path(file_path)
         if not file_path.is_absolute():
-            current_directory = os.path.abspath(__file__)
-            file_path = Path(os.path.join(current_directory, file_path)).resolve()
+            logger.error("Provided path is not an absolute path. Must provide an absolute path.")
+            return None
         if os.path.exists(file_path):
             try:
                 with open(file_path, "rb") as pfile:

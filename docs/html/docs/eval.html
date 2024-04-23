@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>eval package &mdash; Environmental Source Apportionment Toolkit (ESAT) 04/19/2024 documentation</title>
+  <title>eval package &mdash; Environmental Source Apportionment Toolkit (ESAT) 04/23/2024 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
 
@@ -15,7 +15,7 @@
   
         <script src="../_static/jquery.js?v=5d32c60e"></script>
         <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../_static/documentation_options.js?v=d8e30c96"></script>
+        <script src="../_static/documentation_options.js?v=2ceadbe7"></script>
         <script src="../_static/doctools.js?v=9a2dae69"></script>
         <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
@@ -271,8 +271,25 @@ of the randomly generated synthetic profile by passing in a profile matrix</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="eval.simulator.Simulator.load">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#eval.simulator.Simulator.load" title="Link to this definition"></a></dt>
+<dd><p>Load a previously saved ESAT Simulator pickle file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>file_path</strong> (<em>str</em>) – File path to a previously saved ESAT Simulator pickle file</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>On successful load, will return a previously saved Simulator object. Will return None on load fail.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#eval.simulator.Simulator" title="eval.simulator.Simulator">Simulator</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="eval.simulator.Simulator.plot_comparison">
-<span class="sig-name descname"><span class="pre">plot_comparison</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grouped</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#eval.simulator.Simulator.plot_comparison" title="Link to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">plot_comparison</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grouped</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#eval.simulator.Simulator.plot_comparison" title="Link to this definition"></a></dt>
 <dd><p>Plot the results of the output comparison for the model with the highest correlated mapping, if model_i is not
 specified. Otherwise, plots the output comparison of model_i to the synthetic profiles.</p>
 <dl class="field-list simple">
@@ -282,6 +299,26 @@ specified. Otherwise, plots the output comparison of model_i to the synthetic pr
 <li><p><strong>model_i</strong> (<em>int</em>) – The model index for the comparison, when not specified will default to the model with the highest
 correlation mapping.</p></li>
 </ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="eval.simulator.Simulator.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sim_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'synthetic'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_directory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'.'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#eval.simulator.Simulator.save" title="Link to this definition"></a></dt>
+<dd><p>Save the generated synthetic data and uncertainty datasets, and the simulator instance binary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sim_name</strong> (<em>str</em>) – The name for the data and uncertainty dataset files.</p></li>
+<li><p><strong>output_directory</strong> (<em>str</em>) – The path to the directory where the files will be saved.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if save is successful, otherwise False.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
 </dd></dl>

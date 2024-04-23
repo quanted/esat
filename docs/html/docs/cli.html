@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Command Line Interface &mdash; Environmental Source Apportionment Toolkit (ESAT) 04/19/2024 documentation</title>
+  <title>Command Line Interface &mdash; Environmental Source Apportionment Toolkit (ESAT) 04/23/2024 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
 
@@ -15,7 +15,7 @@
   
         <script src="../_static/jquery.js?v=5d32c60e"></script>
         <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../_static/documentation_options.js?v=d8e30c96"></script>
+        <script src="../_static/documentation_options.js?v=2ceadbe7"></script>
         <script src="../_static/doctools.js?v=9a2dae69"></script>
         <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
@@ -50,6 +50,11 @@
 <li class="toctree-l1"><a class="reference internal" href="modules.html">Python API</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Command Line Interface</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#esat">esat</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#esat-analysis-batch">analysis-batch</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#esat-analysis-batch-plot-distribution">plot-distribution</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#esat-analysis-batch-plot-loss">plot-loss</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="#esat-analysis-constrained">analysis-constrained</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#esat-analysis-constrained-eval-constraints">eval-constraints</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#esat-analysis-constrained-eval-expressions">eval-expressions</a></li>
@@ -91,6 +96,13 @@
 <li class="toctree-l3"><a class="reference internal" href="#esat-setup">setup</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#esat-setup-constrained">setup-constrained</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#esat-setup-error">setup-error</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#esat-simulator">simulator</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#esat-simulator-compare">compare</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#esat-simulator-generate">generate</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#esat-simulator-plot">plot</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#esat-simulator-setup">setup</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -126,8 +138,8 @@
 <section id="esat">
 <h2>esat<a class="headerlink" href="#esat" title="Link to this heading"></a></h2>
 <div class="line-block">
-<div class="line">The EPA’s Environmental Source Apportionment Toolkit (ESAT) CLI provides access to the ESAT workflow available in the</div>
-<div class="line">Jupyter notebooks. The workflow sequence is as follows:</div>
+<div class="line">The EPA’s Environmental Source Apportionment Toolkit (ESAT) CLI provides access to the ESAT workflow available in</div>
+<div class="line">the Jupyter notebooks. The workflow sequence is as follows:</div>
 <div class="line">1) setup : specify where you want your project directory for all solution outputs.</div>
 <div class="line">2) analysis-input : (optional) review your input/uncertainty data with metric tables and plots.</div>
 <div class="line">3) run : executes a batch source apportionment (SA) run using the values in the setup configuration file.</div>
@@ -142,9 +154,57 @@
 model run can be used in an error estimation run by adding the path to the constrained model run configuration file
 in the error method configuration. If left empty, the error estimation run will default to the base solution from
 run.</p>
+<p>The ESAT simulator and synthetic datasets can be used by running the ‘setup-sim’ command in place of ‘setup’. To
+generate the synthetic dataset for analysis run ‘generate-sim’, if this is not executed prior to ‘run’ the command
+will be executed in the run command sequence. The ‘run’ command will use the generated synthetic data as it would
+real data. The model outputs can then be compared to the synthetic profiles with the ‘sim-analysis’ command.
+All other commands are available on the simulated data.</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>esat<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>COMMAND<span class="w"> </span><span class="o">[</span>ARGS<span class="o">]</span>...
 </pre></div>
 </div>
+<section id="esat-analysis-batch">
+<h3>analysis-batch<a class="headerlink" href="#esat-analysis-batch" title="Link to this heading"></a></h3>
+<p>The collection of commands for batch model analysis.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>esat<span class="w"> </span>analysis-batch<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>COMMAND<span class="w"> </span><span class="o">[</span>ARGS<span class="o">]</span>...
+</pre></div>
+</div>
+<section id="esat-analysis-batch-plot-distribution">
+<h4>plot-distribution<a class="headerlink" href="#esat-analysis-batch-plot-distribution" title="Link to this heading"></a></h4>
+<p>Plots the loss value distribution Q(true) and Q(robust) for the batch solution.</p>
+<section id="parameters">
+<h5>Parameters<a class="headerlink" href="#parameters" title="Link to this heading"></a></h5>
+<p>project_directory : The project directory where all configuration output files are saved.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>esat<span class="w"> </span>analysis-batch<span class="w"> </span>plot-distribution<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>PROJECT_DIRECTORY
+</pre></div>
+</div>
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-batch-plot-distribution-arg-PROJECT_DIRECTORY">
+<span class="sig-name descname"><span class="pre">PROJECT_DIRECTORY</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-esat-analysis-batch-plot-distribution-arg-PROJECT_DIRECTORY" title="Link to this definition"></a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+</section>
+<section id="esat-analysis-batch-plot-loss">
+<h4>plot-loss<a class="headerlink" href="#esat-analysis-batch-plot-loss" title="Link to this heading"></a></h4>
+<p>Plots the loss value Q(true) over the training iterations for the batch solution.</p>
+<section id="id1">
+<h5>Parameters<a class="headerlink" href="#id1" title="Link to this heading"></a></h5>
+<p>project_directory : The project directory where all configuration output files are saved.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>esat<span class="w"> </span>analysis-batch<span class="w"> </span>plot-loss<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>PROJECT_DIRECTORY
+</pre></div>
+</div>
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-batch-plot-loss-arg-PROJECT_DIRECTORY">
+<span class="sig-name descname"><span class="pre">PROJECT_DIRECTORY</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-esat-analysis-batch-plot-loss-arg-PROJECT_DIRECTORY" title="Link to this definition"></a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+</section>
+</section>
 <section id="esat-analysis-constrained">
 <h3>analysis-constrained<a class="headerlink" href="#esat-analysis-constrained" title="Link to this heading"></a></h3>
 <p>The collection of commands for analyzing the constrained model results.</p>
@@ -1077,6 +1137,80 @@ constraints and expressions).</p>
 <dd><p>Required argument</p>
 </dd></dl>
 
+</section>
+<section id="esat-simulator">
+<h3>simulator<a class="headerlink" href="#esat-simulator" title="Link to this heading"></a></h3>
+<p>The collection of commands for managing ESAT simulator instances.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>esat<span class="w"> </span>simulator<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>COMMAND<span class="w"> </span><span class="o">[</span>ARGS<span class="o">]</span>...
+</pre></div>
+</div>
+<section id="esat-simulator-compare">
+<h4>compare<a class="headerlink" href="#esat-simulator-compare" title="Link to this heading"></a></h4>
+<p>Compares the models generated from the synthetic data to show how similar the modelled profiles are to the known
+synthetic profiles.</p>
+<p>Parameters</p>
+<p>project_directory : The project directory where all configuration output files are saved.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>esat<span class="w"> </span>simulator<span class="w"> </span>compare<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>PROJECT_DIRECTORY
+</pre></div>
+</div>
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-simulator-compare-arg-PROJECT_DIRECTORY">
+<span class="sig-name descname"><span class="pre">PROJECT_DIRECTORY</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-esat-simulator-compare-arg-PROJECT_DIRECTORY" title="Link to this definition"></a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="esat-simulator-generate">
+<h4>generate<a class="headerlink" href="#esat-simulator-generate" title="Link to this heading"></a></h4>
+<p>Generate the synthetic data and uncertainty datasets as defined in the sim_config.toml. Only required for data
+analysis functions, run will check for a simulated config if no file is found in the project_directory and generate
+if required.</p>
+<p>Parameters</p>
+<p>project_directory : The project directory where all configuration output files are saved.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>esat<span class="w"> </span>simulator<span class="w"> </span>generate<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>PROJECT_DIRECTORY
+</pre></div>
+</div>
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-simulator-generate-arg-PROJECT_DIRECTORY">
+<span class="sig-name descname"><span class="pre">PROJECT_DIRECTORY</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-esat-simulator-generate-arg-PROJECT_DIRECTORY" title="Link to this definition"></a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="esat-simulator-plot">
+<h4>plot<a class="headerlink" href="#esat-simulator-plot" title="Link to this heading"></a></h4>
+<p>Plots the results of the simulator output comparison to the synthetic profiles.</p>
+<p>Parameters</p>
+<p>project_directory : The project directory where all configuration output files are saved.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>esat<span class="w"> </span>simulator<span class="w"> </span>plot<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>PROJECT_DIRECTORY
+</pre></div>
+</div>
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-simulator-plot-arg-PROJECT_DIRECTORY">
+<span class="sig-name descname"><span class="pre">PROJECT_DIRECTORY</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-esat-simulator-plot-arg-PROJECT_DIRECTORY" title="Link to this definition"></a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="esat-simulator-setup">
+<h4>setup<a class="headerlink" href="#esat-simulator-setup" title="Link to this heading"></a></h4>
+<p>Create the configuration file for a batch source apportionment simulated run in the provided directory.</p>
+<p>Parameters</p>
+<p>project_directory : The project directory where all configuration output files are saved.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>esat<span class="w"> </span>simulator<span class="w"> </span>setup<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>PROJECT_DIRECTORY
+</pre></div>
+</div>
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-simulator-setup-arg-PROJECT_DIRECTORY">
+<span class="sig-name descname"><span class="pre">PROJECT_DIRECTORY</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-esat-simulator-setup-arg-PROJECT_DIRECTORY" title="Link to this definition"></a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
 </section>
 </section>
 </section>

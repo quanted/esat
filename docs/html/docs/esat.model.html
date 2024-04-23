@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>esat.model package &mdash; Environmental Source Apportionment Toolkit (ESAT) 04/19/2024 documentation</title>
+  <title>esat.model package &mdash; Environmental Source Apportionment Toolkit (ESAT) 04/23/2024 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
 
@@ -15,7 +15,7 @@
   
         <script src="../_static/jquery.js?v=5d32c60e"></script>
         <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../_static/documentation_options.js?v=d8e30c96"></script>
+        <script src="../_static/documentation_options.js?v=2ceadbe7"></script>
         <script src="../_static/doctools.js?v=9a2dae69"></script>
         <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
@@ -152,9 +152,9 @@ considered converged. Default: 100</p></li>
 <li><p><strong>robust_mode</strong> (<em>bool</em>) – Used to turn on the robust mode, use the robust loss value in the update algorithm. Default: False</p></li>
 <li><p><strong>robust_n</strong> (<em>int</em>) – When robust_mode=True, the number of iterations to use the default mode before turning on the robust mode to
 prevent reducing the impact of non-outliers. Default: 200</p></li>
-<li><p><strong>robust_alpha</strong> (<em>int</em>) – When robust_mode=True, the cutoff of the uncertainty scaled residuals to decrease the weights. Robust weights
+<li><p><strong>robust_alpha</strong> (<em>float</em>) – When robust_mode=True, the cutoff of the uncertainty scaled residuals to decrease the weights. Robust weights
 are calculated as the uncertainty multiplied by the square root of the scaled residuals over robust_alpha.
-Default: 4</p></li>
+Default: 4.0</p></li>
 <li><p><strong>parallel</strong> (<em>bool</em>) – Run the individual models in parallel, not the same as the optimized parallelized option for an SA ws-nmf
 model. Default = True.</p></li>
 <li><p><strong>optimized</strong> (<em>bool</em>) – The two update algorithms have also been written in Rust, which can be compiled with maturin, providing
@@ -190,7 +190,7 @@ as individual pickle models (each SA model), or as a single SA model of the batc
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>batch_name</strong> (<em>str</em>) – The name to use for the batch save files.</p></li>
-<li><p><strong>output_directory</strong> – The output directory to save the batch nmf files to.</p></li>
+<li><p><strong>output_directory</strong> – The output directory to save the batch sa files to.</p></li>
 <li><p><strong>pickle_model</strong> (<em>bool</em>) – Pickle the individual models, creating a separate pickle file for each SA model. Default = False.</p></li>
 <li><p><strong>pickle_batch</strong> (<em>bool</em>) – Pickle the batch SA object, which will contain all the SA objects. Default = True.</p></li>
 <li><p><strong>header</strong> (<em>list</em>) – A list of headers, feature names, to add to the top of the csv files. Default: None</p></li>
