@@ -4,7 +4,7 @@ import json
 import logging
 import numpy as np
 import pandas as pd
-from itertools import permutations, combinations
+from itertools import permutations
 import multiprocessing as mp
 from tqdm import tqdm
 from esat.model.batch_sa import BatchSA
@@ -48,8 +48,6 @@ class FactorCompare:
                  uncertainty_df: pd.DataFrame,
                  base_profile_df: pd.DataFrame,
                  base_contribution_df: pd.DataFrame,
-                 factors_columns: list,
-                 features: list,
                  batch_sa: BatchSA,
                  sa_output_file: str = None,
                  method: str = "all",
@@ -62,21 +60,22 @@ class FactorCompare:
         self.base_WH = {}
         self.base_V_estimate = None
 
-        self.factors = len(factors_columns)
-        self.features = features
-
-        self.factor_columns = factors_columns
+        self.base_factors = base_profile_df.columns
+        self.factors = len(self.base_factors)
+        self.features = input_df.columns
 
         self._calculate_base_wh()
 
         self.sa_output_file = sa_output_file
         self.batch_sa = batch_sa
         self.sa_model_dfs = {}
+        self.sa_factors = None
         self.sa_Q = {}
         self._parse_sa_output()
 
         self.model_results = {}
 
+        self.base_k = True
         self.factor_map = None
         self.best_model = None
         self.best_factor_r = None
@@ -195,22 +194,20 @@ class FactorCompare:
                            uncertainty_df=uncertainty_df,
                            base_profile_df=pmf_profiles_df,
                            base_contribution_df=pmf_contribution_df,
-                           factors_columns=factor_columns,
-                           features=features,
                            batch_sa=batch_sa
                            )
         return fc
 
     def _calculate_base_wh(self):
         if self.base_profile_df is not None and self.base_contribution_df is not None:
-            for factor in self.factor_columns:
+            for factor in self.base_factors:
                 base_W_f = self.base_contribution_df[factor].to_numpy()
                 base_H_f = self.base_profile_df[factor].to_numpy()
                 base_W_f = base_W_f.reshape(len(base_W_f), 1)
                 base_WH_f = np.multiply(base_W_f, base_H_f)
                 self.base_WH[factor] = base_WH_f
-            base_W = self.base_contribution_df[self.factor_columns].to_numpy()
-            base_H = self.base_profile_df[self.factor_columns].to_numpy()
+            base_W = self.base_contribution_df[self.base_factors].to_numpy()
+            base_H = self.base_profile_df[self.base_factors].to_numpy()
             self.base_V_estimate = np.matmul(base_W, base_H.T)
 
     def _parse_sa_output(self):
@@ -224,6 +221,7 @@ class FactorCompare:
             else:
                 self.batch_sa = BatchSA.load(self.sa_output_file)
         species_columns = self.features
+        self.sa_factors = [f"Factor {i+1}" for i in range(self.batch_sa.factors)]
         for i, i_sa in enumerate(self.batch_sa.results):
             if i_sa is None:
                 continue
@@ -232,12 +230,12 @@ class FactorCompare:
             sa_wh_data = i_sa.WH
             sa_wh_data = sa_wh_data.reshape(sa_wh_data.shape[1], sa_wh_data.shape[0])
 
-            sa_h_df = pd.DataFrame(sa_h_data, columns=species_columns, index=self.factor_columns)
-            sa_w_df = pd.DataFrame(sa_w_data, columns=self.factor_columns)
+            sa_h_df = pd.DataFrame(sa_h_data, columns=species_columns, index=self.sa_factors)
+            sa_w_df = pd.DataFrame(sa_w_data, columns=self.sa_factors)
             sa_wh_df = pd.DataFrame(sa_wh_data.T, columns=species_columns)
 
             sa_wh_e = {}
-            for factor in self.factor_columns:
+            for factor in self.sa_factors:
                 sa_H_f = sa_h_df.loc[factor].to_numpy()
                 sa_W_f = sa_w_df[factor].to_numpy()
                 sa_W_f = sa_W_f.reshape(len(sa_W_f), 1)
@@ -247,7 +245,7 @@ class FactorCompare:
             self.sa_model_dfs[i] = {"WH": sa_wh_df, "W": sa_w_df, "H": sa_h_df, 'WH-element': sa_wh_e}
             self.sa_Q[i] = i_sa.Qtrue
 
-    def compare(self, verbose: bool = True):
+    def compare_n(self, verbose: bool = True):
         """
         Run the model comparison.
 
@@ -266,11 +264,11 @@ class FactorCompare:
             nmf_m = self.sa_model_dfs[m]["H"]
             nmf_contribution_m = self.sa_model_dfs[m]["W"]
             nmf_wh = self.sa_model_dfs[m]["WH-element"]
-            for i in self.factor_columns:
+            for i in self.base_factors:
                 base_i = self.base_profile_df[i].astype(float)
                 base_contribution_i = self.base_contribution_df[i].astype(float)
                 base_wh = self.base_WH[i].flatten()
-                for j in self.factor_columns:
+                for j in self.sa_factors:
                     nmf_j = nmf_m.loc[j].astype(float)
                     r2 = self.calculate_correlation(factor1=base_i, factor2=nmf_j)
                     correlation_results[m][f"base-{i}_esat-{j}"] = r2
@@ -281,8 +279,8 @@ class FactorCompare:
                     r2_3 = self.calculate_correlation(base_wh, nmf_wh_f)
                     wh_results[m][f"base-{i}_esat-{j}"] = r2_3
 
-        # factor_permutations = list(permutations(self.factor_columns, len(self.factor_columns)))
-        logger.info(f"Number of permutations for {self.factors} factors: {math.factorial(self.factors)}")
+        logger.info(f"Model Count: {len(correlation_results.keys())}, Correlation Count: "
+                    f"{len(correlation_results[0].keys())}")
         best_r = 0.0
         best_perm = None
         best_model = None
@@ -295,10 +293,13 @@ class FactorCompare:
 
         permutations_n = math.factorial(self.factors)
         factors_max = 100000
-
+        logger.info(f"Total models and permutations: {permutations_n*len(self.sa_model_dfs)}")
         pool = mp.Pool()
+        
+        all_permutations = list(permutations(self.base_factors, len(self.base_factors)))
 
-        for m in tqdm(range(len(self.sa_model_dfs)), desc="Calculating average correlation for all permutations for each model"):
+        for m in tqdm(range(len(self.sa_model_dfs)), desc="Calculating average correlation for all permutations for "
+                                                          "each model"):
             # Each Model
             permutation_results = {}
             model_contribution_results = {}
@@ -307,7 +308,7 @@ class FactorCompare:
             best_model_r = 0.0
 
             factor_permutations = []
-            for factor_i, factor in enumerate(list(permutations(self.factor_columns, len(self.factor_columns)))):
+            for factor_i, factor in enumerate(all_permutations):
                 factor_permutations.append(factor)
                 if len(factor_permutations) >= factors_max or factor_i == permutations_n - 1:
                     pool_inputs = [(factor, correlation_results[m], contribution_results[m], wh_results[m]) for factor in factor_permutations]
@@ -350,6 +351,144 @@ class FactorCompare:
                             }
                             self.model_results[m] = best_model_results
                     factor_permutations = []
+
+        self.best_model = best_model
+        self.best_factor_r = best_factor_r
+        self.best_avg_r = best_r
+        self.best_factor_r_avg = best_factor_r_avg
+        self.best_contribution_r = best_contribution_r
+        self.best_contribution_r_avg = best_contribution_r_avg
+        self.best_wh_r = best_wh_r
+        self.best_wh_r_avg = best_wh_r_avg
+        self.factor_map = list(best_perm)
+        if verbose:
+            self.print_results()
+
+    def compare(self, verbose: bool = True):
+        """
+        Run the model comparison.
+
+        Parameters
+        ----------
+        verbose : bool
+            Display the results of the comparison.
+        """
+        correlation_results = {}
+        contribution_results = {}
+        wh_results = {}
+
+        for m in range(len(self.sa_model_dfs)):
+            correlation_results[m] = {}
+            contribution_results[m] = {}
+            wh_results[m] = {}
+
+        correlation_count = len(self.base_factors) * len(self.sa_model_dfs) * len(self.sa_factors)
+        pbar = tqdm(total=correlation_count, desc="Calculating correlation between base and model factors")
+        for i in self.base_factors:
+            base_i = self.base_profile_df[i].astype(float)
+            base_contribution_i = self.base_contribution_df[i].astype(float)
+            base_wh = self.base_WH[i].flatten()
+            for m in range(len(self.sa_model_dfs)):
+                model_m = self.sa_model_dfs[m]["H"]
+                model_contribution_m = self.sa_model_dfs[m]["W"]
+                model_wh = self.sa_model_dfs[m]["WH-element"]
+                for j in self.sa_factors:
+                    model_j = model_m.loc[j].astype(float)
+                    r2 = self.calculate_correlation(factor1=base_i, factor2=model_j)
+                    correlation_results[m][f"base-{i}_esat-{j}"] = r2
+                    model_contribution_j = model_contribution_m[j].astype(float)
+                    r2_2 = self.calculate_correlation(factor1=base_contribution_i, factor2=model_contribution_j)
+                    contribution_results[m][f"base-{i}_esat-{j}"] = r2_2
+                    model_wh_f = model_wh[j].astype(float).flatten()
+                    r2_3 = self.calculate_correlation(base_wh, model_wh_f)
+                    wh_results[m][f"base-{i}_esat-{j}"] = r2_3
+                    pbar.update()
+        pbar.close()
+        logger.info(f"Model Count: {len(correlation_results.keys())}, Correlation Count: "
+                    f"{len(correlation_results[0].keys())}")
+        best_r = 0.0
+        best_perm = None
+        best_model = None
+        best_factor_r = None
+        best_contribution_r = None
+        best_contribution_r_avg = None
+        best_factor_r_avg = None
+        best_wh_r = None
+        best_wh_r_avg = None
+
+        pool = mp.Pool(processes=os.cpu_count()-1)
+
+        if len(self.base_factors) >= len(self.sa_factors):
+            prime_list = self.base_factors
+            r = len(self.sa_factors)
+            base_k = True
+        else:
+            prime_list = self.sa_factors
+            r = len(self.base_factors)
+            base_k = False
+        self.base_k = base_k
+
+        permutations_n = len(list(permutations(prime_list, r=r)))
+
+        pbar = tqdm(total=permutations_n*len(self.sa_model_dfs),
+                    desc="Calculating average correlation for all permutations for Model: 1")
+        for m in range(len(self.sa_model_dfs)):
+            # Each Model
+            permutation_results = {}
+            model_contribution_results = {}
+            factor_contribution_results = {}
+            best_model_r = 0.0
+            factor_permutations = []
+
+            for factor_i, factor in enumerate(list(permutations(prime_list, r=r))):
+                factor_permutations.append(factor)
+                if factor_i == permutations_n - 1:
+                    pool_inputs = [(factor, correlation_results[m], contribution_results[m], wh_results[m], base_k)
+                                   for factor in factor_permutations]
+                    for pool_results in pool.starmap(self.combine_factors, pool_inputs):
+                        factor, r_avg, r_values, c_r_avg, c_r_values, wh_r_avg, wh_r_values = pool_results
+                        permutation_results[factor] = (r_avg, r_values)
+                        model_contribution_results[factor] = (c_r_avg, c_r_values)
+                        factor_contribution_results[factor] = (wh_r_avg, wh_r_values)
+
+                        if self.method == "all":
+                            model_avg_r = (r_avg + c_r_avg + wh_r_avg) / 3.0
+                        elif self.method == "W":
+                            model_avg_r = c_r_avg
+                        elif self.method == "H":
+                            model_avg_r = r_avg
+                        elif self.method == "WH":
+                            model_avg_r = wh_r_avg
+
+                        if model_avg_r > best_r:
+                            best_r = model_avg_r
+                            best_perm = factor
+                            best_model = m
+                            best_factor_r = r_values
+                            best_factor_r_avg = r_avg
+                            best_contribution_r = c_r_values
+                            best_contribution_r_avg = c_r_avg
+                            best_wh_r = wh_r_values
+                            best_wh_r_avg = wh_r_avg
+                        if model_avg_r > best_model_r:
+                            best_model_r = model_avg_r
+                            best_model_results = {
+                                'best_factor_r': best_factor_r,
+                                'best_avg_r': best_r,
+                                'best_factor_r_avg': best_factor_r_avg,
+                                'best_contribution_r': best_contribution_r,
+                                'best_contribution_r_avg': best_contribution_r_avg,
+                                'best_wh_r': best_wh_r,
+                                'best_wh_r_avg': best_wh_r_avg,
+                                'factor_map': list(factor)
+                            }
+                            self.model_results[m] = best_model_results
+                        factor_permutations = []
+                        pbar.update()
+            pbar.set_description(f"Calculating average correlation for all permutations for Mode: {1+m}")
+        pbar.close()
+        pool.close()
+
         self.best_model = best_model
         self.best_factor_r = best_factor_r
         self.best_avg_r = best_r
@@ -375,8 +514,8 @@ class FactorCompare:
         """
         base_Q = q_loss(V=self.input_df.to_numpy(),
                         U=self.input_df.to_numpy(),
-                        W=self.base_contribution_df[self.factor_columns].to_numpy(),
-                        H=self.base_profile_df[self.factor_columns].to_numpy().T
+                        W=self.base_contribution_df[self.base_factors].to_numpy(),
+                        H=self.base_profile_df[self.base_factors].to_numpy().T
                         )
         if model is None:
             model = self.best_model
@@ -403,20 +542,30 @@ class FactorCompare:
         r_sq = corr ** 2
         return r_sq
 
-    def combine_factors(self, factors, model_correlation, model_contributions, factor_contributions):
+    def combine_factors(self, factors, model_correlation, model_contributions, factor_contributions,
+                        base_k: bool = False):
         """
         Combine the results from parallelized calculations.
         """
         r_values = []
         r_values_2 = []
         r_values_3 = []
-        for i, f in enumerate(factors):
-            r2 = model_correlation[f"base-{self.factor_columns[i]}_esat-{f}"]
-            r2_2 = model_contributions[f"base-{self.factor_columns[i]}_esat-{f}"]
-            r2_3 = factor_contributions[f"base-{self.factor_columns[i]}_esat-{f}"]
-            r_values.append(r2)
-            r_values_2.append(r2_2)
-            r_values_3.append(r2_3)
+        if base_k:
+            for i, f in enumerate(factors):
+                r2 = model_correlation[f"base-{f}_esat-{self.sa_factors[i]}"]
+                r2_2 = model_contributions[f"base-{f}_esat-{self.sa_factors[i]}"]
+                r2_3 = factor_contributions[f"base-{f}_esat-{self.sa_factors[i]}"]
+                r_values.append(r2)
+                r_values_2.append(r2_2)
+                r_values_3.append(r2_3)
+        else:
+            for i, f in enumerate(factors):
+                r2 = model_correlation[f"base-{self.base_factors[i]}_esat-{f}"]
+                r2_2 = model_contributions[f"base-{self.base_factors[i]}_esat-{f}"]
+                r2_3 = factor_contributions[f"base-{self.base_factors[i]}_esat-{f}"]
+                r_values.append(r2)
+                r_values_2.append(r2_2)
+                r_values_3.append(r2_3)
         r_avg = np.mean(r_values)
         r_avg_2 = np.mean(r_values_2)
         r_avg_3 = np.mean(r_values_3)
