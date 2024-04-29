@@ -228,8 +228,6 @@ class Simulator:
                                                 uncertainty_df=self.syn_uncertainty_df,
                                                 base_profile_df=self.syn_profiles_df,
                                                 base_contribution_df=self.syn_contributions_df,
-                                                factors_columns=self.syn_factor_columns,
-                                                features=self.syn_columns,
                                                 batch_sa=self.batch_sa
                                                 )
             self.factor_compare.compare()
@@ -246,15 +244,13 @@ class Simulator:
             logger.info(f"Mappings for the most selected model in the batch. Model: {selected_model}")
             self.factor_compare.print_results(model=selected_model)
 
-    def plot_comparison(self, grouped: bool = False, model_i: int = None):
+    def plot_comparison(self, model_i: int = None):
         """
         Plot the results of the output comparison for the model with the highest correlated mapping, if model_i is not
         specified. Otherwise, plots the output comparison of model_i to the synthetic profiles.
 
         Parameters
         ----------
-        grouped : bool
-            Generate a single plot for all the profiles, otherwise all profiles are graphed individually.
         model_i : int
             The model index for the comparison, when not specified will default to the model with the highest
             correlation mapping.
@@ -275,69 +271,49 @@ class Simulator:
 
         _H = self.batch_sa.results[model_i].H
         norm_H = 100 * (_H / _H.sum(axis=0))
+        factors_n = min(len(self.factor_compare.sa_factors), len(self.factor_compare.base_factors))
 
-        if grouped:
-            subplot_titles = [f"Factor {i}" for i in range(1, self.factors_n + 1)] + factor_compare['factor_map']
-
-            h_fig = make_subplots(rows=4, cols=self.factors_n, vertical_spacing=0.03, subplot_titles=subplot_titles,
-                                  row_heights=[0.35, 0.35, 0.04, 0.3])
-            for i in range(1, self.factors_n + 1):
-                h_fig.add_trace(
-                    go.Bar(name=f"Factor {i}", x=self.syn_columns, y=norm_syn_H[i - 1], marker_color=color_map[i - 1]),
-                    row=1, col=i)
-                map_i = int(factor_compare['factor_map'][i - 1].split(" ")[1]) - 1
-                h_fig.add_trace(
-                    go.Bar(name=f"Factor {factor_compare['factor_map'][i - 1]}", x=self.syn_columns, y=norm_H[map_i],
-                           marker_color=color_map[i - 1]), row=2, col=i)
-                i_r2 = factor_compare['best_factor_r'][i - 1]
-                h_fig.add_trace(go.Bar(name="R2", x=(i_r2,), orientation='h', marker_color=r_color_map[int(100 * i_r2)],
-                                       text=np.round(i_r2, 4), textposition="inside", hoverinfo='text',
-                                       hovertemplate="R2: %{x:4f}<extra></extra>"), row=3, col=i)
-                h_fig.add_trace(go.Bar(name="", x=self.syn_columns, y=norm_syn_H[i - 1] - norm_H[map_i],
-                                       marker_color=color_map[i - 1]), row=4, col=i)
-            h_fig.update_yaxes(title_text="Synthetic Profile", row=1, col=1, title_standoff=3)
-            h_fig.update_yaxes(title_text="Model Profile", row=2, col=1, title_standoff=3)
-            h_fig.update_yaxes(title_text="R2", row=3, col=1, title_standoff=25)
-            h_fig.update_yaxes(title_text="Difference", row=4, col=1, title_standoff=3)
-            h_fig.update_xaxes(row=1, showticklabels=False)
-            h_fig.update_xaxes(row=2, showticklabels=False)
-            h_fig.update_xaxes(row=3, range=[0, 1.0])
-            h_fig.update_yaxes(row=3, showticklabels=False)
-            h_fig.update_yaxes(row=4, range=[-50, 50])
-            h_fig.update_layout(title_text=f"Factor Profile Comparison - Model: {model_i + 1}", width=1600,
-                                height=1000, hovermode='x', showlegend=False)
-            h_fig.show()
+        if not self.factor_compare.base_k:
+            subplot_titles = [f"Synthetic Factor {i} : Modelled {factor_compare['factor_map'][i - 1]}" for i in
+                              range(1, factors_n + 1)]
         else:
-            subplot_titles = [f"Factor {i}: {factor_compare['factor_map'][i - 1]}" for i in range(1, self.factors_n + 1)]
-            for i in range(1, self.factors_n + 1):
-                map_i = int(factor_compare['factor_map'][i - 1].split(" ")[1]) - 1
-                abs_res = np.round(np.abs(norm_syn_H[i - 1] - norm_H[map_i]).sum(), 2)
-                label = (f"{subplot_titles[i - 1]} - Residual: {abs_res}", "", "")
-                h_fig = make_subplots(rows=3, cols=1, vertical_spacing=0.05, subplot_titles=label,
-                                      row_heights=[0.5, 0.08, 0.3])
-                h_fig.add_trace(
-                    go.Bar(name=f"Syn Factor {i}", x=self.syn_columns, y=norm_syn_H[i - 1], marker_color="black"),
-                    row=1, col=1)
-                h_fig.add_trace(
-                    go.Bar(name=f"Modelled {factor_compare['factor_map'][i - 1]}", x=self.syn_columns, y=norm_H[map_i],
-                           marker_color="green"), row=1, col=1)
-                i_r2 = factor_compare['best_factor_r'][i - 1]
-                h_fig.add_trace(go.Bar(name="R2", x=(i_r2,), orientation='h', marker_color=r_color_map[int(100 * i_r2)],
-                                       text=np.round(i_r2, 4), textposition="inside", hoverinfo='text',
-                                       hovertemplate="R2: %{x:4f}<extra></extra>", showlegend=False), row=2, col=1)
-                h_fig.add_trace(
-                    go.Bar(name="", x=self.syn_columns, y=norm_syn_H[i - 1] - norm_H[map_i], marker_color="blue",
-                           showlegend=False), row=3, col=1)
-                h_fig.update_yaxes(title_text="Synthetic Profile", row=1, col=1, title_standoff=3)
-                h_fig.update_yaxes(title_text="R2", row=2, col=1, title_standoff=25)
-                h_fig.update_yaxes(title_text="Difference", row=3, col=1, title_standoff=3)
-                h_fig.update_xaxes(row=1, showticklabels=False)
-                h_fig.update_xaxes(row=2, range=[0, 1.0])
-                h_fig.update_yaxes(row=2, showticklabels=False)
-                h_fig.update_yaxes(row=3, range=[-50, 50])
-                h_fig.update_layout(title_text=f"Factor Profile Comparison - Model: {model_i + 1}",
-                                    width=1000, height=600, hovermode='x', showlegend=True)
-                h_fig.show()
+            subplot_titles = [f"Modelled Factor {i} : Synthetic Factor {factor_compare['factor_map'][i - 1]}" for i in
+                              range(1, factors_n + 1)]
+        for i in range(1, factors_n + 1):
+            map_i = int(factor_compare['factor_map'][i - 1].split(" ")[1])
+            if not self.factor_compare.base_k:
+                syn_i = i - 1
+                mod_i = map_i - 1
+            else:
+                syn_i = map_i - 1
+                mod_i = i - 1
+            abs_res = np.round(np.abs(norm_syn_H[syn_i] - norm_H[mod_i]).sum(), 2)
+            label = (f"{subplot_titles[i - 1]} - Residual: {abs_res}", "", "")
+            h_fig = make_subplots(rows=3, cols=1, vertical_spacing=0.05, subplot_titles=label,
+                                  row_heights=[0.5, 0.08, 0.3])
+            h_fig.add_trace(
+                go.Bar(name=f"Syn Factor {syn_i + 1}", x=self.syn_columns, y=norm_syn_H[syn_i], marker_color="black"),
+                row=1, col=1)
+            h_fig.add_trace(
+                go.Bar(name=f"Modelled Factor {mod_i+1}", x=self.syn_columns, y=norm_H[mod_i],
+                       marker_color="green"), row=1, col=1)
+            i_r2 = factor_compare['best_factor_r'][i - 1]
+            h_fig.add_trace(go.Bar(name="R2", x=(i_r2,), orientation='h', marker_color=r_color_map[int(100 * i_r2)],
+                                   text=np.round(i_r2, 4), textposition="inside", hoverinfo='text',
+                                   hovertemplate="R2: %{x:4f}<extra></extra>", showlegend=False), row=2, col=1)
+            h_fig.add_trace(
+                go.Bar(name="", x=self.syn_columns, y=norm_syn_H[syn_i] - norm_H[mod_i], marker_color="blue",
+                       showlegend=False), row=3, col=1)
+            h_fig.update_yaxes(title_text="Synthetic Profile", row=1, col=1, title_standoff=3)
+            h_fig.update_yaxes(title_text="R2", row=2, col=1, title_standoff=25)
+            h_fig.update_yaxes(title_text="Difference", row=3, col=1, title_standoff=3)
+            h_fig.update_xaxes(row=1, showticklabels=False)
+            h_fig.update_xaxes(row=2, range=[0, 1.0])
+            h_fig.update_yaxes(row=2, showticklabels=False)
+            h_fig.update_yaxes(row=3, range=[-50, 50])
+            h_fig.update_layout(title_text=f"Factor Profile Comparison - Model: {model_i + 1}",
+                                width=1000, height=600, hovermode='x', showlegend=True)
+            h_fig.show()
 
     def save(self, sim_name: str = "synthetic", output_directory: str = "."):
         """
