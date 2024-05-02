@@ -64,6 +64,7 @@ def qr_loss(V, U, W, H, alpha=4.0):
     residuals = np.subtract(V, _wh)
     scaled_residuals = np.abs(residuals/U)
     robust_uncertainty = np.sqrt(scaled_residuals/alpha) * U
+    robust_uncertainty[robust_uncertainty <= 0.0] = 1e-12
     robust_residuals = np.abs(residuals / robust_uncertainty)
     scaled_residuals[scaled_residuals > alpha] = robust_residuals[scaled_residuals > alpha]
     _q = np.sum(np.square(scaled_residuals))
@@ -75,6 +76,7 @@ def qr_loss(V, U, W, H, alpha=4.0):
 
 def q_factor(V, U, W, H):
     wh = np.matmul(W, H)
+    wh[wh <= 0.0] = 1e-12
     residuals = np.subtract(V, wh)
     u_residuals = np.divide(residuals, U)
     u2_residuals = u_residuals**2

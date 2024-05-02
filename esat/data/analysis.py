@@ -532,8 +532,9 @@ class BatchAnalysis:
     batch_sa : BatchSA
         A completed ESAT batch source apportionment to run solution analysis on.
     """
-    def __init__(self, batch_sa: BatchSA):
+    def __init__(self, batch_sa: BatchSA, data_handler: DataHandler = None):
         self.batch_sa = batch_sa
+        self.data_handler = data_handler
 
     def plot_loss(self):
         """
@@ -583,3 +584,42 @@ class BatchAnalysis:
         b_q_fig.update_traces(hovertemplate='Model: %{text}<br>%{x}: %{y:.2f}<extra></extra>')
         b_q_fig.update_layout(width=800, height=800)
         b_q_fig.show()
+
+    def plot_temporal_residuals(self, feature_idx: int):
+        """
+        Plot the temporal residuals for a specified feature, by index, of all models in the SA batch.
+
+        Parameters
+        ----------
+        feature_idx : int
+            The index of the feature to plot.
+        """
+        temporal_residuals = []
+        for i in range(0, len(self.batch_sa.results) - 1):
+            result = self.batch_sa.results[i]
+            model_residual = np.abs(result.V - result.WH)
+            temporal_residuals.append(model_residual)
+        if self.data_handler is None:
+            x = list(range(1, temporal_residuals[0].shape+1))
+            feature_label = feature_idx + 1
+        else:
+            x = self.data_handler.input_data_df.index
+            feature_label = self.data_handler.features[feature_idx]
+
+        temporal_fig = go.Figure()
+        temporal_fig.add_trace(
+            go.Scatter(x=x, y=self.batch_sa.V[:, feature_idx], name="Input", line=dict(dash='dash', width=2)))
+
+        for i, t in enumerate(temporal_residuals):
+            visible = "legendonly"
+            if i == self.batch_sa.best_model:
+                visible = True
+            y = t[:, feature_idx]
+            temporal_fig.add_trace(go.Scatter(x=x, y=y, mode='lines', name=f"Model {i + 1}", visible=visible))
+        temporal_fig.update_layout(title=f"Model Temporal Residuals - Feature: {feature_label}",
+                                   width=1200,
+                                   height=600,
+                                   hovermode='x'
+                                   )
+        temporal_fig.update_yaxes(title_text="Conc.")
+        temporal_fig.show()
