@@ -35,6 +35,10 @@ class BatchSA:
         The NMF algorithm to be used for updating the W and H matrices. Options are: 'ls-nmf' and 'ws-nmf'.
     seed : int
         The random seed used for initializing the W and H matrices. Default is 42.
+    H : np.ndarray
+        Optional, predefined factor profile matrix. Accepts profiles of size one to 'factors'.
+    W : np.ndarray
+        Optional, predefined factor contribution matrix.
     init_method : str
        The default option is column means, though any option other than 'kmeans' or 'cmeans' will use the column
        means initialization when W and/or H is not provided.
@@ -78,6 +82,8 @@ class BatchSA:
                  models: int = 20,
                  method: str = "ls-nmf",
                  seed: int = 42,
+                 H: np.ndarray = None,
+                 W: np.ndarray = None,
                  init_method: str = "column_mean",
                  init_norm: bool = True,
                  fuzziness: float = 5.0,
@@ -100,6 +106,8 @@ class BatchSA:
 
         self.V = V
         self.U = U
+        self.H = H
+        self.W = W
 
         self.models = int(models)
         self.max_iter = int(max_iter)
@@ -160,7 +168,10 @@ class BatchSA:
                     optimized=self.optimized,
                     verbose=False
                 )
-                _sa.initialize(init_method=self.init_method, init_norm=self.init_norm, fuzziness=self.fuzziness)
+                _sa.initialize(H=self.H, W=self.W,
+                               init_method=self.init_method,
+                               init_norm=self.init_norm,
+                               fuzziness=self.fuzziness)
                 input_parameters.append((_sa, i))
 
             results = pool.starmap(self._train_task, input_parameters)
@@ -198,7 +209,10 @@ class BatchSA:
                     seed=_seed,
                     verbose=self.verbose,
                 )
-                _sa.initialize(init_method=self.init_method, init_norm=self.init_norm, fuzziness=self.fuzziness)
+                _sa.initialize(H=self.H, W=self.W,
+                               init_method=self.init_method,
+                               init_norm=self.init_norm,
+                               fuzziness=self.fuzziness)
                 run = _sa.train(max_iter=self.max_iter, converge_delta=self.converge_delta, converge_n=self.converge_n,
                                 model_i=model_i, robust_mode=self.robust_mode, robust_n=self.robust_n,
                                 robust_alpha=self.robust_alpha, update_step=self.update_step)

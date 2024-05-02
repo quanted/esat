@@ -121,6 +121,11 @@ class Simulator:
             (factors_n, features_n)
 
         """
+        _profiles = None
+        if profiles is not None:
+            if profiles.shape != (self.factors_n, self.features_n):
+                _profiles = profiles
+                profiles = None
         if profiles is None:
             self.syn_profiles = np.zeros(shape=(self.factors_n, self.features_n))
             factor_list = list(range(self.factors_n))
@@ -132,10 +137,83 @@ class Simulator:
                 for j in factor_feature_selected:
                     ji_value = self.rng.random(size=1)
                     self.syn_profiles[j][i] = ji_value
-            self.syn_profiles[self.syn_profiles <= 0.0] = 1e-12
         else:
             self.syn_profiles = profiles
+        if _profiles is not None:
+            for i in range(_profiles.shape[0]):
+                self.syn_profiles[i] = _profiles[i]
+        self.syn_profiles[self.syn_profiles <= 0.0] = 1e-12
         logger.info("Synthetic profiles generated")
+        self._generate_data()
+        self._generate_dfs()
+        self._create_sa()
+
+    def update_contribution(self,
+                             factor_i: int,
+                             curve_type: str,
+                             scale: float = 0.1,
+                             frequency: float = 0.5,
+                             maximum: float = 5.0,
+                             minimum: float = 0.5):
+        """
+        Update the contributions for a specific factor to follow the curve type. The values are randomly sampled from
+        a normal distribution around the curve type as defined by the magnitude, frequency and/or slope values. The
+        input and uncertainty data are recalculated with each update.
+
+        Parameters
+        ----------
+        factor_i : int
+            The factor contribution to update, by index.
+        curve_type : str
+            The type of curve that describes the factor contribution. Options include: 'uniform', 'increasing',
+            'decreasing', 'logistic', 'periodic'. Default: uniform.
+        scale : float
+            The scale of the normal distribution of the curve value to be resampled.
+        frequency : float
+            The frequency of slope change in periodic and logistic curves.
+        maximum : float
+            The maximum value for all  curves.
+        minimum : float
+            The minimum value for all curves.
+        """
+        if minimum > maximum:
+            maximum, minimum = minimum, maximum
+        elif minimum == maximum:
+            maximum *= 2
+
+        if curve_type == "increasing":
+            curve_y = np.linspace(minimum, maximum, num=self.samples_n)
+        elif curve_type == "decreasing":
+            curve_y = np.linspace(maximum, minimum, num=self.samples_n)
+        elif curve_type == "logistic":
+            x_periods = []
+            n_periods = int(1.0/frequency)
+            for i in range(0, n_periods):
+                if i == n_periods:
+                    steps = self.samples_n - (2 * int(self.samples_n/n_periods))
+                else:
+                    steps = int(self.samples_n/n_periods)
+                if i % 2 == 0:
+                    x_i = np.linspace(-100, 100, steps)
+                else:
+                    x_i = np.linspace(100, -100, steps)
+                x_periods.append(x_i)
+            curve_x = np.concatenate(x_periods, axis=None)
+            curve_y = minimum + (maximum - minimum)/(1.0 + np.exp(-curve_x))
+        elif curve_type == "periodic":
+            n_periods = int(1.0/frequency)
+            curve_a = np.linspace(-np.pi, np.pi, int(self.samples_n / n_periods))
+            curve_x = np.tile(curve_a[0:len(curve_a) - 1], n_periods + 1)
+            curve_x = curve_x[0:self.samples_n]
+            curve_y = np.sin(curve_x) * ((maximum - minimum) / 2)
+            curve_y = (curve_y + (np.abs(np.min(curve_y))) + minimum)
+        else:
+            curve_y = self.rng.random(size=(self.samples_n, 1)) * float(maximum)
+        y_data = self.rng.normal(loc=curve_y, scale=scale, size=curve_y.shape)
+        y_data[y_data <= 0.0] = 1e-12
+        self.syn_contributions[:, factor_i] = y_data
+        logger.info(f"Synthetic factor contribution updated as a random sampling from a normal distribution along "
+                    f"a {curve_type} curve.")
         self._generate_data()
         self._generate_dfs()
         self._create_sa()
@@ -159,7 +237,7 @@ class Simulator:
 
         syn_unc_p = self.rng.normal(loc=self.uncertainty_mean, scale=self.uncertainty_scale, size=syn_data.shape)
         syn_uncertainty = syn_data * syn_unc_p
-        syn_uncertainty[syn_uncertainty <= 0.0] = 1e-12
+        syn_uncertainty[syn_uncertainty <= 0.0] = 1e-4
         self.syn_uncertainty = syn_uncertainty
         logger.info("Synthetic uncertainty data generated")
 
@@ -244,7 +322,98 @@ class Simulator:
             logger.info(f"Mappings for the most selected model in the batch. Model: {selected_model}")
             self.factor_compare.print_results(model=selected_model)
 
+    def plot_synthetic_contributions(self):
+        """
+        Plot the factor contribution matrix.
+        """
+
+        curve_figure = go.Figure()
+        for i in range(self.factors_n):
+            contribution_i = self.syn_contributions[:,i]
+            curve_figure.add_trace(go.Scatter(x=self.syn_data_df.index, y=contribution_i, name=self.syn_factor_columns[i]))
+        curve_figure.update_layout(title_text="Factor Contributions (W)", width=1200, height=800)
+        curve_figure.update_yaxes(title_text="Conc")
+        curve_figure.show()
+
     def plot_comparison(self, model_i: int = None):
+        """
+        Plot the results of the output comparison for the model with the highest correlated mapping, if model_i is not
+        specified. Otherwise, plots the output comparison of model_i to the synthetic profiles.
+
+        Parameters
+        ----------
+        model_i : int
+            The model index for the comparison, when not specified will default to the model with the highest
+            correlation mapping.
+        """
+        if self.batch_sa is None:
+            logger.error("A batch source apportionment must be completed and compared before plotting.")
+            return
+        if not model_i:
+            model_i = self.factor_compare.best_model
+
+        factor_compare = self.factor_compare.model_results[model_i]
+
+        # color_map = px.colors.sample_colorscale("plasma", [n / (self.factors_n - 1) for n in range(self.factors_n)])
+        # r_color_map = px.colors.sample_colorscale("jet", [n / (100 - 1) for n in range(100)])
+
+        syn_H = self.syn_profiles
+        norm_syn_H = 100 * (syn_H / syn_H.sum(axis=0))
+        _H = self.batch_sa.results[model_i].H
+        norm_H = 100 * (_H / _H.sum(axis=0))
+
+        syn_W = self.syn_contributions
+        norm_syn_W = 100 * (syn_W / syn_W.sum(axis=0))
+        _W = self.batch_sa.results[model_i].W
+        norm_W = 100 * (_W / _W.sum(axis=0))
+
+        factors_n = min(len(self.factor_compare.sa_factors), len(self.factor_compare.base_factors))
+
+        if not self.factor_compare.base_k:
+            subplot_titles = [f"Synthetic Factor {i} : Modelled {factor_compare['factor_map'][i - 1]}" for i in
+                              range(1, factors_n + 1)]
+        else:
+            subplot_titles = [f"Modelled Factor {i} : Synthetic {factor_compare['factor_map'][i - 1]}" for i in
+                              range(1, factors_n + 1)]
+        for i in range(1, factors_n + 1):
+            map_i = int(factor_compare['factor_map'][i - 1].split(" ")[1])
+            if not self.factor_compare.base_k:
+                syn_i = i - 1
+                mod_i = map_i - 1
+
+            else:
+                syn_i = map_i - 1
+                mod_i = i - 1
+            i_r2 = factor_compare['best_factor_r'][i-1]
+            i_r2_con = factor_compare['best_contribution_r'][i-1]
+            label = (subplot_titles[i - 1] + " - R2: " + str(round(i_r2, 4)),
+                     subplot_titles[i - 1] + " - R2: " + str(round(i_r2_con, 4)), "", "",)
+            h_fig = make_subplots(rows=2, cols=2, subplot_titles=label, vertical_spacing=0.01, row_heights=[0.6, 0.4])
+            h_fig.add_trace(go.Bar(name=f"Synthetic Profile f{syn_i + 1}", x=self.syn_columns, y=norm_syn_H[syn_i],
+                                   marker_color="black"), row=1, col=1)
+            h_fig.add_trace(go.Bar(name=f"Modelled Profile f{mod_i + 1}", x=self.syn_columns, y=norm_H[mod_i],
+                                   marker_color="green"), row=1, col=1)
+            h_fig.add_trace(
+                go.Bar(name="", x=self.syn_columns, y=norm_syn_H[syn_i] - norm_H[mod_i], marker_color="blue",
+                       showlegend=False), row=2, col=1)
+            h_fig.add_trace(go.Scatter(name=f"Synthetic Contribution f{syn_i + 1}", x=self.syn_data_df.index,
+                                       y=norm_syn_W[:, syn_i], line_color="black"), row=1, col=2)
+            h_fig.add_trace(go.Scatter(name=f"Model Contribution f{mod_i + 1}", x=self.syn_data_df.index,
+                                       y=norm_W[:, mod_i], line_color="green"), row=1, col=2)
+            h_fig.add_trace(
+                go.Scatter(name="", x=self.syn_data_df.index, y=norm_syn_W[:, syn_i] - norm_W[:, mod_i],
+                           marker_color="blue", showlegend=False), row=2, col=2)
+            h_fig.update_yaxes(title_text="Synthetic Profile", row=1, col=1, title_standoff=3)
+            h_fig.update_yaxes(title_text="Difference", row=2, col=1)
+            h_fig.update_yaxes(title_text="Scaled Concentrations", row=1, col=2)
+            h_fig.update_xaxes(row=1, showticklabels=False)
+            h_fig.update_yaxes(row=2, col=2, title_text="Residuals")
+            h_fig.update_yaxes(row=2, col=1, range=[-50, 50])
+            h_fig.update_layout(title_text=f"Mapped Factor Comparison - Model: {model_i + 1}",
+                                width=1600, height=800, hovermode='x', showlegend=True)
+            h_fig.show()
+
+    def plot_profile_comparison(self, model_i: int = None):
         """
         Plot the results of the output comparison for the model with the highest correlated mapping, if model_i is not
         specified. Otherwise, plots the output comparison of model_i to the synthetic profiles.
@@ -268,16 +437,16 @@ class Simulator:
 
         syn_H = self.syn_profiles
         norm_syn_H = 100 * (syn_H / syn_H.sum(axis=0))
-
         _H = self.batch_sa.results[model_i].H
         norm_H = 100 * (_H / _H.sum(axis=0))
+
         factors_n = min(len(self.factor_compare.sa_factors), len(self.factor_compare.base_factors))
 
         if not self.factor_compare.base_k:
             subplot_titles = [f"Synthetic Factor {i} : Modelled {factor_compare['factor_map'][i - 1]}" for i in
                               range(1, factors_n + 1)]
         else:
-            subplot_titles = [f"Modelled Factor {i} : Synthetic Factor {factor_compare['factor_map'][i - 1]}" for i in
+            subplot_titles = [f"Modelled Factor {i} : Synthetic {factor_compare['factor_map'][i - 1]}" for i in
                               range(1, factors_n + 1)]
         for i in range(1, factors_n + 1):
             map_i = int(factor_compare['factor_map'][i - 1].split(" ")[1])

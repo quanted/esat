@@ -248,7 +248,9 @@ class SA:
         ----------
         H : np.ndarray
            The factor profile matrix of shape (factors, N), provided by the user when not using one of the three
-           initialization methods. H is always a non-negative matrix.
+           initialization methods. H is always a non-negative matrix. If fewer than the specified factors are provided,
+           the factor profiles in the H matrix are inserted into the randomly sampled factor profile matrix of shape
+           (factors, N).
         W : np.ndarray
            The factor contribution matrix of shape (M, factors), provided by the user when not using one of the three
            initialization methods. When using method=ws-nmf, the W matrix can contain negative values.
@@ -268,6 +270,12 @@ class SA:
         if init_norm:
             obs = whiten(obs=self.V)
 
+        prior_H = None
+        if H is not None:
+            if H.shape != (self.factors, self.n):
+                prior_H = H
+                H = None
+
         if "kmeans" in init_method.lower():
             self.metadata["init_norm"] = init_norm
             centroids, clusters = kmeans2(data=obs, k=self.factors, seed=self.seed)
@@ -275,7 +283,7 @@ class SA:
             for i, c in enumerate(clusters):
                 contributions[i, c] = 1.0
             W = contributions
-            H = np.abs(centroids)
+            H = centroids
             if self.verbose:
                 logger.debug(f"Factor profile and contribution matrices initialized using k-means clustering. "
                              f"The observations were {'not' if not init_norm else ''} normalized.")
@@ -284,7 +292,7 @@ class SA:
             self.metadata["init_cmeans_fuzziness"] = fuzziness
             fcm = FCM(n_clusters=self.factors, m=fuzziness, random_state=self.seed)
             fcm.fit(obs)
-            H = np.abs(fcm.centers)
+            H = fcm.centers
             W = fcm.u
             if self.verbose:
                 logger.debug(f"Factor profile and contribution matrices initialized using fuzzy c-means clustering. "
@@ -293,18 +301,27 @@ class SA:
             if H is None:
                 V_avg = np.sqrt(np.mean(self.V, axis=0) / self.factors)
                 H = V_avg * self.rng.standard_normal(size=(self.factors, self.n)).astype(self.V.dtype, copy=False)
-                H = np.abs(H)
+            if "update" in init_method.lower():
+                if self.method == "ls-nmf":
+                    W = np.matmul(self.V, H.T)
+                else:
+                    W, _ = self.update_step(V=self.V, We=self.We, W=None, H=H)
             if W is None:
                 V_avg = np.sqrt(np.mean(self.V, axis=1) / self.factors)
                 V_avg = V_avg.reshape(len(V_avg), 1)
                 W = np.multiply(V_avg, self.rng.standard_normal(size=(self.m, self.factors)).astype(self.V.dtype,
                                                                                                     copy=False))
                 if self.method == "ls-nmf":
-                    W = np.abs(W)
+                    W[W <= 0.0] = 1e-12
             if self.verbose and (H is None and W is None):
                 logger.debug(f"Factor profile and contribution matrices initialized using random selection from a "
                              f"normal distribution with a mean determined from the column mean divided by the number "
                              f"of factors.")
+
+        if prior_H is not None:
+            for i in range(prior_H.shape[0]):
+                H[i] = prior_H[i]
+        H[H <= 0.0] = 1e-12
         self.H = H
         self.W = W
         self.init_method = init_method
