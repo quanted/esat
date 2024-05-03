@@ -71,9 +71,11 @@ class Simulator:
                  outlier_p: float = 0.10,
                  outlier_mag: float = 2.0,
                  contribution_max: int = 10,
-                 noise_mean: float = 0.1,
+                 noise_mean_min: float = 0.1,
+                 noise_mean_max: float = 0.12,
                  noise_scale: float = 0.02,
-                 uncertainty_mean: float = 0.05,
+                 uncertainty_mean_min: float = 0.05,
+                 uncertainty_mean_max: float = 0.05,
                  uncertainty_scale: float = 0.01
                  ):
         self.seed = int(seed)
@@ -87,13 +89,16 @@ class Simulator:
         self.outliers = outliers
         self.outlier_p = float(outlier_p)
         self.outlier_mag = float(outlier_mag)
-        self.noise_mean = float(noise_mean)
+        self.noise_mean_min = float(noise_mean_min)
+        self.noise_mean_max = float(noise_mean_max)
         self.noise_scale = float(noise_scale)
-        self.uncertainty_mean = float(uncertainty_mean)
+        self.uncertainty_mean_min = float(uncertainty_mean_min)
+        self.uncertainty_mean_max = float(uncertainty_mean_max)
         self.uncertainty_scale = float(uncertainty_scale)
 
         self.syn_profiles = None
         self.syn_contributions = self.rng.random(size=(self.samples_n, self.factors_n)) * float(contribution_max)
+        self.time_steps = pd.date_range(datetime.now().strftime("%Y-%m-%d"), periods=self.samples_n, freq='d')
 
         self.syn_data = None
         self.syn_uncertainty = None
@@ -144,17 +149,14 @@ class Simulator:
                 self.syn_profiles[i] = _profiles[i]
         self.syn_profiles[self.syn_profiles <= 0.0] = 1e-12
         logger.info("Synthetic profiles generated")
-        self._generate_data()
-        self._generate_dfs()
-        self._create_sa()
 
     def update_contribution(self,
-                             factor_i: int,
-                             curve_type: str,
-                             scale: float = 0.1,
-                             frequency: float = 0.5,
-                             maximum: float = 5.0,
-                             minimum: float = 0.5):
+                            factor_i: int,
+                            curve_type: str,
+                            scale: float = 0.1,
+                            frequency: float = 0.5,
+                            maximum: float = 1.0,
+                            minimum: float = 0.1):
         """
         Update the contributions for a specific factor to follow the curve type. The values are randomly sampled from
         a normal distribution around the curve type as defined by the magnitude, frequency and/or slope values. The
@@ -212,11 +214,8 @@ class Simulator:
         y_data = self.rng.normal(loc=curve_y, scale=scale, size=curve_y.shape)
         y_data[y_data <= 0.0] = 1e-12
         self.syn_contributions[:, factor_i] = y_data
-        logger.info(f"Synthetic factor contribution updated as a random sampling from a normal distribution along "
-                    f"a {curve_type} curve.")
-        self._generate_data()
-        self._generate_dfs()
-        self._create_sa()
+        logger.info(f"Synthetic factor {factor_i + 1} contribution updated as a random sampling from a normal "
+                    f"distribution along a {curve_type} curve.")
 
     def _generate_data(self):
         """
@@ -224,7 +223,8 @@ class Simulator:
         """
         syn_data = np.matmul(self.syn_contributions, self.syn_profiles)
         # Add noise
-        noise = syn_data * self.rng.normal(loc=self.noise_mean, scale=self.noise_scale, size=syn_data.shape)
+        noise_mean = self.rng.uniform(low=self.noise_mean_min, high=self.noise_mean_max, size=self.features_n)
+        noise = syn_data * self.rng.normal(loc=noise_mean, scale=self.noise_scale, size=syn_data.shape)
         syn_data = np.add(syn_data, noise)
         # Add outliers
         if self.outliers:
@@ -235,7 +235,9 @@ class Simulator:
         self.syn_data = syn_data
         logger.info("Synthetic data generated")
 
-        syn_unc_p = self.rng.normal(loc=self.uncertainty_mean, scale=self.uncertainty_scale, size=syn_data.shape)
+        uncertainty_mean = self.rng.uniform(low=self.uncertainty_mean_min, high=self.uncertainty_mean_max,
+                                            size=self.features_n)
+        syn_unc_p = self.rng.normal(loc=uncertainty_mean, scale=self.uncertainty_scale, size=syn_data.shape)
         syn_uncertainty = syn_data * syn_unc_p
         syn_uncertainty[syn_uncertainty <= 0.0] = 1e-4
         self.syn_uncertainty = syn_uncertainty
@@ -245,13 +247,12 @@ class Simulator:
         """
         Create data, uncertainty, profile and contribution dataframes with column labels and index.
         """
-        time_steps = pd.date_range(datetime.now().strftime("%Y-%m-%d"), periods=self.samples_n, freq='d')
 
         self.syn_data_df = pd.DataFrame(self.syn_data, columns=self.syn_columns)
-        self.syn_data_df['Date'] = time_steps
+        self.syn_data_df['Date'] = self.time_steps
         self.syn_data_df.set_index('Date', inplace=True)
         self.syn_uncertainty_df = pd.DataFrame(self.syn_uncertainty, columns=self.syn_columns)
-        self.syn_uncertainty_df['Date'] = time_steps
+        self.syn_uncertainty_df['Date'] = self.time_steps
         self.syn_uncertainty_df.set_index('Date', inplace=True)
         self.syn_profiles_df = pd.DataFrame(self.syn_profiles.T, columns=self.syn_factor_columns)
         self.syn_contributions_df = pd.DataFrame(self.syn_contributions, columns=self.syn_factor_columns)
@@ -278,6 +279,9 @@ class Simulator:
         -------
             pd.DataFrame, pd.DataFrame
         """
+        self._generate_data()
+        self._generate_dfs()
+        self._create_sa()
         return self.syn_data_df, self.syn_uncertainty_df
 
     def compare(self, batch_sa: BatchSA, selected_model: int = None):
@@ -329,8 +333,9 @@ class Simulator:
 
         curve_figure = go.Figure()
         for i in range(self.factors_n):
-            contribution_i = self.syn_contributions[:,i]
-            curve_figure.add_trace(go.Scatter(x=self.syn_data_df.index, y=contribution_i, name=self.syn_factor_columns[i]))
+            contribution_i = self.syn_contributions[:, i]
+            curve_figure.add_trace(go.Scatter(x=list(self.time_steps), y=contribution_i,
+                                              name=self.syn_factor_columns[i], mode='lines+markers'))
         curve_figure.update_layout(title_text="Factor Contributions (W)", width=1200, height=800)
         curve_figure.update_yaxes(title_text="Conc")
         curve_figure.show()
@@ -397,9 +402,9 @@ class Simulator:
                 go.Bar(name="", x=self.syn_columns, y=norm_syn_H[syn_i] - norm_H[mod_i], marker_color="blue",
                        showlegend=False), row=2, col=1)
             h_fig.add_trace(go.Scatter(name=f"Synthetic Contribution f{syn_i + 1}", x=self.syn_data_df.index,
-                                       y=norm_syn_W[:, syn_i], line_color="black"), row=1, col=2)
+                                       y=norm_syn_W[:, syn_i], line_color="black", mode='lines+markers'), row=1, col=2)
             h_fig.add_trace(go.Scatter(name=f"Model Contribution f{mod_i + 1}", x=self.syn_data_df.index,
-                                       y=norm_W[:, mod_i], line_color="green"), row=1, col=2)
+                                       y=norm_W[:, mod_i], line_color="green", mode='lines+markers'), row=1, col=2)
             h_fig.add_trace(
                 go.Scatter(name="", x=self.syn_data_df.index, y=norm_syn_W[:, syn_i] - norm_W[:, mod_i],
                            marker_color="blue", showlegend=False), row=2, col=2)
