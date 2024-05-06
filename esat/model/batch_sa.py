@@ -181,17 +181,19 @@ class BatchSA:
             best_q = float("inf")
             ordered_results = [None for i in range(0, len(results)+1)]
             for result in results:
-                model_i, _nmf = result
-                ordered_results[model_i-1] = _nmf
-                _nmf_q = _nmf.Qrobust if self.best_robust else _nmf.Qtrue
+                model_i, _sa = result
+                ordered_results[model_i-1] = _sa
+                _nmf_q = _sa.Qrobust if self.best_robust else _sa.Qtrue
                 if _nmf_q < best_q:
                     best_q = _nmf_q
                     best_model = model_i
             for i, result in enumerate(ordered_results):
                 if result is None:
                     continue
-                logger.info(f"Model: {i + 1}, Q(true): {round(result.Qtrue, 4)}, "
-                            f"Q(robust): {round(result.Qrobust, 4)}, Seed: {result.seed}, "
+                logger.info(f"Model: {i + 1}, "
+                            f"Q(true): {round(result.Qtrue, 4)}, MSE(true): {round(result.Qtrue/self.V.shape[0], 4)}, "
+                            f"Q(robust): {round(result.Qrobust, 4)}, "
+                            f"MSE(robust): {round(result.Qrobust/self.V.shape[0], 4)}, Seed: {result.seed}, "
                             f"Converged: {result.converged}, Steps: {result.converge_steps}/{self.max_iter}")
             self.results = ordered_results
         else:
@@ -234,13 +236,16 @@ class BatchSA:
         self.runtime = round(t1 - t0, 2)
         best_model = best_model - 1
         logger.info(f"Results - Best Model: {best_model+1}, Q(true): {round(self.results[best_model].Qtrue, 4)}, "
-                    f"Q(robust): {round(self.results[best_model].Qrobust, 4)}, Converged: {self.results[best_model].converged}")
+                    f"MSE(true): {round(self.results[best_model].Qtrue/self.V.shape[0], 4)}, "
+                    f"Q(robust): {round(self.results[best_model].Qrobust, 4)}, "
+                    f"MSE(robust): {round(self.results[best_model].Qrobust/self.V.shape[0], 4)}, "
+                    f"Converged: {self.results[best_model].converged}")
         logger.info(f"Factor Q(True): {self.results[best_model].factor_Q}")
         logger.info(f"Runtime: {round((t1 - t0) / 60, 2)} min(s)")
         self.best_model = best_model
         return True, ""
 
-    def _train_task(self, nmf, model_i) -> (int, SA):
+    def _train_task(self, sa, model_i) -> (int, SA):
         """
         Parallelized train task.
 
@@ -258,16 +263,17 @@ class BatchSA:
 
         """
         t0 = time.time()
-        nmf.train(max_iter=self.max_iter, converge_delta=self.converge_delta, converge_n=self.converge_n,
-                  model_i=model_i, robust_mode=self.robust_mode, robust_n=self.robust_n, robust_alpha=self.robust_alpha,
-                  update_step=self.update_step)
+        sa.train(max_iter=self.max_iter, converge_delta=self.converge_delta, converge_n=self.converge_n,
+                 model_i=model_i, robust_mode=self.robust_mode, robust_n=self.robust_n, robust_alpha=self.robust_alpha,
+                 update_step=self.update_step)
         t1 = time.time()
         if self.verbose:
-            logger.info(f"Model: {model_i}, Seed: {nmf.seed}, "
-                        f"Q(true): {round(nmf.Qtrue, 4)}, Q(robust): {round(nmf.Qrobust, 4)}, "
-                        f"Steps: {nmf.converge_steps}/{self.max_iter}, Converged: {nmf.converged}, "
+            logger.info(f"Model: {model_i}, Seed: {sa.seed}, "
+                        f"Q(true): {round(sa.Qtrue, 4)}, MSE(true): {round(sa.Qtrue/sa.V.shape[0], 4)}, "
+                        f"Q(robust): {round(sa.Qrobust, 4)}, MSE(robust): {round(sa.Qrobust/sa.V.shape[0], 4)},"
+                        f"Steps: {sa.converge_steps}/{self.max_iter}, Converged: {sa.converged}, "
                         f"Runtime: {round(t1 - t0, 2)} sec")
-        return model_i, nmf
+        return model_i, sa
 
     def save(self, batch_name: str,
              output_directory: str,

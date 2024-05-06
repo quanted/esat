@@ -428,13 +428,16 @@ class SA:
             q_robust, U_robust = qr_loss(V=V, U=U, W=W, H=H, alpha=robust_alpha)
             t1 = time.time()
             if self.verbose:
-                logger.info(f"R - Model: {model_i}, Seed: {self.seed}, Q(true): {round(q_true, 4)}, "
-                            f"Q(robust): {round(q_robust, 4)}, Steps: {self.converge_steps}/{max_iter}, "
+                logger.info(f"R - Model: {model_i}, Seed: {self.seed}, "
+                            f"Q(true): {round(q_true, 4)}, MSE(true): {round(q_true/self.m, 4)}"
+                            f"Q(robust): {round(q_robust, 4)}, MSE(robust): {round(q_robust/self.m, 4)}, "
+                            f"Steps: {self.converge_steps}/{max_iter}, "
                             f"Converged: {self.converged}, Runtime: {round(t1 - t0, 2)} sec")
         else:
             prior_q = []
-            We_prime =  copy.copy(self.We)
-            t_iter = trange(max_iter, desc=f"Model: {model_i}, Seed: {self.seed}, Q(true): NA, Q(robust): NA, dQ: NA",
+            We_prime = copy.copy(self.We)
+            t_iter = trange(max_iter, desc=f"Model: {model_i}, Seed: {self.seed}, Q(true): NA, MSE(true): NA, "
+                                           f"Q(robust): NA, MSE(robust): NA, dQ: NA",
                             position=0, leave=True, disable=not self.verbose)
             for i in t_iter:
                 W, H = self.update_step(V=V, We=We_prime, W=W, H=H)
@@ -459,8 +462,10 @@ class SA:
                     delta_q = delta_q_first - delta_q_last
                     if delta_q < converge_delta:
                         converged = True
-                t_iter.set_description(f"Model: {model_i}, Seed: {self.seed}, Q(true): {round(q_true, 2)}, "
-                                       f"Q(robust): {round(q_robust, 2)}, dQ: {round(delta_q, 4)}")
+                t_iter.set_description(f"Model: {model_i}, Seed: {self.seed}, "
+                                       f"Q(true): {round(q_true, 4)}, MSE(true): {round(q_true/self.m, 4)}, "
+                                       f"Q(robust): {round(q_robust, 4)}, MSE(robust): {round(q_robust/self.m, 4)}, "
+                                       f"dQ: {round(delta_q, 4)}")
                 t_iter.refresh()
 
                 if converged:
@@ -476,35 +481,6 @@ class SA:
         self.Qrobust, _ = qr_loss(V=V, U=U, W=W, H=H, alpha=robust_alpha)
         self.factor_Q = q_factor(V=V, U=U, W=W, H=H)
         self.q_list = q_list
-        # if bump:
-        #     logger.info(f"Solution bump test, n: {bump_n}, range: {bump_range}")
-        #     bump_found = False
-        #     bump_q = self.Qtrue
-        #     bump_solution = None
-        #     for j in range(bump_n):
-        #
-        #         _H, _W = solution_bump(profile=H, contribution=W, bump_range=bump_range,
-        #                                seed=self.rng.integers(low=1, high=1e10, size=1))
-        #         _q = q_loss(V=V, U=U, W=_W, H=_H)
-        #         if bump_q > _q:
-        #             bump_found = True
-        #             bump_q = _q
-        #             bump_solution = (_H, _W)
-        #     if bump_found:
-        #         logger.info(f"A more optimal solution found from bump. "
-        #                     f"Prior Q(true): {self.Qtrue}, bump Q(true): {bump_q}")
-        #         if "bumped" in self.metadata.keys():
-        #             self.metadata["bumped_count"] = self.metadata["bumped_count"] + 1
-        #         else:
-        #             self.metadata["bumped_count"] = 1
-        #         self.metadata["bumped"] = "Solution bumped"
-        #         self.H = bump_solution[0]
-        #         self.W = bump_solution[1]
-        #         self.Qtrue = bump_q
-        #         self.Qrobust, _ = qr_loss(V=V, U=U, W=self.W, H=self.H, alpha=robust_alpha)
-        #         self.train(max_iter=max_iter, converge_delta=converge_delta, converge_n=converge_n, model_i=model_i,
-        #                    robust_mode=robust_mode, robust_alpha=robust_alpha, update_step=update_step, bump=bump,
-        #                    bump_n=bump_n, bump_range=bump_range)
         self.metadata["completion_date"] = datetime.now().strftime("%m/%d/%Y, %H:%M:%S %Z")
         self.metadata["max_iterations"] = int(max_iter)
         self.metadata["converge_delta"] = float(converge_delta)
