@@ -595,8 +595,10 @@ class BatchAnalysis:
             The index of the feature to plot.
         """
         temporal_residuals = []
-        for i in range(0, len(self.batch_sa.results) - 1):
+        for i in range(0, len(self.batch_sa.results)):
             result = self.batch_sa.results[i]
+            if result is None:
+                continue
             model_residual = np.abs(result.V - result.WH)
             temporal_residuals.append(model_residual)
         if self.data_handler is None:

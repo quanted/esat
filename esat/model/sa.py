@@ -67,7 +67,7 @@ class SA:
                  factors: int,
                  method: str = "ls-nmf",
                  seed: int = 42,
-                 optimized: bool = False,
+                 optimized: bool = True,
                  parallelized: bool = True,
                  verbose: bool = False
                  ):
@@ -429,8 +429,8 @@ class SA:
             t1 = time.time()
             if self.verbose:
                 logger.info(f"R - Model: {model_i}, Seed: {self.seed}, "
-                            f"Q(true): {round(q_true, 4)}, MSE(true): {round(q_true/self.m, 4)}"
-                            f"Q(robust): {round(q_robust, 4)}, MSE(robust): {round(q_robust/self.m, 4)}, "
+                            f"Q(true): {round(q_true, 4)}, MSE(true): {round(q_true / self.V.size, 4)}, "
+                            f"Q(robust): {round(q_robust, 4)}, MSE(robust): {round(q_robust / self.V.size, 4)}, "
                             f"Steps: {self.converge_steps}/{max_iter}, "
                             f"Converged: {self.converged}, Runtime: {round(t1 - t0, 2)} sec")
         else:
@@ -463,8 +463,8 @@ class SA:
                     if delta_q < converge_delta:
                         converged = True
                 t_iter.set_description(f"Model: {model_i}, Seed: {self.seed}, "
-                                       f"Q(true): {round(q_true, 4)}, MSE(true): {round(q_true/self.m, 4)}, "
-                                       f"Q(robust): {round(q_robust, 4)}, MSE(robust): {round(q_robust/self.m, 4)}, "
+                                       f"Q(true): {round(q_true, 4)}, MSE(true): {round(q_true/self.V.size, 4)}, "
+                                       f"Q(robust): {round(q_robust, 4)}, MSE(robust): {round(q_robust/self.V.size, 4)}, "
                                        f"dQ: {round(delta_q, 4)}")
                 t_iter.refresh()
 

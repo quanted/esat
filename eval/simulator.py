@@ -31,9 +31,7 @@ class Simulator:
     dataset value by outlier_mag.
     Uncertainty is generated from a normal distribution, scaled by the dataset.
 
-    #TODO: Simulator save and load functions
     #TODO: Looper, batch simulator mode
-    #TODO: Sum of profile residuals (synthetic - modeled) metrics
 
     Parameters
     ----------
@@ -53,14 +51,18 @@ class Simulator:
         The magnitude of the outliers on the dataset elements.
     contribution_max : int
         The maximum value in the synthetic contribution matrix (W).
-    noise_mean : float
-        The mean decimal percentage of the synthetic dataset for noise.
+    noise_mean_min : float
+        The minimum value for the randomly selected mean decimal percentage of the synthetic dataset for noise, by feature.
+    noise_mean_max : float
+        The maximum value for the randomly selected mean decimal percentage of the synthetic dataset for noise, by feature.
     noise_scale : float
-        The scale of the normal distribution for the noise.
-    uncertainty_mean : float
-        The mean decimal percentage of the uncertainty of the synthetic dataset.
+        The scale of the normal distribution for the noise, standard deviation of the distribution.
+    uncertainty_mean_min : float
+        The minimum value for the randomly selected mean decimal percentage of the uncertainty of the synthetic dataset, by feature.
+    uncertainty_mean_max : float
+        The maximum value for the randomly selected mean decimal percentage of the uncertainty of the synthetic dataset, by feature.
     uncertainty_scale : float
-        The scale of the normal distribution for the uncertainty.
+        The scale of the normal distribution for the uncertainty, standard deviation of the distribution.
     """
     def __init__(self,
                  seed: int,
