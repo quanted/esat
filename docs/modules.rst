@@ -2,8 +2,9 @@ Python API
 ===============
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
+   esat.rst
    esat.data.rst
    esat.error.rst
    esat.model.rst

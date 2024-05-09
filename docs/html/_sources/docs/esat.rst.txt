@@ -40,6 +40,14 @@ esat.utils module
    :undoc-members:
    :show-inheritance:
 
+esat.helpers module
+-------------------
+
+.. automodule:: esat.helpers
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Module contents
 ---------------
 
