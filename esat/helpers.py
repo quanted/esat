@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import multiprocessing as mp
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 from esat.model.sa import SA
 from tqdm import tqdm
 
@@ -25,6 +26,7 @@ class FSearch:
         self.pbar = None
         self.train_mse = None
         self.test_mse = None
+        self.q_true = None
         self.estimated_factor = None
         self.results_df = None
 
@@ -39,6 +41,7 @@ class FSearch:
         list_i = results[2]-self.min_factors
         self.train_mse[list_i].append(results[0])
         self.test_mse[list_i].append(results[1])
+        self.q_true[list_i].append(results[3])
         self.pbar.update(1)
 
     @staticmethod
@@ -53,7 +56,7 @@ class FSearch:
         test_residuals = np.multiply(~mask, residuals**2)
         train_mse = np.round(train_residuals.sum()/m_train, 5)
         test_mse = np.round(test_residuals.sum()/m_test, 5)
-        return train_mse, test_mse, factor_n
+        return train_mse, test_mse, factor_n, _sa.Qtrue
 
     def search(self, samples: int = 200, min_factors: int = 2, max_factors: int = 15):
         self.min_factors = min_factors
@@ -63,6 +66,7 @@ class FSearch:
 
         self.train_mse = [[] for i in range(self.max_factors - self.min_factors)]
         self.test_mse = [[] for i in range(self.max_factors - self.min_factors)]
+        self.q_true = [[] for i in range(self.max_factors - self.min_factors)]
 
         pool_parameters = []
         for i in range(samples):
@@ -86,6 +90,7 @@ class FSearch:
 
         self.train_mse = [np.mean(i) for i in self.train_mse]
         self.test_mse = [np.mean(i) for i in self.test_mse]
+        self.q_true = [np.mean(i) for i in self.q_true]
         return self.results()
 
     def results(self):
@@ -111,23 +116,32 @@ class FSearch:
                                            "Test MSE": self.test_mse,
                                            "Train MSE": self.train_mse,
                                            "Delta MSE": delta_mse,
-                                           "Delta Ratio": ratio_delta
+                                           "Delta Ratio": ratio_delta,
+                                           "Q(True)": self.q_true
                                        })
         return self.results_df
 
     def plot(self, actual_count: int = None):
-        mse_fig = go.Figure()
+        mse_fig = make_subplots(specs=[[{"secondary_y": True}]])
         x = list(range(self.min_factors, self.max_factors))
-        mse_fig.add_trace(go.Scatter(x=x, y=self.results_df["Train MSE"], name="Train MSE", mode='lines+markers'))
-        mse_fig.add_trace(go.Scatter(x=x, y=self.results_df["Test MSE"], name="Test MSE", mode='lines+markers'))
-        mse_fig.add_trace(go.Scatter(x=x, y=self.results_df["Delta MSE"], name="Delta MSE", mode='lines+markers'))
-        mse_fig.add_trace(go.Scatter(x=x, y=self.results_df["Delta Ratio"], name="Ratio Delta", mode='lines+markers'))
+        mse_fig.add_trace(go.Scatter(x=x, y=self.results_df["Train MSE"], name="Train MSE", mode='lines+markers'),
+                          secondary_y=False)
+        mse_fig.add_trace(go.Scatter(x=x, y=self.results_df["Test MSE"], name="Test MSE", mode='lines+markers'),
+                          secondary_y=False)
+        mse_fig.add_trace(go.Scatter(x=x, y=self.results_df["Delta MSE"], name="Delta MSE", mode='lines+markers'),
+                          secondary_y=False)
+        mse_fig.add_trace(go.Scatter(x=x, y=self.results_df["Delta Ratio"], name="Ratio Delta", mode='lines+markers'),
+                          secondary_y=False)
+        mse_fig.add_trace(go.Scatter(x=x, y=self.results_df["Q(True)"], name="Q(True)", mode='lines',
+                                     line=dict(width=1, dash='dash')),
+                          secondary_y=True)
         if actual_count:
             mse_fig.add_vline(x=actual_count, line_width=1, line_dash="dash", line_color="black",
                               name="Actual Factor Count")
         mse_fig.add_vline(x=self.estimated_factor, line_width=1, line_dash="dash", line_color="red",
                           name="Estimated Factor Count")
-        mse_fig.update_layout(width=800, height=800, title_text="Factor Estimation", hovermode='x')
-        mse_fig.update_yaxes(title_text="Mean Squared Error")
+        mse_fig.update_layout(width=800, height=800, title_text="Factor Estimation", hovermode='x unified')
+        mse_fig.update_yaxes(title_text="Mean Squared Error", secondary_y=False)
+        mse_fig.update_yaxes(title_text="Q(True)", secondary_y=True)
         mse_fig.update_xaxes(title_text="Number of Factors")
         mse_fig.show()
