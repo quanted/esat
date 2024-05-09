@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>esat package &mdash; Environmental Source Apportionment Toolkit (ESAT) 04/23/2024 documentation</title>
+  <title>esat package &mdash; Environmental Source Apportionment Toolkit (ESAT) 05/09/2024 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
 
@@ -15,7 +15,7 @@
   
         <script src="../_static/jquery.js?v=5d32c60e"></script>
         <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../_static/documentation_options.js?v=2ceadbe7"></script>
+        <script src="../_static/documentation_options.js?v=b5dd6643"></script>
         <script src="../_static/doctools.js?v=9a2dae69"></script>
         <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
@@ -101,6 +101,7 @@
 <li class="toctree-l3"><a class="reference internal" href="esat.data.html#esat.data.analysis.BatchAnalysis"><code class="docutils literal notranslate"><span class="pre">BatchAnalysis</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="esat.data.html#esat.data.analysis.BatchAnalysis.plot_loss"><code class="docutils literal notranslate"><span class="pre">BatchAnalysis.plot_loss()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="esat.data.html#esat.data.analysis.BatchAnalysis.plot_loss_distribution"><code class="docutils literal notranslate"><span class="pre">BatchAnalysis.plot_loss_distribution()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.data.html#esat.data.analysis.BatchAnalysis.plot_temporal_residuals"><code class="docutils literal notranslate"><span class="pre">BatchAnalysis.plot_temporal_residuals()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="esat.data.html#esat.data.analysis.ModelAnalysis"><code class="docutils literal notranslate"><span class="pre">ModelAnalysis</span></code></a><ul>
@@ -381,6 +382,66 @@
 <dt class="sig sig-object py" id="esat.utils.solution_bump">
 <span class="sig-prename descclassname"><span class="pre">esat.utils.</span></span><span class="sig-name descname"><span class="pre">solution_bump</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">profile</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contribution</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bump_range</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">(0.9,</span> <span class="pre">1.1)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">42</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.utils.solution_bump" title="Link to this definition"></a></dt>
 <dd></dd></dl>
+
+</section>
+<section id="module-esat.helpers">
+<span id="esat-helpers-module"></span><h2>esat.helpers module<a class="headerlink" href="#module-esat.helpers" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="esat.helpers.FSearch">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">esat.helpers.</span></span><span class="sig-name descname"><span class="pre">FSearch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">V</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">U</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">42</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_percent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.helpers.FSearch" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Factor search uses a Monte Carlo sampling approach for testing different factor counts using cross-validation
+testing. Both a train and a test MSE are calculated for each model in the search. These MSE values are averaged
+for each factor count and the change in test MSE is used to estimate the factor count for the dataset.</p>
+<p>Reference: <a class="reference external" href="http://alexhwilliams.info/itsneuronalblog/2018/02/26/crossval/">http://alexhwilliams.info/itsneuronalblog/2018/02/26/crossval/</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>V</strong> (<em>np.ndarray</em>) – The input dataset to use for the factor search.</p></li>
+<li><p><strong>U</strong> (<em>np.ndarray</em>) – The uncertainty dataset to use for the factor search.</p></li>
+<li><p><strong>seed</strong> (<em>int</em>) – The random seed to use for the model initialization, cross-validation masking, and factor selection.</p></li>
+<li><p><strong>test_percent</strong> (<em>float</em>) – The decimal percentage of values in the input dataset to use for the MSE test calculation.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.helpers.FSearch.plot">
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">actual_count</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.helpers.FSearch.plot" title="Link to this definition"></a></dt>
+<dd><p>Plot the results of the factor search as seen by the results table. When the actual number of factors are known,
+they can be provided using the actual_count parameter. The estimated factor count will be shown as a red dashed
+vertical line, the actual factor count is shown as a black dashed vertical line when it is provided.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>actual_count</strong> (<em>int</em>) – The known factor count value, such as when using the Simulator.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.helpers.FSearch.search">
+<span class="sig-name descname"><span class="pre">search</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_factors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_factors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">15</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.helpers.FSearch.search" title="Link to this definition"></a></dt>
+<dd><p>Run the Monte Carlo sampling for a random set of models using factor counts between min_factors and max_factors
+a specified number of times, samples.</p>
+<p>When the results are inconclusive or there are several large peaks in the delta MSE line, increasing the sample
+count can help narrow the estimation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>samples</strong> (<em>int</em>) – The number of random samples to take for the factor estimation.</p></li>
+<li><p><strong>min_factors</strong> (<em>int</em>) – The minimum number of factors to consider in the random sampling.</p></li>
+<li><p><strong>max_factors</strong> (<em>int</em>) – The maximum number of factors to consider in the random sampling.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The results of the factor search showing the metrics used to estimate the factor count.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pd.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
 
 </section>
 <section id="module-esat">

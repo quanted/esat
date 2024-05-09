@@ -13,7 +13,25 @@ logger = logging.getLogger(__name__)
 
 
 class FSearch:
-    def __init__(self, V, U, seed: int = 42, test_percent: float = 0.1):
+    """
+    Factor search uses a Monte Carlo sampling approach for testing different factor counts using cross-validation
+    testing. Both a train and a test MSE are calculated for each model in the search. These MSE values are averaged
+    for each factor count and the change in test MSE is used to estimate the factor count for the dataset.
+
+    Reference: http://alexhwilliams.info/itsneuronalblog/2018/02/26/crossval/
+
+    Parameters
+    ----------
+    V : np.ndarray
+        The input dataset to use for the factor search.
+    U : np.ndarray
+        The uncertainty dataset to use for the factor search.
+    seed : int
+        The random seed to use for the model initialization, cross-validation masking, and factor selection.
+    test_percent : float
+        The decimal percentage of values in the input dataset to use for the MSE test calculation.
+    """
+    def __init__(self, V: np.ndarray, U: np.ndarray, seed: int = 42, test_percent: float = 0.1):
         self.V = V
         self.U = U
         self.seed = seed
@@ -59,6 +77,27 @@ class FSearch:
         return train_mse, test_mse, factor_n, _sa.Qtrue
 
     def search(self, samples: int = 200, min_factors: int = 2, max_factors: int = 15):
+        """
+        Run the Monte Carlo sampling for a random set of models using factor counts between min_factors and max_factors
+        a specified number of times, samples.
+
+        When the results are inconclusive or there are several large peaks in the delta MSE line, increasing the sample
+        count can help narrow the estimation.
+
+        Parameters
+        ----------
+        samples : int
+            The number of random samples to take for the factor estimation.
+        min_factors : int
+            The minimum number of factors to consider in the random sampling.
+        max_factors : int
+            The maximum number of factors to consider in the random sampling.
+
+        Returns
+        -------
+        pd.DataFrame
+            The results of the factor search showing the metrics used to estimate the factor count.
+        """
         self.min_factors = min_factors
         self.max_factors = max_factors + 1
         self.samples = samples
@@ -91,9 +130,9 @@ class FSearch:
         self.train_mse = [np.mean(i) for i in self.train_mse]
         self.test_mse = [np.mean(i) for i in self.test_mse]
         self.q_true = [np.mean(i) for i in self.q_true]
-        return self.results()
+        return self._results()
 
-    def results(self):
+    def _results(self):
         delta_mse_r = []
         for factor_n in range(0, len(self.test_mse) - 1):
             delta_i = self.test_mse[factor_n] - self.test_mse[factor_n + 1]
@@ -122,6 +161,17 @@ class FSearch:
         return self.results_df
 
     def plot(self, actual_count: int = None):
+        """
+        Plot the results of the factor search as seen by the results table. When the actual number of factors are known,
+        they can be provided using the actual_count parameter. The estimated factor count will be shown as a red dashed
+        vertical line, the actual factor count is shown as a black dashed vertical line when it is provided.
+
+        Parameters
+        ----------
+        actual_count : int
+            The known factor count value, such as when using the Simulator.
+
+        """
         mse_fig = make_subplots(specs=[[{"secondary_y": True}]])
         x = list(range(self.min_factors, self.max_factors))
         mse_fig.add_trace(go.Scatter(x=x, y=self.results_df["Train MSE"], name="Train MSE", mode='lines+markers'),

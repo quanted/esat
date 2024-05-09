@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>esat.data package &mdash; Environmental Source Apportionment Toolkit (ESAT) 04/23/2024 documentation</title>
+  <title>esat.data package &mdash; Environmental Source Apportionment Toolkit (ESAT) 05/09/2024 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
 
@@ -15,7 +15,7 @@
   
         <script src="../_static/jquery.js?v=5d32c60e"></script>
         <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../_static/documentation_options.js?v=2ceadbe7"></script>
+        <script src="../_static/documentation_options.js?v=b5dd6643"></script>
         <script src="../_static/doctools.js?v=9a2dae69"></script>
         <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
@@ -110,7 +110,7 @@
 <span id="esat-data-analysis-module"></span><h2>esat.data.analysis module<a class="headerlink" href="#module-esat.data.analysis" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="esat.data.analysis.BatchAnalysis">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">esat.data.analysis.</span></span><span class="sig-name descname"><span class="pre">BatchAnalysis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_sa</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="esat.model.html#esat.model.batch_sa.BatchSA" title="esat.model.batch_sa.BatchSA"><span class="pre">BatchSA</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.data.analysis.BatchAnalysis" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">esat.data.analysis.</span></span><span class="sig-name descname"><span class="pre">BatchAnalysis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_sa</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="esat.model.html#esat.model.batch_sa.BatchSA" title="esat.model.batch_sa.BatchSA"><span class="pre">BatchSA</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_handler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#esat.data.datahandler.DataHandler" title="esat.data.datahandler.DataHandler"><span class="pre">DataHandler</span></a></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.data.analysis.BatchAnalysis" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Class for running batch solution analysis.</p>
 <dl class="field-list simple">
@@ -135,6 +135,17 @@ data uncertainty the curve may not be entirely smooth.</p>
 decreasing converge_delta will narrow the criteria. If the Q(True) and Q(Robust) distributions are very similar
 the solution may be overfit, where enough sources/factors are available to capture the majority of outline
 behavior. In this case, reducing the number of factors can resolve overfitting the model.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.data.analysis.BatchAnalysis.plot_temporal_residuals">
+<span class="sig-name descname"><span class="pre">plot_temporal_residuals</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature_idx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.data.analysis.BatchAnalysis.plot_temporal_residuals" title="Link to this definition"></a></dt>
+<dd><p>Plot the temporal residuals for a specified feature, by index, of all models in the SA batch.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>feature_idx</strong> (<em>int</em>) – The index of the feature to plot.</p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>
