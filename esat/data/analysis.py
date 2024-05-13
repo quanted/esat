@@ -307,7 +307,7 @@ class ModelAnalysis:
         contr_plot.update_yaxes(title_text="Normalized Contributions")
         contr_plot.show()
 
-    def plot_factor_fingerprints(self):
+    def plot_factor_fingerprints(self, grouped: bool = False):
         """
         Create a stacked bar plot of the factor profile, fingerprints.
 
@@ -318,8 +318,12 @@ class ModelAnalysis:
         fig = go.Figure()
         for idx in range(self.model.factors-1, -1, -1):
             fig.add_trace(go.Bar(name=f"Factor {idx+1}", x=self.dh.features, y=normalized_factors_data[idx]))
-        fig.update_layout(title=f"Factor Fingerprints - Model {self.selected_model}",
-                          width=1200, height=800, barmode='stack', hovermode='x unified')
+        if grouped:
+            fig.update_layout(title=f"Factor Fingerprints - Model {self.selected_model}",
+                              width=1200, height=800, barmode='group', hovermode='x unified')
+        else:
+            fig.update_layout(title=f"Factor Fingerprints - Model {self.selected_model}",
+                              width=1200, height=800, barmode='stack', hovermode='x unified')
         fig.update_yaxes(title_text="% Feature Concentration", range=[0, 100])
         fig.show()
 
