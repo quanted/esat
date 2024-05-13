@@ -1,6 +1,6 @@
 import logging
 import os
-
+import copy
 import numpy as np
 import pandas as pd
 import multiprocessing as mp
@@ -65,13 +65,17 @@ class FactorEstimator:
     @staticmethod
     def _random_sample(V, U, mask, seed, factor_n):
         m_train = np.count_nonzero(mask)
-        m_test = np.count_nonzero(~mask)
+        i_mask = copy.copy(mask)
+        i_mask[i_mask == 1] = 0
+        i_mask[i_mask == 0] = 1
+        m_test = np.count_nonzero(i_mask)
         _sa = SA(V=V, U=U, factors=factor_n, method="ls-nmf", seed=seed, optimized=True, verbose=False)
         _sa.initialize()
         _sa.train(max_iter=10000, converge_delta=1.0, converge_n=10)
         residuals = V - _sa.WH
         train_residuals = np.multiply(mask, residuals**2)
-        test_residuals = np.multiply(~mask, residuals**2)
+
+        test_residuals = np.multiply(i_mask, residuals**2)
         train_mse = np.round(train_residuals.sum()/m_train, 5)
         test_mse = np.round(test_residuals.sum()/m_test, 5)
         return train_mse, test_mse, factor_n, _sa.Qtrue
@@ -137,10 +141,11 @@ class FactorEstimator:
         for factor_n in range(0, len(self.test_mse) - 1):
             delta_i = self.test_mse[factor_n] - self.test_mse[factor_n + 1]
             delta_mse_r.append(delta_i)
-        c = np.max(delta_mse_r) * 0.01
+        c = 1.01 * np.max(delta_mse_r)
         ratio_delta = [np.nan]
         for factor_n in range(0, len(self.test_mse) - 2):
-            rd = delta_mse_r[factor_n] / (delta_mse_r[factor_n + 1] + c)
+            rd = c*(delta_mse_r[factor_n]/delta_mse_r[factor_n + 1])
+            # rd = (delta_mse_r[factor_n]/min1) / np.abs(max1 - c * delta_mse_r[factor_n + 1])
             ratio_delta.append(rd)
         ratio_delta.append(np.nan)
         delta_mse = [np.nan]
