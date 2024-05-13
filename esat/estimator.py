@@ -12,7 +12,7 @@ from tqdm import tqdm
 logger = logging.getLogger(__name__)
 
 
-class FSearch:
+class FactorEstimator:
     """
     Factor search uses a Monte Carlo sampling approach for testing different factor counts using cross-validation
     testing. Both a train and a test MSE are calculated for each model in the search. These MSE values are averaged
@@ -76,7 +76,7 @@ class FSearch:
         test_mse = np.round(test_residuals.sum()/m_test, 5)
         return train_mse, test_mse, factor_n, _sa.Qtrue
 
-    def search(self, samples: int = 200, min_factors: int = 2, max_factors: int = 15):
+    def run(self, samples: int = 200, min_factors: int = 2, max_factors: int = 15):
         """
         Run the Monte Carlo sampling for a random set of models using factor counts between min_factors and max_factors
         a specified number of times, samples.

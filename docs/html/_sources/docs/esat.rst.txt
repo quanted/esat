@@ -40,10 +40,10 @@ esat.utils module
    :undoc-members:
    :show-inheritance:
 
-esat.helpers module
--------------------
+esat.estimator module
+---------------------
 
-.. automodule:: esat.helpers
+.. automodule:: esat.estimator
    :members:
    :undoc-members:
    :show-inheritance:
