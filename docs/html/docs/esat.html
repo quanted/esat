@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>esat package &mdash; Environmental Source Apportionment Toolkit (ESAT) 05/09/2024 documentation</title>
+  <title>esat package &mdash; Environmental Source Apportionment Toolkit (ESAT) 05/13/2024 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
 
@@ -15,12 +15,14 @@
   
         <script src="../_static/jquery.js?v=5d32c60e"></script>
         <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="../_static/documentation_options.js?v=b5dd6643"></script>
+        <script src="../_static/documentation_options.js?v=615ec0ae"></script>
         <script src="../_static/doctools.js?v=9a2dae69"></script>
         <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" /> 
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="esat.cli package" href="esat.cli.html" />
+    <link rel="prev" title="Python API" href="modules.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -43,10 +45,52 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../index.html">Welcome to EPA ESAT’s Documentation!</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../README.html">Environmental Source Apportionment Toolkit (ESAT)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="modules.html">Python API</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">Python API</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">esat package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#subpackages">Subpackages</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="esat.cli.html">esat.cli package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.data.html">esat.data package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.error.html">esat.error package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.model.html">esat.model package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.rotational.html">esat.rotational package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-esat.configs">esat.configs module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-esat.metrics">esat.metrics module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#esat.metrics.cal_connectivity"><code class="docutils literal notranslate"><span class="pre">cal_connectivity()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#esat.metrics.cal_cophenetic"><code class="docutils literal notranslate"><span class="pre">cal_cophenetic()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#esat.metrics.cal_dispersion"><code class="docutils literal notranslate"><span class="pre">cal_dispersion()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#esat.metrics.calculate_Q"><code class="docutils literal notranslate"><span class="pre">calculate_Q()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#esat.metrics.q_factor"><code class="docutils literal notranslate"><span class="pre">q_factor()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#esat.metrics.q_loss"><code class="docutils literal notranslate"><span class="pre">q_loss()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#esat.metrics.qr_loss"><code class="docutils literal notranslate"><span class="pre">qr_loss()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-esat.utils">esat.utils module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#esat.utils.calculate_factor_correlation"><code class="docutils literal notranslate"><span class="pre">calculate_factor_correlation()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#esat.utils.compare_all_factors"><code class="docutils literal notranslate"><span class="pre">compare_all_factors()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#esat.utils.np_encoder"><code class="docutils literal notranslate"><span class="pre">np_encoder()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#esat.utils.solution_bump"><code class="docutils literal notranslate"><span class="pre">solution_bump()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-esat.estimator">esat.estimator module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#esat.estimator.FactorEstimator"><code class="docutils literal notranslate"><span class="pre">FactorEstimator</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-esat">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="esat.data.html">esat.data package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="esat.error.html">esat.error package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="esat.model.html">esat.model package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="esat.rotational.html">esat.rotational package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="eval.html">eval package</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="cli.html">Command Line Interface</a></li>
 </ul>
 
@@ -64,6 +108,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">Python API</a></li>
       <li class="breadcrumb-item active">esat package</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/docs/esat.rst.txt" rel="nofollow"> View page source</a>
@@ -384,11 +429,11 @@
 <dd></dd></dl>
 
 </section>
-<section id="module-esat.helpers">
-<span id="esat-helpers-module"></span><h2>esat.helpers module<a class="headerlink" href="#module-esat.helpers" title="Link to this heading"></a></h2>
+<section id="module-esat.estimator">
+<span id="esat-estimator-module"></span><h2>esat.estimator module<a class="headerlink" href="#module-esat.estimator" title="Link to this heading"></a></h2>
 <dl class="py class">
-<dt class="sig sig-object py" id="esat.helpers.FSearch">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">esat.helpers.</span></span><span class="sig-name descname"><span class="pre">FSearch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">V</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">U</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">42</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_percent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.helpers.FSearch" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="esat.estimator.FactorEstimator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">esat.estimator.</span></span><span class="sig-name descname"><span class="pre">FactorEstimator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">V</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">U</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">42</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_percent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.estimator.FactorEstimator" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Factor search uses a Monte Carlo sampling approach for testing different factor counts using cross-validation
 testing. Both a train and a test MSE are calculated for each model in the search. These MSE values are averaged
@@ -405,8 +450,8 @@ for each factor count and the change in test MSE is used to estimate the factor 
 </dd>
 </dl>
 <dl class="py method">
-<dt class="sig sig-object py" id="esat.helpers.FSearch.plot">
-<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">actual_count</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.helpers.FSearch.plot" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="esat.estimator.FactorEstimator.plot">
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">actual_count</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.estimator.FactorEstimator.plot" title="Link to this definition"></a></dt>
 <dd><p>Plot the results of the factor search as seen by the results table. When the actual number of factors are known,
 they can be provided using the actual_count parameter. The estimated factor count will be shown as a red dashed
 vertical line, the actual factor count is shown as a black dashed vertical line when it is provided.</p>
@@ -418,8 +463,8 @@ vertical line, the actual factor count is shown as a black dashed vertical line 
 </dd></dl>
 
 <dl class="py method">
-<dt class="sig sig-object py" id="esat.helpers.FSearch.search">
-<span class="sig-name descname"><span class="pre">search</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_factors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_factors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">15</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.helpers.FSearch.search" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="esat.estimator.FactorEstimator.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_factors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_factors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">15</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.estimator.FactorEstimator.run" title="Link to this definition"></a></dt>
 <dd><p>Run the Monte Carlo sampling for a random set of models using factor counts between min_factors and max_factors
 a specified number of times, samples.</p>
 <p>When the results are inconclusive or there are several large peaks in the delta MSE line, increasing the sample
@@ -452,7 +497,10 @@ count can help narrow the estimation.</p>
 
            </div>
           </div>
-          <footer>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="modules.html" class="btn btn-neutral float-left" title="Python API" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="esat.cli.html" class="btn btn-neutral float-right" title="esat.cli package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
 
   <hr/>
 
