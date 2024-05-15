@@ -148,11 +148,17 @@ class FactorEstimator:
             # rd = (delta_mse_r[factor_n]/min1) / np.abs(max1 - c * delta_mse_r[factor_n + 1])
             ratio_delta.append(rd)
         ratio_delta.append(np.nan)
+
+        mse_min = np.min(self.test_mse)
+        k_est = []
+        for factor_n in range(0, self.max_factors-self.min_factors):
+            rd = mse_min/(self.test_mse[factor_n]*np.power(factor_n+self.min_factors, 1.3))
+            k_est.append(rd)
         delta_mse = [np.nan]
         for factor_n in range(0, len(self.test_mse) - 1):
             delta_i = self.test_mse[factor_n] - self.test_mse[factor_n + 1]
             delta_mse.append(delta_i)
-        self.estimated_factor = np.nanargmax(ratio_delta) + self.min_factors
+        self.estimated_factor = np.nanargmax(k_est) + self.min_factors
         logger.info(f"Estimated factor count: {self.estimated_factor}")
         self.results_df = pd.DataFrame(data=
                                        {
@@ -161,6 +167,7 @@ class FactorEstimator:
                                            "Train MSE": self.train_mse,
                                            "Delta MSE": delta_mse,
                                            "Delta Ratio": ratio_delta,
+                                           "K Estimate": k_est,
                                            "Q(True)": self.q_true
                                        })
         return self.results_df
@@ -186,6 +193,8 @@ class FactorEstimator:
         mse_fig.add_trace(go.Scatter(x=x, y=self.results_df["Delta MSE"], name="Delta MSE", mode='lines+markers'),
                           secondary_y=False)
         mse_fig.add_trace(go.Scatter(x=x, y=self.results_df["Delta Ratio"], name="Ratio Delta", mode='lines+markers'),
+                          secondary_y=False)
+        mse_fig.add_trace(go.Scatter(x=x, y=self.results_df["K Estimate"], name="K Estimate", mode='lines+markers'),
                           secondary_y=False)
         mse_fig.add_trace(go.Scatter(x=x, y=self.results_df["Q(True)"], name="Q(True)", mode='lines',
                                      line=dict(width=1, dash='dash')),
