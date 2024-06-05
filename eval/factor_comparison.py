@@ -364,7 +364,7 @@ class FactorCompare:
                             }
                             self.model_results[m] = best_model_results
                     factor_permutations = []
-            pbar.set_description(f"Calculating average correlation for all permutations for Mode: {1+m}")
+            pbar.set_description(f"Calculating average correlation for all permutations for Model: {1+m}")
         pbar.close()
         pool.close()
 

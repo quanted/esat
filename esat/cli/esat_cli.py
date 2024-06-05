@@ -18,6 +18,7 @@ from esat.error.bs_disp import BSDISP
 from esat.rotational.constrained import ConstrainedModel
 from esat.configs import run_config, sim_config, error_config, constrained_config
 from esat_eval.simulator import Simulator
+from esat.estimator import FactorEstimator
 
 
 logging.basicConfig(format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S', level=logging.INFO)
@@ -29,12 +30,16 @@ def get_dh(input_path, uncertainty_path, index_col):
     return dh
 
 
-def get_sim(sim_path, sim_parameters):
+def get_sim(sim_path, sim_parameters, sim_contributions):
     if "esat_simulator.pkl" in os.listdir(sim_path):
         sim = Simulator.load(os.path.join(sim_path, "esat_simulator.pkl"))
     else:
         sim = Simulator(**sim_parameters)
+        for f_i, i_params in sim_contributions.items():
+            c_params = json.loads(i_params)
+            sim.update_contribution(factor_i=int(f_i), **c_params)
         sim.save(output_directory=sim_path)
+
     return sim
 
 
@@ -212,7 +217,10 @@ def generate_sim(project_directory):
         return
     config = get_config(project_directory=project_directory, sim=True)
     logger.info("Generating synthetic data")
-    _ = get_sim(sim_path=project_directory, sim_parameters=config['parameters'])
+    sim = get_sim(sim_path=project_directory,
+                  sim_parameters=config['parameters'],
+                  sim_contributions=config["contributions"]
+                  )
     logger.info("ESAT Simulator setup complete")
 
 
@@ -235,7 +243,10 @@ def compare_sim(project_directory):
         return
     config = get_config(project_directory=project_directory, sim=True)
     logger.info("Generating synthetic data")
-    sim = get_sim(sim_path=project_directory, sim_parameters=config['parameters'])
+    sim = get_sim(sim_path=project_directory,
+                  sim_parameters=config['parameters'],
+                  sim_contributions=config["contributions"]
+                  )
     batch_sa = get_batchsa(project_directory=project_directory)
     sim.compare(batch_sa=batch_sa)
     sim.save(output_directory=project_directory)
@@ -259,7 +270,10 @@ def plot_sim(project_directory):
         return
     config = get_config(project_directory=project_directory, sim=True)
     logger.info("Generating synthetic data")
-    sim = get_sim(sim_path=project_directory, sim_parameters=config['parameters'])
+    sim = get_sim(sim_path=project_directory,
+                  sim_parameters=config['parameters'],
+                  sim_contributions=config["contributions"]
+                  )
     sim.plot_comparison()
 
 
@@ -396,6 +410,37 @@ def plot_feature_timeseries(project_directory, feature_idx):
 
 @esat_cli.command()
 @click.argument("project_directory", type=click.Path(exists=True))
+def estimate(project_directory):
+    """
+    Run a factor estimation using the provided configuration file.
+
+    Parameters
+
+    project_directory : The project directory containing .toml configuration files.
+
+    """
+    config = get_config(project_directory=project_directory)
+    if "sim_config.toml" in os.listdir(project_directory):
+        _sim_config = get_config(project_directory=project_directory, sim=True)
+        sim = get_sim(sim_path=project_directory,
+                      sim_parameters=_sim_config['parameters'],
+                      sim_contributions=_sim_config['contributions'])
+        data_df, uncertainty_df = sim.get_data()
+        dh = DataHandler.load_dataframe(input_df=data_df, uncertainty_df=uncertainty_df)
+    else:
+        dh = DataHandler(**config["data"])
+    V, U = dh.get_data()
+    factor_estimator = FactorEstimator(V=V, U=U)
+    estimator_results = factor_estimator.run(
+        samples=int(config["estimator"]["samples"]),
+        min_factors=int(config["estimator"]["min_k"]),
+        max_factors=int(config["estimator"]["max_k"])
+    )
+    logger.info(f"{estimator_results}")
+
+
+@esat_cli.command()
+@click.argument("project_directory", type=click.Path(exists=True))
 def run(project_directory):
     """
     Run a batch source apportionment run using the provided configuration file.
@@ -408,13 +453,14 @@ def run(project_directory):
     config = get_config(project_directory=project_directory)
     if "sim_config.toml" in os.listdir(project_directory):
         _sim_config = get_config(project_directory=project_directory, sim=True)
-        sim = get_sim(sim_path=project_directory, sim_parameters=_sim_config['parameters'])
+        sim = get_sim(sim_path=project_directory,
+                      sim_parameters=_sim_config['parameters'],
+                      sim_contributions=_sim_config['contributions'])
         data_df, uncertainty_df = sim.get_data()
         dh = DataHandler.load_dataframe(input_df=data_df, uncertainty_df=uncertainty_df)
     else:
         dh = DataHandler(**config["data"])
     V, U = dh.get_data()
-
     sa_models = BatchSA(V=V, U=U, **config["parameters"])
     _ = sa_models.train()
     output_path = os.path.join(config["project"]["directory"], "output")

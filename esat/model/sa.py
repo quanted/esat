@@ -525,6 +525,8 @@ class SA:
             factor_header = [f"Factor {i + 1}" for i in range(self.factors)]
             factor_header = ",".join(factor_header)
             header = ",".join(header)
+        else:
+            header = []
         output_directory = Path(output_directory)
         if not output_directory.is_absolute():
             logger.error("Provided output directory is not an absolute path. Must provide an absolute path.")
@@ -600,88 +602,88 @@ class SA:
             return None
 
 
-if __name__ == "__main__":
-
-    # Test code for running a single SA model, using both the python and Rust functions, includes model save and loads.
-    import time
-    import os
-    from esat.data.datahandler import DataHandler
-
-    logging.getLogger('matplotlib.font_manager').setLevel(logging.ERROR)
-    logging.getLogger('matplotlib').setLevel(logging.ERROR)
-
-    # SA model parameters and training hyper-parameters
-    factors = 6
-    method = "ls-nmf"                   # "ls-nmf", "ws-nmf"
-    init_method = "col_means"           # default is column means, "kmeans", "cmeans"
-    init_norm = True
-    seed = 42
-    max_iterations = 20000
-    converge_delta = 0.1
-    converge_n = 10
-    dataset = "br"                      # "br": Baton Rouge, "b": Baltimore, "sl": St Louis
-    verbose = True
-    robust_mode = False
-    robust_n = 100
-    robust_alpha = 4
-
-    bump = True
-    bump_n = 100
-    bump_range = (0.95, 1.05)
-
-    # ---- Data Samples ---- #
-    input_file = None
-    uncertainty_file = None
-    data_directory = os.path.join("D:\\", "projects", "esat", "data")
-    if dataset == "br":
-        input_file = os.path.join(data_directory, "Dataset-BatonRouge-con.csv")
-        uncertainty_file = os.path.join(data_directory, "Dataset-BatonRouge-unc.csv")
-        output_path = os.path.join(data_directory, "output", "BatonRouge")
-    elif dataset == "b":
-        input_file = os.path.join(data_directory, "Dataset-Baltimore_con.txt")
-        uncertainty_file = os.path.join(data_directory, "Dataset-Baltimore_unc.txt")
-        output_path = os.path.join(data_directory, "output", "Baltimore")
-    elif dataset == "sl":
-        input_file = os.path.join(data_directory, "Dataset-StLouis-con.csv")
-        uncertainty_file = os.path.join(data_directory, "Dataset-StLouis-unc.csv")
-        output_path = os.path.join(data_directory, "output", "StLouis")
-
-    index_col = "Date"
-    sn_threshold = 2.0
-
-    # ------------------- #
-
-    dh = DataHandler(
-        input_path=input_file,
-        uncertainty_path=uncertainty_file,
-        index_col=index_col,
-        sn_threshold=sn_threshold
-    )
-    V = dh.input_data_processed
-    U = dh.uncertainty_data_processed
-
-    t0 = time.time()
-    logger.info("Running python code")
-    sa = SA(V=V, U=U, factors=factors, method=method, seed=seed, optimized=False, verbose=verbose)
-    sa.initialize(init_method=init_method, init_norm=init_norm, fuzziness=5.0)
-    sa.train(max_iter=max_iterations, converge_delta=converge_delta, converge_n=converge_n,
-             robust_alpha=robust_alpha, robust_n=robust_n, robust_mode=robust_mode,
-             bump=bump, bump_n=bump_n, bump_range=bump_range)
-    t1 = time.time()
-    logger.info(f"Runtime: {round((t1 - t0) / 60, 2)} min(s)")
-
-    logger.info("Running rust code")
-    sa2 = SA(V=V, U=U, factors=factors, method=method, seed=seed, optimized=True, verbose=verbose)
-    sa2.initialize(init_method=init_method, init_norm=init_norm, fuzziness=5.0)
-    sa2.train(max_iter=max_iterations, converge_delta=converge_delta, converge_n=converge_n,
-              robust_alpha=robust_alpha, robust_n=robust_n, robust_mode=robust_mode,
-              bump=bump, bump_n=bump_n, bump_range=bump_range)
-    # t2 = time.time()
-    # logger.info(f"Runtime: {round((t2 - t1) / 60, 2)} min(s)")
-    #
-    # sa2.save(model_name="test", output_directory=os.path.join(data_directory,"output"), pickle_model=False,
-    #          header=list(dh.features))
-    # sa2.summary()
-    #
-    # _sa = SA.load(file_path=os.path.join(data_directory, "output", "test.pkl"))
+# if __name__ == "__main__":
+#
+#     # Test code for running a single SA model, using both the python and Rust functions, includes model save and loads.
+#     import time
+#     import os
+#     from esat.data.datahandler import DataHandler
+#
+#     logging.getLogger('matplotlib.font_manager').setLevel(logging.ERROR)
+#     logging.getLogger('matplotlib').setLevel(logging.ERROR)
+#
+#     # SA model parameters and training hyper-parameters
+#     factors = 6
+#     method = "ls-nmf"                   # "ls-nmf", "ws-nmf"
+#     init_method = "col_means"           # default is column means, "kmeans", "cmeans"
+#     init_norm = True
+#     seed = 42
+#     max_iterations = 20000
+#     converge_delta = 0.1
+#     converge_n = 10
+#     dataset = "br"                      # "br": Baton Rouge, "b": Baltimore, "sl": St Louis
+#     verbose = True
+#     robust_mode = False
+#     robust_n = 100
+#     robust_alpha = 4
+#
+#     bump = True
+#     bump_n = 100
+#     bump_range = (0.95, 1.05)
+#
+#     # ---- Data Samples ---- #
+#     input_file = None
+#     uncertainty_file = None
+#     data_directory = os.path.join("D:\\", "projects", "esat", "data")
+#     if dataset == "br":
+#         input_file = os.path.join(data_directory, "Dataset-BatonRouge-con.csv")
+#         uncertainty_file = os.path.join(data_directory, "Dataset-BatonRouge-unc.csv")
+#         output_path = os.path.join(data_directory, "output", "BatonRouge")
+#     elif dataset == "b":
+#         input_file = os.path.join(data_directory, "Dataset-Baltimore_con.txt")
+#         uncertainty_file = os.path.join(data_directory, "Dataset-Baltimore_unc.txt")
+#         output_path = os.path.join(data_directory, "output", "Baltimore")
+#     elif dataset == "sl":
+#         input_file = os.path.join(data_directory, "Dataset-StLouis-con.csv")
+#         uncertainty_file = os.path.join(data_directory, "Dataset-StLouis-unc.csv")
+#         output_path = os.path.join(data_directory, "output", "StLouis")
+#
+#     index_col = "Date"
+#     sn_threshold = 2.0
+#
+#     # ------------------- #
+#
+#     dh = DataHandler(
+#         input_path=input_file,
+#         uncertainty_path=uncertainty_file,
+#         index_col=index_col,
+#         sn_threshold=sn_threshold
+#     )
+#     V = dh.input_data_processed
+#     U = dh.uncertainty_data_processed
+#
+#     t0 = time.time()
+#     logger.info("Running python code")
+#     sa = SA(V=V, U=U, factors=factors, method=method, seed=seed, optimized=False, verbose=verbose)
+#     sa.initialize(init_method=init_method, init_norm=init_norm, fuzziness=5.0)
+#     sa.train(max_iter=max_iterations, converge_delta=converge_delta, converge_n=converge_n,
+#              robust_alpha=robust_alpha, robust_n=robust_n, robust_mode=robust_mode,
+#              bump=bump, bump_n=bump_n, bump_range=bump_range)
+#     t1 = time.time()
+#     logger.info(f"Runtime: {round((t1 - t0) / 60, 2)} min(s)")
+#
+#     logger.info("Running rust code")
+#     sa2 = SA(V=V, U=U, factors=factors, method=method, seed=seed, optimized=True, verbose=verbose)
+#     sa2.initialize(init_method=init_method, init_norm=init_norm, fuzziness=5.0)
+#     sa2.train(max_iter=max_iterations, converge_delta=converge_delta, converge_n=converge_n,
+#               robust_alpha=robust_alpha, robust_n=robust_n, robust_mode=robust_mode,
+#               bump=bump, bump_n=bump_n, bump_range=bump_range)
+#     t2 = time.time()
+#     logger.info(f"Runtime: {round((t2 - t1) / 60, 2)} min(s)")
+#
+#     sa2.save(model_name="test", output_directory=os.path.join(data_directory,"output"), pickle_model=False,
+#     header=list(dh.features))
+#     sa2.summary()
+#
+#     _sa = SA.load(file_path=os.path.join(data_directory, "output", "test.pkl"))
 
