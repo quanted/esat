@@ -19,22 +19,35 @@ sim_config['parameters'] = {
     'outlier_p': 0.10,               # Decimal percent of outliers in the dataset
     'outlier_mag': 2,                # Magnitude of outliers
     'contribution_max': 10,          # Maximum value of the contribution matrix (W) (Randomly sampled from a uniform distribution)
-    'noise_mean': 0.1,               # Mean of noise added to the synthetic dataset (Randomly sampled from a normal distribution)
+    'noise_mean_min': 0.03,          # Minimum mean of noise added to the synthetic dataset, by feature (Randomly sampled from a normal distribution)
+    'noise_mean_max': 0.05,          # Maximum mean of noise added to the synthetic dataset, by feature (Randomly sampled from a normal distribution)
     'noise_scale': 0.02,             # Scale of the noise added to the synthetic dataset
-    'uncertainty_mean': 0.05,        # Mean of the uncertainty matrix, percentage of the input dataset (Randomly sampled from a normal distribution)
+    'uncertainty_mean_min': 0.04,    # Minimum mean of the uncertainty matrix, percentage of the input dataset (Randomly sampled from a normal distribution)
+    'uncertainty_mean_max': 0.06,    # Maximum mean of the uncertainty matrix, percentage of the input dataset (Randomly sampled from a normal distribution)
     'uncertainty_scale': 0.01        # Scale of the uncertainty matrix
+}
+sim_config['contributions'] = {
+    '0': '{"curve_type":"logistic","scale": 0.1,"frequency":0.5}',
+    '1': '{"curve_type":"periodic","minimum": 0.1,"maximum": 0.9,"frequency": 0.5,"scale":0.1}',
+    '2': '{"curve_type":"increasing","minimum": 0.1,"maximum": 0.9,"scale":0.1}',
+    '3': '{"curve_type":"decreasing","minimum": 0.1,"maximum": 0.9,"scale":0.1}'
 }
 
 # ------- RUN Configuration --------- #
 run_config = configparser.ConfigParser()
 run_config['project'] = {
     "name": "",
-    "directory": "."
+    "directory": ".",
 }
 run_config['data'] = {
     "input_path": "",
     "uncertainty_path": "",
     "index_col": 0
+}
+run_config['estimator'] = {
+    "samples": 250,
+    "min_k": 2,
+    "max_k": 12
 }
 run_config['parameters'] = {
     'factors': -1,
