@@ -26,6 +26,8 @@ default = ["extension-module"]
 
 [profile.dev]
 opt-level = 3
+debug = false
 
 [profile.release]
 opt-level = 3
+debug = false

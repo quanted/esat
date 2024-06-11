@@ -274,8 +274,8 @@ class BatchSA:
         t1 = time.time()
         if self.verbose:
             logger.info(f"Model: {model_i}, Seed: {sa.seed}, "
-                        f"Q(true): {round(sa.Qtrue, 4)}, MSE(true): {round(sa.Qtrue/sa.V.shape[0], 4)}, "
-                        f"Q(robust): {round(sa.Qrobust, 4)}, MSE(robust): {round(sa.Qrobust/sa.V.shape[0], 4)},"
+                        f"Q(true): {round(sa.Qtrue, 4)}, MSE(true): {round(sa.Qtrue/sa.V.size, 4)}, "
+                        f"Q(robust): {round(sa.Qrobust, 4)}, MSE(robust): {round(sa.Qrobust/sa.V.size, 4)}, "
                         f"Steps: {sa.converge_steps}/{self.max_iter}, Converged: {sa.converged}, "
                         f"Runtime: {round(t1 - t0, 2)} sec")
         return model_i, sa

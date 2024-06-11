@@ -149,17 +149,20 @@ class BSDISP:
         if parallel:
             cpus = mp.cpu_count()
             cpus = cpus - 1 if cpus > 1 else 1
-            with mp.Pool(processes=cpus) as pool:
-                p_args = []
-                for i, bs_key in enumerate(bs_keys):
-                    i_model = self.bootstrap.bs_results[bs_key]["model"]
-                    i_args = (bs_key, i_model, self.feature_labels, self.model_selected, self.threshold_dQ,
-                              self.max_search, self.features, self.dQmax)
-                    p_args.append(i_args)
-
-                for result in pool.starmap(BSDISP._parallel_disp, p_args, chunksize=10):
-                    i, i_disp = result
-                    self.disp_results[i] = i_disp
+            pool = mp.Pool(processes=cpus)
+            p_args = []
+            for i, bs_key in enumerate(bs_keys):
+                i_model = self.bootstrap.bs_results[bs_key]["model"]
+                i_args = (bs_key, i_model, self.feature_labels, self.model_selected, self.threshold_dQ,
+                          self.max_search, self.features, self.dQmax)
+                p_args.append(i_args)
+            results = pool.starmap(BSDISP._parallel_disp, p_args)
+            pool.close()
+            pool.join()
+            # for result in pool.starmap(BSDISP._parallel_disp, p_args, chunksize=10):
+            for result in results:
+                i, i_disp = result
+                self.disp_results[i] = i_disp
         else:
             for bs_key in tqdm(bs_keys, desc="BS-DISP - Displacement Stage", position=0, leave=True):
                 bs_result = self.bootstrap.bs_results[bs_key]
