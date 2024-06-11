@@ -613,7 +613,7 @@ class Bootstrap:
                                     marker=dict(color='red', size=4), name="Base"))
         f_plot.update_layout(
             title=f"Variability in Percentage of Species - Model {self.model_selected} - Factor {factor_label} ",
-            width=1200, height=600, showlegend=False)
+            width=1200, height=600, showlegend=False, hovermode='x unified')
         f_plot.update_yaxes(title_text="Percentage", range=[0, 100])
         f_plot.show()
 
@@ -651,7 +651,7 @@ class Bootstrap:
                        name="Base"))
         c_plot.update_layout(
             title=f"Variability in Concentration of Species - Model {self.model_selected} - Factor {factor_label} ",
-            width=1200, height=600, showlegend=False)
+            width=1200, height=600, showlegend=False, hovermode='x unified')
         c_plot.update_yaxes(title_text="Concentration (log)", type="log")
         c_plot.show()
 
