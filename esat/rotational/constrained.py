@@ -1133,7 +1133,7 @@ class ConstrainedModel:
         for factor in factor_labels:
             contr_fig.add_trace(go.Scatter(x=contr_df.index, y=contr_df[factor], mode='lines+markers', name=factor))
         contr_fig.update_layout(title=f"Factor Contributions (avg=1)",
-                                width=1200, height=600,
+                                width=1200, height=600, hovermode='x unified',
                                 legend=dict(orientation="h", xanchor="right", yanchor="bottom", x=1, y=1.02))
         contr_fig.update_yaxes(title_text="Normalized Contribution")
         contr_fig.show()

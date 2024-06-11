@@ -369,7 +369,7 @@ class DataHandler:
             y0 = data_df[feature_i]
             y = y0[x]
             ts_plot.add_trace(go.Scatter(x=x, y=y, line=dict(width=1), mode='lines+markers', name=feature_i))
-        ts_plot.update_layout(title=f"Concentration Timeseries", width=800, height=600)
+        ts_plot.update_layout(title=f"Concentration Timeseries", width=800, height=600, hovermode='x unified')
         if len(feature_label) == 1:
             ts_plot.update_layout(showlegend=True)
         ts_plot.show()

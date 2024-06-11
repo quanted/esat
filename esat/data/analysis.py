@@ -230,7 +230,7 @@ class ModelAnalysis:
                                         line=dict(width=1), mode='lines', name="Residuals"), row=2, col=1)
 
         ts_subplot.update_layout(title_text=f"Estimated Time-series for {x_label} - Model {self.selected_model}", width=1200, height=800,
-                                 yaxis_title="Concentrations")
+                                 yaxis_title="Concentrations", hovermode='x unified')
         ts_subplot.show()
 
     def plot_factor_profile(self,
@@ -417,7 +417,7 @@ class ModelAnalysis:
             contr_fig.add_trace(go.Scatter(x=contr_df.index, y=contr_df[factor], mode='lines+markers', name=factor))
         converged = "Converged Model" if self.model.converged else "Unconverged Model"
         contr_fig.update_layout(title=f"Factor Contributions (avg=1) From Base Model #{self.selected_model} ({converged})",
-                                width=1200, height=600,
+                                width=1200, height=600, hovermode='x unified',
                                 legend=dict(orientation="h", xanchor="right", yanchor="bottom", x=1, y=1.02))
         contr_fig.update_yaxes(title_text="Normalized Contribution")
         contr_fig.show()

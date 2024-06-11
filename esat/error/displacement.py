@@ -186,7 +186,7 @@ class Displacement:
                                    marker_line_width=1.5, opacity=0.6)
         disp_profile.update_layout(
             title=f"Variability in Percentage of Features - Model {self.selected_model} - Factor {factor_label} - dQ {dQ}",
-            width=1200, height=600, showlegend=True)
+            width=1200, height=600, showlegend=True, hovermode='x unified')
         disp_profile.update_yaxes(title_text="Percentage", range=[0, 100])
         disp_profile.update_traces(selector=dict(type="bar"), hovertemplate='Max: %{value}<br>Min: %{base}')
         disp_profile.show()
@@ -231,7 +231,7 @@ class Displacement:
                                 marker_line_width=1.5, opacity=0.6, hovertemplate='Max: %{value}<br>Min: %{base}')
         disp_conc.update_layout(
             title=f"Variability in Concentration of Features - Model {self.selected_model} - Factor {factor_label} - dQ {dQ}",
-            width=1200, height=600, showlegend=True)
+            width=1200, height=600, showlegend=True, hovermode='x unified')
         disp_conc.update_yaxes(title_text="Concentration (log)", type="log")
         disp_conc.show()
 
