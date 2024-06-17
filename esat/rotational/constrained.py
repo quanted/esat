@@ -821,7 +821,7 @@ class ConstrainedModel:
         c_columns = ["Index", "Target", "Type", "Base Value", "Target Value(s)", "Solution Value", "dQ"]
         c_df = pd.DataFrame(constraint_values, columns=c_columns)
         c_fig = go.Figure(data=[go.Table(header=dict(values=list(c_df.columns)), cells=dict(values=c_df.values.T))])
-        c_fig.update_layout(width=1200, height=40*len(constraint_values), title="Constraints Evaluation Table",
+        c_fig.update_layout(width=1200, height=200+20*len(constraint_values), title="Constraints Evaluation Table",
                             margin={'t': 50, 'l': 25, 'b': 10, 'r': 25})
         c_fig.show()
 
@@ -862,7 +862,7 @@ class ConstrainedModel:
         e_columns = ["Index", "Target", "Base Value", "Solution Value"]
         e_df = pd.DataFrame(exp_element.values(), columns=e_columns)
         e_fig = go.Figure(data=[go.Table(header=dict(values=list(e_df.columns)), cells=dict(values=e_df.values.T))])
-        e_fig.update_layout(width=1200, height=35*len(exp_element.keys()), title="Expressions Element Evaluation Table",
+        e_fig.update_layout(width=1200, height=200+20*len(exp_element.keys()), title="Expressions Element Evaluation Table",
                             margin={'t': 50, 'l': 25, 'b': 10, 'r': 25})
         e_fig.show()
 
@@ -870,7 +870,7 @@ class ConstrainedModel:
         term_columns = term_columns + ["dQ", "Base Eval", "Solution Eval"]
         term_table = pd.DataFrame(exp_table, columns=term_columns)
         term_fig = go.Figure(data=[go.Table(header=dict(values=list(term_table.columns)), cells=dict(values=term_table.values.T))])
-        term_fig.update_layout(height=25*len(exp_element.keys()), title="Expressions Evaluation Table",
+        term_fig.update_layout(height=200+20*len(exp_element.keys()), title="Expressions Evaluation Table",
                             margin={'t': 50, 'l': 25, 'b': 10, 'r': 25})
         term_fig.show()
 

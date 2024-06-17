@@ -176,7 +176,7 @@ class Simulator:
         frequency : float
             The frequency of slope change in periodic and logistic curves.
         maximum : float
-            The maximum value for all  curves.
+            The maximum value for all curves.
         minimum : float
             The minimum value for all curves.
         """
