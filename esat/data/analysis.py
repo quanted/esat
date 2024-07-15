@@ -63,7 +63,7 @@ class ModelAnalysis:
                       "Anderson Normal Residual": [], "Anderson Statistic": [],
                       "Shapiro Normal Residuals": [], "Shapiro PValue": [],
                       "KS Normal Residuals": [], "KS PValue": [], "KS Statistic": []}
-        cats =  copy.copy(self.dh.metrics['Category'])
+        cats = copy.copy(self.dh.metrics['Category'])
         results = self.model.WH if results is None else results
         residuals = self.dh.input_data_df - results
         scaled_residuals = residuals / self.dh.uncertainty_data

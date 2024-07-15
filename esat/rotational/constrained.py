@@ -295,6 +295,7 @@ class ConstrainedModel:
         """
         #TODO: Add validation of expressions to make sure they are properly structured.
         self.expressions.append(expression)
+        return True
 
     def list_expressions(self):
         """

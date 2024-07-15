@@ -20,25 +20,17 @@ class TestSA:
     model_name = "sa_test00"
 
     @classmethod
-    def setup_class(self):
+    def setup_class(cls):
         logger.info("Running SA Test Setup")
-        self.data_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "data")
-        self.input_file = os.path.join(self.data_path, "Dataset-BatonRouge-con.csv")
-        self.uncertainty_file = os.path.join(self.data_path, "Dataset-BatonRouge-unc.csv")
-        self.datahandler = DataHandler(
-            input_path=self.input_file,
-            uncertainty_path=self.uncertainty_file,
+        cls.data_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "data")
+        cls.input_file = os.path.join(cls.data_path, "Dataset-BatonRouge-con.csv")
+        cls.uncertainty_file = os.path.join(cls.data_path, "Dataset-BatonRouge-unc.csv")
+        cls.datahandler = DataHandler(
+            input_path=cls.input_file,
+            uncertainty_path=cls.uncertainty_file,
             index_col='Date'
         )
-        self.V, self.U = self.datahandler.get_data()
-
-    @classmethod
-    def teardown_class(self):
-        save_path = os.path.join(self.data_path, "output")
-        for _file in os.listdir(save_path):
-            if self.model_name in str(_file):
-                if os.path.exists(_file):
-                    os.remove(_file)
+        cls.V, cls.U = cls.datahandler.get_data()
 
     def test_initialization(self):
         factor_n = 6
@@ -105,7 +97,7 @@ class TestSA:
         sa = SA(V=self.V, U=self.U, factors=factor_n)
         sa.initialize()
         sa.train(max_iter=500, converge_delta=1.0, converge_n=10)
-        save_path = os.path.join(self.data_path, "output")
+        save_path = os.path.join(self.data_path, "test_output")
         saved_file = sa.save(
             model_name=self.model_name,
             output_directory=save_path,
@@ -121,7 +113,7 @@ class TestSA:
         assert str(saved_file_pkl) == str(os.path.join(save_path, f"{self.model_name}.pkl"))
 
     def test_load(self):
-        save_path = os.path.join(self.data_path, "output")
+        save_path = os.path.join(self.data_path, "test_output")
         save_file = os.path.join(save_path, f"{self.model_name}.pkl")
         sa = SA.load(file_path=save_file)
         assert sa is not None
