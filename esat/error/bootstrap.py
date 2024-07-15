@@ -153,7 +153,7 @@ class Bootstrap:
         row_count = 0
         for i in range(M):
             if not overlapping:
-                rng_i = int(rng.integers(low=0, high=M - 1, size=1))
+                rng_i = int(rng.integers(low=0, high=int(M) - 1, size=1)[0])
                 index_i = index_blocks[rng_i]
             else:
                 i_start = int(rng.integers(low=0, high=N - self.block_size - 1, size=1)[0])

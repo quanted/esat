@@ -53,11 +53,14 @@ class WSNMF:
 
             uh = np.matmul(wei_d, H.T)
             _w_d = np.matmul(H, uh)
-            _w_dm = np.matrix(_w_d)
+            _w_dm = np.array(_w_d)
+            # _w_dm = np.matrix(_w_d)
             if npl.det(_w_dm) == 0:
-                _w_di = np.array(npl.pinv(_w_dm))
+                _w_di = npl.pinv(_w_dm)
+            #     _w_di = np.array(npl.pinv(_w_dm))
             else:
-                _w_di = np.array(npl.inv(_w_dm))
+                _w_di = npl.inv(_w_dm)
+            #     _w_di = np.array(npl.inv(_w_dm))
             _w = np.matmul(_w_n, _w_di)
             _W.append(_w)
         W = np.array(_W)
