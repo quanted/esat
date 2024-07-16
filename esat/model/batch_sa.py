@@ -101,8 +101,8 @@ class BatchSA:
         """
         Constructor method.
         """
-        self.factors = factors
-        self.method = method
+        self.factors = int(factors)
+        self.method = str(method)
 
         self.V = V
         self.U = U
@@ -117,21 +117,31 @@ class BatchSA:
 
         self.seed = 42 if seed is None else int(seed)
         self.rng = np.random.default_rng(self.seed)
-        self.init_method = init_method
-        self.init_norm = init_norm
-        self.fuzziness = fuzziness
+        self.init_method = str(init_method)
+        self.init_norm = bool(init_norm)
+        self.fuzziness = float(fuzziness)
 
-        self.robust_mode = robust_mode
-        self.robust_n = robust_n
-        self.robust_alpha = robust_alpha
+        self.robust_mode = bool(robust_mode)
+        self.robust_n = int(robust_n)
+        self.robust_alpha = float(robust_alpha)
 
         self.runtime = None
-        self.parallel = parallel
-        self.optimized = optimized
-        self.verbose = verbose
+        self.parallel = parallel if isinstance(parallel, bool) else str(parallel).lower() == "true"
+        self.optimized = optimized if isinstance(optimized, bool) else str(optimized).lower() == "true"
+        self.verbose = verbose if isinstance(verbose, bool) else str(verbose).lower() == "true"
         self.results = []
         self.best_model = None
         self.update_step = None
+
+    def details(self):
+        logger.info(f"Batch Source Apportionment Instance Configuration")
+        logger.info("-------------------------------------------------")
+        logger.info(f"Factors: {self.factors}, Method: {self.method}, Models: {self.models}")
+        logger.info(f"Max Iterations: {self.max_iter}, Converge Delta: {self.converge_delta}, "
+                    f"Converge N: {self.converge_n}")
+        logger.info(f"Random Seed: {self.seed}, Init Method: {self.init_method}")
+        logger.info(f"Parallel: {self.parallel}, Optimized: {self.optimized}, Verbose: {self.verbose}")
+        logger.info("-------------------------------------------------")
 
     def train(self, min_limit: int = None):
         """
