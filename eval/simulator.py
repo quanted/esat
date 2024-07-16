@@ -142,8 +142,8 @@ class Simulator:
                 # the specific factors which contribute to current feature
                 factor_feature_selected = self.rng.choice(factor_list, size=factor_features_n, replace=False)
                 for j in factor_feature_selected:
-                    ji_value = self.rng.random(size=1)
-                    self.syn_profiles[j][i] = ji_value
+                    ji_value = self.rng.random(size=None)
+                    self.syn_profiles[j][i] = float(ji_value)
         else:
             self.syn_profiles = profiles
         if _profiles is not None:

@@ -38,6 +38,7 @@ def get_sim(sim_path, sim_parameters, sim_contributions):
         for f_i, i_params in sim_contributions.items():
             c_params = json.loads(i_params)
             sim.update_contribution(factor_i=int(f_i), **c_params)
+        _v, _u = sim.get_data()
         sim.save(output_directory=sim_path)
 
     return sim
@@ -458,10 +459,12 @@ def run(project_directory):
                       sim_contributions=_sim_config['contributions'])
         data_df, uncertainty_df = sim.get_data()
         dh = DataHandler.load_dataframe(input_df=data_df, uncertainty_df=uncertainty_df)
+        logger.info(f"Executing ESAT Simulation")
     else:
         dh = DataHandler(**config["data"])
     V, U = dh.get_data()
     sa_models = BatchSA(V=V, U=U, **config["parameters"])
+    sa_models.details()
     _ = sa_models.train()
     output_path = os.path.join(config["project"]["directory"], "output")
     if not os.path.exists(output_path):
@@ -714,7 +717,7 @@ def setup_error(project_directory):
               help="Run the displacement (DISP) error estimation method.", show_default=True)
 @click.option("--bs", is_flag=True, prompt=False, default=False, show_default=True,
               help="Run the bootstrap (BS) error estimation method.")
-@click.option("--bsdisp", is_flag=True, prompt=True, show_default=True, default=False,
+@click.option("--bsdisp", is_flag=True, prompt=False, show_default=True, default=False,
               help="Run the bootstrap-displacement (BSDISP) error estimation method.")
 def run_error(project_directory, disp, bs, bsdisp):
     """
@@ -725,8 +728,9 @@ def run_error(project_directory, disp, bs, bsdisp):
     project_directory : The project directory containing .toml configuration files.
 
     """
-    if not all((disp, bs, bsdisp)):
+    if not any((disp, bs, bsdisp)):
         logger.info("One or more error estimation method must be selected.")
+        logger.info(f"DISP: {disp}, BS: {bs}, BS-DISP: {bsdisp}")
         return
     config = get_config(project_directory=project_directory)
     e_config = get_config(project_directory=project_directory, error=True)
@@ -751,8 +755,8 @@ def run_error(project_directory, disp, bs, bsdisp):
         selected_model = sa_models.results[selected_i]
     logger.info(f"Running error estimation on model {selected_i}")
     if disp:
-        features = e_config["disp"]["features"].strip('][').split(",")
-        features = [int(f) for f in features] if len(features) > 1 else None
+        features = json.loads(e_config["disp"]["features"])
+        features = [int(f) for f in features] if len(features) >= 1 else None
         features_label = features if features is not None else "all"
         logger.info(f"Running DISP on model {selected_i} for features: {features_label}")
         disp = Displacement(
@@ -789,9 +793,10 @@ def run_error(project_directory, disp, bs, bsdisp):
         block_size = dh.optimal_block if block_size == -1 else block_size
         seed = int(e_config["bsdisp"]["seed"])
         seed = selected_model.seed if seed == -1 else seed
-        features = e_config["bsdisp"]["features"].strip('][').split(",")
-        features = [int(f) for f in features] if len(features) > 1 else None
+        features = json.loads(e_config["disp"]["features"])
+        features = [int(f) for f in features] if len(features) >= 1 else None
         features_label = features if features is not None else "all"
+        logger.info(f"Running DISP on model {selected_i} for features: {features_label}")
         logger.info(f"Running BSDISP on model {selected_i}, features: {features_label}")
         _bs = None
         if e_config["bsdisp"]["bootstrap_output"] != "":
@@ -815,7 +820,8 @@ def run_error(project_directory, disp, bs, bsdisp):
             max_search=int(e_config["bsdisp"]["max_search"]),
             threshold_dQ=float(e_config["bsdisp"]["threshold_dQ"])
         )
-        bsdisp.run()
+        parallel = config['parameters']['parallel'].lower() == "true"
+        bsdisp.run(parallel=parallel)
         bsdisp.save(bsdisp_name=f"bsdisp-{config['project']['name']}", output_directory=error_dir, pickle_result=True)
         bsdisp.save(bsdisp_name=f"bsdisp-{config['project']['name']}", output_directory=error_dir, pickle_result=False)
         logger.info("BSDISP Completed")
