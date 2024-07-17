@@ -18,7 +18,8 @@ release = datetime.now().strftime("%m/%d/%Y")
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = ['myst_parser', 'sphinx.ext.autosummary', 'sphinx.ext.autodoc', 'sphinx.ext.todo', 'sphinx.ext.napoleon', 'sphinx_click']
+extensions = ['myst_parser', 'sphinx.ext.autosummary', 'sphinx.ext.autodoc', 'sphinx.ext.todo', 'sphinx.ext.napoleon',
+              'sphinx_click']
 
 autodoc_typehints = "signature"
 autodoc_default_options = {
