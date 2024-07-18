@@ -5,10 +5,10 @@
 import os
 import sys
 from datetime import datetime
-sys.path.insert(0, os.path.abspath('.'))
-sys.path.insert(1, os.path.abspath('..'))
-sys.path.insert(2, os.path.abspath(os.path.join("..", "esat")))
-sys.path.insert(3, os.path.abspath(os.path.join("..", "eval")))
+sys.path.insert(0, os.path.abspath("."))
+sys.path.insert(1, os.path.abspath(os.path.join('.', 'esat')))
+# sys.path.insert(2, os.path.abspath(os.path.join(".", "esat")))
+sys.path.insert(2, os.path.abspath(os.path.join(".", "eval")))
 
 
 # -- Project information -----------------------------------------------------
@@ -17,7 +17,8 @@ sys.path.insert(3, os.path.abspath(os.path.join("..", "eval")))
 project = 'Environmental Source Apportionment Toolkit (ESAT)'
 copyright = '2024, EPA'
 author = 'Deron Smith'
-release = datetime.now().strftime("%m/%d/%Y")
+version = str(datetime.now().year)
+release = "0.1a"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

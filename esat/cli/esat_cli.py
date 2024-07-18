@@ -1,10 +1,6 @@
 import sys
 import os
 
-# cwd = os.getcwd()
-# sys.path.append(cwd)
-# sys.path.append(cwd + "..\\src")
-
 import click
 import json
 import configparser

@@ -14,8 +14,13 @@ jobs:
       - name: Install dependencies
         run: |
           pip install sphinx sphinx_rtd_theme myst_parser sphinx-click
+          pip install -r doc-requirements.txt
       - name: Sphinx build
         run: |
+          python -m build
+          pip install dist\esat-2024.0.1-cp312-cp312-linux_x86_64.whl
+          sphinx-apidoc -o docs esat
+          sphinx-apidoc -o docs eval
           sphinx-build -M html . docs
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
