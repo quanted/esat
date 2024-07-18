@@ -1,6 +1,6 @@
 # esat pyproject.toml for setuptools and setuptools-rust
 [build-system]
-requires = ["setuptools >=61.0", "setuptools-rust"]
+requires = ["setuptools >70.0", "setuptools-rust"]
 build-backend = "setuptools.build_meta"
 
 [project]
