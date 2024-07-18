@@ -15,6 +15,7 @@ jobs:
         run: |
           pip install sphinx sphinx_rtd_theme myst_parser sphinx-click
           pip install -r doc-requirements.txt
+          pip install --upgrade build
       - name: Sphinx build
         run: |
           python -m build
