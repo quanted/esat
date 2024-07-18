@@ -16,8 +16,6 @@ jobs:
           pip install sphinx sphinx_rtd_theme myst_parser sphinx-click
       - name: Sphinx build
         run: |
-          export PATH=${GITHUB_WORKSPACE}:$PATH
-          sphinx-apidoc -o docs esat
           sphinx-build -M html . docs
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
