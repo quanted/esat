@@ -6,6 +6,10 @@ import os
 import sys
 from datetime import datetime
 sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(1, os.path.abspath('..'))
+sys.path.insert(2, os.path.abspath(os.path.join("..", "esat")))
+sys.path.insert(3, os.path.abspath(os.path.join("..", "eval")))
+
 
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
