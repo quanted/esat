@@ -359,6 +359,9 @@ class ConstrainedModel:
 
     def _apply_expressions(self, iW, iH, D_w, D_h):
         # Set the expression matrix and expression total vector to zero
+        if len(self.expressions) == 0:
+            return np.zeros(shape=iW.shape), np.zeros(shape=iH.shape)
+
         exp_A = np.zeros(shape=(len(self.expression_labeled), len(self.expression_mapped.keys())))
         exp_B = np.zeros(shape=len(self.expression_labeled))
 
