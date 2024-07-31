@@ -452,9 +452,11 @@ class ModelAnalysis:
         Parameters
         ----------
         factor_idx : int
-           The factor index to plot.
+           The factor index to plot showing all features for that factor, if factor_idx is none will show the
+           feature_idx for all factors.
         feature_idx : int
-           The features to include in the plot, or if factor_idx=None, which feature
+           The feature to include in the plot if factor_idx is none, otherwise will show all features for a specified
+           factor_idx.
         percentage : bool
            Plot the concentration as a scaled value, percentage of the sum of all factors, or as the calculated mass.
            Default = True.

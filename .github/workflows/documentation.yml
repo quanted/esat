@@ -23,7 +23,6 @@ jobs:
           sphinx-apidoc -o docs esat
           sphinx-apidoc -o docs eval
           sphinx-build . _build
-#          sphinx-build -M html . docs
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}

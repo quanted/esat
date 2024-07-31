@@ -281,7 +281,7 @@ class SA:
             centroids, clusters = kmeans2(data=obs, k=self.factors, seed=self.seed)
             contributions = np.zeros(shape=(len(clusters), self.factors)) + (1.0 / self.factors)
             for i, c in enumerate(clusters):
-                contributions[i, c] = 1.0
+                contributions[i, c] = self.rng.normal(1.0, 0.1, None)
             W = contributions
             H = centroids
             if self.verbose:
