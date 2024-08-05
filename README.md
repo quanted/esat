@@ -109,3 +109,6 @@ with the coverage results displayed by
 
 While the overall coverage percentage is low, the majority of the untested code is for visualization functions with all 
 core functionality covered by tests.
+
+### Community Contributions
+
