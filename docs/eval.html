@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>eval package &mdash; Environmental Source Apportionment Toolkit (ESAT) 0.1a documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=88a2ef70"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Command Line Interface" href="cli.html" />
+    <link rel="prev" title="esat.rotational package" href="esat.rotational.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Environmental Source Apportionment Toolkit (ESAT)
+          </a>
+              <div class="version">
+                2024
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Welcome to EPA’s ESAT Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html">Environmental Source Apportionment Toolkit (ESAT)</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">Python API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="esat.html">esat package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="esat.data.html">esat.data package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="esat.error.html">esat.error package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="esat.model.html">esat.model package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="esat.rotational.html">esat.rotational package</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">eval package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-eval.factor_comparison">eval.factor_comparison module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#eval.factor_comparison.FactorCompare"><code class="docutils literal notranslate"><span class="pre">FactorCompare</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-eval.simulator">eval.simulator module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#eval.simulator.Simulator"><code class="docutils literal notranslate"><span class="pre">Simulator</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-eval">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">Command Line Interface</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Environmental Source Apportionment Toolkit (ESAT)</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">Python API</a></li>
+      <li class="breadcrumb-item active">eval package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/docs/eval.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="eval-package">
+<h1>eval package<a class="headerlink" href="#eval-package" title="Link to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+</section>
+<section id="module-eval.factor_comparison">
+<span id="eval-factor-comparison-module"></span><h2>eval.factor_comparison module<a class="headerlink" href="#module-eval.factor_comparison" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="eval.factor_comparison.FactorCompare">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">eval.factor_comparison.</span></span><span class="sig-name descname"><span class="pre">FactorCompare</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uncertainty_df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_profile_df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_contribution_df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_sa</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="esat.model.html#esat.model.batch_sa.BatchSA" title="esat.model.batch_sa.BatchSA"><span class="pre">BatchSA</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">sa_output_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'all'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#eval.factor_comparison.FactorCompare" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Compare the results between a single base solution and a collection of solutions. Used for comparing the output of
+ESAT to those generated by PMF5 and by the Simulator for comparing the output of models using synthetic data and
+known synthetic profiles.</p>
+<p>#TODO: Factor compare for models with a different number of factors</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_df</strong> (<em>pd.DataFrame</em>) – The input dataset dataframe.</p></li>
+<li><p><strong>uncertainty_df</strong> (<em>pd.DataFrame</em>) – The uncertainty dataset dataframe.</p></li>
+<li><p><strong>base_profile_df</strong> (<em>pd.DataFrame</em>) – The base profile (H) dataframe.</p></li>
+<li><p><strong>base_contribution_df</strong> (<em>pd.DataFrame</em>) – The base contribution (W) dataframe.</p></li>
+<li><p><strong>factors_columns</strong> (<em>list</em>) – The list of factor names.</p></li>
+<li><p><strong>features</strong> (<em>list</em>) – The list of feature names.</p></li>
+<li><p><strong>batch_sa</strong> (<a class="reference internal" href="esat.model.html#esat.model.batch_sa.BatchSA" title="esat.model.batch_sa.BatchSA"><em>BatchSA</em></a>) – A completed instance of BatchSA whose models will be evaluated against the base model.</p></li>
+<li><p><strong>sa_output_file</strong> (<em>str</em>) – The path to a completed BatchSA save file.</p></li>
+<li><p><strong>method</strong> (<em>str</em>) – The selection method for best mapping, correlation of ‘W’, ‘H’, ‘WH’, or ‘all’.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="eval.factor_comparison.FactorCompare.calculate_correlation">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">calculate_correlation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">factor2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#eval.factor_comparison.FactorCompare.calculate_correlation" title="Link to this definition"></a></dt>
+<dd><p>Calculates the correlation between two factors.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="eval.factor_comparison.FactorCompare.combine_factors">
+<span class="sig-name descname"><span class="pre">combine_factors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factors</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_correlation</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_contributions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">factor_contributions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base_k</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#eval.factor_comparison.FactorCompare.combine_factors" title="Link to this definition"></a></dt>
+<dd><p>Combine the results from parallelized calculations.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="eval.factor_comparison.FactorCompare.compare">
+<span class="sig-name descname"><span class="pre">compare</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#eval.factor_comparison.FactorCompare.compare" title="Link to this definition"></a></dt>
+<dd><p>Run the model comparison.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>verbose</strong> (<em>bool</em>) – Display the results of the comparison.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="eval.factor_comparison.FactorCompare.load_pmf_output">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load_pmf_output</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uncertainty_df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pmf_profile_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pmf_contribution_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_sa</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="esat.model.html#esat.model.batch_sa.BatchSA" title="esat.model.batch_sa.BatchSA"><span class="pre">BatchSA</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#eval.factor_comparison.FactorCompare.load_pmf_output" title="Link to this definition"></a></dt>
+<dd><p>Load the output of a completed PMF5 base model, specifying the profile and contribution files.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>factors</strong> (<em>int</em>) – The number of factors used in the PMF5 models.</p></li>
+<li><p><strong>input_df</strong> (<em>pd.DataFrame</em>) – The input dataset dataframe.</p></li>
+<li><p><strong>uncertainty_df</strong> (<em>pd.DataFrame</em>) – The uncertainty dataset dataframe.</p></li>
+<li><p><strong>pmf_profile_file</strong> (<em>str</em>) – The path to the PMF5 output factor profile file.</p></li>
+<li><p><strong>pmf_contribution_file</strong> (<em>str</em>) – The path to the PMF5 output factor contribution file.</p></li>
+<li><p><strong>batch_sa</strong> (<a class="reference internal" href="esat.model.html#esat.model.batch_sa.BatchSA" title="esat.model.batch_sa.BatchSA"><em>BatchSA</em></a>) – The completed BatchSA instance which will be compared to the PMF5 output.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>An initialized instance of FactorCompare.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#eval.factor_comparison.FactorCompare" title="eval.factor_comparison.FactorCompare">FactorCompare</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="eval.factor_comparison.FactorCompare.print_results">
+<span class="sig-name descname"><span class="pre">print_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#eval.factor_comparison.FactorCompare.print_results" title="Link to this definition"></a></dt>
+<dd><p>Print the results of the comparison, defaulting to the model with the highest correlation mapping unless model
+is specified.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>model</strong> (<em>int</em>) – The model index for printing the results of a specific model.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-eval.simulator">
+<span id="eval-simulator-module"></span><h2>eval.simulator module<a class="headerlink" href="#module-eval.simulator" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="eval.simulator.Simulator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">eval.simulator.</span></span><span class="sig-name descname"><span class="pre">Simulator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">factors_n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">features_n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">samples_n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outliers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outlier_p</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outlier_mag</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contribution_max</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise_mean_min</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise_mean_max</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.12</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise_scale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.02</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uncertainty_mean_min</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uncertainty_mean_max</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uncertainty_scale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.01</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#eval.simulator.Simulator" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>The ESAT Simulator provides methods for generating customized synthetic source profiles and datasets. These
+synthetic datasets can then be passed to SA or BatchSA instances. The results of those model runs can be evaluated
+against the known synthetic profiles using the Simulator compare function. A visualization of the comparison is
+available with the plot_comparison function.</p>
+<p>The synthetic profile matrix (H) is generated from a uniform distribution [0.0, 1.0).
+The synthetic contribution matrix (W) is generated from a uniform distribution [0.0, 1.0) * contribution_max.
+The synthetic dataset is the matrix multiplication product of WH + noise + outliers.
+Noise is added to the dataset from a normal distribution, scaled by the dataset.
+Outliers are added to the dataset at random, for the decimal percentage outlier_p parameters, multiplying the
+dataset value by outlier_mag.
+Uncertainty is generated from a normal distribution, scaled by the dataset.</p>
+<p>#TODO: Looper, batch simulator mode</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>seed</strong> (<em>int</em>) – The seed for the random number generator.</p></li>
+<li><p><strong>factors_n</strong> (<em>int</em>) – The number of synthetic factors to generate.</p></li>
+<li><p><strong>features_n</strong> (<em>int</em>) – The number of synthetic features in the dataset.</p></li>
+<li><p><strong>samples_n</strong> (<em>int</em>) – The number of synthetic samples in the dataset.</p></li>
+<li><p><strong>outliers</strong> (<em>bool</em>) – Include outliers in the synthetic dataset.</p></li>
+<li><p><strong>outlier_p</strong> (<em>float</em>) – The decimal percentage of outliers in the dataset.</p></li>
+<li><p><strong>outlier_mag</strong> (<em>float</em>) – The magnitude of the outliers on the dataset elements.</p></li>
+<li><p><strong>contribution_max</strong> (<em>int</em>) – The maximum value in the synthetic contribution matrix (W).</p></li>
+<li><p><strong>noise_mean_min</strong> (<em>float</em>) – The minimum value for the randomly selected mean decimal percentage of the synthetic dataset for noise, by feature.</p></li>
+<li><p><strong>noise_mean_max</strong> (<em>float</em>) – The maximum value for the randomly selected mean decimal percentage of the synthetic dataset for noise, by feature.</p></li>
+<li><p><strong>noise_scale</strong> (<em>float</em>) – The scale of the normal distribution for the noise, standard deviation of the distribution.</p></li>
+<li><p><strong>uncertainty_mean_min</strong> (<em>float</em>) – The minimum value for the randomly selected mean decimal percentage of the uncertainty of the synthetic dataset, by feature.</p></li>
+<li><p><strong>uncertainty_mean_max</strong> (<em>float</em>) – The maximum value for the randomly selected mean decimal percentage of the uncertainty of the synthetic dataset, by feature.</p></li>
+<li><p><strong>uncertainty_scale</strong> (<em>float</em>) – The scale of the normal distribution for the uncertainty, standard deviation of the distribution.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="eval.simulator.Simulator.compare">
+<span class="sig-name descname"><span class="pre">compare</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_sa</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="esat.model.html#esat.model.batch_sa.BatchSA" title="esat.model.batch_sa.BatchSA"><span class="pre">BatchSA</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">selected_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#eval.simulator.Simulator.compare" title="Link to this definition"></a></dt>
+<dd><p>Run the profile comparison, evaluating the results of each of the models in the BatchSA instance. All models are
+evaluated with the results for each model available in simulator.factor_compare.model_results</p>
+<p>The model with the highest average R squared value for the factor mapping is defined as the best_model, which
+can be different from the most optimal model, model with the lowest loss value. If they are different the best
+mapping for the most optimal model is also provided.</p>
+<p>A mapping details for a specific model can also be found by specifying the selected_model parameter, model by
+index. Requires that compare has already been completed on the instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>batch_sa</strong> (<a class="reference internal" href="esat.model.html#esat.model.batch_sa.BatchSA" title="esat.model.batch_sa.BatchSA"><em>BatchSA</em></a>) – Completed instance of BatchSA to compare the output models to the known synthetic profiles.</p></li>
+<li><p><strong>selected_model</strong> (<em>int</em>) – If specified, displays the best mapping for the specified model.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="eval.simulator.Simulator.generate_profiles">
+<span class="sig-name descname"><span class="pre">generate_profiles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">profiles</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#eval.simulator.Simulator.generate_profiles" title="Link to this definition"></a></dt>
+<dd><p>Generate the synthetic profiles. Run on Simulator initialization, but customized profiles can be used inplace
+of the randomly generated synthetic profile by passing in a profile matrix</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>profiles</strong> (<em>np.ndarray</em>) – A custom profile matrix to be used in place of the random synthetic profile. Matrix must have shape
+(factors_n, features_n)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="eval.simulator.Simulator.get_data">
+<span class="sig-name descname"><span class="pre">get_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#eval.simulator.Simulator.get_data" title="Link to this definition"></a></dt>
+<dd><p>Get the synthetic data and uncertainty dataframes to use with the DataHandler.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pd.DataFrame, pd.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="eval.simulator.Simulator.load">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#eval.simulator.Simulator.load" title="Link to this definition"></a></dt>
+<dd><p>Load a previously saved ESAT Simulator pickle file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>file_path</strong> (<em>str</em>) – File path to a previously saved ESAT Simulator pickle file</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>On successful load, will return a previously saved Simulator object. Will return None on load fail.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#eval.simulator.Simulator" title="eval.simulator.Simulator">Simulator</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="eval.simulator.Simulator.plot_comparison">
+<span class="sig-name descname"><span class="pre">plot_comparison</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#eval.simulator.Simulator.plot_comparison" title="Link to this definition"></a></dt>
+<dd><p>Plot the results of the output comparison for the model with the highest correlated mapping, if model_i is not
+specified. Otherwise, plots the output comparison of model_i to the synthetic profiles.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>model_i</strong> (<em>int</em>) – The model index for the comparison, when not specified will default to the model with the highest
+correlation mapping.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="eval.simulator.Simulator.plot_profile_comparison">
+<span class="sig-name descname"><span class="pre">plot_profile_comparison</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#eval.simulator.Simulator.plot_profile_comparison" title="Link to this definition"></a></dt>
+<dd><p>Plot the results of the output comparison for the model with the highest correlated mapping, if model_i is not
+specified. Otherwise, plots the output comparison of model_i to the synthetic profiles.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>model_i</strong> (<em>int</em>) – The model index for the comparison, when not specified will default to the model with the highest
+correlation mapping.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="eval.simulator.Simulator.plot_synthetic_contributions">
+<span class="sig-name descname"><span class="pre">plot_synthetic_contributions</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#eval.simulator.Simulator.plot_synthetic_contributions" title="Link to this definition"></a></dt>
+<dd><p>Plot the factor contribution matrix.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="eval.simulator.Simulator.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sim_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'synthetic'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_directory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'.'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#eval.simulator.Simulator.save" title="Link to this definition"></a></dt>
+<dd><p>Save the generated synthetic data and uncertainty datasets, and the simulator instance binary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sim_name</strong> (<em>str</em>) – The name for the data and uncertainty dataset files.</p></li>
+<li><p><strong>output_directory</strong> (<em>str</em>) – The path to the directory where the files will be saved.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if save is successful, otherwise False.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="eval.simulator.Simulator.update_contribution">
+<span class="sig-name descname"><span class="pre">update_contribution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor_i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">curve_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frequency</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maximum</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minimum</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#eval.simulator.Simulator.update_contribution" title="Link to this definition"></a></dt>
+<dd><p>Update the contributions for a specific factor to follow the curve type. The values are randomly sampled from
+a normal distribution around the curve type as defined by the magnitude, frequency and/or slope values. The
+input and uncertainty data are recalculated with each update.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>factor_i</strong> (<em>int</em>) – The factor contribution to update, by index.</p></li>
+<li><p><strong>curve_type</strong> (<em>str</em>) – The type of curve that describes the factor contribution. Options include: ‘uniform’, ‘increasing’,
+‘decreasing’, ‘logistic’, ‘periodic’. Default: uniform.</p></li>
+<li><p><strong>scale</strong> (<em>float</em>) – The scale of the normal distribution of the curve value to be resampled.</p></li>
+<li><p><strong>frequency</strong> (<em>float</em>) – The frequency of slope change in periodic and logistic curves.</p></li>
+<li><p><strong>maximum</strong> (<em>float</em>) – The maximum value for all curves.</p></li>
+<li><p><strong>minimum</strong> (<em>float</em>) – The minimum value for all curves.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-eval">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-eval" title="Link to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="esat.rotational.html" class="btn btn-neutral float-left" title="esat.rotational package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="cli.html" class="btn btn-neutral float-right" title="Command Line Interface" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, EPA.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

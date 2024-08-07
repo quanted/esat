@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>esat.data package &mdash; Environmental Source Apportionment Toolkit (ESAT) 0.1a documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=88a2ef70"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="esat.error package" href="esat.error.html" />
+    <link rel="prev" title="esat.cli package" href="esat.cli.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Environmental Source Apportionment Toolkit (ESAT)
+          </a>
+              <div class="version">
+                2024
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Welcome to EPA’s ESAT Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html">Environmental Source Apportionment Toolkit (ESAT)</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">Python API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="esat.html">esat package</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">esat.data package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-esat.data.analysis">esat.data.analysis module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#esat.data.analysis.BatchAnalysis"><code class="docutils literal notranslate"><span class="pre">BatchAnalysis</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#esat.data.analysis.ModelAnalysis"><code class="docutils literal notranslate"><span class="pre">ModelAnalysis</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-esat.data.datahandler">esat.data.datahandler module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#esat.data.datahandler.DataHandler"><code class="docutils literal notranslate"><span class="pre">DataHandler</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-esat.data.test_tools">esat.data.test_tools module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#esat.data.test_tools.CompareAnalyzer"><code class="docutils literal notranslate"><span class="pre">CompareAnalyzer</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-esat.data">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="esat.error.html">esat.error package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="esat.model.html">esat.model package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="esat.rotational.html">esat.rotational package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="eval.html">eval package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">Command Line Interface</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Environmental Source Apportionment Toolkit (ESAT)</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">Python API</a></li>
+          <li class="breadcrumb-item"><a href="esat.html">esat package</a></li>
+      <li class="breadcrumb-item active">esat.data package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/docs/esat.data.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="esat-data-package">
+<h1>esat.data package<a class="headerlink" href="#esat-data-package" title="Link to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+</section>
+<section id="module-esat.data.analysis">
+<span id="esat-data-analysis-module"></span><h2>esat.data.analysis module<a class="headerlink" href="#module-esat.data.analysis" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="esat.data.analysis.BatchAnalysis">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">esat.data.analysis.</span></span><span class="sig-name descname"><span class="pre">BatchAnalysis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_sa</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="esat.model.html#esat.model.batch_sa.BatchSA" title="esat.model.batch_sa.BatchSA"><span class="pre">BatchSA</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_handler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#esat.data.datahandler.DataHandler" title="esat.data.datahandler.DataHandler"><span class="pre">DataHandler</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.data.analysis.BatchAnalysis" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class for running batch solution analysis.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>batch_sa</strong> (<a class="reference internal" href="esat.model.html#esat.model.batch_sa.BatchSA" title="esat.model.batch_sa.BatchSA"><em>BatchSA</em></a>) – A completed ESAT batch source apportionment to run solution analysis on.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.data.analysis.BatchAnalysis.plot_loss">
+<span class="sig-name descname"><span class="pre">plot_loss</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#esat.data.analysis.BatchAnalysis.plot_loss" title="Link to this definition"></a></dt>
+<dd><p>Plot the loss value for each model in the batch solution as it changes over time.</p>
+<p>A model will stop updating if the convergence criteria is met, which can be identified by the models that stop
+before reaching max iterations. The ideal loss curve should represent a y=1/x hyperbola, but because of the
+data uncertainty the curve may not be entirely smooth.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.data.analysis.BatchAnalysis.plot_loss_distribution">
+<span class="sig-name descname"><span class="pre">plot_loss_distribution</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#esat.data.analysis.BatchAnalysis.plot_loss_distribution" title="Link to this definition"></a></dt>
+<dd><p>Plot the distribution of batch model Q(True) and Q(Robust).</p>
+<p>A very broad distribution is often a result of a ‘loose’ convergence criteria, increasing converge_n and
+decreasing converge_delta will narrow the criteria. If the Q(True) and Q(Robust) distributions are very similar
+the solution may be overfit, where enough sources/factors are available to capture the majority of outline
+behavior. In this case, reducing the number of factors can resolve overfitting the model.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.data.analysis.BatchAnalysis.plot_temporal_residuals">
+<span class="sig-name descname"><span class="pre">plot_temporal_residuals</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature_idx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.data.analysis.BatchAnalysis.plot_temporal_residuals" title="Link to this definition"></a></dt>
+<dd><p>Plot the temporal residuals for a specified feature, by index, of all models in the SA batch.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>feature_idx</strong> (<em>int</em>) – The index of the feature to plot.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="esat.data.analysis.ModelAnalysis">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">esat.data.analysis.</span></span><span class="sig-name descname"><span class="pre">ModelAnalysis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">datahandler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#esat.data.datahandler.DataHandler" title="esat.data.datahandler.DataHandler"><span class="pre">DataHandler</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="esat.model.html#esat.model.sa.SA" title="esat.model.sa.SA"><span class="pre">SA</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">selected_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.data.analysis.ModelAnalysis" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class for running model analysis and generating plots.
+A collection of model statistic methods and plot generation functions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>datahandler</strong> (<a class="reference internal" href="#esat.data.datahandler.DataHandler" title="esat.data.datahandler.DataHandler"><em>DataHandler</em></a>) – The datahandler instance used for processing the input and uncertainty datasets used by the SA model.</p></li>
+<li><p><strong>model</strong> (<em>SAModel</em>) – A completed SA model with output used for calculating model statistics and generating plots.</p></li>
+<li><p><strong>selected_model</strong> (<em>int</em>) – If SA model is part of a batch, the model id/index that will be used for plot labels.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.data.analysis.ModelAnalysis.calculate_statistics">
+<span class="sig-name descname"><span class="pre">calculate_statistics</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.data.analysis.ModelAnalysis.calculate_statistics" title="Link to this definition"></a></dt>
+<dd><p>Calculate general statistics from the results of the NMF model run.</p>
+<p>Will generate a pd.DataFrame with a set of metrics for each feature. The resulting dataframe will be accessible
+as .statistics. These metrics focus on residual analysis, including Norm tests of the residuals with three
+different metrics for testing the norm.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>results</strong> (<em>np.ndarray</em>) – The default behavior is for this function to use the nmf model WH matrix for calculating metrics, this can
+be overriden by providing np.ndarray in the ‘results’ parameter. Default = None.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.data.analysis.ModelAnalysis.plot_estimated_observed">
+<span class="sig-name descname"><span class="pre">plot_estimated_observed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature_idx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.data.analysis.ModelAnalysis.plot_estimated_observed" title="Link to this definition"></a></dt>
+<dd><p>Create a plot that shows the estimates concentrations of a feature vs the observed concentrations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>feature_idx</strong> (<em>int</em>) – The index of the feature to plot.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.data.analysis.ModelAnalysis.plot_estimated_timeseries">
+<span class="sig-name descname"><span class="pre">plot_estimated_timeseries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature_idx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.data.analysis.ModelAnalysis.plot_estimated_timeseries" title="Link to this definition"></a></dt>
+<dd><p>Create a plot that shows the estimated values of a timeseries for a specific feature, selected by feature index.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>feature_idx</strong> (<em>int</em>) – The index of the feature to plot.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.data.analysis.ModelAnalysis.plot_factor_composition">
+<span class="sig-name descname"><span class="pre">plot_factor_composition</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#esat.data.analysis.ModelAnalysis.plot_factor_composition" title="Link to this definition"></a></dt>
+<dd><p>Creates a radar plot of the composition of all the factors to all features.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.data.analysis.ModelAnalysis.plot_factor_contributions">
+<span class="sig-name descname"><span class="pre">plot_factor_contributions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature_idx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contribution_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.05</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.data.analysis.ModelAnalysis.plot_factor_contributions" title="Link to this definition"></a></dt>
+<dd><p>Create a plot of the factor contributions and the normalized contribution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>feature_idx</strong> (<em>int</em>) – The index of the feature to plot.</p></li>
+<li><p><strong>contribution_threshold</strong> (<em>float</em>) – The contribution percentage of a factor above which to include on the plot.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.data.analysis.ModelAnalysis.plot_factor_fingerprints">
+<span class="sig-name descname"><span class="pre">plot_factor_fingerprints</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grouped</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.data.analysis.ModelAnalysis.plot_factor_fingerprints" title="Link to this definition"></a></dt>
+<dd><p>Create a stacked bar plot of the factor profile, fingerprints.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.data.analysis.ModelAnalysis.plot_factor_profile">
+<span class="sig-name descname"><span class="pre">plot_factor_profile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor_idx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">H</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">W</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.data.analysis.ModelAnalysis.plot_factor_profile" title="Link to this definition"></a></dt>
+<dd><p>Create a bar plot of a factor profile.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>factor_idx</strong> (<em>int</em>) – The index of the factor to plot (1 -&gt; k).</p></li>
+<li><p><strong>H</strong> (<em>np.ndarray</em>) – Overrides the factor profile matrix in the NMF model used for the plot.</p></li>
+<li><p><strong>W</strong> (<em>np.ndarray</em>) – Overrides the factor contribution matrix in the NMF model used for the plot.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.data.analysis.ModelAnalysis.plot_factor_surface">
+<span class="sig-name descname"><span class="pre">plot_factor_surface</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor_idx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_idx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">percentage</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zero_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0001</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.data.analysis.ModelAnalysis.plot_factor_surface" title="Link to this definition"></a></dt>
+<dd><p>Creates a 3d surface plot of the specified factor_idx’s concentration percentage or mass.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>factor_idx</strong> (<em>int</em>) – The factor index to plot showing all features for that factor, if factor_idx is none will show the
+feature_idx for all factors.</p></li>
+<li><p><strong>feature_idx</strong> (<em>int</em>) – The feature to include in the plot if factor_idx is none, otherwise will show all features for a specified
+factor_idx.</p></li>
+<li><p><strong>percentage</strong> (<em>bool</em>) – Plot the concentration as a scaled value, percentage of the sum of all factors, or as the calculated mass.
+Default = True.</p></li>
+<li><p><strong>zero_threshold</strong> (<em>float</em>) – Values below this threshold are considered zero on the plot.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.data.analysis.ModelAnalysis.plot_g_space">
+<span class="sig-name descname"><span class="pre">plot_g_space</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor_1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">factor_2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.data.analysis.ModelAnalysis.plot_g_space" title="Link to this definition"></a></dt>
+<dd><p>Create a scatter plot showing a factor contributions vs another factor contributions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>factor_1</strong> (<em>int</em>) – The index of the factor to plot along the x-axis.</p></li>
+<li><p><strong>factor_2</strong> (<em>int</em>) – The index of the factor to plot along the y-axis.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.data.analysis.ModelAnalysis.plot_residual_histogram">
+<span class="sig-name descname"><span class="pre">plot_residual_histogram</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature_idx</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abs_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">est_V</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.data.analysis.ModelAnalysis.plot_residual_histogram" title="Link to this definition"></a></dt>
+<dd><p>Create a plot of a histogram of the residuals for a specific feature.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>feature_idx</strong> (<em>int</em>) – The index of the feature for the plot.</p></li>
+<li><p><strong>abs_threshold</strong> (<em>float</em>) – The function generates a list of residuals that exceed this limit, the absolute value of the limit.</p></li>
+<li><p><strong>est_V</strong> (<em>np.ndarray</em>) – Overrides the use of the NMF model’s WH matrix in the residual calculation. Default = None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The list of residuals that exceed the absolute value of the threshold, as a pd.DataFrame</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pd.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-esat.data.datahandler">
+<span id="esat-data-datahandler-module"></span><h2>esat.data.datahandler module<a class="headerlink" href="#module-esat.data.datahandler" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="esat.data.datahandler.DataHandler">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">esat.data.datahandler.</span></span><span class="sig-name descname"><span class="pre">DataHandler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uncertainty_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index_col</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_col</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sn_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.data.datahandler.DataHandler" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>The class for cleaning and preparing input datasets for use in ESAT.</p>
+<p>The DataHandler class is intended to provide a standardized way of cleaning and preparing data from file to ESAT
+models.</p>
+<p>The input and uncertainty data files are specified by their file paths. Input files can be .csv or tab separated
+text files. Other file formats are not supported at this time.</p>
+<p>#TODO: Add additional supported file formats by expanding the __read_data function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_path</strong> (<em>str</em>) – The file path to the input dataset.</p></li>
+<li><p><strong>uncertainty_path</strong> (<em>str</em>) – The file path to the uncertainty dataset.
+#TODO: Add the option of generating an uncertainty dataset from a provided input dataset, using a random selection of some percentage range of the input dataset cell values.</p></li>
+<li><p><strong>index_col</strong> (<em>str</em>) – The name of the index column if it is not the first column in the dataset. Default = None, which will use
+the 1st column.</p></li>
+<li><p><strong>drop_col</strong> (<em>list</em>) – A list of columns to drop from the dataset. Default = None.</p></li>
+<li><p><strong>sn_threshold</strong> (<em>float</em>) – The threshold for the signal to noise ratio values.</p></li>
+<li><p><strong>load</strong> (<em>bool</em>) – Load the input and uncertainty data files, used internally for load_dataframe.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.data.datahandler.DataHandler.get_data">
+<span class="sig-name descname"><span class="pre">get_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#esat.data.datahandler.DataHandler.get_data" title="Link to this definition"></a></dt>
+<dd><p>Get the processed input and uncertainty dataset ready for use in ESAT.
+:returns: The processed input dataset and the processed uncertainty dataset as numpy arrays.
+:rtype: np.ndarray, np.ndarray</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.data.datahandler.DataHandler.load_dataframe">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load_dataframe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uncertainty_df</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.data.datahandler.DataHandler.load_dataframe" title="Link to this definition"></a></dt>
+<dd><p>Pass in pandas dataframes for the input and uncertainty datasets, instead of using files.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_df</strong></p></li>
+<li><p><strong>uncertainty_df</strong></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Instance of DataHandler using dataframes as input.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#esat.data.datahandler.DataHandler" title="esat.data.datahandler.DataHandler">DataHandler</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.data.datahandler.DataHandler.plot_data_uncertainty">
+<span class="sig-name descname"><span class="pre">plot_data_uncertainty</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature_idx</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.data.datahandler.DataHandler.plot_data_uncertainty" title="Link to this definition"></a></dt>
+<dd><p>Create a plot of the data vs the uncertainty for a specified feature, by the feature index.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>feature_idx</strong> (<em>int</em>) – The index of the feature, column, of the input and uncertainty dataset to plot.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.data.datahandler.DataHandler.plot_feature_data">
+<span class="sig-name descname"><span class="pre">plot_feature_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y_idx</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.data.datahandler.DataHandler.plot_feature_data" title="Link to this definition"></a></dt>
+<dd><p>Create a plot of a data feature, column, vs another data feature, column. Specified by the feature indices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x_idx</strong> (<em>int</em>) – The feature index for the x-axis values.</p></li>
+<li><p><strong>y_idx</strong> (<em>int</em>) – The feature index for the y-axis values.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.data.datahandler.DataHandler.plot_feature_timeseries">
+<span class="sig-name descname"><span class="pre">plot_feature_timeseries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature_selection</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.data.datahandler.DataHandler.plot_feature_timeseries" title="Link to this definition"></a></dt>
+<dd><p>Create a plot of a feature, or list of features, as a timeseries.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>feature_selection</strong> (<em>int</em><em> or </em><em>list</em>) – A single or list of feature indices to plot as a timeseries.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.data.datahandler.DataHandler.set_category">
+<span class="sig-name descname"><span class="pre">set_category</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">category</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'strong'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.data.datahandler.DataHandler.set_category" title="Link to this definition"></a></dt>
+<dd><p>Set the S/N category for the feature, options are ‘strong’, ‘weak’ or ‘bad’. All features are set to ‘strong’
+by default, which doesn’t modify the feature’s behavior in models. Features categorized as ‘weak’ triples their
+uncertainty and ‘bad’ features are excluded from analysis.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>feature</strong> (<em>str</em>) – The name or label of the feature.</p></li>
+<li><p><strong>category</strong> (<em>str</em>) – The new category of the feature</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if the change was successful, otherwise False.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-esat.data.test_tools">
+<span id="esat-data-test-tools-module"></span><h2>esat.data.test_tools module<a class="headerlink" href="#module-esat.data.test_tools" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="esat.data.test_tools.CompareAnalyzer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">esat.data.test_tools.</span></span><span class="sig-name descname"><span class="pre">CompareAnalyzer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pmf_profile_df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pmf_contributions_df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ls_profile_df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ws_profile_df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ls_mapping</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ws_mapping</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ls_contributions_df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ws_contributions_df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">datetimestamps</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.data.test_tools.CompareAnalyzer" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Compare ESAT output with the PMF5 output.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.data.test_tools.CompareAnalyzer.feature_histogram">
+<span class="sig-name descname"><span class="pre">feature_histogram</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalized</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.data.test_tools.CompareAnalyzer.feature_histogram" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.data.test_tools.CompareAnalyzer.plot_factor_contribution">
+<span class="sig-name descname"><span class="pre">plot_factor_contribution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.data.test_tools.CompareAnalyzer.plot_factor_contribution" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.data.test_tools.CompareAnalyzer.plot_factors">
+<span class="sig-name descname"><span class="pre">plot_factors</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#esat.data.test_tools.CompareAnalyzer.plot_factors" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.data.test_tools.CompareAnalyzer.plot_feature_timeseries">
+<span class="sig-name descname"><span class="pre">plot_feature_timeseries</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor_n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_input</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.data.test_tools.CompareAnalyzer.plot_feature_timeseries" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.data.test_tools.CompareAnalyzer.plot_fingerprints">
+<span class="sig-name descname"><span class="pre">plot_fingerprints</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ls_nmf_r2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="p"><span class="pre">-</span></span><span class="m"><span class="pre">1</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ws_nmf_r2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="p"><span class="pre">-</span></span><span class="m"><span class="pre">1</span></span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.data.test_tools.CompareAnalyzer.plot_fingerprints" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.data.test_tools.CompareAnalyzer.timeseries_plot">
+<span class="sig-name descname"><span class="pre">timeseries_plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.data.test_tools.CompareAnalyzer.timeseries_plot" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-esat.data">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-esat.data" title="Link to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="esat.cli.html" class="btn btn-neutral float-left" title="esat.cli package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="esat.error.html" class="btn btn-neutral float-right" title="esat.error package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, EPA.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

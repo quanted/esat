@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>esat.rotational package &mdash; Environmental Source Apportionment Toolkit (ESAT) 0.1a documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=88a2ef70"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="eval package" href="eval.html" />
+    <link rel="prev" title="esat.model package" href="esat.model.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Environmental Source Apportionment Toolkit (ESAT)
+          </a>
+              <div class="version">
+                2024
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Welcome to EPA’s ESAT Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html">Environmental Source Apportionment Toolkit (ESAT)</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">Python API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="esat.html">esat package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="esat.data.html">esat.data package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="esat.error.html">esat.error package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="esat.model.html">esat.model package</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">esat.rotational package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-esat.rotational.constrained">esat.rotational.constrained module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#esat.rotational.constrained.ConstrainedModel"><code class="docutils literal notranslate"><span class="pre">ConstrainedModel</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#esat.rotational.constrained.Constraint"><code class="docutils literal notranslate"><span class="pre">Constraint</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-esat.rotational">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="eval.html">eval package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">Command Line Interface</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Environmental Source Apportionment Toolkit (ESAT)</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">Python API</a></li>
+          <li class="breadcrumb-item"><a href="esat.html">esat package</a></li>
+      <li class="breadcrumb-item active">esat.rotational package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/docs/esat.rotational.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="esat-rotational-package">
+<h1>esat.rotational package<a class="headerlink" href="#esat-rotational-package" title="Link to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+</section>
+<section id="module-esat.rotational.constrained">
+<span id="esat-rotational-constrained-module"></span><h2>esat.rotational.constrained module<a class="headerlink" href="#module-esat.rotational.constrained" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="esat.rotational.constrained.ConstrainedModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">esat.rotational.constrained.</span></span><span class="sig-name descname"><span class="pre">ConstrainedModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="esat.model.html#esat.model.sa.SA" title="esat.model.sa.SA"><span class="pre">SA</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_handler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="esat.data.html#esat.data.datahandler.DataHandler" title="esat.data.datahandler.DataHandler"><span class="pre">DataHandler</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">softness</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.rotational.constrained.ConstrainedModel" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>The constrained model class that creates an instead of a constrained model using a base SA model.</p>
+<p>The constrained model takes as input a previously completed SA instance, the solution of a base model run
+(single SA instance) is used for the initial conditions of a constrained model run. Additional inputs include
+the instance of the DataHandler used to provided data to the SA instance (used for plotting) and a ‘softness’
+parameter that determines how soft, or how large, the Q(aux) value is in comparison to the Q(Robust) and
+Q(True) loss values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>base_model</strong> (<a class="reference internal" href="esat.model.html#esat.model.sa.SA" title="esat.model.sa.SA"><em>SA</em></a>) – The completed base model instance of SA.</p></li>
+<li><p><strong>data_handler</strong> (<a class="reference internal" href="esat.data.html#esat.data.datahandler.DataHandler" title="esat.data.datahandler.DataHandler"><em>DataHandler</em></a>) – The instance of the DataHandler user to preprocess the input data for SA.</p></li>
+<li><p><strong>softness</strong> (<em>float</em>) – The softness parameter that determines how large the Q(aux) loss value is in comparison to the primary Q
+loss.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.rotational.constrained.ConstrainedModel.add_constraint">
+<span class="sig-name descname"><span class="pre">add_constraint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">constraint_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_value</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dQ</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.rotational.constrained.ConstrainedModel.add_constraint" title="Link to this definition"></a></dt>
+<dd><p>Adds a single constraint to the ConstrainedModel instance. What constraints are available and valid structure
+of the constraint parameters can be found in the Constraint class. A factor element can only have one
+constraint.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>constraint_type</strong> (<em>str</em>) – The type of constraint being added, there are 6 types which are detailed in the Constraint class.</p></li>
+<li><p><strong>index</strong> (<em>tuple</em>) – The index of the factor element (as they natively appear in either the H or W matrices). i.e. (i,j)</p></li>
+<li><p><strong>target</strong> (<em>str</em>) – The target factor element matrix. A factor feature element (H) is ‘feature’ while a factor sample element (W)
+is ‘sample’.</p></li>
+<li><p><strong>target_value</strong> (<em>float</em>) – The target value for pull to value constraint.</p></li>
+<li><p><strong>min_value</strong> (<em>float</em>) – The min value for the define limits constraint.</p></li>
+<li><p><strong>max_value</strong> (<em>float</em>) – The max value for the define limits constraint.</p></li>
+<li><p><strong>dQ</strong> (<em>float</em>) – The dQ value for the constraints with dQ limits.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if the constraint was added or False if the constraint wasn’t valid and is not added.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.rotational.constrained.ConstrainedModel.add_expression">
+<span class="sig-name descname"><span class="pre">add_expression</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">expression</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.rotational.constrained.ConstrainedModel.add_expression" title="Link to this definition"></a></dt>
+<dd><p>Add an expression to the constrained model. An expression is an equation involving 2 or more factor elements
+that quantifies the relationship between those factor elements. These expressions are structured as formatted
+strings, that take the form:</p>
+<p>“(0.66*[factor:1|feature:2])-(4.2*[factor:2|feature:4])=0,250”
+“(0.35*[factor:0|feature:3])-(2.0*[factor:1|feature:3])-(3.7*[factor:3|feature:4])=0,250”
+“(3.2*[factor:2|feature:4])+(1.2*[factor:3|feature:10])+(0.1*[factor:1|feature:3])+(20.0*[factor:4|feature:3])-(10.7*[factor:5|feature:4])=0,250”</p>
+<p>Where each element is defined inside of () and consist of a coefficient and the factor element, i.e.
+(COEF_ij*(factor:I|feature:J). Then the combination of factor elements are correlated by +/0- operators with the
+resulting equation equal to 0. The comma and following value is the dQ limit. These limits are summed for all
+expressions and used to decrease the amount of change these expressions can apply to the solution matrices if
+the expressions dQ is greater than that summed limit.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>expression</strong> (<em>str</em>) – A string expression to be added to the list of expressions for the constrained model.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.rotational.constrained.ConstrainedModel.display_results">
+<span class="sig-name descname"><span class="pre">display_results</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#esat.rotational.constrained.ConstrainedModel.display_results" title="Link to this definition"></a></dt>
+<dd><p>Print the results of the constrained model run.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.rotational.constrained.ConstrainedModel.evaluate_constraints">
+<span class="sig-name descname"><span class="pre">evaluate_constraints</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#esat.rotational.constrained.ConstrainedModel.evaluate_constraints" title="Link to this definition"></a></dt>
+<dd><p>Evaluate and show the factor element constraint results of the constrained model run.
+TODO: Perform factor mapping between the base solution and the constrained solution.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.rotational.constrained.ConstrainedModel.evaluate_expressions">
+<span class="sig-name descname"><span class="pre">evaluate_expressions</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#esat.rotational.constrained.ConstrainedModel.evaluate_expressions" title="Link to this definition"></a></dt>
+<dd><p>Evaluate and show the expression results of the constrained model run.
+TODO: Perform factor mapping between the base solution and the constrained solution.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.rotational.constrained.ConstrainedModel.list_constraints">
+<span class="sig-name descname"><span class="pre">list_constraints</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#esat.rotational.constrained.ConstrainedModel.list_constraints" title="Link to this definition"></a></dt>
+<dd><p>List all the constraints that are currently set for this constrained model.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.rotational.constrained.ConstrainedModel.list_expressions">
+<span class="sig-name descname"><span class="pre">list_expressions</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#esat.rotational.constrained.ConstrainedModel.list_expressions" title="Link to this definition"></a></dt>
+<dd><p>List all the current expressions assigned to the constrained model.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.rotational.constrained.ConstrainedModel.load">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.rotational.constrained.ConstrainedModel.load" title="Link to this definition"></a></dt>
+<dd><p>Load a previously saved Constrained SA pickle file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>file_path</strong> (<em>str</em>) – File path to a previously saved Constrained SA pickle file</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>On successful load, will return a previously saved Constrained SA object. Will return None on load fail.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#esat.rotational.constrained.ConstrainedModel" title="esat.rotational.constrained.ConstrainedModel">ConstrainedModel</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.rotational.constrained.ConstrainedModel.plot_Q">
+<span class="sig-name descname"><span class="pre">plot_Q</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Qtype</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'True'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.rotational.constrained.ConstrainedModel.plot_Q" title="Link to this definition"></a></dt>
+<dd><p>Plot the loss value Q as it changes over iterations. Four options for Qtype are available.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>Qtype</strong> (<em>str</em>) – The Q loss value to plot. Available options are: true, robust, aux, and main. Q(Main) is the loss value of
+the objective function for the constrained model and is the sum of true and aux.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.rotational.constrained.ConstrainedModel.plot_contributions">
+<span class="sig-name descname"><span class="pre">plot_contributions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor_idx</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.rotational.constrained.ConstrainedModel.plot_contributions" title="Link to this definition"></a></dt>
+<dd><p>Plot the constrained model factor contributions by factor index.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>factor_idx</strong> (<em>int</em>) – The factor index to plot. Valid index values range from 1 to the total number of factors.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.rotational.constrained.ConstrainedModel.plot_factor_contributions">
+<span class="sig-name descname"><span class="pre">plot_factor_contributions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.06</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.rotational.constrained.ConstrainedModel.plot_factor_contributions" title="Link to this definition"></a></dt>
+<dd><p>Plot the constrained model factor contributions for a specified feature by feature index.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>feature_idx</strong> (<em>int</em>) – The feature index to plot. Valid index range from 1 to the number of features in the model.</p></li>
+<li><p><strong>threshold</strong> (<em>float</em>) – The factor contribution threshold for a factor to be included in the plot.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.rotational.constrained.ConstrainedModel.plot_factor_fingerprints">
+<span class="sig-name descname"><span class="pre">plot_factor_fingerprints</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#esat.rotational.constrained.ConstrainedModel.plot_factor_fingerprints" title="Link to this definition"></a></dt>
+<dd><p>Plot the constrained model factor fingerprints.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.rotational.constrained.ConstrainedModel.plot_g_space">
+<span class="sig-name descname"><span class="pre">plot_g_space</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor_idx1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">factor_idx2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_base</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">show_delta</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.rotational.constrained.ConstrainedModel.plot_g_space" title="Link to this definition"></a></dt>
+<dd><p>Plot the constrained model G-Space plot for two factors. Options include adding the base model values and/or
+adding the change of values from the base values and the constrained model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>factor_idx1</strong> (<em>int</em>) – The first factor index to plot. Valid index values range from 1 to the total number of factors.</p></li>
+<li><p><strong>factor_idx2</strong> (<em>int</em>) – The second factor index to plot. Valid index values range from 1 to the total number of factors.</p></li>
+<li><p><strong>show_base</strong> (<em>bool</em>) – Include the base model values in the plot.</p></li>
+<li><p><strong>show_delta</strong> (<em>bool</em>) – Include the change of the constrained model from the base model, will set show_base to True.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.rotational.constrained.ConstrainedModel.plot_profile">
+<span class="sig-name descname"><span class="pre">plot_profile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor_idx</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.rotational.constrained.ConstrainedModel.plot_profile" title="Link to this definition"></a></dt>
+<dd><p>Plot the constrained model factor profile by index.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>factor_idx</strong> (<em>int</em>) – The factor index to plot. Valid index values range from 1 to the total number of factors.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.rotational.constrained.ConstrainedModel.plot_profile_contributions">
+<span class="sig-name descname"><span class="pre">plot_profile_contributions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor_idx</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.rotational.constrained.ConstrainedModel.plot_profile_contributions" title="Link to this definition"></a></dt>
+<dd><p>Plot the constrained model factor profile and factor contribution by index. The plots are similar to those
+available to SA models in the analysis module.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>factor_idx</strong> (<em>int</em>) – The factor index to plot. Valid index values range from 1 to the total number of factors.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.rotational.constrained.ConstrainedModel.remove_constraint">
+<span class="sig-name descname"><span class="pre">remove_constraint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">constraint_label</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.rotational.constrained.ConstrainedModel.remove_constraint" title="Link to this definition"></a></dt>
+<dd><p>Remove a constraint. When a constraint is added to a ConstrainedModel, a label is created for that constraint
+that is defined by: ‘factor:I|feature:K’ or ‘factor:I|sample:J’. The labels can also be found by listing the
+constraints.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>constraint_label</strong> (<em>str</em>) – The label of the constraint to be removed.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.rotational.constrained.ConstrainedModel.remove_expression">
+<span class="sig-name descname"><span class="pre">remove_expression</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">expression_idx</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.rotational.constrained.ConstrainedModel.remove_expression" title="Link to this definition"></a></dt>
+<dd><p>Remove an expression from the current list of expressions by index.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>expression_idx</strong> (<em>int</em>) – The index of the expression to remove, values from 0 to the number of expressions - 1.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.rotational.constrained.ConstrainedModel.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_directory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pickle_model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.rotational.constrained.ConstrainedModel.save" title="Link to this definition"></a></dt>
+<dd><p>Save the constrained model instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model_name</strong> (<em>str</em>) – The name to use for the constrained model save files.</p></li>
+<li><p><strong>output_directory</strong> – The output directory to save the constrained model instance to.</p></li>
+<li><p><strong>pickle_model</strong> (<em>bool</em>) – Pickle the constrained model, useful for reloading the instance. Default = False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The path to the output directory, if pickle=False or the path to the pickle file. If save fails returns None</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.rotational.constrained.ConstrainedModel.train">
+<span class="sig-name descname"><span class="pre">train</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_iterations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">converge_delta</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">converge_n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.rotational.constrained.ConstrainedModel.train" title="Link to this definition"></a></dt>
+<dd><p>Retrain the specified nmf model applying the constraints and expressions conditions on the solution and finding
+to calculate a new solution. If no arguments are provided, the values used in the base nmf model will be
+applied.</p>
+<p>Prior to beginning the update iterations, all the expressions are processed and converted into data structures
+that will be used to solve those expressions.</p>
+<p>For each iteration, the constraint and expression target values are calculated and two matrices are created
+which contain the difference between the curren value in those matrices and the target value. The expression
+target values are calculated first and then followed by the constraint values. The difference matrices are added
+to the solution matrices before being updated by the SA update algorithm that is used in the base model.</p>
+<p>The model is considered converged when Q(Main) changes by less than converge_delta over converge_n iterations,
+where Q(Main) is defined as Q(main) = Q(True) + Q(aux). Q(aux) is defined as
+Q(aux) = sum(square(W_base + Difference_to_Target_W - W_i)/S_W) +
+sum(square(H_base + Difference_to_Target_H - H_i)/S_H).</p>
+<p>The completed constrained model solution is assigned to the .constrained_model variable, which is an instance of
+SA. This constrained SA solution can then be passed into any of the error estimation methods in the same way
+as an SA solution from the BatchNMF instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>max_iterations</strong> (<em>int</em>) – The maximum number of iterations to run the update procedure. Defaults to the value set in the base model.</p></li>
+<li><p><strong>converge_delta</strong> (<em>float</em>) – The change in Q that determines convergence. Defaults to the value set in the base model.</p></li>
+<li><p><strong>converge_n</strong> (<em>int</em>) – The number of iterations where the change in Q is less than converge_delta for the model to be considered
+converged.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="esat.rotational.constrained.Constraint">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">esat.rotational.constrained.</span></span><span class="sig-name descname"><span class="pre">Constraint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">constraint_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_values</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.rotational.constrained.Constraint" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>The constrained model takes a base SA solution and finds a new solution that applies both constraints and
+expressions. The Constraint class objects are created from the add_constraint method in the constrained model class.
+The constraint class does not need to be called directly.</p>
+<p>Defines a constraint targeting a single factor element in the solution. There are 6 different constraint types:
+“pull down”, “pull up”, “pull to value”, “set to zero”, “set to base value”, “define limits”. A constraint must
+target a factor element in either the ‘sample’ or ‘feature’ solutions, which determines which matrix the
+provided index is targeting. The target_values of the constraint can take several forms depending on what
+constraint type is provided. Here are examples of each type and their target_values:</p>
+<p>Constraint(constraint_type=’pull down’, index=(0,0), target=’feature’, target_values=dQ_limit)
+Constraint(constraint_type=’pull up’, index=(0,0), target=’feature’, target_values=dQ_limit)
+Constraint(constraint_type=’pull to value’, index=(0,0), target=’feature’, target_values=(pull_to_value, dQ_limit))
+Constraint(constraint_type=’set to zero’, index=(0,0), target=’feature’)
+Constraint(constraint_type=’set to base value’, index=(0,0), target=’feature’)
+Constraint(constraint_type=’define limits’, index=(0,0), target=’feature’, target_values=(min_value, max_value))</p>
+<p>These examples are created when a user calls the add_constraint method from a ConstrainedModel instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>constraint_type</strong> (<em>str</em>) – The type of constraint that is being defined. Valid types are: “pull down”, “pull up”, “pull to value”,
+“set to zero”, “set to base value”, “define limits”.</p></li>
+<li><p><strong>index</strong> (<em>tuple</em>) – A tuple that specifies the index of the factor matrix that is being constrained.</p></li>
+<li><p><strong>target</strong> (<em>str</em>) – The target matrix for the constraint. Options are ‘feature’ (H) or ‘sample’ (W) matrices.</p></li>
+<li><p><strong>target_values</strong> – The target values for the constraint. The parameter type and value is dependent on the constraint type,
+details shown in the Constraint description.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.rotational.constrained.Constraint.describe">
+<span class="sig-name descname"><span class="pre">describe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.rotational.constrained.Constraint.describe" title="Link to this definition"></a></dt>
+<dd><p>Prints the constraint details.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>label</strong> (<em>str</em>) – The label or title of the constraint, created by the ConstrainedModel class.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.rotational.constrained.Constraint.tostring">
+<span class="sig-name descname"><span class="pre">tostring</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">label</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.rotational.constrained.Constraint.tostring" title="Link to this definition"></a></dt>
+<dd><p>Get string representation of the constraint.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>label</strong> (<em>str</em>) – Optional label for the constraint.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The constraint string.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="esat.rotational.constrained.Constraint.type_list">
+<span class="sig-name descname"><span class="pre">type_list</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('pull</span> <span class="pre">down',</span> <span class="pre">'pull</span> <span class="pre">up',</span> <span class="pre">'pull</span> <span class="pre">to</span> <span class="pre">value',</span> <span class="pre">'set</span> <span class="pre">to</span> <span class="pre">zero',</span> <span class="pre">'set</span> <span class="pre">to</span> <span class="pre">base</span> <span class="pre">value',</span> <span class="pre">'define</span> <span class="pre">limits')</span></em><a class="headerlink" href="#esat.rotational.constrained.Constraint.type_list" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-esat.rotational">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-esat.rotational" title="Link to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="esat.model.html" class="btn btn-neutral float-left" title="esat.model package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="eval.html" class="btn btn-neutral float-right" title="eval package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, EPA.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

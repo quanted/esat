@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>esat package &mdash; Environmental Source Apportionment Toolkit (ESAT) 0.1a documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=88a2ef70"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="esat.cli package" href="esat.cli.html" />
+    <link rel="prev" title="Python API" href="modules.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Environmental Source Apportionment Toolkit (ESAT)
+          </a>
+              <div class="version">
+                2024
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Welcome to EPA’s ESAT Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html">Environmental Source Apportionment Toolkit (ESAT)</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">Python API</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">esat package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#subpackages">Subpackages</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="esat.cli.html">esat.cli package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.data.html">esat.data package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.error.html">esat.error package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.model.html">esat.model package</a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.rotational.html">esat.rotational package</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-esat.configs">esat.configs module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-esat.metrics">esat.metrics module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#esat.metrics.calculate_Q"><code class="docutils literal notranslate"><span class="pre">calculate_Q()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#esat.metrics.q_factor"><code class="docutils literal notranslate"><span class="pre">q_factor()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#esat.metrics.q_loss"><code class="docutils literal notranslate"><span class="pre">q_loss()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#esat.metrics.qr_loss"><code class="docutils literal notranslate"><span class="pre">qr_loss()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-esat.utils">esat.utils module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#esat.utils.calculate_factor_correlation"><code class="docutils literal notranslate"><span class="pre">calculate_factor_correlation()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#esat.utils.compare_all_factors"><code class="docutils literal notranslate"><span class="pre">compare_all_factors()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#esat.utils.np_encoder"><code class="docutils literal notranslate"><span class="pre">np_encoder()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#esat.utils.solution_bump"><code class="docutils literal notranslate"><span class="pre">solution_bump()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-esat.estimator">esat.estimator module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#esat.estimator.FactorEstimator"><code class="docutils literal notranslate"><span class="pre">FactorEstimator</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-esat">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="esat.data.html">esat.data package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="esat.error.html">esat.error package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="esat.model.html">esat.model package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="esat.rotational.html">esat.rotational package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="eval.html">eval package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">Command Line Interface</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Environmental Source Apportionment Toolkit (ESAT)</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">Python API</a></li>
+      <li class="breadcrumb-item active">esat package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/docs/esat.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="esat-package">
+<h1>esat package<a class="headerlink" href="#esat-package" title="Link to this heading"></a></h1>
+<section id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Link to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="esat.cli.html">esat.cli package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="esat.cli.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="esat.cli.html#module-esat.cli.esat_cli">esat.cli.esat_cli module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="esat.cli.html#esat.cli.esat_cli.get_batchsa"><code class="docutils literal notranslate"><span class="pre">get_batchsa()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="esat.cli.html#esat.cli.esat_cli.get_config"><code class="docutils literal notranslate"><span class="pre">get_config()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="esat.cli.html#esat.cli.esat_cli.get_constrained_model"><code class="docutils literal notranslate"><span class="pre">get_constrained_model()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="esat.cli.html#esat.cli.esat_cli.get_dh"><code class="docutils literal notranslate"><span class="pre">get_dh()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="esat.cli.html#esat.cli.esat_cli.get_error_model"><code class="docutils literal notranslate"><span class="pre">get_error_model()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="esat.cli.html#esat.cli.esat_cli.get_model_analysis"><code class="docutils literal notranslate"><span class="pre">get_model_analysis()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="esat.cli.html#esat.cli.esat_cli.get_sim"><code class="docutils literal notranslate"><span class="pre">get_sim()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="esat.cli.html#module-esat.cli">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="esat.data.html">esat.data package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="esat.data.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="esat.data.html#module-esat.data.analysis">esat.data.analysis module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="esat.data.html#esat.data.analysis.BatchAnalysis"><code class="docutils literal notranslate"><span class="pre">BatchAnalysis</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="esat.data.html#esat.data.analysis.BatchAnalysis.plot_loss"><code class="docutils literal notranslate"><span class="pre">BatchAnalysis.plot_loss()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.data.html#esat.data.analysis.BatchAnalysis.plot_loss_distribution"><code class="docutils literal notranslate"><span class="pre">BatchAnalysis.plot_loss_distribution()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.data.html#esat.data.analysis.BatchAnalysis.plot_temporal_residuals"><code class="docutils literal notranslate"><span class="pre">BatchAnalysis.plot_temporal_residuals()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="esat.data.html#esat.data.analysis.ModelAnalysis"><code class="docutils literal notranslate"><span class="pre">ModelAnalysis</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="esat.data.html#esat.data.analysis.ModelAnalysis.calculate_statistics"><code class="docutils literal notranslate"><span class="pre">ModelAnalysis.calculate_statistics()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.data.html#esat.data.analysis.ModelAnalysis.plot_estimated_observed"><code class="docutils literal notranslate"><span class="pre">ModelAnalysis.plot_estimated_observed()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.data.html#esat.data.analysis.ModelAnalysis.plot_estimated_timeseries"><code class="docutils literal notranslate"><span class="pre">ModelAnalysis.plot_estimated_timeseries()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.data.html#esat.data.analysis.ModelAnalysis.plot_factor_composition"><code class="docutils literal notranslate"><span class="pre">ModelAnalysis.plot_factor_composition()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.data.html#esat.data.analysis.ModelAnalysis.plot_factor_contributions"><code class="docutils literal notranslate"><span class="pre">ModelAnalysis.plot_factor_contributions()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.data.html#esat.data.analysis.ModelAnalysis.plot_factor_fingerprints"><code class="docutils literal notranslate"><span class="pre">ModelAnalysis.plot_factor_fingerprints()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.data.html#esat.data.analysis.ModelAnalysis.plot_factor_profile"><code class="docutils literal notranslate"><span class="pre">ModelAnalysis.plot_factor_profile()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.data.html#esat.data.analysis.ModelAnalysis.plot_factor_surface"><code class="docutils literal notranslate"><span class="pre">ModelAnalysis.plot_factor_surface()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.data.html#esat.data.analysis.ModelAnalysis.plot_g_space"><code class="docutils literal notranslate"><span class="pre">ModelAnalysis.plot_g_space()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.data.html#esat.data.analysis.ModelAnalysis.plot_residual_histogram"><code class="docutils literal notranslate"><span class="pre">ModelAnalysis.plot_residual_histogram()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="esat.data.html#module-esat.data.datahandler">esat.data.datahandler module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="esat.data.html#esat.data.datahandler.DataHandler"><code class="docutils literal notranslate"><span class="pre">DataHandler</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="esat.data.html#esat.data.datahandler.DataHandler.get_data"><code class="docutils literal notranslate"><span class="pre">DataHandler.get_data()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.data.html#esat.data.datahandler.DataHandler.load_dataframe"><code class="docutils literal notranslate"><span class="pre">DataHandler.load_dataframe()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.data.html#esat.data.datahandler.DataHandler.plot_data_uncertainty"><code class="docutils literal notranslate"><span class="pre">DataHandler.plot_data_uncertainty()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.data.html#esat.data.datahandler.DataHandler.plot_feature_data"><code class="docutils literal notranslate"><span class="pre">DataHandler.plot_feature_data()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.data.html#esat.data.datahandler.DataHandler.plot_feature_timeseries"><code class="docutils literal notranslate"><span class="pre">DataHandler.plot_feature_timeseries()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.data.html#esat.data.datahandler.DataHandler.set_category"><code class="docutils literal notranslate"><span class="pre">DataHandler.set_category()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="esat.data.html#module-esat.data.test_tools">esat.data.test_tools module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="esat.data.html#esat.data.test_tools.CompareAnalyzer"><code class="docutils literal notranslate"><span class="pre">CompareAnalyzer</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="esat.data.html#esat.data.test_tools.CompareAnalyzer.feature_histogram"><code class="docutils literal notranslate"><span class="pre">CompareAnalyzer.feature_histogram()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.data.html#esat.data.test_tools.CompareAnalyzer.plot_factor_contribution"><code class="docutils literal notranslate"><span class="pre">CompareAnalyzer.plot_factor_contribution()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.data.html#esat.data.test_tools.CompareAnalyzer.plot_factors"><code class="docutils literal notranslate"><span class="pre">CompareAnalyzer.plot_factors()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.data.html#esat.data.test_tools.CompareAnalyzer.plot_feature_timeseries"><code class="docutils literal notranslate"><span class="pre">CompareAnalyzer.plot_feature_timeseries()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.data.html#esat.data.test_tools.CompareAnalyzer.plot_fingerprints"><code class="docutils literal notranslate"><span class="pre">CompareAnalyzer.plot_fingerprints()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.data.html#esat.data.test_tools.CompareAnalyzer.timeseries_plot"><code class="docutils literal notranslate"><span class="pre">CompareAnalyzer.timeseries_plot()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="esat.data.html#module-esat.data">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="esat.error.html">esat.error package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="esat.error.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="esat.error.html#module-esat.error.bootstrap">esat.error.bootstrap module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="esat.error.html#esat.error.bootstrap.Bootstrap"><code class="docutils literal notranslate"><span class="pre">Bootstrap</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="esat.error.html#esat.error.bootstrap.Bootstrap.load"><code class="docutils literal notranslate"><span class="pre">Bootstrap.load()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.error.html#esat.error.bootstrap.Bootstrap.map_contributions"><code class="docutils literal notranslate"><span class="pre">Bootstrap.map_contributions()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.error.html#esat.error.bootstrap.Bootstrap.map_factors"><code class="docutils literal notranslate"><span class="pre">Bootstrap.map_factors()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.error.html#esat.error.bootstrap.Bootstrap.plot_contribution"><code class="docutils literal notranslate"><span class="pre">Bootstrap.plot_contribution()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.error.html#esat.error.bootstrap.Bootstrap.plot_factor"><code class="docutils literal notranslate"><span class="pre">Bootstrap.plot_factor()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.error.html#esat.error.bootstrap.Bootstrap.plot_results"><code class="docutils literal notranslate"><span class="pre">Bootstrap.plot_results()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.error.html#esat.error.bootstrap.Bootstrap.run"><code class="docutils literal notranslate"><span class="pre">Bootstrap.run()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.error.html#esat.error.bootstrap.Bootstrap.save"><code class="docutils literal notranslate"><span class="pre">Bootstrap.save()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.error.html#esat.error.bootstrap.Bootstrap.show_factor_results"><code class="docutils literal notranslate"><span class="pre">Bootstrap.show_factor_results()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.error.html#esat.error.bootstrap.Bootstrap.show_mapping_table"><code class="docutils literal notranslate"><span class="pre">Bootstrap.show_mapping_table()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.error.html#esat.error.bootstrap.Bootstrap.show_q_table"><code class="docutils literal notranslate"><span class="pre">Bootstrap.show_q_table()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.error.html#esat.error.bootstrap.Bootstrap.summary"><code class="docutils literal notranslate"><span class="pre">Bootstrap.summary()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="esat.error.html#module-esat.error.bs_disp">esat.error.bs_disp module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="esat.error.html#esat.error.bs_disp.BSDISP"><code class="docutils literal notranslate"><span class="pre">BSDISP</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="esat.error.html#esat.error.bs_disp.BSDISP.dQmax"><code class="docutils literal notranslate"><span class="pre">BSDISP.dQmax</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.error.html#esat.error.bs_disp.BSDISP.load"><code class="docutils literal notranslate"><span class="pre">BSDISP.load()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.error.html#esat.error.bs_disp.BSDISP.plot_contribution"><code class="docutils literal notranslate"><span class="pre">BSDISP.plot_contribution()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.error.html#esat.error.bs_disp.BSDISP.plot_profile"><code class="docutils literal notranslate"><span class="pre">BSDISP.plot_profile()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.error.html#esat.error.bs_disp.BSDISP.plot_results"><code class="docutils literal notranslate"><span class="pre">BSDISP.plot_results()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.error.html#esat.error.bs_disp.BSDISP.run"><code class="docutils literal notranslate"><span class="pre">BSDISP.run()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.error.html#esat.error.bs_disp.BSDISP.save"><code class="docutils literal notranslate"><span class="pre">BSDISP.save()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.error.html#esat.error.bs_disp.BSDISP.summary"><code class="docutils literal notranslate"><span class="pre">BSDISP.summary()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="esat.error.html#module-esat.error.displacement">esat.error.displacement module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="esat.error.html#esat.error.displacement.Displacement"><code class="docutils literal notranslate"><span class="pre">Displacement</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="esat.error.html#esat.error.displacement.Displacement.dQmax"><code class="docutils literal notranslate"><span class="pre">Displacement.dQmax</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.error.html#esat.error.displacement.Displacement.load"><code class="docutils literal notranslate"><span class="pre">Displacement.load()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.error.html#esat.error.displacement.Displacement.plot_contribution"><code class="docutils literal notranslate"><span class="pre">Displacement.plot_contribution()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.error.html#esat.error.displacement.Displacement.plot_profile"><code class="docutils literal notranslate"><span class="pre">Displacement.plot_profile()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.error.html#esat.error.displacement.Displacement.plot_results"><code class="docutils literal notranslate"><span class="pre">Displacement.plot_results()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.error.html#esat.error.displacement.Displacement.run"><code class="docutils literal notranslate"><span class="pre">Displacement.run()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.error.html#esat.error.displacement.Displacement.save"><code class="docutils literal notranslate"><span class="pre">Displacement.save()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.error.html#esat.error.displacement.Displacement.summary"><code class="docutils literal notranslate"><span class="pre">Displacement.summary()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="esat.error.html#module-esat.error.error">esat.error.error module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="esat.error.html#esat.error.error.Error"><code class="docutils literal notranslate"><span class="pre">Error</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="esat.error.html#esat.error.error.Error.plot_summary"><code class="docutils literal notranslate"><span class="pre">Error.plot_summary()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="esat.error.html#module-esat.error">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="esat.model.html">esat.model package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="esat.model.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="esat.model.html#module-esat.model.batch_sa">esat.model.batch_sa module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="esat.model.html#esat.model.batch_sa.BatchSA"><code class="docutils literal notranslate"><span class="pre">BatchSA</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="esat.model.html#esat.model.batch_sa.BatchSA.details"><code class="docutils literal notranslate"><span class="pre">BatchSA.details()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.model.html#esat.model.batch_sa.BatchSA.load"><code class="docutils literal notranslate"><span class="pre">BatchSA.load()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.model.html#esat.model.batch_sa.BatchSA.save"><code class="docutils literal notranslate"><span class="pre">BatchSA.save()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.model.html#esat.model.batch_sa.BatchSA.train"><code class="docutils literal notranslate"><span class="pre">BatchSA.train()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="esat.model.html#module-esat.model.ls_nmf">esat.model.ls_nmf module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="esat.model.html#esat.model.ls_nmf.LSNMF"><code class="docutils literal notranslate"><span class="pre">LSNMF</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="esat.model.html#esat.model.ls_nmf.LSNMF.update"><code class="docutils literal notranslate"><span class="pre">LSNMF.update()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="esat.model.html#esat-model-optimization-module">esat.model.optimization module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="esat.model.html#module-esat.model.recombinator">esat.model.recombinator module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="esat.model.html#esat.model.recombinator.OptimalBlockLength"><code class="docutils literal notranslate"><span class="pre">OptimalBlockLength</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="esat.model.html#esat.model.recombinator.OptimalBlockLength.b_star_cb"><code class="docutils literal notranslate"><span class="pre">OptimalBlockLength.b_star_cb</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.model.html#esat.model.recombinator.OptimalBlockLength.b_star_sb"><code class="docutils literal notranslate"><span class="pre">OptimalBlockLength.b_star_sb</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="esat.model.html#esat.model.recombinator.lam"><code class="docutils literal notranslate"><span class="pre">lam()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="esat.model.html#esat.model.recombinator.mlag"><code class="docutils literal notranslate"><span class="pre">mlag()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="esat.model.html#esat.model.recombinator.optimal_block_length"><code class="docutils literal notranslate"><span class="pre">optimal_block_length()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="esat.model.html#module-esat.model.sa">esat.model.sa module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="esat.model.html#esat.model.sa.SA"><code class="docutils literal notranslate"><span class="pre">SA</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="esat.model.html#esat.model.sa.SA.initialize"><code class="docutils literal notranslate"><span class="pre">SA.initialize()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.model.html#esat.model.sa.SA.load"><code class="docutils literal notranslate"><span class="pre">SA.load()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.model.html#esat.model.sa.SA.save"><code class="docutils literal notranslate"><span class="pre">SA.save()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.model.html#esat.model.sa.SA.summary"><code class="docutils literal notranslate"><span class="pre">SA.summary()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.model.html#esat.model.sa.SA.train"><code class="docutils literal notranslate"><span class="pre">SA.train()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="esat.model.html#module-esat.model.ws_nmf">esat.model.ws_nmf module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="esat.model.html#esat.model.ws_nmf.WSNMF"><code class="docutils literal notranslate"><span class="pre">WSNMF</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="esat.model.html#esat.model.ws_nmf.WSNMF.update"><code class="docutils literal notranslate"><span class="pre">WSNMF.update()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="esat.model.html#module-esat.model">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="esat.rotational.html">esat.rotational package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="esat.rotational.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="esat.rotational.html#module-esat.rotational.constrained">esat.rotational.constrained module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="esat.rotational.html#esat.rotational.constrained.ConstrainedModel"><code class="docutils literal notranslate"><span class="pre">ConstrainedModel</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="esat.rotational.html#esat.rotational.constrained.ConstrainedModel.add_constraint"><code class="docutils literal notranslate"><span class="pre">ConstrainedModel.add_constraint()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.rotational.html#esat.rotational.constrained.ConstrainedModel.add_expression"><code class="docutils literal notranslate"><span class="pre">ConstrainedModel.add_expression()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.rotational.html#esat.rotational.constrained.ConstrainedModel.display_results"><code class="docutils literal notranslate"><span class="pre">ConstrainedModel.display_results()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.rotational.html#esat.rotational.constrained.ConstrainedModel.evaluate_constraints"><code class="docutils literal notranslate"><span class="pre">ConstrainedModel.evaluate_constraints()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.rotational.html#esat.rotational.constrained.ConstrainedModel.evaluate_expressions"><code class="docutils literal notranslate"><span class="pre">ConstrainedModel.evaluate_expressions()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.rotational.html#esat.rotational.constrained.ConstrainedModel.list_constraints"><code class="docutils literal notranslate"><span class="pre">ConstrainedModel.list_constraints()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.rotational.html#esat.rotational.constrained.ConstrainedModel.list_expressions"><code class="docutils literal notranslate"><span class="pre">ConstrainedModel.list_expressions()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.rotational.html#esat.rotational.constrained.ConstrainedModel.load"><code class="docutils literal notranslate"><span class="pre">ConstrainedModel.load()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.rotational.html#esat.rotational.constrained.ConstrainedModel.plot_Q"><code class="docutils literal notranslate"><span class="pre">ConstrainedModel.plot_Q()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.rotational.html#esat.rotational.constrained.ConstrainedModel.plot_contributions"><code class="docutils literal notranslate"><span class="pre">ConstrainedModel.plot_contributions()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.rotational.html#esat.rotational.constrained.ConstrainedModel.plot_factor_contributions"><code class="docutils literal notranslate"><span class="pre">ConstrainedModel.plot_factor_contributions()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.rotational.html#esat.rotational.constrained.ConstrainedModel.plot_factor_fingerprints"><code class="docutils literal notranslate"><span class="pre">ConstrainedModel.plot_factor_fingerprints()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.rotational.html#esat.rotational.constrained.ConstrainedModel.plot_g_space"><code class="docutils literal notranslate"><span class="pre">ConstrainedModel.plot_g_space()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.rotational.html#esat.rotational.constrained.ConstrainedModel.plot_profile"><code class="docutils literal notranslate"><span class="pre">ConstrainedModel.plot_profile()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.rotational.html#esat.rotational.constrained.ConstrainedModel.plot_profile_contributions"><code class="docutils literal notranslate"><span class="pre">ConstrainedModel.plot_profile_contributions()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.rotational.html#esat.rotational.constrained.ConstrainedModel.remove_constraint"><code class="docutils literal notranslate"><span class="pre">ConstrainedModel.remove_constraint()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.rotational.html#esat.rotational.constrained.ConstrainedModel.remove_expression"><code class="docutils literal notranslate"><span class="pre">ConstrainedModel.remove_expression()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.rotational.html#esat.rotational.constrained.ConstrainedModel.save"><code class="docutils literal notranslate"><span class="pre">ConstrainedModel.save()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.rotational.html#esat.rotational.constrained.ConstrainedModel.train"><code class="docutils literal notranslate"><span class="pre">ConstrainedModel.train()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="esat.rotational.html#esat.rotational.constrained.Constraint"><code class="docutils literal notranslate"><span class="pre">Constraint</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="esat.rotational.html#esat.rotational.constrained.Constraint.describe"><code class="docutils literal notranslate"><span class="pre">Constraint.describe()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.rotational.html#esat.rotational.constrained.Constraint.tostring"><code class="docutils literal notranslate"><span class="pre">Constraint.tostring()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.rotational.html#esat.rotational.constrained.Constraint.type_list"><code class="docutils literal notranslate"><span class="pre">Constraint.type_list</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="esat.rotational.html#module-esat.rotational">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+</section>
+<section id="module-esat.configs">
+<span id="esat-configs-module"></span><h2>esat.configs module<a class="headerlink" href="#module-esat.configs" title="Link to this heading"></a></h2>
+</section>
+<section id="module-esat.metrics">
+<span id="esat-metrics-module"></span><h2>esat.metrics module<a class="headerlink" href="#module-esat.metrics" title="Link to this heading"></a></h2>
+<p>Collection of metric functions which are used throughout the code base.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="esat.metrics.calculate_Q">
+<span class="sig-prename descclassname"><span class="pre">esat.metrics.</span></span><span class="sig-name descname"><span class="pre">calculate_Q</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">residuals</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uncertainty</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.metrics.calculate_Q" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="esat.metrics.q_factor">
+<span class="sig-prename descclassname"><span class="pre">esat.metrics.</span></span><span class="sig-name descname"><span class="pre">q_factor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">V</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">U</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">W</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">H</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.metrics.q_factor" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="esat.metrics.q_loss">
+<span class="sig-prename descclassname"><span class="pre">esat.metrics.</span></span><span class="sig-name descname"><span class="pre">q_loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">V</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">U</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">W</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">H</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uncertainty</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.metrics.q_loss" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="esat.metrics.qr_loss">
+<span class="sig-prename descclassname"><span class="pre">esat.metrics.</span></span><span class="sig-name descname"><span class="pre">qr_loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">V</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">U</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">W</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">H</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.metrics.qr_loss" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-esat.utils">
+<span id="esat-utils-module"></span><h2>esat.utils module<a class="headerlink" href="#module-esat.utils" title="Link to this heading"></a></h2>
+<p>Collection of utility functions used throughout the code base.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="esat.utils.calculate_factor_correlation">
+<span class="sig-prename descclassname"><span class="pre">esat.utils.</span></span><span class="sig-name descname"><span class="pre">calculate_factor_correlation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">factor2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.utils.calculate_factor_correlation" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="esat.utils.compare_all_factors">
+<span class="sig-prename descclassname"><span class="pre">esat.utils.</span></span><span class="sig-name descname"><span class="pre">compare_all_factors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matrix1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrix2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.utils.compare_all_factors" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="esat.utils.np_encoder">
+<span class="sig-prename descclassname"><span class="pre">esat.utils.</span></span><span class="sig-name descname"><span class="pre">np_encoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">object</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.utils.np_encoder" title="Link to this definition"></a></dt>
+<dd><p>Convert any numpy type to a generic type for json serialization.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>object</strong> – Object to be converted.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Generic object or an unchanged object if not a numpy type</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="esat.utils.solution_bump">
+<span class="sig-prename descclassname"><span class="pre">esat.utils.</span></span><span class="sig-name descname"><span class="pre">solution_bump</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">profile</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contribution</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bump_range</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">(0.9,</span> <span class="pre">1.1)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">42</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.utils.solution_bump" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-esat.estimator">
+<span id="esat-estimator-module"></span><h2>esat.estimator module<a class="headerlink" href="#module-esat.estimator" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="esat.estimator.FactorEstimator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">esat.estimator.</span></span><span class="sig-name descname"><span class="pre">FactorEstimator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">V</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">U</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">42</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_percent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.estimator.FactorEstimator" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Factor search uses a Monte Carlo sampling approach for testing different factor counts using cross-validation
+testing. Both a train and a test MSE are calculated for each model in the search. These MSE values are averaged
+for each factor count and the change in test MSE is used to estimate the factor count for the dataset.</p>
+<p>Reference: <a class="reference external" href="http://alexhwilliams.info/itsneuronalblog/2018/02/26/crossval/">http://alexhwilliams.info/itsneuronalblog/2018/02/26/crossval/</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>V</strong> (<em>np.ndarray</em>) – The input dataset to use for the factor search.</p></li>
+<li><p><strong>U</strong> (<em>np.ndarray</em>) – The uncertainty dataset to use for the factor search.</p></li>
+<li><p><strong>seed</strong> (<em>int</em>) – The random seed to use for the model initialization, cross-validation masking, and factor selection.</p></li>
+<li><p><strong>test_percent</strong> (<em>float</em>) – The decimal percentage of values in the input dataset to use for the MSE test calculation.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.estimator.FactorEstimator.plot">
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">actual_count</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.estimator.FactorEstimator.plot" title="Link to this definition"></a></dt>
+<dd><p>Plot the results of the factor search as seen by the results table. When the actual number of factors are known,
+they can be provided using the actual_count parameter. The estimated factor count will be shown as a red dashed
+vertical line, the actual factor count is shown as a black dashed vertical line when it is provided.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>actual_count</strong> (<em>int</em>) – The known factor count value, such as when using the Simulator.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.estimator.FactorEstimator.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">samples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">200</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_factors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_factors</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">15</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.estimator.FactorEstimator.run" title="Link to this definition"></a></dt>
+<dd><p>Run the Monte Carlo sampling for a random set of models using factor counts between min_factors and max_factors
+a specified number of times, samples.</p>
+<p>When the results are inconclusive or there are several large peaks in the delta MSE line, increasing the sample
+count can help narrow the estimation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>samples</strong> (<em>int</em>) – The number of random samples to take for the factor estimation.</p></li>
+<li><p><strong>min_factors</strong> (<em>int</em>) – The minimum number of factors to consider in the random sampling.</p></li>
+<li><p><strong>max_factors</strong> (<em>int</em>) – The maximum number of factors to consider in the random sampling.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The results of the factor search showing the metrics used to estimate the factor count.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pd.DataFrame</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-esat">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-esat" title="Link to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="modules.html" class="btn btn-neutral float-left" title="Python API" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="esat.cli.html" class="btn btn-neutral float-right" title="esat.cli package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, EPA.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

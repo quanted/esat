@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Summary &mdash; Environmental Source Apportionment Toolkit (ESAT) 0.1a documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=88a2ef70"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Environmental Source Apportionment Toolkit (ESAT)
+          </a>
+              <div class="version">
+                2024
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Welcome to EPA’s ESAT Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="README.html">Environmental Source Apportionment Toolkit (ESAT)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="docs/modules.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="docs/cli.html">Command Line Interface</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Environmental Source Apportionment Toolkit (ESAT)</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Summary</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/paper.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="summary">
+<h1>Summary<a class="headerlink" href="#summary" title="Link to this heading"></a></h1>
+<p>Source apportionment is an important tool in environmental science where sample or sensor data are often the product
+of many, often unknown, contributing sources. One technique for source apportionment is non-negative matrix
+factorization (NMF). Using NMF, source apportionment models estimate potential source profiles and contributions providing
+a cost-efficient method for further strategic data collection or modeling. An important aspect of modeling, especially
+environmental modeling, is the consideration of input data uncertainty and error quantification.</p>
+<p>The EPA’s Positive Matrix Factorization version 5 (PMF5) application offers a source apportionment modeling and analysis
+workflow that has an active international user community. PMF5 was released in 2014 and is no longer supported;
+additionally the Multilinear Engine v2 (ME2) used, is proprietary, with documentation existing only for ME1
+[&#64;Paatero:1999].</p>
+</section>
+<section id="statement-of-need">
+<h1>Statement of Need<a class="headerlink" href="#statement-of-need" title="Link to this heading"></a></h1>
+<p>The Environmental Source Apportionment Toolkit (ESAT) has been developed as a replacement to PMF5, and has been
+designed for increased flexibility, documentation and transparency.<code class="docutils literal notranslate"><span class="pre">ESAT</span></code> is an open-source Python
+package for flexible source apportionment workflows. The Python API and CLI of <code class="docutils literal notranslate"><span class="pre">ESAT</span></code> provides an object-oriented
+interface that can completely recreate the PMF5 workflow. The matrix factorization algorithms in <code class="docutils literal notranslate"><span class="pre">ESAT</span></code> have been
+written in Rust for optimization of the core math functionality. <code class="docutils literal notranslate"><span class="pre">ESAT</span></code> has two NMF algorithms for updating
+the profile and contribution matrices of the solution, least-squares NMF (LS-NMF) [&#64;Wang:2006] and weighted-semi NMF
+(WS-NMF) [&#64;Ding:2008] [&#64;DeMelo:2012].</p>
+<p><code class="docutils literal notranslate"><span class="pre">ESAT</span></code> provides a highly flexible API and CLI that can create source apportionment workflows like those found in PMF5,
+but can also create new workflows that allow for novel environmental research.
+<code class="docutils literal notranslate"><span class="pre">ESAT</span></code> was developed for environmental research, though it’s not limited to environmental researchers, as matrix
+factorization is used in many different fields; <code class="docutils literal notranslate"><span class="pre">ESAT</span></code> places no restriction on the types of input datasets.</p>
+<section id="algorithms">
+<h2>Algorithms<a class="headerlink" href="#algorithms" title="Link to this heading"></a></h2>
+<p>The loss function used in <code class="docutils literal notranslate"><span class="pre">ESAT</span></code>, and PMF5, is a variation of squared-error loss, where data uncertainty is taken into
+consideration:</p>
+<p>$$
+Q = \sum_{i=1}^n \sum_{j=1}^m \bigg[ \frac{V_{ij} - \sum_{k=1}^K W_{ik} H_{kj}}{U_{ij}} \bigg]^2
+$$
+here $V$ is the input data matrix of features (columns=$M$) by samples (rows=$N$), $U$ is the uncertainty matrix of the
+input data matrix, $W$ is the factor contribution matrix of samples by factors=$k$, $H$ is the factor profile of
+factors by features.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">ESAT</span></code> versions of NMF algorithms convert the uncertainty $U$ into weights defined as $Uw = \frac{1}{U^2}$.
+The update equations for LS-NMF then become:</p>
+<p>$$ H_{t+1} = H_t \circ \frac{W_t (V \circ Uw)}{W_t {((W_{t}H_{t}) \circ Uw)}} $$</p>
+<p>$$ W_{t+1} = W_t \circ \frac{(V \circ Uw) H_{t+1}}{((W_{t}H_{t+1})\circ Uw )H_{t+1}} $$</p>
+<p>while the update equations for WS-NMF:</p>
+<p>$$ W_{t+1,i} = (H^{T}Uw_{i}^{d}H)^{-1}(H^{T}Uw_{i}^{d}V_{i})$$</p>
+<p>$$ H_{t+1,i} = H_{t, i}\sqrt{\frac{((V^{T}Uw)W_{t+1})<em>{i}^{+} + [H</em>{t}(W_{t+1}^{T}Uw W)^{-}]<em>{i}}{((V^{T}Uw)W</em>{t+1})<em>{i}^{-} + [H</em>{t}(W_{t+1}^{T}Uw W)^{+}]_{i}}}$$</p>
+<p>where $W^{-} = \frac{(|W| - W)}{2.0}$ and $W^{+} = \frac{(|W| + W)}{2.0}$.</p>
+</section>
+<section id="error-estimation">
+<h2>Error Estimation<a class="headerlink" href="#error-estimation" title="Link to this heading"></a></h2>
+<p>An important part of the source apportionment workflow is quantifying potential model error. <code class="docutils literal notranslate"><span class="pre">ESAT</span></code> offers the same error estimation
+methods that were available in PMF5 [&#64;Brown:2015], but with flexibility for customization.
+\begin{itemize}
+\item Displacement Method (DISP): Quantify the error due to rotational ambiguity by evaluating the amount of change in source profile that correspond to specific changes in the loss.
+\item Bootstrap Method (BS): Quantify the error due to the order of the samples via block resampling.
+\item BS-DISP: Calculate the displacement error on a set of bootstrap datasets to quantify the combined error.
+\end{itemize}</p>
+</section>
+<section id="simulator">
+<h2>Simulator<a class="headerlink" href="#simulator" title="Link to this heading"></a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">ESAT</span></code> contains a data simulator for generating synthetic profiles and contributions which allow for direct model evaluation.
+The synthetic profiles can either be randomly generated, use a previously defined set of profiles, or a combination of both.
+The random synthetic contributions can follow specified curves and value ranges. The <code class="docutils literal notranslate"><span class="pre">ESAT</span></code> model profiles can then
+be mapped to the known synthetic data for direct comparison and accuracy evaluations.</p>
+</section>
+</section>
+<section id="acknowledgements">
+<h1>Acknowledgements<a class="headerlink" href="#acknowledgements" title="Link to this heading"></a></h1>
+<p>ESAT development has been funded by U.S. EPA.  Mention of any trade names, products, or services does not convey, and
+should not be interpreted as conveying, official EPA approval, endorsement, or recommendation. The views expressed in
+this paper are those of the authors and do not necessarily represent the views or policies of the US EPA.</p>
+</section>
+<section id="references">
+<h1>References<a class="headerlink" href="#references" title="Link to this heading"></a></h1>
+</section>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, EPA.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

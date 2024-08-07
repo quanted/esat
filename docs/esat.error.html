@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>esat.error package &mdash; Environmental Source Apportionment Toolkit (ESAT) 0.1a documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=88a2ef70"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="esat.model package" href="esat.model.html" />
+    <link rel="prev" title="esat.data package" href="esat.data.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Environmental Source Apportionment Toolkit (ESAT)
+          </a>
+              <div class="version">
+                2024
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Welcome to EPA’s ESAT Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html">Environmental Source Apportionment Toolkit (ESAT)</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">Python API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="esat.html">esat package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="esat.data.html">esat.data package</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">esat.error package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#submodules">Submodules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-esat.error.bootstrap">esat.error.bootstrap module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#esat.error.bootstrap.Bootstrap"><code class="docutils literal notranslate"><span class="pre">Bootstrap</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-esat.error.bs_disp">esat.error.bs_disp module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#esat.error.bs_disp.BSDISP"><code class="docutils literal notranslate"><span class="pre">BSDISP</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-esat.error.displacement">esat.error.displacement module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#esat.error.displacement.Displacement"><code class="docutils literal notranslate"><span class="pre">Displacement</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-esat.error.error">esat.error.error module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#esat.error.error.Error"><code class="docutils literal notranslate"><span class="pre">Error</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-esat.error">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="esat.model.html">esat.model package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="esat.rotational.html">esat.rotational package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="eval.html">eval package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">Command Line Interface</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Environmental Source Apportionment Toolkit (ESAT)</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="modules.html">Python API</a></li>
+          <li class="breadcrumb-item"><a href="esat.html">esat package</a></li>
+      <li class="breadcrumb-item active">esat.error package</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/docs/esat.error.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="esat-error-package">
+<h1>esat.error package<a class="headerlink" href="#esat-error-package" title="Link to this heading"></a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading"></a></h2>
+</section>
+<section id="module-esat.error.bootstrap">
+<span id="esat-error-bootstrap-module"></span><h2>esat.error.bootstrap module<a class="headerlink" href="#module-esat.error.bootstrap" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="esat.error.bootstrap.Bootstrap">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">esat.error.bootstrap.</span></span><span class="sig-name descname"><span class="pre">Bootstrap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sa</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="esat.model.html#esat.model.sa.SA" title="esat.model.sa.SA"><span class="pre">SA</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_labels</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_selected</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bootstrap_n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">block_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.6</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.error.bootstrap.Bootstrap" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>The Bootstrap (BS) method is used to detect and estimate disproportionate effects of a small set of data samples on
+the solution. The BS method assembles dataset by randomly selecting blocks of consecutive samples from the original
+dataset, with replacement.</p>
+<p>The BS method implemented here is called the block bootstrap method. The block BS method is useful on
+timeseries data that may contain temporal correlations that would otherwise be lost if single samples were
+resampled.</p>
+<p>For each BS run, a unique BS dataset is created and run through NMF to convergence where the output is compared
+to see if the factors of the original base model map to each of the factors of the BS output. The factors are
+mapped to the original base model factors by highest correlation, potentially having multiple BS factors mapping
+to the same base model factor, where the correlation is above the user specified threshold.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sa</strong> (<a class="reference internal" href="esat.model.html#esat.model.sa.SA" title="esat.model.sa.SA"><em>SA</em></a>) – A completed SA base model that used the same data and uncertainty datasets.</p></li>
+<li><p><strong>feature_labels</strong> (<em>list</em>) – The labels for the features, columns of the dataset, specified from the data handler.</p></li>
+<li><p><strong>model_selected</strong> (<em>int</em>) – The index of the model selected from a batch NMF run, used for labeling.</p></li>
+<li><p><strong>bootstrap_n</strong> (<em>int</em>) – The number of bootstrap runs to make.</p></li>
+<li><p><strong>block_size</strong> (<em>int</em>) – The block size for the BS resampling.</p></li>
+<li><p><strong>threshold</strong> (<em>float</em>) – The correlation threshold that must be met for a BS factor to be mapped to a base model factor, factor
+correlations must be greater than the threshold or are labeled unmapped.</p></li>
+<li><p><strong>seed</strong> (<em>int</em>) – The random seed for random resampling of the BS datasets. The base model random seed is used for all BS runs,
+which result in the same initial W matrix.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.error.bootstrap.Bootstrap.load">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.error.bootstrap.Bootstrap.load" title="Link to this definition"></a></dt>
+<dd><p>Load a previously saved BS SA pickle file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>file_path</strong> (<em>str</em>) – File path to a previously saved BS SA pickle file</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>On successful load, will return a previously saved BS SA object. Will return None on load fail.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#esat.error.bootstrap.Bootstrap" title="esat.error.bootstrap.Bootstrap">Bootstrap</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.error.bootstrap.Bootstrap.map_contributions">
+<span class="sig-name descname"><span class="pre">map_contributions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">W1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">H1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">W2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">H2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.6</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.error.bootstrap.Bootstrap.map_contributions" title="Link to this definition"></a></dt>
+<dd><p>Map all the factors of H1 to the factors of H2 by the factor contributions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>W1</strong> (<em>np.ndarray</em>) – The first factor contribution matrix for the mapping.</p></li>
+<li><p><strong>H1</strong> (<em>np.ndarray</em>) – The first factor profile matrix for the mapping.</p></li>
+<li><p><strong>W2</strong> (<em>np.ndarray</em>) – The second factor contribution matrix for the mapping.</p></li>
+<li><p><strong>H2</strong> (<em>np.ndarray</em>) – The second factor profile matrix for the mapping.</p></li>
+<li><p><strong>threshold</strong> (<em>float</em>) – The threshold that a factor correlation must exceed to be mapped to another factor.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A dictionary of the mapping of the H1 factors to the H2 factors.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.error.bootstrap.Bootstrap.map_factors">
+<span class="sig-name descname"><span class="pre">map_factors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">H1</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">H2</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.6</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.error.bootstrap.Bootstrap.map_factors" title="Link to this definition"></a></dt>
+<dd><p>Map all the factors of one factor profile to the factors of a second factor profile.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>H1</strong> (<em>np.ndarray</em>) – The first factor profile for the mapping.</p></li>
+<li><p><strong>H2</strong> (<em>np.ndarray</em>) – The second factor profile for the mapping.</p></li>
+<li><p><strong>threshold</strong> (<em>float</em>) – The threshold that a factor correlation must exceed to be mapped to another factor.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A dictionary of the mapping of the H1 factors to the H2 factors.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.error.bootstrap.Bootstrap.plot_contribution">
+<span class="sig-name descname"><span class="pre">plot_contribution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.error.bootstrap.Bootstrap.plot_contribution" title="Link to this definition"></a></dt>
+<dd><p>Plot the BS factor contributions for a specific factor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>factor</strong> (<em>int</em>) – The index of the factor to plot.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.error.bootstrap.Bootstrap.plot_factor">
+<span class="sig-name descname"><span class="pre">plot_factor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.error.bootstrap.Bootstrap.plot_factor" title="Link to this definition"></a></dt>
+<dd><p>Plot the BS factor profile for a specific factor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>factor</strong> (<em>int</em>) – The index of the factor to plot.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.error.bootstrap.Bootstrap.plot_results">
+<span class="sig-name descname"><span class="pre">plot_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.error.bootstrap.Bootstrap.plot_results" title="Link to this definition"></a></dt>
+<dd><p>Plot both the factor profile and factor contributions for a specific index.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>factor</strong> (<em>int</em>) – The index of the factor to plot.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.error.bootstrap.Bootstrap.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">keep_H</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reuse_seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">block</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overlapping</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.error.bootstrap.Bootstrap.run" title="Link to this definition"></a></dt>
+<dd><p>Run the BS method.</p>
+<p>Executes all the BS runs and compiles the results.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>keep_H</strong> (<em>bool</em>) – When retraining the SA models using the resampled input and uncertainty datasets, keep the base model H
+matrix instead of reinitializing. The W matrix is always reinitialized when NMF is run on the BS datasets.
+Default = True</p></li>
+<li><p><strong>reuse_seed</strong> (<em>bool</em>) – Reuse the base model seed for initializing the W matrix, and the H matrix if keep_H = False. Default = True</p></li>
+<li><p><strong>block</strong> (<em>bool</em>) – Use block resampling instead of full resampling. Default = True</p></li>
+<li><p><strong>overlapping</strong> (<em>bool</em>) – Allow resampled blocks to overlap. Default = False</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.error.bootstrap.Bootstrap.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bs_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_directory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pickle_result</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.error.bootstrap.Bootstrap.save" title="Link to this definition"></a></dt>
+<dd><p>Save the BS results.
+:param bs_name: The name to use for the BS file.
+:type bs_name: str
+:param output_directory: The output directory to save the BS file to.
+:type output_directory: str
+:param pickle_result: Pickle the bs model. Default = True.
+:type pickle_result: bool</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The path to the saved file.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.error.bootstrap.Bootstrap.show_factor_results">
+<span class="sig-name descname"><span class="pre">show_factor_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.error.bootstrap.Bootstrap.show_factor_results" title="Link to this definition"></a></dt>
+<dd><p>Create the table showing the factor metrics from the BS runs for a specific factor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>factor</strong> (<em>int</em>) – The index of the factor to show.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.error.bootstrap.Bootstrap.show_mapping_table">
+<span class="sig-name descname"><span class="pre">show_mapping_table</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#esat.error.bootstrap.Bootstrap.show_mapping_table" title="Link to this definition"></a></dt>
+<dd><p>Plots the factor mapping table.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.error.bootstrap.Bootstrap.show_q_table">
+<span class="sig-name descname"><span class="pre">show_q_table</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#esat.error.bootstrap.Bootstrap.show_q_table" title="Link to this definition"></a></dt>
+<dd><p>Plots the BS run Q(robust) statistics.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.error.bootstrap.Bootstrap.summary">
+<span class="sig-name descname"><span class="pre">summary</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#esat.error.bootstrap.Bootstrap.summary" title="Link to this definition"></a></dt>
+<dd><p>Prints a summary of the BS parameters and results.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-esat.error.bs_disp">
+<span id="esat-error-bs-disp-module"></span><h2>esat.error.bs_disp module<a class="headerlink" href="#module-esat.error.bs_disp" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="esat.error.bs_disp.BSDISP">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">esat.error.bs_disp.</span></span><span class="sig-name descname"><span class="pre">BSDISP</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sa</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="esat.model.html#esat.model.sa.SA" title="esat.model.sa.SA"><span class="pre">SA</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_labels</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_selected</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bootstrap</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#esat.error.bootstrap.Bootstrap" title="esat.error.bootstrap.Bootstrap"><span class="pre">Bootstrap</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bootstrap_n</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">block_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.6</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_search</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_dQ</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.error.bs_disp.BSDISP" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>The Bootstrap-Displacement (BS-DISP) method combines both the Bootstrap and Displacement methods to estimate the
+errors with both random and rotational ambiguity. For each BS run/dataset, the DISP method is run on that dataset.</p>
+<p>The BS-DISP method uses a base model, and an optional BS instance. For each bootstrap run, BS dataset, DISP will
+be run on each BS model for the specified features. If no features are specified then all features are run on
+DISP.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sa</strong> (<a class="reference internal" href="esat.model.html#esat.model.sa.SA" title="esat.model.sa.SA"><em>SA</em></a>) – A completed SA base model that used the same data and uncertainty datasets.</p></li>
+<li><p><strong>feature_labels</strong> (<em>list</em>) – The labels for the features, columns of the dataset, specified from the data handler.</p></li>
+<li><p><strong>model_selected</strong> (<em>int</em>) – The index of the model selected from a batch NMF run, used for labeling.</p></li>
+<li><p><strong>bootstrap</strong> (<a class="reference internal" href="#esat.error.bootstrap.Bootstrap" title="esat.error.bootstrap.Bootstrap"><em>Bootstrap</em></a>) – A previously complete BS model.</p></li>
+<li><p><strong>bootstrap_n</strong> (<em>int</em>) – The number of bootstrap runs to make.</p></li>
+<li><p><strong>block_size</strong> (<em>int</em>) – The block size for the BS resampling.</p></li>
+<li><p><strong>threshold</strong> (<em>float</em>) – The correlation threshold that must be met for a BS factor to be mapped to a base model factor, factor
+correlations must be greater than the threshold or are labeled unmapped.</p></li>
+<li><p><strong>max_search</strong> (<em>int</em>) – The maximum number of search steps to complete when trying to find a factor feature value. Default = 50</p></li>
+<li><p><strong>threshold_dQ</strong> (<em>float</em>) – The threshold range of the dQ value for the factor feature value to be considered found. I.E, dQ=4 and
+threshold_dQ=0.1, than any value between 3.9 and 4.0 will be considered valid.</p></li>
+<li><p><strong>features</strong> (<em>list</em>) – A list of the feature indices to run DISP on, default is None which will run DISP on all features.</p></li>
+<li><p><strong>seed</strong> (<em>int</em>) – The random seed for random resampling of the BS datasets. The base model random seed is used for all BS runs,
+which result in the same initial W matrix.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="esat.error.bs_disp.BSDISP.dQmax">
+<span class="sig-name descname"><span class="pre">dQmax</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[4,</span> <span class="pre">2,</span> <span class="pre">1,</span> <span class="pre">0.5]</span></em><a class="headerlink" href="#esat.error.bs_disp.BSDISP.dQmax" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.error.bs_disp.BSDISP.load">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.error.bs_disp.BSDISP.load" title="Link to this definition"></a></dt>
+<dd><p>Load a previously saved BS-DISP SA pickle file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>file_path</strong> (<em>str</em>) – File path to a previously saved BS-DISP SA pickle file</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>On successful load, will return a previously saved BS-DISP SA object. Will return None on load fail.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#esat.error.bs_disp.BSDISP" title="esat.error.bs_disp.BSDISP">BSDISP</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.error.bs_disp.BSDISP.plot_contribution">
+<span class="sig-name descname"><span class="pre">plot_contribution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dQ</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.5</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.error.bs_disp.BSDISP.plot_contribution" title="Link to this definition"></a></dt>
+<dd><p>Plot the BS-DISP factor contribution results.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>factor</strong> (<em>int</em>) – The index of the BS-DISP factor results to display.</p></li>
+<li><p><strong>dQ</strong> (<em>float</em>) – The dQ value to show in the results, valid values are (0.5, 1, 2, 4). Default = 0.5, will use default if
+invalid value provided.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.error.bs_disp.BSDISP.plot_profile">
+<span class="sig-name descname"><span class="pre">plot_profile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dQ</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.5</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.error.bs_disp.BSDISP.plot_profile" title="Link to this definition"></a></dt>
+<dd><p>Plot the BS-DISP factor profile results.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>factor</strong> (<em>int</em>) – The index of the BS-DISP factor results to display.</p></li>
+<li><p><strong>dQ</strong> (<em>float</em>) – The dQ value to show in the results, valid values are (0.5, 1, 2, 4). Default = 0.4, will use default if
+invalid value provided.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.error.bs_disp.BSDISP.plot_results">
+<span class="sig-name descname"><span class="pre">plot_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dQ</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.5</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.error.bs_disp.BSDISP.plot_results" title="Link to this definition"></a></dt>
+<dd><p>Plot the BS-DISP results for a specified factor and dQ value. The output results are grouped by dQ, with dQ=0.5
+being the default value displayed for results.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>factor</strong> (<em>int</em>) – The index of the BS-DISP factor results to display.</p></li>
+<li><p><strong>dQ</strong> (<em>float</em>) – The dQ value to show in the results, valid values are (0.5, 1, 2, 4). Default = 0.5, will use default if
+invalid value provided.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.error.bs_disp.BSDISP.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parallel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_H</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reuse_seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">block</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overlapping</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.error.bs_disp.BSDISP.run" title="Link to this definition"></a></dt>
+<dd><p>Run the BS-DISP error estimation method. If no prior BS run had been completed, this will execute a BS run and
+then a DISP for each of the BS runs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>keep_H</strong> (<em>bool</em>) – When retraining the SA models using the resampled input and uncertainty datasets, keep the base model H
+matrix instead of reinitializing. The W matrix is always reinitialized when SA is run on the BS datasets.
+Default = True</p></li>
+<li><p><strong>reuse_seed</strong> (<em>bool</em>) – Reuse the base model seed for initializing the W matrix, and the H matrix if keep_H = False. Default = True</p></li>
+<li><p><strong>block</strong> (<em>bool</em>) – Use block resampling instead of full resampling. Default = True</p></li>
+<li><p><strong>overlapping</strong> (<em>bool</em>) – Allow resampled blocks to overlap. Default = False</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.error.bs_disp.BSDISP.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bsdisp_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_directory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pickle_result</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.error.bs_disp.BSDISP.save" title="Link to this definition"></a></dt>
+<dd><p>Save the BS-DISP results.
+:param bsdisp_name: The name to use for the BS-DISP pickle file.
+:type bsdisp_name: str
+:param output_directory: The output directory to save the BS-DISP pickle file to.
+:type output_directory: str
+:param pickle_result: Pickle the BS-DISP model. Default = True.
+:type pickle_result: bool</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The path to the saved file.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.error.bs_disp.BSDISP.summary">
+<span class="sig-name descname"><span class="pre">summary</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#esat.error.bs_disp.BSDISP.summary" title="Link to this definition"></a></dt>
+<dd><p>Prints a summary of the BS-DISP results table.</p>
+<p>Summary shows the largest change in Q across all DISP runs, the % of cases with a drop of Q, swap in best
+fit and swap in DISP phase. Followed by the swap % table as shown in the regular DISP summary. The dQmax values
+in BS-DISP differ from DISP to account for increased variability, BS-DISP dQmax values are (0.5, 1, 2, 4) while
+DISP dQmax values are (4, 8, 16, 32)</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-esat.error.displacement">
+<span id="esat-error-displacement-module"></span><h2>esat.error.displacement module<a class="headerlink" href="#module-esat.error.displacement" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="esat.error.displacement.Displacement">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">esat.error.displacement.</span></span><span class="sig-name descname"><span class="pre">Displacement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sa</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="esat.model.html#esat.model.sa.SA" title="esat.model.sa.SA"><span class="pre">SA</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_labels</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_selected</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_search</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_dQ</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.error.displacement.Displacement" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>The displacement method (DISP) for error estimation explores the rotational ambiguity in the solution by assessing
+the largest range of source profile values without an appreciable increase in the loss value (Q).</p>
+<p>The DISP method finds the required change in a factor profile feature value to cause a specific increase in the
+loss function value (dQ). The change is found for dQ=(4, 8, 16, 32) and for both increasing and decreasing
+changes to the factor profile feature values. The search for these changes is limited to max_search steps, where
+a step is the binary search for the value based upon the bounds of the initial value. Factor profile values must
+be greater than 0, so once the modified value is below 1e-8 or the modified value is no longer changing between
+steps the search is stopped and the final value in the search used.</p>
+<p>The process is repeated for all factors and features, if there are factors=k, features=N, dQ_N=4 then this
+process is completed 2*k*N*4 times.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sa</strong> (<a class="reference internal" href="esat.model.html#esat.model.sa.SA" title="esat.model.sa.SA"><em>SA</em></a>) – The base model to run the DISP method on.</p></li>
+<li><p><strong>feature_labels</strong> (<em>list</em>) – The list of feature, column, labels from the original input dataset. Provided in the data handler.</p></li>
+<li><p><strong>model_selected</strong> (<em>int</em>) – The index of the model selected in the case of a batch NMF run, used for labeling.</p></li>
+<li><p><strong>max_search</strong> (<em>int</em>) – The maximum number of search steps to complete when trying to find a factor feature value. Default = 50</p></li>
+<li><p><strong>threshold_dQ</strong> (<em>float</em>) – The threshold range of the dQ value for the factor feature value to be considered found. I.E, dQ=4 and
+threshold_dQ=0.1, than any value between 3.9 and 4.0 will be considered valid.</p></li>
+<li><p><strong>features</strong> (<em>list</em>) – A list of the feature indices to run DISP on, default is None which will run DISP on all features.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="esat.error.displacement.Displacement.dQmax">
+<span class="sig-name descname"><span class="pre">dQmax</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">[32,</span> <span class="pre">16,</span> <span class="pre">8,</span> <span class="pre">4]</span></em><a class="headerlink" href="#esat.error.displacement.Displacement.dQmax" title="Link to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.error.displacement.Displacement.load">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.error.displacement.Displacement.load" title="Link to this definition"></a></dt>
+<dd><p>Load a previously saved DISP SA pickle file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>file_path</strong> (<em>str</em>) – File path to a previously saved DISP SA pickle file</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>On successful load, will return a previously saved DISP NMF object. Will return None on load fail.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#esat.error.displacement.Displacement" title="esat.error.displacement.Displacement">Displacement</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.error.displacement.Displacement.plot_contribution">
+<span class="sig-name descname"><span class="pre">plot_contribution</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dQ</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.error.displacement.Displacement.plot_contribution" title="Link to this definition"></a></dt>
+<dd><p>Plot the DISP factor contribution results.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>factor</strong> (<em>int</em>) – The index of the DISP factor results to display.</p></li>
+<li><p><strong>dQ</strong> (<em>int</em>) – The dQ value to show in the results, valid values are (4, 8, 16, 32). Default = 4, will use default if
+invalid value provided.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.error.displacement.Displacement.plot_profile">
+<span class="sig-name descname"><span class="pre">plot_profile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dQ</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.error.displacement.Displacement.plot_profile" title="Link to this definition"></a></dt>
+<dd><p>Plot the DISP factor profile results.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>factor</strong> (<em>int</em>) – The index of the DISP factor results to display.</p></li>
+<li><p><strong>dQ</strong> (<em>int</em>) – The dQ value to show in the results, valid values are (4, 8, 16, 32). Default = 4, will use default if
+invalid value provided.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.error.displacement.Displacement.plot_results">
+<span class="sig-name descname"><span class="pre">plot_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dQ</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.error.displacement.Displacement.plot_results" title="Link to this definition"></a></dt>
+<dd><p>Plot the DISP results for a specified factor and dQ value. The output results are grouped by dQ, with dQ=4 being
+the default value displayed for results.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>factor</strong> (<em>int</em>) – The index of the DISP factor results to display.</p></li>
+<li><p><strong>dQ</strong> (<em>int</em>) – The dQ value to show in the results, valid values are (4, 8, 16, 32). Default = 4, will use default if
+invalid value provided.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.error.displacement.Displacement.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.error.displacement.Displacement.run" title="Link to this definition"></a></dt>
+<dd><p>Run the DISP method on the provided SA model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>batch</strong> (<em>int</em>) – Batch number identifier, used for labeling DISP during parallel runs with BS-DISP.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.error.displacement.Displacement.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">disp_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_directory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pickle_result</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.error.displacement.Displacement.save" title="Link to this definition"></a></dt>
+<dd><p>Save the DISP results.
+:param disp_name: The name to use for the DISP pickle file.
+:type disp_name: str
+:param output_directory: The output directory to save the DISP pickle file to.
+:type output_directory: str
+:param pickle_result: Pickle the disp model. Default = True.
+:type pickle_result: bool</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The path to the saved file.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.error.displacement.Displacement.summary">
+<span class="sig-name descname"><span class="pre">summary</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#esat.error.displacement.Displacement.summary" title="Link to this definition"></a></dt>
+<dd><p>Print the summary table showing the largest change in dQ and the % of factor flips that occurred.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-esat.error.error">
+<span id="esat-error-error-module"></span><h2>esat.error.error module<a class="headerlink" href="#module-esat.error.error" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="esat.error.error.Error">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">esat.error.error.</span></span><span class="sig-name descname"><span class="pre">Error</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#esat.error.bootstrap.Bootstrap" title="esat.error.bootstrap.Bootstrap"><span class="pre">Bootstrap</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">disp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#esat.error.displacement.Displacement" title="esat.error.displacement.Displacement"><span class="pre">Displacement</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bsdisp</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#esat.error.bs_disp.BSDISP" title="esat.error.bs_disp.BSDISP"><span class="pre">BSDISP</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.error.error.Error" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Calculate the summary error statistics from bootstrap, displacement and BS-DISP results.</p>
+<p>Calculate the combined error summary statistics from various error estimation methods.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>bs</strong> (<a class="reference internal" href="#esat.error.bootstrap.Bootstrap" title="esat.error.bootstrap.Bootstrap"><em>Bootstrap</em></a>) – The BS run to calculate the summary error.</p></li>
+<li><p><strong>disp</strong> (<a class="reference internal" href="#esat.error.displacement.Displacement" title="esat.error.displacement.Displacement"><em>Displacement</em></a>) – The DISP run to calculate the summary error.</p></li>
+<li><p><strong>bsdisp</strong> (<a class="reference internal" href="#esat.error.bs_disp.BSDISP" title="esat.error.bs_disp.BSDISP"><em>BSDISP</em></a>) – The BS-DISP run to calculate the summary error.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="esat.error.error.Error.plot_summary">
+<span class="sig-name descname"><span class="pre">plot_summary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">factor</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.error.error.Error.plot_summary" title="Link to this definition"></a></dt>
+<dd><p>Plot the combined error estimation results from all provided method results.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>factor</strong> (<em>int</em>) – The index of the factor to plot.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-esat.error">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-esat.error" title="Link to this heading"></a></h2>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="esat.data.html" class="btn btn-neutral float-left" title="esat.data package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="esat.model.html" class="btn btn-neutral float-right" title="esat.model package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, EPA.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

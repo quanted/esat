@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Python API &mdash; Environmental Source Apportionment Toolkit (ESAT) 0.1a documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=88a2ef70"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="esat package" href="esat.html" />
+    <link rel="prev" title="Environmental Source Apportionment Toolkit (ESAT)" href="../README.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            Environmental Source Apportionment Toolkit (ESAT)
+          </a>
+              <div class="version">
+                2024
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Welcome to EPA’s ESAT Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html">Environmental Source Apportionment Toolkit (ESAT)</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Python API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="esat.html">esat package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="esat.data.html">esat.data package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="esat.error.html">esat.error package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="esat.model.html">esat.model package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="esat.rotational.html">esat.rotational package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="eval.html">eval package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="cli.html">Command Line Interface</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Environmental Source Apportionment Toolkit (ESAT)</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Python API</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/docs/modules.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="python-api">
+<h1>Python API<a class="headerlink" href="#python-api" title="Link to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="esat.html">esat package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="esat.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="esat.cli.html">esat.cli package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="esat.data.html">esat.data package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="esat.error.html">esat.error package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="esat.model.html">esat.model package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="esat.rotational.html">esat.rotational package</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="esat.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="esat.html#module-esat.configs">esat.configs module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="esat.html#module-esat.metrics">esat.metrics module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="esat.html#esat.metrics.calculate_Q"><code class="docutils literal notranslate"><span class="pre">calculate_Q()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="esat.html#esat.metrics.q_factor"><code class="docutils literal notranslate"><span class="pre">q_factor()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="esat.html#esat.metrics.q_loss"><code class="docutils literal notranslate"><span class="pre">q_loss()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="esat.html#esat.metrics.qr_loss"><code class="docutils literal notranslate"><span class="pre">qr_loss()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="esat.html#module-esat.utils">esat.utils module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="esat.html#esat.utils.calculate_factor_correlation"><code class="docutils literal notranslate"><span class="pre">calculate_factor_correlation()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="esat.html#esat.utils.compare_all_factors"><code class="docutils literal notranslate"><span class="pre">compare_all_factors()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="esat.html#esat.utils.np_encoder"><code class="docutils literal notranslate"><span class="pre">np_encoder()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="esat.html#esat.utils.solution_bump"><code class="docutils literal notranslate"><span class="pre">solution_bump()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="esat.html#module-esat.estimator">esat.estimator module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="esat.html#esat.estimator.FactorEstimator"><code class="docutils literal notranslate"><span class="pre">FactorEstimator</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="esat.html#module-esat">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="esat.data.html">esat.data package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="esat.data.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="esat.data.html#module-esat.data.analysis">esat.data.analysis module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="esat.data.html#esat.data.analysis.BatchAnalysis"><code class="docutils literal notranslate"><span class="pre">BatchAnalysis</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="esat.data.html#esat.data.analysis.ModelAnalysis"><code class="docutils literal notranslate"><span class="pre">ModelAnalysis</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="esat.data.html#module-esat.data.datahandler">esat.data.datahandler module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="esat.data.html#esat.data.datahandler.DataHandler"><code class="docutils literal notranslate"><span class="pre">DataHandler</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="esat.data.html#module-esat.data.test_tools">esat.data.test_tools module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="esat.data.html#esat.data.test_tools.CompareAnalyzer"><code class="docutils literal notranslate"><span class="pre">CompareAnalyzer</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="esat.data.html#module-esat.data">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="esat.error.html">esat.error package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="esat.error.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="esat.error.html#module-esat.error.bootstrap">esat.error.bootstrap module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="esat.error.html#esat.error.bootstrap.Bootstrap"><code class="docutils literal notranslate"><span class="pre">Bootstrap</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="esat.error.html#module-esat.error.bs_disp">esat.error.bs_disp module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="esat.error.html#esat.error.bs_disp.BSDISP"><code class="docutils literal notranslate"><span class="pre">BSDISP</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="esat.error.html#module-esat.error.displacement">esat.error.displacement module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="esat.error.html#esat.error.displacement.Displacement"><code class="docutils literal notranslate"><span class="pre">Displacement</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="esat.error.html#module-esat.error.error">esat.error.error module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="esat.error.html#esat.error.error.Error"><code class="docutils literal notranslate"><span class="pre">Error</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="esat.error.html#module-esat.error">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="esat.model.html">esat.model package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="esat.model.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="esat.model.html#module-esat.model.batch_sa">esat.model.batch_sa module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="esat.model.html#esat.model.batch_sa.BatchSA"><code class="docutils literal notranslate"><span class="pre">BatchSA</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="esat.model.html#module-esat.model.ls_nmf">esat.model.ls_nmf module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="esat.model.html#esat.model.ls_nmf.LSNMF"><code class="docutils literal notranslate"><span class="pre">LSNMF</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="esat.model.html#esat-model-optimization-module">esat.model.optimization module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="esat.model.html#module-esat.model.recombinator">esat.model.recombinator module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="esat.model.html#esat.model.recombinator.OptimalBlockLength"><code class="docutils literal notranslate"><span class="pre">OptimalBlockLength</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="esat.model.html#esat.model.recombinator.lam"><code class="docutils literal notranslate"><span class="pre">lam()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="esat.model.html#esat.model.recombinator.mlag"><code class="docutils literal notranslate"><span class="pre">mlag()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="esat.model.html#esat.model.recombinator.optimal_block_length"><code class="docutils literal notranslate"><span class="pre">optimal_block_length()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="esat.model.html#module-esat.model.sa">esat.model.sa module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="esat.model.html#esat.model.sa.SA"><code class="docutils literal notranslate"><span class="pre">SA</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="esat.model.html#module-esat.model.ws_nmf">esat.model.ws_nmf module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="esat.model.html#esat.model.ws_nmf.WSNMF"><code class="docutils literal notranslate"><span class="pre">WSNMF</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="esat.model.html#module-esat.model">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="esat.rotational.html">esat.rotational package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="esat.rotational.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="esat.rotational.html#module-esat.rotational.constrained">esat.rotational.constrained module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="esat.rotational.html#esat.rotational.constrained.ConstrainedModel"><code class="docutils literal notranslate"><span class="pre">ConstrainedModel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="esat.rotational.html#esat.rotational.constrained.Constraint"><code class="docutils literal notranslate"><span class="pre">Constraint</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="esat.rotational.html#module-esat.rotational">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="eval.html">eval package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="eval.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="eval.html#module-eval.factor_comparison">eval.factor_comparison module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="eval.html#eval.factor_comparison.FactorCompare"><code class="docutils literal notranslate"><span class="pre">FactorCompare</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="eval.html#module-eval.simulator">eval.simulator module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="eval.html#eval.simulator.Simulator"><code class="docutils literal notranslate"><span class="pre">Simulator</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="eval.html#module-eval">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../README.html" class="btn btn-neutral float-left" title="Environmental Source Apportionment Toolkit (ESAT)" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="esat.html" class="btn btn-neutral float-right" title="esat package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, EPA.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
