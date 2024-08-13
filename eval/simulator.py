@@ -227,11 +227,16 @@ class Simulator:
         # Add noise
         noise_mean = self.rng.uniform(low=self.noise_mean_min, high=self.noise_mean_max, size=self.features_n)
         noise = syn_data * self.rng.normal(loc=noise_mean, scale=self.noise_scale, size=syn_data.shape)
+        negative_noise_mask = self.rng.uniform(size=syn_data.shape)
+        noise[negative_noise_mask < 0.5] = noise[negative_noise_mask < 0.5] * -1.0
         syn_data = np.add(syn_data, noise)
         # Add outliers
         if self.outliers:
             outlier_mask = self.rng.uniform(size=syn_data.shape)
-            syn_data[outlier_mask <= self.outlier_p] = syn_data[outlier_mask <= self.outlier_p] * self.outlier_mag
+            outlier_p = self.outlier_p * 0.5
+            outlier_n = 1.0 - (self.outlier_p * 0.5)
+            syn_data[outlier_mask <= outlier_n] = syn_data[outlier_mask <= outlier_n] * self.outlier_mag
+            syn_data[outlier_mask >= outlier_p] = syn_data[outlier_mask >= outlier_p] / self.outlier_mag
         # Make sure no negative or zero values are in the dataset
         syn_data[syn_data <= 0.0] = 1e-12
         self.syn_data = syn_data

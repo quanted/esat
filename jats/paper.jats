@@ -54,6 +54,7 @@ package</article-title>
 <xref ref-type="aff" rid="aff-1"/>
 </contrib>
 <contrib contrib-type="author">
+<contrib-id contrib-id-type="orcid">https://orcid.org/0009-0005-2221-0433</contrib-id>
 <name>
 <surname>Parmar</surname>
 <given-names>Rajbir</given-names>
@@ -97,37 +98,38 @@ a Creative Commons Attribution 4.0 International License (CC BY
 <sec id="summary">
   <title>Summary</title>
   <p>Source apportionment is an important tool in environmental science
-  where sample or sensor data is very often the product of many, often
+  where sample or sensor data are often the product of many, often
   unknown, contributing sources. One technique for source apportionment
-  is through non-negative matrix factorization (NMF). Using NMF, source
-  apportionment models can estimate potential source profiles and
+  is non-negative matrix factorization (NMF). Using NMF, source
+  apportionment models estimate potential source profiles and
   contributions providing a cost-efficient method for further strategic
   data collection or modeling. An important aspect of modeling,
-  especially environmental modeling, is the consideration of uncertainty
-  in the data and quantifying error in the results.</p>
-  <p>The EPA’s Positive Matrix Factorization version 5 (PMF5)
-  application offers a source apportionment modeling and analysis
-  workflow that has an active international user community. PMF5 was
-  released in 2014 and is no longer supported, additionally the
-  Multilinear Engine v2 (ME2) used is proprietary with documentation
-  existing only for ME1
+  especially environmental modeling, is the consideration of input data
+  uncertainty and error quantification.</p>
+  <p>The EPA’s Positive Matrix Factorization version 5
+  (PMF5)(<xref alt="EPA, 2014" rid="ref-PMF5" ref-type="bibr">EPA,
+  2014</xref>) application offers a source apportionment modeling and
+  analysis workflow that has an active international user community.
+  PMF5 was released in 2014 and is no longer supported; additionally the
+  Multilinear Engine v2 (ME2) used in PMF5 is proprietary, with
+  documentation existing only for the prior version ME1
   (<xref alt="Paatero, 1999" rid="ref-PaateroU003A1999" ref-type="bibr">Paatero,
   1999</xref>).</p>
 </sec>
 <sec id="statement-of-need">
   <title>Statement of Need</title>
   <p>The Environmental Source Apportionment Toolkit (ESAT) has been
-  developed as a replacement to PMF5 that has been developed from the
-  ground up for increased flexibility, documentation and
+  developed as a replacement to PMF5, and has been designed for
+  increased flexibility, documentation and
   transparency.<monospace>ESAT</monospace> is an open-source Python
   package for flexible source apportionment workflows. The Python API
   and CLI of <monospace>ESAT</monospace> provides an object-oriented
   interface that can completely recreate the PMF5 workflow. The matrix
   factorization algorithms in <monospace>ESAT</monospace> have been
   written in Rust for optimization of the core math functionality.
-  <monospace>ESAT</monospace> has two NMF algorithms implemented for
-  updating the profile and contribution matrices of the solution,
-  least-squares NMF (LS-NMF)
+  <monospace>ESAT</monospace> has two NMF algorithms for updating the
+  profile and contribution matrices of the solution: least-squares NMF
+  (LS-NMF)
   (<xref alt="Wang et al., 2006" rid="ref-WangU003A2006" ref-type="bibr">Wang
   et al., 2006</xref>) and weighted-semi NMF (WS-NMF)
   (<xref alt="Ding et al., 2008" rid="ref-DingU003A2008" ref-type="bibr">Ding
@@ -136,17 +138,16 @@ a Creative Commons Attribution 4.0 International License (CC BY
   &amp; Wainer, 2012</xref>).</p>
   <p><monospace>ESAT</monospace> provides a highly flexible API and CLI
   that can create source apportionment workflows like those found in
-  PMF5, but can also be used to create new workflows that allow for
-  different and novel environmental research to be conducted.
-  <monospace>ESAT</monospace> was developed to be used in environmental
-  research, though is not limited to environmental researchers as matrix
-  factorization is used in many different fields and
-  <monospace>ESAT</monospace> places no restriction on types of datasets
-  used.</p>
+  PMF5, but can also create new workflows that allow for novel
+  environmental research. <monospace>ESAT</monospace> was developed for
+  environmental research, though it’s not limited to that domain, as
+  matrix factorization is used in many different fields;
+  <monospace>ESAT</monospace> places no restriction on the types of
+  input datasets.</p>
   <sec id="algorithms">
     <title>Algorithms</title>
     <p>The loss function used in <monospace>ESAT</monospace>, and PMF5,
-    is a variation of squared-error loss where the data uncertainty is
+    is a variation of squared-error loss, where data uncertainty is
     taken into consideration:</p>
     <p><disp-formula><alternatives>
     <tex-math><![CDATA[ 
@@ -178,21 +179,21 @@ a Creative Commons Attribution 4.0 International License (CC BY
     <tex-math><![CDATA[H]]></tex-math>
     <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>H</mml:mi></mml:math></alternatives></inline-formula>
     is the factor profile of factors by features.</p>
-    <p>The <monospace>ESAT</monospace> versions of the NMF algorithms
-    converts the uncertainty of <inline-formula><alternatives>
+    <p>The <monospace>ESAT</monospace> versions of NMF algorithms
+    convert the uncertainty <inline-formula><alternatives>
     <tex-math><![CDATA[U]]></tex-math>
     <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mi>U</mml:mi></mml:math></alternatives></inline-formula>
     into weights defined as <inline-formula><alternatives>
     <tex-math><![CDATA[Uw = \frac{1}{U^2}]]></tex-math>
     <mml:math display="inline" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mrow><mml:mi>U</mml:mi><mml:mi>w</mml:mi><mml:mo>=</mml:mo><mml:mfrac><mml:mn>1</mml:mn><mml:msup><mml:mi>U</mml:mi><mml:mn>2</mml:mn></mml:msup></mml:mfrac></mml:mrow></mml:math></alternatives></inline-formula>.
-    The update equations for LS-NMF then becomes:</p>
+    The update equations for LS-NMF then become:</p>
     <p><disp-formula><alternatives>
     <tex-math><![CDATA[ H_{t+1} = H_t \circ \frac{W_t (V \circ Uw)}{W_t {((W_{t}H_{t}) \circ Uw)}} ]]></tex-math>
     <mml:math display="block" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mrow><mml:msub><mml:mi>H</mml:mi><mml:mrow><mml:mi>t</mml:mi><mml:mo>+</mml:mo><mml:mn>1</mml:mn></mml:mrow></mml:msub><mml:mo>=</mml:mo><mml:msub><mml:mi>H</mml:mi><mml:mi>t</mml:mi></mml:msub><mml:mo>∘</mml:mo><mml:mfrac><mml:mrow><mml:msub><mml:mi>W</mml:mi><mml:mi>t</mml:mi></mml:msub><mml:mrow><mml:mo stretchy="true" form="prefix">(</mml:mo><mml:mi>V</mml:mi><mml:mo>∘</mml:mo><mml:mi>U</mml:mi><mml:mi>w</mml:mi><mml:mo stretchy="true" form="postfix">)</mml:mo></mml:mrow></mml:mrow><mml:mrow><mml:msub><mml:mi>W</mml:mi><mml:mi>t</mml:mi></mml:msub><mml:mrow><mml:mo stretchy="true" form="prefix">(</mml:mo><mml:mrow><mml:mo stretchy="true" form="prefix">(</mml:mo><mml:msub><mml:mi>W</mml:mi><mml:mi>t</mml:mi></mml:msub><mml:msub><mml:mi>H</mml:mi><mml:mi>t</mml:mi></mml:msub><mml:mo stretchy="true" form="postfix">)</mml:mo></mml:mrow><mml:mo>∘</mml:mo><mml:mi>U</mml:mi><mml:mi>w</mml:mi><mml:mo stretchy="true" form="postfix">)</mml:mo></mml:mrow></mml:mrow></mml:mfrac></mml:mrow></mml:math></alternatives></disp-formula></p>
     <p><disp-formula><alternatives>
     <tex-math><![CDATA[ W_{t+1} = W_t \circ \frac{(V \circ Uw) H_{t+1}}{((W_{t}H_{t+1})\circ Uw )H_{t+1}} ]]></tex-math>
     <mml:math display="block" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mrow><mml:msub><mml:mi>W</mml:mi><mml:mrow><mml:mi>t</mml:mi><mml:mo>+</mml:mo><mml:mn>1</mml:mn></mml:mrow></mml:msub><mml:mo>=</mml:mo><mml:msub><mml:mi>W</mml:mi><mml:mi>t</mml:mi></mml:msub><mml:mo>∘</mml:mo><mml:mfrac><mml:mrow><mml:mrow><mml:mo stretchy="true" form="prefix">(</mml:mo><mml:mi>V</mml:mi><mml:mo>∘</mml:mo><mml:mi>U</mml:mi><mml:mi>w</mml:mi><mml:mo stretchy="true" form="postfix">)</mml:mo></mml:mrow><mml:msub><mml:mi>H</mml:mi><mml:mrow><mml:mi>t</mml:mi><mml:mo>+</mml:mo><mml:mn>1</mml:mn></mml:mrow></mml:msub></mml:mrow><mml:mrow><mml:mrow><mml:mo stretchy="true" form="prefix">(</mml:mo><mml:mrow><mml:mo stretchy="true" form="prefix">(</mml:mo><mml:msub><mml:mi>W</mml:mi><mml:mi>t</mml:mi></mml:msub><mml:msub><mml:mi>H</mml:mi><mml:mrow><mml:mi>t</mml:mi><mml:mo>+</mml:mo><mml:mn>1</mml:mn></mml:mrow></mml:msub><mml:mo stretchy="true" form="postfix">)</mml:mo></mml:mrow><mml:mo>∘</mml:mo><mml:mi>U</mml:mi><mml:mi>w</mml:mi><mml:mo stretchy="true" form="postfix">)</mml:mo></mml:mrow><mml:msub><mml:mi>H</mml:mi><mml:mrow><mml:mi>t</mml:mi><mml:mo>+</mml:mo><mml:mn>1</mml:mn></mml:mrow></mml:msub></mml:mrow></mml:mfrac></mml:mrow></mml:math></alternatives></disp-formula></p>
-    <p>while the update equations for WS-NMF is:</p>
+    <p>while the update equations for WS-NMF:</p>
     <p><disp-formula><alternatives>
     <tex-math><![CDATA[ W_{t+1,i} = (H^{T}Uw_{i}^{d}H)^{-1}(H^{T}Uw_{i}^{d}V_{i})]]></tex-math>
     <mml:math display="block" xmlns:mml="http://www.w3.org/1998/Math/MathML"><mml:mrow><mml:msub><mml:mi>W</mml:mi><mml:mrow><mml:mi>t</mml:mi><mml:mo>+</mml:mo><mml:mn>1</mml:mn><mml:mo>,</mml:mo><mml:mi>i</mml:mi></mml:mrow></mml:msub><mml:mo>=</mml:mo><mml:msup><mml:mrow><mml:mo stretchy="true" form="prefix">(</mml:mo><mml:msup><mml:mi>H</mml:mi><mml:mi>T</mml:mi></mml:msup><mml:mi>U</mml:mi><mml:msubsup><mml:mi>w</mml:mi><mml:mi>i</mml:mi><mml:mi>d</mml:mi></mml:msubsup><mml:mi>H</mml:mi><mml:mo stretchy="true" form="postfix">)</mml:mo></mml:mrow><mml:mrow><mml:mi>−</mml:mi><mml:mn>1</mml:mn></mml:mrow></mml:msup><mml:mrow><mml:mo stretchy="true" form="prefix">(</mml:mo><mml:msup><mml:mi>H</mml:mi><mml:mi>T</mml:mi></mml:msup><mml:mi>U</mml:mi><mml:msubsup><mml:mi>w</mml:mi><mml:mi>i</mml:mi><mml:mi>d</mml:mi></mml:msubsup><mml:msub><mml:mi>V</mml:mi><mml:mi>i</mml:mi></mml:msub><mml:mo stretchy="true" form="postfix">)</mml:mo></mml:mrow></mml:mrow></mml:math></alternatives></disp-formula></p>
@@ -209,16 +210,16 @@ a Creative Commons Attribution 4.0 International License (CC BY
   <sec id="error-estimation">
     <title>Error Estimation</title>
     <p>An important part of the source apportionment workflow is
-    quantifying potential model error, <monospace>ESAT</monospace>
+    quantifying potential model error. <monospace>ESAT</monospace>
     offers the same error estimation methods that were available in PMF5
     (<xref alt="Brown et al., 2015" rid="ref-BrownU003A2015" ref-type="bibr">Brown
-    et al., 2015</xref>) but with flexibility for customization.</p>
+    et al., 2015</xref>), but with flexibility for customization.</p>
     <list list-type="bullet">
       <list-item>
         <p>Displacement Method (DISP): Quantify the error due to
         rotational ambiguity by evaluating the amount of change in
-        source profile values that correspond to specific changes in the
-        loss value.</p>
+        source profile that correspond to specific changes in the
+        loss.</p>
       </list-item>
       <list-item>
         <p>Bootstrap Method (BS): Quantify the error due to the order of
@@ -235,12 +236,11 @@ a Creative Commons Attribution 4.0 International License (CC BY
     <p><monospace>ESAT</monospace> contains a data simulator for
     generating synthetic profiles and contributions which allow for
     direct model evaluation. The synthetic profiles can either be
-    randomly generated, use a previously defined set of profiles or a
-    combination of the both. While the random synthetic contributions
-    can follow specified curves and value ranges. The
-    <monospace>ESAT</monospace> model profiles can then be mapped to the
-    known synthetic data for direct comparison and accuracy
-    evaluations.</p>
+    randomly generated, use a previously defined set of profiles, or a
+    combination of both. The random synthetic contributions can follow
+    specified curves and value ranges. The <monospace>ESAT</monospace>
+    model profiles can then be mapped to the known synthetic data for
+    direct comparison and accuracy evaluations.</p>
   </sec>
 </sec>
 <sec id="acknowledgements">
@@ -329,6 +329,16 @@ a Creative Commons Attribution 4.0 International License (CC BY
       <volume>7</volume>
       <fpage>1</fpage>
       <lpage>10</lpage>
+    </element-citation>
+  </ref>
+  <ref id="ref-PMF5">
+    <element-citation>
+      <person-group person-group-type="author">
+        <name><surname>EPA</surname><given-names>United States</given-names></name>
+      </person-group>
+      <article-title>Positive matrix factorization model for environmental data analyses</article-title>
+      <year iso-8601-date="2014">2014</year>
+      <uri>https://www.epa.gov/air-research/positive-matrix-factorization-model-environmental-data-analyses</uri>
     </element-citation>
   </ref>
 </ref-list>

@@ -38,9 +38,9 @@ factorization (NMF). Using NMF, source apportionment models estimate potential s
 a cost-efficient method for further strategic data collection or modeling. An important aspect of modeling, especially 
 environmental modeling, is the consideration of input data uncertainty and error quantification. 
 
-The EPA's Positive Matrix Factorization version 5 (PMF5) application offers a source apportionment modeling and analysis
+The EPA's Positive Matrix Factorization version 5 (PMF5)[@PMF5] application offers a source apportionment modeling and analysis
 workflow that has an active international user community. PMF5 was released in 2014 and is no longer supported; 
-additionally the Multilinear Engine v2 (ME2) used, is proprietary, with documentation existing only for ME1
+additionally the Multilinear Engine v2 (ME2) used in PMF5 is proprietary, with documentation existing only for the prior version ME1
 [@Paatero:1999].  
 
 # Statement of Need
@@ -50,12 +50,12 @@ designed for increased flexibility, documentation and transparency.`ESAT` is an 
 package for flexible source apportionment workflows. The Python API and CLI of `ESAT` provides an object-oriented 
 interface that can completely recreate the PMF5 workflow. The matrix factorization algorithms in `ESAT` have been 
 written in Rust for optimization of the core math functionality. `ESAT` has two NMF algorithms for updating
-the profile and contribution matrices of the solution, least-squares NMF (LS-NMF) [@Wang:2006] and weighted-semi NMF 
+the profile and contribution matrices of the solution: least-squares NMF (LS-NMF) [@Wang:2006] and weighted-semi NMF 
 (WS-NMF) [@Ding:2008] [@DeMelo:2012]. 
 
 `ESAT` provides a highly flexible API and CLI that can create source apportionment workflows like those found in PMF5, 
 but can also create new workflows that allow for novel environmental research. 
-`ESAT` was developed for environmental research, though it's not limited to environmental researchers, as matrix
+`ESAT` was developed for environmental research, though it's not limited to that domain, as matrix
 factorization is used in many different fields; `ESAT` places no restriction on the types of input datasets.
 
 ## Algorithms
