@@ -37,6 +37,7 @@ class FactorEstimator:
         self.seed = seed
         self.rng = np.random.default_rng(seed=self.seed)
         self.test_percent = test_percent
+        self.m, self.n = self.V.shape
 
         self.min_factors = 2
         self.max_factors = 15
@@ -50,8 +51,8 @@ class FactorEstimator:
 
     def _get_mask(self, threshold=0.1):
         _mask = np.zeros(shape=self.V.shape)
-        for feature in range(self.V.shape[1]):
-            feature_i = self.rng.random(size=self.V[feature].shape) > threshold
+        for feature in range(self.m):
+            feature_i = self.rng.random(size=self.n) > threshold
             _mask[feature] = feature_i
         return _mask.astype(int)
 

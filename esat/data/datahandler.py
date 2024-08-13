@@ -270,11 +270,15 @@ class DataHandler:
         """
         if input_data is None:
             input_data = self.input_data.to_numpy()
-        optimal_blocks = optimal_block_length(input_data)
-        optimal_block = []
-        for opt in optimal_blocks:
-            optimal_block.append(opt.b_star_cb)
-        self.optimal_block = math.floor(np.mean(optimal_block))
+        try:
+            optimal_blocks = optimal_block_length(input_data)
+            optimal_block = []
+            for opt in optimal_blocks:
+                optimal_block.append(opt.b_star_cb)
+            self.optimal_block = math.floor(np.mean(optimal_block))
+        except ValueError as e:
+            self.optimal_block = int(input_data.shape[1]/5)
+            logger.error(f"Unable to determine optimal block size. Setting default to {self.optimal_block}")
 
     def plot_data_uncertainty(self, feature_idx):
         """
