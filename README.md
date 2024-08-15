@@ -1,5 +1,19 @@
 # Environmental Source Apportionment Toolkit (ESAT)
-Last Update: 07-31-2024
+Last Update: 08-15-2024
+
+## Table of Contents
+ - [Description](#description)
+ - [Background](#background)
+    - [ESAT Predecessor](#esat-predecessor)
+    - [Features](#features)
+    - [Notebooks](#notebooks)
+ - [Development](#development)
+    - [Requirements](#requirements)
+    - [Rust Compiling](#rust-compiling)
+    - [Creating Docs](#creating-docs)
+    - [Building Wheels and Compiling Rust](#building-wheels-and-compiling-rust)
+    - [Code Tests](#code-tests)
+    - [Community Contributions](#community-contributions)
 
 ## Description
 The Environmental Source Apportionment Toolkit (ESAT) is an open-source software package that provides API and CLI 
@@ -111,4 +125,5 @@ While the overall coverage percentage is low, the majority of the untested code 
 core functionality covered by tests.
 
 ### Community Contributions
+Community contributions are currently limited to creating pull requests and/or issues for code updates, bug fixes or added documentation.
 

@@ -24,3 +24,5 @@ __pycache__/
 
 *.egg-info/
 dist/
+jats/
+.pytest_cache/
