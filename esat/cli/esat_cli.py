@@ -13,8 +13,11 @@ from esat.error.bootstrap import Bootstrap
 from esat.error.bs_disp import BSDISP
 from esat.rotational.constrained import ConstrainedModel
 from esat.configs import run_config, sim_config, error_config, constrained_config
-from esat_eval.simulator import Simulator
 from esat.estimator import FactorEstimator
+try:
+    from esat_eval.simulator import Simulator
+except ModuleNotFoundError as e:
+    from eval.simulator import Simulator
 
 
 logging.basicConfig(format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S', level=logging.INFO)
