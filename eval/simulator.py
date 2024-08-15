@@ -11,7 +11,10 @@ from plotly.subplots import make_subplots
 from esat.model.sa import SA
 from esat.metrics import q_loss, qr_loss
 from esat.model.batch_sa import BatchSA
-from esat_eval.factor_comparison import FactorCompare
+try:
+    from esat_eval.factor_comparison import FactorCompare
+except ModuleNotFoundError as e:
+    from eval.factor_comparison import FactorCompare
 
 logger = logging.getLogger(__name__)
 
