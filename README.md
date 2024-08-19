@@ -125,5 +125,8 @@ While the overall coverage percentage is low, the majority of the untested code 
 core functionality covered by tests.
 
 ### Community Contributions
-Community contributions are currently limited to creating pull requests and/or issues for code updates, bug fixes or added documentation.
+For those in the user community wishing to contribute to this project:
+ * Code updates can be made through pull requests that will be reviewed by repository maintainers.
+ * Software, code, or algorithm related bugs and issues can be submitted directly as issues on the GitHub repository.
+ * Support can be requested through GitHub issues or through email at [esat@epa.gov](esat@epa.gov).
 
