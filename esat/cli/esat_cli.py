@@ -5,6 +5,7 @@ import click
 import json
 import configparser
 import logging
+from importlib import metadata
 from esat.data.datahandler import DataHandler
 from esat.model.batch_sa import BatchSA
 from esat.data.analysis import ModelAnalysis, BatchAnalysis
@@ -22,6 +23,8 @@ except ModuleNotFoundError as e:
 
 logging.basicConfig(format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S', level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+VERSION = metadata.version("esat")
 
 
 def get_dh(input_path, uncertainty_path, index_col):
@@ -98,6 +101,7 @@ def get_constrained_model(project_directory):
 
 
 @click.group()
+@click.version_option(version=VERSION)
 def esat_cli():
     """
     \b
