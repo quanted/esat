@@ -3,6 +3,9 @@ Last Update: 08-15-2024
 
 ## Table of Contents
  - [Description](#description)
+ - [Quick Start](#quick-start)
+   - [Installation](#installation) 
+   - [Example Code](#example-code)
  - [Background](#background)
     - [ESAT Predecessor](#esat-predecessor)
     - [Features](#features)
@@ -28,6 +31,35 @@ processing. The source apportionment algorithms provided in ESAT include two var
 factorization (NMF), both of which have been written in Rust and contained within the python package. A collection of 
 data processing and visualization features are included for data and model analytics. The ESAT package includes a 
 synthetic data generator and comparison tools to evaluate ESAT model outputs.
+
+## Quick Start
+
+ESAT supports python version 3.10, 3.11, and 3.12. As the python package contains compiled code there are OS and python
+specific versions, supporting Mac Intel, Mac M1+, Linux, and Windows.
+
+### Installation
+The ESAT python package contains all compiled code and required dependencies and can be installed using pip
+```commandline
+pip install esat-VERSION-OS.whl
+```
+where the <i>VERSION</i> is the code version, such as <i>2024.1.0</i>, and <i>OS</i> is operating system targeted 
+compiled version, such as <i>cp312-cp312-win_amd64</i>. If an error message appears during installation stating that the 
+package is not supported check that the correct OS and python version are being installed for that system.
+
+When the package becomes available on pypi, the package will be able to be installed with 
+```commandline
+pip install esat
+```
+The esat python package is recommended to be installed in its own dedicated python virtual environment or conda environment.
+
+To run the jupyter notebooks, install jupyterlab into the esat python environmental
+```commandline
+pip install jupyterlab
+```
+
+### Example Code
+Jupyter notebooks containing complete code examples, using sample datasets, are available for the 
+[source apportionment workflow](notebooks/epa_esat_workflow_01.ipynb) and the [simulator workflow](notebooks/epa_esat_simulator_01.ipynb). 
 
 ## Background
 

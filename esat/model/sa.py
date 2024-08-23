@@ -232,6 +232,7 @@ class SA:
                    init_method: str = "column_mean",
                    init_norm: bool = True,
                    fuzziness: float = 5.0,
+                   H_ratio: float = 0.9
                    ):
         """
         Initialize the factor profile (H) and factor contribution matrices (W).
@@ -263,6 +264,9 @@ class SA:
         fuzziness : float
            The amount of fuzziness to apply to fuzzy c-means clustering. Default is 5. See fuzzy c-means clustering
            documentation.
+        H_ratio : float
+            When some number of factors has been provided, H is not None, than the H_ratio determines how much of the
+            features in the provided H contribute to the complete feature profile ratio.
         """
 
         self.metadata["init_method"] = init_method
@@ -319,8 +323,11 @@ class SA:
                              f"of factors.")
 
         if prior_H is not None:
-            for i in range(prior_H.shape[0]):
-                H[i] = prior_H[i]
+            _p_i = prior_H.shape[0]
+            _H = H[_p_i:]
+            _H = (_H / _H.sum(axis=0)) * (1.0 - H_ratio)
+            _prior_H = (prior_H / prior_H.sum(axis=0)) * H_ratio
+            H = np.vstack((_prior_H, _H))
         H[H <= 0.0] = 1e-12
         self.H = H
         self.W = W
@@ -421,8 +428,12 @@ class SA:
 
         if self.optimized:
             t0 = time.time()
-            _results = self.optimized_update(V, U, We, W, H, max_iter, converge_delta, converge_n,
-                                             robust_mode, robust_n, robust_alpha)[0]
+            try:
+                _results = self.optimized_update(V, U, We, W, H, max_iter, converge_delta, converge_n,
+                                                 robust_mode, robust_n, robust_alpha)[0]
+            except RuntimeError as ex:
+                logger.error(f"Runtime Exception: {ex}")
+                return False
             W, H, q, self.converged, self.converge_steps, q_list = _results
             q_true = q_loss(V=V, U=U, W=W, H=H)
             q_robust, U_robust = qr_loss(V=V, U=U, W=W, H=H, alpha=robust_alpha)

@@ -270,13 +270,10 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
                 let w_n = (&new_h * v_j).transpose();
                 let uh = &we_j_diag * &new_h.transpose();
                 let w_d = &new_h * &uh;
-                let w_d_det = w_d.determinant();
-                let w_d_inv: DMatrix<f64> = if w_d_det == 0.0 {
-                    w_d.pseudo_inverse(1e-15).unwrap()
+                let mut w_d_inv = w_d;
+                if ! w_d_inv.try_inverse_mut() {
+                    w_d_inv = w_d_inv.pseudo_inverse(1e-15).unwrap()
                 }
-                else{
-                    w_d.try_inverse().unwrap()
-                };
                 let _w = w_n * w_d_inv;
                 let _j_w_row = DVector::from_column_slice(_w.as_slice());
                 let j_w_row = _j_w_row.column(0);

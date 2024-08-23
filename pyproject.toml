@@ -5,11 +5,12 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "esat"
-version = "2024.0.1"
+version = "2024.0.2"
 requires-python = ">=3.10"
 description = "EPA's Environmental Source Apportionment Toolkit python package."
 authors = [
-    {name = "Deron Smith", email = "smith.deron@epa.gov"}
+    {name = "Deron Smith", email = "smith.deron@epa.gov"},
+    {name = "Mike Cyterski", email = "cyterski.mike@epa.gov"}
 ]
 maintainers = [
     {name = "Deron Smith", email = "smith.deron@epa.gov"}
