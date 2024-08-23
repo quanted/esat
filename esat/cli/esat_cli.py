@@ -1,3 +1,4 @@
+import importlib.metadata
 import sys
 import os
 
@@ -24,7 +25,11 @@ except ModuleNotFoundError as e:
 logging.basicConfig(format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S', level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-VERSION = metadata.version("esat")
+try:
+    VERSION = metadata.version("esat")
+except importlib.metadata.PackageNotFoundError as ex:
+    logger.warn("ESAT package must be installed to determine version number")
+    VERSION = "NA"
 
 
 def get_dh(input_path, uncertainty_path, index_col):

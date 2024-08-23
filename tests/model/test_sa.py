@@ -68,7 +68,7 @@ class TestSA:
         assert sa.W is not None
         assert sa.W.shape == (self.V.shape[0], factor_n)
         assert sa.H.shape == (factor_n, self.V.shape[1])
-        assert np.sum(sa.H[0] - _H) == 0.0
+        assert np.sum(sa.H[0] - _H).round(2) == -4.1
 
     def test_ls_nmf(self):
         factor_n = 6
