@@ -19,7 +19,7 @@ jobs:
       - name: Sphinx build
         run: |
           python -m build
-          pip install dist/esat-2024.0.1-cp310-cp310-linux_x86_64.whl
+          pip install --find-links dist esat
           sphinx-apidoc -o docs esat
           sphinx-apidoc -o docs eval
           sphinx-build . _build
