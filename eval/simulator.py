@@ -216,7 +216,7 @@ class Simulator:
             curve_y = (curve_y + (np.abs(np.min(curve_y))) + minimum)
         else:
             curve_y = self.rng.random(size=(self.samples_n, 1)) * float(maximum)
-        y_data = self.rng.normal(loc=curve_y, scale=scale, size=curve_y.shape)
+        y_data = self.rng.normal(loc=curve_y, scale=scale, size=curve_y.shape).flatten()
         y_data[y_data <= 0.0] = 1e-12
         self.syn_contributions[:, factor_i] = y_data
         logger.info(f"Synthetic factor {factor_i + 1} contribution updated as a random sampling from a normal "

@@ -42,6 +42,43 @@ class ModelAnalysis:
         self.selected_model = selected_model
         self.statistics = None
 
+    def features_metrics(self, est_V: np.ndarray = None):
+        """
+        Create a dataframe of the feature metrics and error for model analysis.
+
+        Parameters
+        ----------
+        est_V : np.ndarray
+            Overrides the use of the ESAT model's WH matrix in the residual calculation. Default = None.
+
+        Returns
+        -------
+            pd.DataFrame
+                The features of the input dataset compared to the results of the model, as a pd.DataFrame
+        """
+        V = self.model.V
+        if est_V is None:
+            est_V = self.model.WH
+        features = self.dh.features
+
+        feature_mean = []
+        feature_rmse = []
+        feature_p_rmse = []
+        for column_i in range(V.shape[1]):
+            c_mean = round(float(V[:, column_i].mean()), 4)
+            c_rmse = round(np.sqrt(np.sum((V[:, column_i] - est_V[:, column_i]) ** 2)) / 14, 4)
+            c_percent = round((c_rmse/c_mean) * 100, 2)
+            feature_mean.append(c_mean)
+            feature_rmse.append(c_rmse)
+            feature_p_rmse.append(c_percent)
+        df = pd.DataFrame(data={
+            "Feature": features,
+            "Mean": feature_mean,
+            "RMSE": feature_rmse,
+            "Percentage": feature_p_rmse
+        })
+        return df
+
     def calculate_statistics(self, results: np.ndarray = None):
         """
         Calculate general statistics from the results of the NMF model run.
@@ -53,7 +90,7 @@ class ModelAnalysis:
         Parameters
         ----------
         results : np.ndarray
-            The default behavior is for this function to use the nmf model WH matrix for calculating metrics, this can
+            The default behavior is for this function to use the ESAT model WH matrix for calculating metrics, this can
             be overriden by providing np.ndarray in the 'results' parameter. Default = None.
 
         """
@@ -124,7 +161,7 @@ class ModelAnalysis:
         abs_threshold : float
             The function generates a list of residuals that exceed this limit, the absolute value of the limit.
         est_V : np.ndarray
-            Overrides the use of the NMF model's WH matrix in the residual calculation. Default = None.
+            Overrides the use of the ESAT model's WH matrix in the residual calculation. Default = None.
 
         Returns
         -------
@@ -246,9 +283,9 @@ class ModelAnalysis:
         factor_idx : int
             The index of the factor to plot (1 -> k).
         H : np.ndarray
-            Overrides the factor profile matrix in the NMF model used for the plot.
+            Overrides the factor profile matrix in the ESAT model used for the plot.
         W : np.ndarray
-            Overrides the factor contribution matrix in the NMF model used for the plot.
+            Overrides the factor contribution matrix in the ESAT model used for the plot.
 
         """
         if factor_idx > self.model.factors or factor_idx < 1:

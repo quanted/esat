@@ -33,34 +33,48 @@ bibliography: paper.bib
 # Summary
 
 Source apportionment is an important tool in environmental science where sample or sensor data are often the product
-of many, often unknown, contributing sources. One technique for source apportionment is non-negative matrix 
-factorization (NMF). Using NMF, source apportionment models estimate potential source profiles and contributions providing 
-a cost-efficient method for further strategic data collection or modeling. An important aspect of modeling, especially 
-environmental modeling, is the consideration of input data uncertainty and error quantification. 
+of many, often unknown, contributing sources. Source apportionment is used to understand the relative contributions of 
+air sources like vehicle emissions, industrial activities, biomass burning, dust to particulate matter pollution and to 
+identify relative contributions of point sources (e.g., wastewater treatment discharges) and non-point sources (e.g., 
+agricultural runoff) in water bodies such as lakes, rivers, and estuaries. Using non-negative matrix factorization 
+(NMF), source apportionment models estimate potential source profiles and contributions providing a cost-efficient 
+method for further strategic data collection or modeling. 
 
-The EPA's Positive Matrix Factorization version 5 (PMF5)[@PMF5] application offers a source apportionment modeling and analysis
-workflow that has an active international user community. PMF5 was released in 2014 and is no longer supported; 
-additionally the Multilinear Engine v2 (ME2) used in PMF5 is proprietary, with documentation existing only for the prior version ME1
-[@Paatero:1999].  
+
+Environmental Source Apportionment Toolkit (ESAT) is an open-source Python package that provides a flexible and 
+transparent workflow for source apportionment modeling using NMF algorithms, developed to replace the EPA's Positive 
+Matrix Factorization version 5 (PMF5) application[@PMF5:2014] [@Paatero:1999]. `ESAT` recreates the source apportionment workflow of 
+PMF5 including pre-post processing analytical tools, batch modeling, model uncertainty estimations and customized 
+constraints. Additionally, `ESAT` offers a simulator for generating datasets from synthetic profiles and contributions, 
+allowing for direct model output evaluation. The synthetic profiles can either be randomly generated, use a pre-defined 
+set of profiles, or be a combination of the two. The random synthetic contributions can follow specified curves and 
+value ranges. Running `ESAT` using the synthetic datasets we are able to see how accurately ESAT is able to find a 
+solution that recreates the original synthetic profiles and contributions. 
 
 # Statement of Need
 
-The Environmental Source Apportionment Toolkit (ESAT) has been developed as a replacement to PMF5, and has been 
-designed for increased flexibility, documentation and transparency.`ESAT` is an open-source Python 
-package for flexible source apportionment workflows. The Python API and CLI of `ESAT` provides an object-oriented 
-interface that can completely recreate the PMF5 workflow. The matrix factorization algorithms in `ESAT` have been 
-written in Rust for optimization of the core math functionality. `ESAT` has two NMF algorithms for updating
-the profile and contribution matrices of the solution: least-squares NMF (LS-NMF) [@Wang:2006] and weighted-semi NMF 
-(WS-NMF) [@Ding:2008] [@DeMelo:2012]. 
+`ESAT` has been developed as a replacement to PMF5, and has been designed for increased flexibility, documentation and 
+transparency. The EPA's PMF5, released in 2014, provides a widely-used source apportionment modeling and analysis 
+workflow but is no longer supported and relies on the proprietary Multilinear Engine v2 (ME2) that lacks documentation.
 
-`ESAT` provides a highly flexible API and CLI that can create source apportionment workflows like those found in PMF5, 
-but can also create new workflows that allow for novel environmental research. 
+The Python API and CLI of `ESAT` provides an object-oriented interface that can completely recreate the PMF5 workflow. 
+The matrix factorization algorithms in `ESAT` have been written in Rust for runtime optimization of the core math 
+functionality. `ESAT` provides a highly flexible API and CLI that can create source apportionment workflows like those 
+found in PMF5, but can also be used to create new workflows that allow for novel research applications. 
 `ESAT` was developed for environmental research, though it's not limited to that domain, as matrix
 factorization is used in many different fields; `ESAT` places no restriction on the types of input datasets.
 
 ## Algorithms
+Source apportionment algorithms use a loss function to quantify the difference between the input data matrix (V) and 
+the product of a factor contribution matrix (W) and a factor profile matrix (H), weighted by an uncertainty matrix (U) 
+[@Paatero:1994]. The goal is to find factor matrices that best reproduce the measured matrix, while constraining all, 
+or most of, the factor elements to be non-negative. The solution, product of the output W and H matrices, can be used to 
+calculate the residuals and overall loss of the model. `ESAT` has two NMF algorithms for updating the profile and 
+contribution matrices of the solution: least-squares NMF (LS-NMF) [@Wang:2006] and weighted-semi NMF (WS-NMF) 
+[@Ding:2008] [@DeMelo:2012]. 
+
 The loss function used in `ESAT`, and PMF5, is a variation of squared-error loss, where data uncertainty is taken into
-consideration:
+consideration (both in the loss function and in the matrix update equations):
 
 $$ 
 Q = \sum_{i=1}^n \sum_{j=1}^m \bigg[ \frac{V_{ij} - \sum_{k=1}^K W_{ik} H_{kj}}{U_{ij}} \bigg]^2 
@@ -85,22 +99,24 @@ $$ H_{t+1,i} = H_{t, i}\sqrt{\frac{((V^{T}Uw)W_{t+1})_{i}^{+} + [H_{t}(W_{t+1}^{
 where $W^{-} = \frac{(|W| - W)}{2.0}$ and $W^{+} = \frac{(|W| + W)}{2.0}$.
 
 ## Error Estimation
-An important part of the source apportionment workflow is quantifying potential model error. `ESAT` offers the same error estimation
-methods that were available in PMF5 [@Brown:2015], but with flexibility for customization.
-\begin{itemize}
-    \item Displacement Method (DISP): Quantify the error due to rotational ambiguity by evaluating the amount of change in source profile that correspond to specific changes in the loss. 
-    \item Bootstrap Method (BS): Quantify the error due to the order of the samples via block resampling. 
-    \item BS-DISP: Calculate the displacement error on a set of bootstrap datasets to quantify the combined error.
-\end{itemize}
+An important part of the source apportionment workflow is quantifying potential model error. `ESAT` offers the error 
+estimation methods that were developed and made available in PMF5 [@Brown:2015] [@Paatero:2014].
 
-## Simulator
-`ESAT` contains a data simulator for generating synthetic profiles and contributions which allow for direct model evaluation. 
-The synthetic profiles can either be randomly generated, use a previously defined set of profiles, or a combination of both. 
-The random synthetic contributions can follow specified curves and value ranges. The `ESAT` model profiles can then 
-be mapped to the known synthetic data for direct comparison and accuracy evaluations. 
+The displacement method (DISP) determines the amount that a source profile feature, a single value in the H matrix, 
+must increase and decrease to cause targeted changes to the solution loss value. One or more features can be selected
+in the DISP uncertainty analysis. The bootstrap method (BS) uses block bootstrap resampling with replacement to create
+datasets of the original dimensions of the input but where the order of the samples has been modified, in blocks of a
+specified size. The BS method then goes on to calculate a new model from the bootstrap dataset, and original 
+initialization, to evaluate how the profiles and concentrations changes as a result of the reordering of samples.
+The bootstrap-displacement method (BS-DISP) is the combination of the two techniques, where for each bootstrap model 
+DISP is run for one or more features.
+
+These error estimation methods address different uncertainty aspects: DISP targets rotational uncertainty, BS addresses 
+random errors and sample variability, and BS-DISP offers a combined uncertainty estimate, collectively providing a 
+comprehensive understanding of the uncertainty in a source apportionment solution.
 
 # Acknowledgements
-We thank Tom Purucker, and Jeffery Minucci for manuscript and code review and edits. 
+We thank Tom Purucker and Jeffery Minucci for manuscript and code review and edits. 
 This paper has been reviewed in accordance with EPA policy and approved for publication. 
 ESAT development has been funded by U.S. EPA.  Mention of any trade names, products, or services does not convey, and 
 should not be interpreted as conveying, official EPA approval, endorsement, or recommendation. The views expressed in 

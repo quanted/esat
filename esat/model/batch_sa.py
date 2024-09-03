@@ -39,6 +39,10 @@ class BatchSA:
         Optional, predefined factor profile matrix. Accepts profiles of size one to 'factors'.
     W : np.ndarray
         Optional, predefined factor contribution matrix.
+    H_ratio : float
+        Optional, when H has been provided and contains one or more profiles. The H_ratio defines how much weight the
+        predefined profiles have relative to the randomly created one, where a value of 1.0 would mean that the
+        predefined profiles are only relative to each other and account for 100% of their features. Default: 0.9
     init_method : str
        The default option is column means, though any option other than 'kmeans' or 'cmeans' will use the column
        means initialization when W and/or H is not provided.
@@ -84,6 +88,7 @@ class BatchSA:
                  seed: int = 42,
                  H: np.ndarray = None,
                  W: np.ndarray = None,
+                 H_ratio: float = 0.9,
                  init_method: str = "column_mean",
                  init_norm: bool = True,
                  fuzziness: float = 5.0,
@@ -120,6 +125,7 @@ class BatchSA:
         self.init_method = str(init_method)
         self.init_norm = bool(init_norm)
         self.fuzziness = float(fuzziness)
+        self.H_ratio = H_ratio
 
         self.robust_mode = bool(robust_mode)
         self.robust_n = int(robust_n)
