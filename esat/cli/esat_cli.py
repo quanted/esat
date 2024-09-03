@@ -1,6 +1,7 @@
 import importlib.metadata
 import sys
 import os
+import typer
 
 import click
 import json
@@ -1125,4 +1126,4 @@ def constrained_profile_contributions(project_directory, feature_idx):
 
 
 if __name__ == "__main__":
-    esat_cli()
+    typer.run(esat_cli)

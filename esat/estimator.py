@@ -72,7 +72,7 @@ class FactorEstimator:
         m_test = np.count_nonzero(i_mask)
         _sa = SA(V=V, U=U, factors=factor_n, method="ls-nmf", seed=seed, optimized=True, verbose=False)
         _sa.initialize()
-        _sa.train(max_iter=10000, converge_delta=1.0, converge_n=10)
+        _sa.train(max_iter=5000, converge_delta=1.0, converge_n=10)
         residuals = V - _sa.WH
         train_residuals = np.multiply(mask, residuals**2)
 
@@ -159,7 +159,10 @@ class FactorEstimator:
         for factor_n in range(0, len(self.test_mse) - 1):
             delta_i = self.test_mse[factor_n] - self.test_mse[factor_n + 1]
             delta_mse.append(delta_i)
-        self.estimated_factor = np.nanargmax(k_est) + self.min_factors
+        if np.all(np.isnan(k_est)):
+            self.estimated_factor = -1
+        else:
+            self.estimated_factor = np.nanargmax(k_est) + self.min_factors
         logger.info(f"Estimated factor count: {self.estimated_factor}")
         self.results_df = pd.DataFrame(data=
                                        {
