@@ -46,6 +46,7 @@ class FactorEstimator:
         self.train_mse = None
         self.test_mse = None
         self.q_true = None
+        self.q_robust = None
         self.estimated_factor = None
         self.results_df = None
 
@@ -61,6 +62,7 @@ class FactorEstimator:
         self.train_mse[list_i].append(results[0])
         self.test_mse[list_i].append(results[1])
         self.q_true[list_i].append(results[3])
+        self.q_robust[list_i].append(results[4])
         self.pbar.update(1)
 
     @staticmethod
@@ -80,9 +82,10 @@ class FactorEstimator:
         test_residuals = np.multiply(i_mask, s_residuals)
         train_mse = np.round(train_residuals.sum()/m_train, 5)
         test_mse = np.round(test_residuals.sum()/m_test, 5)
-        return train_mse, test_mse, factor_n, _sa.Qtrue
+        return train_mse, test_mse, factor_n, _sa.Qtrue, _sa.Qrobust
 
-    def run(self, samples: int = 200, min_factors: int = 2, max_factors: int = 15, max_iterations: int = 2000, converge_delta: float = 1.0, converge_n: int = 10):
+    def run(self, samples: int = 200, min_factors: int = 2, max_factors: int = 15, max_iterations: int = 2000,
+            converge_delta: float = 1.0, converge_n: int = 10):
         """
         Run the Monte Carlo sampling for a random set of models using factor counts between min_factors and max_factors
         a specified number of times, samples.
@@ -98,6 +101,13 @@ class FactorEstimator:
             The minimum number of factors to consider in the random sampling.
         max_factors : int
             The maximum number of factors to consider in the random sampling.
+        max_iterations : int
+            The maximum number of iterations to run the models.
+        converge_delta : float
+            The change in the loss value over a specified numbers of steps for the model to be considered converged.
+        converge_n : int
+            The number of steps where the loss changes by less than converge_delta, for the model to be considered
+            converged.
 
         Returns
         -------
@@ -112,6 +122,7 @@ class FactorEstimator:
         self.train_mse = [[] for i in range(self.max_factors - self.min_factors)]
         self.test_mse = [[] for i in range(self.max_factors - self.min_factors)]
         self.q_true = [[] for i in range(self.max_factors - self.min_factors)]
+        self.q_robust = [[] for i in range(self.max_factors - self.min_factors)]
 
         pool_parameters = []
         for i in range(samples):
@@ -136,6 +147,8 @@ class FactorEstimator:
         self.train_mse = [np.mean(i) for i in self.train_mse]
         self.test_mse = [np.mean(i) for i in self.test_mse]
         self.q_true = [np.mean(i) for i in self.q_true]
+        self.q_robust = [np.mean(i) for i in self.q_robust]
+
         return self._results()
 
     def _results(self):
@@ -173,7 +186,8 @@ class FactorEstimator:
                                            "Delta MSE": delta_mse,
                                            "Delta Ratio": ratio_delta,
                                            "K Estimate": k_est,
-                                           "Q(True)": self.q_true
+                                           "Q(True)": self.q_true,
+                                           "Q(Robust)": self.q_robust
                                        })
         return self.results_df
 
