@@ -66,6 +66,8 @@ class Simulator:
         The maximum value for the randomly selected mean decimal percentage of the uncertainty of the synthetic dataset, by feature.
     uncertainty_scale : float
         The scale of the normal distribution for the uncertainty, standard deviation of the distribution.
+    verbose: bool
+        Turn on verbosity for added logging.
     """
     def __init__(self,
                  seed: int,
@@ -81,10 +83,12 @@ class Simulator:
                  noise_scale: float = 0.02,
                  uncertainty_mean_min: float = 0.05,
                  uncertainty_mean_max: float = 0.05,
-                 uncertainty_scale: float = 0.01
+                 uncertainty_scale: float = 0.01,
+                 verbose: bool = True,
                  ):
         self.seed = int(seed)
         self.rng = np.random.default_rng(self.seed)
+        self.verbose = verbose
         self.factors_n = int(factors_n)
         self.features_n = int(features_n)
         self.samples_n = int(samples_n)
@@ -153,7 +157,8 @@ class Simulator:
             for i in range(_profiles.shape[0]):
                 self.syn_profiles[i] = _profiles[i]
         self.syn_profiles[self.syn_profiles <= 0.0] = 1e-12
-        logger.info("Synthetic profiles generated")
+        if self.verbose:
+            logger.info("Synthetic profiles generated")
 
     def update_contribution(self,
                             factor_i: int,
@@ -194,8 +199,8 @@ class Simulator:
             curve_y = np.linspace(maximum, minimum, num=self.samples_n)
         elif curve_type == "logistic":
             x_periods = []
-            n_periods = int(1.0/frequency)
-            for i in range(0, n_periods):
+            n_periods = int(1.0/frequency) + 1
+            for i in range(0, n_periods+1):
                 if i == n_periods:
                     steps = self.samples_n - (2 * int(self.samples_n/n_periods))
                 else:
@@ -208,7 +213,7 @@ class Simulator:
             curve_x = np.concatenate(x_periods, axis=None)
             curve_y = minimum + (maximum - minimum)/(1.0 + np.exp(-curve_x))
         elif curve_type == "periodic":
-            n_periods = int(1.0/frequency)
+            n_periods = int(1.0/frequency) + 1
             curve_a = np.linspace(-np.pi, np.pi, int(self.samples_n / n_periods))
             curve_x = np.tile(curve_a[0:len(curve_a) - 1], n_periods + 1)
             curve_x = curve_x[0:self.samples_n]
@@ -216,11 +221,14 @@ class Simulator:
             curve_y = (curve_y + (np.abs(np.min(curve_y))) + minimum)
         else:
             curve_y = self.rng.random(size=(self.samples_n, 1)) * float(maximum)
+        curve_y = curve_y[:self.samples_n]
         y_data = self.rng.normal(loc=curve_y, scale=scale, size=curve_y.shape).flatten()
         y_data[y_data <= 0.0] = 1e-12
         self.syn_contributions[:, factor_i] = y_data
-        logger.info(f"Synthetic factor {factor_i + 1} contribution updated as a random sampling from a normal "
-                    f"distribution along a {curve_type} curve.")
+        if self.verbose:
+            logger.info(f"Synthetic factor {factor_i + 1} contribution updated as a random sampling from a normal "
+                        f"distribution along a {curve_type} curve.")
+            logger.info(f"Frequency: {frequency}, Shape: {curve_y.shape}")
 
     def _generate_data(self):
         """
@@ -243,7 +251,8 @@ class Simulator:
         # Make sure no negative or zero values are in the dataset
         syn_data[syn_data <= 0.0] = 1e-12
         self.syn_data = syn_data
-        logger.info("Synthetic data generated")
+        if self.verbose:
+            logger.info("Synthetic data generated")
 
         uncertainty_mean = self.rng.uniform(low=self.uncertainty_mean_min, high=self.uncertainty_mean_max,
                                             size=self.features_n)
@@ -251,7 +260,8 @@ class Simulator:
         syn_uncertainty = syn_data * syn_unc_p
         syn_uncertainty[syn_uncertainty <= 0.0] = 1e-4
         self.syn_uncertainty = syn_uncertainty
-        logger.info("Synthetic uncertainty data generated")
+        if self.verbose:
+            logger.info("Synthetic uncertainty data generated")
 
     def _generate_dfs(self):
         """
@@ -266,7 +276,8 @@ class Simulator:
         self.syn_uncertainty_df.set_index('Date', inplace=True)
         self.syn_profiles_df = pd.DataFrame(self.syn_profiles.T, columns=self.syn_factor_columns)
         self.syn_contributions_df = pd.DataFrame(self.syn_contributions, columns=self.syn_factor_columns)
-        logger.info("Synthetic dataframes completed")
+        if self.verbose:
+            logger.info("Synthetic dataframes completed")
 
     def _create_sa(self):
         """
@@ -279,7 +290,8 @@ class Simulator:
         self.syn_sa.WH = np.matmul(self.syn_contributions, self.syn_profiles)
         self.syn_sa.Qrobust = qr_loss(V=self.syn_sa.V, U=self.syn_sa.U, W=self.syn_sa.W, H=self.syn_sa.H)
         self.syn_sa.Qtrue = q_loss(V=self.syn_sa.V, U=self.syn_sa.U, W=self.syn_sa.W, H=self.syn_sa.H)
-        logger.info("Synthetic source apportionment instance created.")
+        if self.verbose:
+            logger.info("Synthetic source apportionment instance created.")
 
     def get_data(self):
         """
@@ -315,7 +327,8 @@ class Simulator:
         """
         self.batch_sa = batch_sa
         if selected_model is None:
-            logger.info("Searching all models in the batch to find which has the highest average correlation mapping.")
+            if self.verbose:
+                logger.info("Searching all models in the batch to find which has the highest average correlation mapping.")
             self.factor_compare = FactorCompare(input_df=self.syn_data_df,
                                                 uncertainty_df=self.syn_uncertainty_df,
                                                 base_profile_df=self.syn_profiles_df,

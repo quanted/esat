@@ -2,6 +2,7 @@
 title: 'ESAT: Environmental Source Apportionment Toolkit Python package'
 tags: 
     - Python
+    - Rust
     - source apportionment
     - matrix factorization
     - environmental research

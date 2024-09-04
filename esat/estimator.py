@@ -64,7 +64,7 @@ class FactorEstimator:
         self.pbar.update(1)
 
     @staticmethod
-    def _random_sample(V, U, mask, seed, factor_n):
+    def _random_sample(V, U, mask, seed, factor_n, max_iter: int = 2000, converge_delta: float = 1.0, converge_n: int = 10):
         m_train = np.count_nonzero(mask)
         i_mask = copy.copy(mask)
         i_mask[i_mask == 1] = 0
@@ -72,16 +72,17 @@ class FactorEstimator:
         m_test = np.count_nonzero(i_mask)
         _sa = SA(V=V, U=U, factors=factor_n, method="ls-nmf", seed=seed, optimized=True, verbose=False)
         _sa.initialize()
-        _sa.train(max_iter=5000, converge_delta=1.0, converge_n=10)
+        _sa.train(max_iter=max_iter, converge_delta=converge_delta, converge_n=converge_n)
         residuals = V - _sa.WH
-        train_residuals = np.multiply(mask, residuals**2)
+        s_residuals = residuals**2
+        train_residuals = np.multiply(mask, s_residuals)
 
-        test_residuals = np.multiply(i_mask, residuals**2)
+        test_residuals = np.multiply(i_mask, s_residuals)
         train_mse = np.round(train_residuals.sum()/m_train, 5)
         test_mse = np.round(test_residuals.sum()/m_test, 5)
         return train_mse, test_mse, factor_n, _sa.Qtrue
 
-    def run(self, samples: int = 200, min_factors: int = 2, max_factors: int = 15):
+    def run(self, samples: int = 200, min_factors: int = 2, max_factors: int = 15, max_iterations: int = 2000, converge_delta: float = 1.0, converge_n: int = 10):
         """
         Run the Monte Carlo sampling for a random set of models using factor counts between min_factors and max_factors
         a specified number of times, samples.
@@ -117,7 +118,7 @@ class FactorEstimator:
             seed_i = self.rng.integers(low=100, high=1e6, size=1)[0]
             factor_i = self.rng.integers(low=self.min_factors, high=self.max_factors, size=1)[0]
             mask = self._get_mask(threshold=self.test_percent)
-            pool_parameters.append((self.V, self.U, mask, seed_i, factor_i))
+            pool_parameters.append((self.V, self.U, mask, seed_i, factor_i, max_iterations, converge_delta, converge_n))
 
         pool = mp.Pool(os.cpu_count()-1)
         results = []
@@ -153,7 +154,7 @@ class FactorEstimator:
         mse_min = np.min(self.test_mse)
         k_est = []
         for factor_n in range(0, self.max_factors-self.min_factors):
-            rd = mse_min/(self.test_mse[factor_n]*np.power(factor_n+self.min_factors, 1.3))
+            rd = mse_min/(self.test_mse[factor_n]*np.power(factor_n+self.min_factors, 0.9))
             k_est.append(rd)
         delta_mse = [np.nan]
         for factor_n in range(0, len(self.test_mse) - 1):
