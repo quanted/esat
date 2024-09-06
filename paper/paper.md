@@ -49,7 +49,7 @@ PMF5 including pre-post processing analytical tools, batch modeling, model uncer
 constraints. Additionally, `ESAT` offers a simulator for generating datasets from synthetic profiles and contributions, 
 allowing for direct model output evaluation. The synthetic profiles can either be randomly generated, use a pre-defined 
 set of profiles, or be a combination of the two. The random synthetic contributions can follow specified curves and 
-value ranges. Running `ESAT` using the synthetic datasets we are able to see how accurately ESAT is able to find a 
+value ranges. Running `ESAT` using the synthetic datasets allow us to accurately assess ESAT's ability to find a 
 solution that recreates the original synthetic profiles and contributions. 
 
 # Statement of Need
@@ -58,20 +58,18 @@ solution that recreates the original synthetic profiles and contributions.
 transparency. The EPA's PMF5, released in 2014, provides a widely-used source apportionment modeling and analysis 
 workflow but is no longer supported and relies on the proprietary Multilinear Engine v2 (ME2) that lacks documentation.
 
-The Python API and CLI of `ESAT` provides an object-oriented interface that can completely recreate the PMF5 workflow. 
+The Python API and CLI of `ESAT` provides an object-oriented interface that can recreates the PMF5 workflow. 
 The matrix factorization algorithms in `ESAT` have been written in Rust for runtime optimization of the core math 
-functionality. `ESAT` provides a highly flexible API and CLI that can create source apportionment workflows like those 
-found in PMF5, but can also be used to create new workflows that allow for novel research applications. 
+functionality. `ESAT` provides a highly flexible API and CLI that can create source apportionment workflows like in PMF5, but can also be used to create new workflows that allow for novel research applications. 
 `ESAT` was developed for environmental research, though it's not limited to that domain, as matrix
-factorization is used in many different fields; `ESAT` places no restriction on the types of input datasets.
+factorization is used in many different fields.
 
 ## Algorithms
 Source apportionment algorithms use a loss function to quantify the difference between the input data matrix (V) and 
 the product of a factor contribution matrix (W) and a factor profile matrix (H), weighted by an uncertainty matrix (U) 
-[@Paatero:1994]. The goal is to find factor matrices that best reproduce the measured matrix, while constraining all, 
-or most of, the factor elements to be non-negative. The solution, product of the output W and H matrices, can be used to 
-calculate the residuals and overall loss of the model. `ESAT` has two NMF algorithms for updating the profile and 
-contribution matrices of the solution: least-squares NMF (LS-NMF) [@Wang:2006] and weighted-semi NMF (WS-NMF) 
+[@Paatero:1994]. The goal is to find factor matrices that best reproduce the input matrix, while constraining all, 
+or most of, the factor elements to be non-negative. The solution, W and H, can be used to calculate the residuals and 
+overall model loss. `ESAT` has two NMF algorithms for updating the profile and contribution matrices: least-squares NMF (LS-NMF) [@Wang:2006] and weighted-semi NMF (WS-NMF) 
 [@Ding:2008] [@DeMelo:2012]. 
 
 The loss function used in `ESAT`, and PMF5, is a variation of squared-error loss, where data uncertainty is taken into
@@ -104,17 +102,17 @@ An important part of the source apportionment workflow is quantifying potential 
 estimation methods that were developed and made available in PMF5 [@Brown:2015] [@Paatero:2014].
 
 The displacement method (DISP) determines the amount that a source profile feature, a single value in the H matrix, 
-must increase and decrease to cause targeted changes to the solution loss value. One or more features can be selected
+must increase and decrease to cause targeted changes to the loss value. One or more features can be selected
 in the DISP uncertainty analysis. The bootstrap method (BS) uses block bootstrap resampling with replacement to create
-datasets of the original dimensions of the input but where the order of the samples has been modified, in blocks of a
-specified size. The BS method then goes on to calculate a new model from the bootstrap dataset, and original 
-initialization, to evaluate how the profiles and concentrations changes as a result of the reordering of samples.
-The bootstrap-displacement method (BS-DISP) is the combination of the two techniques, where for each bootstrap model 
-DISP is run for one or more features.
+datasets with the original dimensions of the input, but where the order of the samples has been modified, in blocks of a
+specified size. The BS method then calculates a new model from the bootstrap dataset, and original 
+initialization, to evaluate how the profiles and concentrations change as a result of sample reordering.
+The bootstrap-displacement method (BS-DISP) is the combination of the two techniques, where DISP is run for each 
+bootstrap model on one or more features.
 
 These error estimation methods address different uncertainty aspects: DISP targets rotational uncertainty, BS addresses 
-random errors and sample variability, and BS-DISP offers a combined uncertainty estimate, collectively providing a 
-comprehensive understanding of the uncertainty in a source apportionment solution.
+random errors and sample variability, and BS-DISP provides the most comprehensive understanding of how the uncertainty 
+impacts a source apportionment solution.
 
 # Acknowledgements
 We thank Tom Purucker and Jeffery Minucci for manuscript and code review and edits. 
