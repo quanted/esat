@@ -37,6 +37,9 @@ synthetic data generator and comparison tools to evaluate ESAT model outputs.
 ESAT supports python version 3.10, 3.11, and 3.12. As the python package contains compiled code there are OS and python
 specific versions, supporting Mac Intel, Mac M1+, Linux, and Windows.
 
+### Documentation
+The Python API and CLI documentation can be found at the Github ESAT IO site: [https://quanted.github.io/esat/](https://quanted.github.io/esat/)
+
 ### Installation
 The ESAT python package contains all compiled code and required dependencies and can be installed using pip
 ```commandline

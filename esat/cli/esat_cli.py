@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 try:
     VERSION = metadata.version("esat")
 except importlib.metadata.PackageNotFoundError as ex:
-    logger.warn("ESAT package must be installed to determine version number")
+    logger.warning("ESAT package must be installed to determine version number")
     VERSION = "NA"
 
 

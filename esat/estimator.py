@@ -30,8 +30,10 @@ class FactorEstimator:
         The random seed to use for the model initialization, cross-validation masking, and factor selection.
     test_percent : float
         The decimal percentage of values in the input dataset to use for the MSE test calculation.
+    k_coef: float
+        The K estimate metric calculation uses a coefficient that can be used for tuning.
     """
-    def __init__(self, V: np.ndarray, U: np.ndarray, seed: int = 42, test_percent: float = 0.1):
+    def __init__(self, V: np.ndarray, U: np.ndarray, seed: int = 42, test_percent: float = 0.1, k_coef: float = 1.0):
         self.V = V
         self.U = U
         self.seed = seed
@@ -39,6 +41,7 @@ class FactorEstimator:
         self.test_percent = test_percent
         self.m, self.n = self.V.shape
 
+        self.k_coef = k_coef
         self.min_factors = 2
         self.max_factors = 15
         self.samples = 200
@@ -167,7 +170,7 @@ class FactorEstimator:
         mse_min = np.min(self.test_mse)
         k_est = []
         for factor_n in range(0, self.max_factors-self.min_factors):
-            rd = mse_min/(self.test_mse[factor_n]*np.power(factor_n+self.min_factors, 0.9))
+            rd = mse_min/(self.test_mse[factor_n]*np.power(factor_n+self.min_factors, self.k_coef))
             k_est.append(rd)
         delta_mse = [np.nan]
         for factor_n in range(0, len(self.test_mse) - 1):
