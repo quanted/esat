@@ -27,7 +27,7 @@ authors:
 affiliations:
     - name: United States Environmental Protection Agency, Office of Research and Development, Center for Environmental Measurement and Modeling
       index: 1
-date: 09/09/2024
+date: 9 September 2024
 bibliography: paper.bib
 ---
 
