@@ -100,6 +100,23 @@ ESAT includes constrained models, as found in PMF5, where selecting a source app
 
 Lastly, ESAT includes a data simulator which allows for random or use defined synthetic source profiles and contributions to be used in ESAT to evaluating how well the original synthetic data can be recreated.
 
+### Limitations
+Matrix factorization algorithms are fall under the group of optimization, or minimization, algorithms which attempt to 
+find a minima based upon some loss function and stopping condition. These algorithms are classified as NP-Complete, a 
+category of algorithms which are nondeterministic polynomial time complete and there is no known way to quickly find a 
+solution. Given this limitation of NMF, a solution can only be considered a local minima with no known way to guarantee 
+or prove it is the globally optimal solution. One approach for helping determine that a solution is a good solution is 
+by producing many such solutions with a constricted convergence criteria or stopping condition. Then evaluating these 
+solutions to determine which, if any, correspond to the best actual representation or model of the data given domain 
+knowledge and expertise. 
+
+NMF algorithms are data-agnostic, operates the same on any correctly structured data regardless of domain, potential 
+leading to another limitation, interpretation of the solution. An important component in evaluating whether or not to 
+use ESAT, or any NMF algorithm, on a dataset is to determine how to interpret factor profiles and contributions. How 
+this is done is fully dependent on the data and domain of the input dataset, such as units, types of features, temporal 
+or spatial considerations, etc. 
+
+
 ### Notebooks
 Juypter notebooks are available that demonstrate the complete source apportionment and error estimation workflow found in PMF5, demonstrated in notebooks/epa_esat_workflow_01.ipynb
 
@@ -165,3 +182,7 @@ For those in the user community wishing to contribute to this project:
  * Software, code, or algorithm related bugs and issues can be submitted directly as issues on the GitHub repository.
  * Support can be requested through GitHub issues or through email at [esat@epa.gov](esat@epa.gov).
 
+## Disclaimer 
+ESAT development has been funded by U.S. EPA.  Mention of any trade names, products, or services does not convey, and 
+should not be interpreted as conveying, official EPA approval, endorsement, or recommendation. The views expressed in 
+this README are those of the authors and do not necessarily represent the views or policies of the US EPA.

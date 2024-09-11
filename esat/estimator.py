@@ -180,7 +180,7 @@ class FactorEstimator:
             self.estimated_factor = -1
         else:
             self.estimated_factor = np.nanargmax(k_est) + self.min_factors
-        logger.info(f"Estimated factor count: {self.estimated_factor}")
+        # logger.info(f"Estimated factor count: {self.estimated_factor}")
         self.results_df = pd.DataFrame(data=
                                        {
                                            "Factors": list(range(self.min_factors, self.max_factors)),
