@@ -13,7 +13,7 @@ jobs:
       - uses: actions/setup-python@v5
       - name: Install dependencies
         run: |
-          pip install sphinx sphinx_rtd_theme myst_parser sphinx-click
+          pip install sphinx sphinx_rtd_theme myst_parser sphinx-click sphinx-book-theme
           pip install -r doc-requirements.txt
           pip install --upgrade build
       - name: Sphinx build

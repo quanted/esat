@@ -1,5 +1,5 @@
 click==8.1.7
-fuzzy-c-means==1.7.0
+fuzzy-c-means==1.7.2
 numpy==1.26.4
 pandas[excel, performance]==2.2.2
 plotly==5.19.0
