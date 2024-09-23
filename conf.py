@@ -4,10 +4,11 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 import os
 import sys
+from importlib import metadata
 from datetime import datetime
 sys.path.insert(0, os.path.abspath("."))
-sys.path.insert(1, os.path.abspath(os.path.join('.', 'esat')))
-# sys.path.insert(2, os.path.abspath(os.path.join(".", "esat")))
+sys.path.insert(1, os.path.abspath(os.path.join(".", "esat")))
+sys.path.insert(1, os.path.abspath(os.path.join(".", "esat", "model")))
 sys.path.insert(2, os.path.abspath(os.path.join(".", "eval")))
 
 
@@ -18,7 +19,7 @@ project = 'Environmental Source Apportionment Toolkit (ESAT)'
 copyright = '2024, EPA'
 author = 'Deron Smith'
 version = str(datetime.now().year)
-release = "0.1a"
+release = metadata.version("esat")
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -40,7 +41,7 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = 'sphinx_rtd_theme'
+html_theme = 'sphinx_book_theme'
 html_static_path = ['docs/static']
 html_sidebars = {
     '*': [
