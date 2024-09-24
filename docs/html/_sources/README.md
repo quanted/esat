@@ -42,7 +42,7 @@ The Python API and CLI documentation can be found at the Github ESAT IO site: [h
 
 ### Installation
 The ESAT python package contains all compiled code and required dependencies and can be installed using pip
-```commandline
+```bash
 pip install esat-VERSION-OS.whl
 ```
 where the <i>VERSION</i> is the code version, such as <i>2024.1.0</i>, and <i>OS</i> is operating system targeted 
@@ -50,13 +50,13 @@ compiled version, such as <i>cp312-cp312-win_amd64</i>. If an error message appe
 package is not supported check that the correct OS and python version are being installed for that system.
 
 When the package becomes available on pypi, the package will be able to be installed with 
-```commandline
+```bash
 pip install esat
 ```
 The esat python package is recommended to be installed in its own dedicated python virtual environment or conda environment.
 
 To run the jupyter notebooks, install jupyterlab into the esat python environmental
-```commandline
+```bash
 pip install jupyterlab
 ```
 
@@ -180,7 +180,7 @@ core functionality covered by tests.
 For those in the user community wishing to contribute to this project:
  * Code updates can be made through pull requests that will be reviewed by repository maintainers.
  * Software, code, or algorithm related bugs and issues can be submitted directly as issues on the GitHub repository.
- * Support can be requested through GitHub issues or through email at [esat@epa.gov](esat@epa.gov).
+ * Support can be requested through GitHub issues or through email at [esat@epa.gov](mailto:esat@epa.gov).
 
 ## Disclaimer 
 ESAT development has been funded by U.S. EPA.  Mention of any trade names, products, or services does not convey, and 
