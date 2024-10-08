@@ -72,6 +72,8 @@ class BatchSA:
     parallel : bool
         Run the individual models in parallel, not the same as the optimized parallelized option for an SA ws-nmf
         model. Default = True.
+    cpus : int
+        The number of cpus to use for parallel processing. Default is the number of cpus - 1.
     optimized: bool
         The two update algorithms have also been written in Rust, which can be compiled with maturin, providing
         an optimized implementation for rapid training of SA models. Setting optimized to True will run the
@@ -100,6 +102,7 @@ class BatchSA:
                  robust_n: int = 200,
                  robust_alpha: float = 4.0,
                  parallel: bool = True,
+                 cpus: int = -1,
                  optimized: bool = True,
                  verbose: bool = True
                  ):
@@ -133,6 +136,7 @@ class BatchSA:
 
         self.runtime = None
         self.parallel = parallel if isinstance(parallel, bool) else str(parallel).lower() == "true"
+        self.cpus = cpus if cpus > 0 else mp.cpu_count() - 1
         self.optimized = optimized if isinstance(optimized, bool) else str(optimized).lower() == "true"
         self.verbose = verbose if isinstance(verbose, bool) else str(verbose).lower() == "true"
         self.results = []
@@ -169,9 +173,8 @@ class BatchSA:
         t0 = time.time()
         if self.parallel:
             # TODO: Add batch processing for large datasets and large number of epochs to reduce memory requirements.
-            cpus = mp.cpu_count()
-            cpus = cpus - 1 if cpus > 3 else 1
-            pool = mp.Pool(processes=cpus)
+            logger.info(f"Running batch SA models in parallel using {self.cpus} processes.")
+            pool = mp.Pool(processes=self.cpus)
             input_parameters = []
             for i in range(1, self.models+1):
                 _seed = self.rng.integers(low=0, high=1e5)

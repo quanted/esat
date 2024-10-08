@@ -360,10 +360,7 @@ class SA:
               robust_mode: bool = False,
               robust_n: int = 200,
               robust_alpha: float = 4,
-              update_step: str = None,
-              bump: bool = False,
-              bump_n: int = 10,
-              bump_range: tuple = (0.9, 1.1)
+              update_step: str = None
               ):
         """
         Train the SA model by iteratively updating the W and H matrices reducing the loss value Q until convergence.
