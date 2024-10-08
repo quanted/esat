@@ -74,7 +74,9 @@ class Bootstrap:
         """
         self.sa = sa
         self.model_selected = model_selected
-        self.feature_labels = feature_labels if feature_labels else list([f"Feature {i+1}" for i in range(self.sa.V.shape[1])])
+        self.feature_labels = list([f"Feature {i+1}" for i in range(self.sa.V.shape[1])]) if feature_labels is None else feature_labels
+        # self.feature_labels = feature_labels
+
         self.data = sa.V
         self.uncertainty = sa.U
 

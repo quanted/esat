@@ -33,7 +33,7 @@ class TestBootstrap:
         )
         self.V, self.U = self.datahandler.get_data()
         self.batch = BatchSA(V=self.V, U=self.U, models=2, factors=6, method="ls-nmf",
-                             max_iter=500, converge_delta=1.0, converge_n=10, parallel=False)
+                             max_iter=500, converge_delta=1.0, converge_n=10, parallel=True)
         self.batch.train()
 
     def test_run(self):

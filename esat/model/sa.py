@@ -130,7 +130,7 @@ class SA:
         if self.method == "ls-nmf" and not self.__has_neg:
             self.update_step = LSNMF.update
 
-        self.optimized = optimized
+        self.optimized = optimized if isinstance(optimized, bool) else str(optimized).lower() == "true"
         if self.optimized:
             # Attempt to load rust code for optimized model training
             try:

@@ -84,6 +84,15 @@ class TestSA:
         assert sa2.WH is not None
         assert sa2.Qtrue is not None
 
+    def test_optimized(self):
+        factor_n = 6
+        sa = SA(V=self.V, U=self.U, factors=factor_n, method="ls-nmf", optimized=True)
+        sa.initialize()
+        sa.train(max_iter=500, converge_delta=1.0, converge_n=10)
+        assert sa.WH is not None
+        assert sa.Qtrue is not None
+        assert sa.optimized
+
     def test_ws_nmf(self):
         factor_n = 6
         sa = SA(V=self.V, U=self.U, factors=factor_n, method="ws-nmf")
