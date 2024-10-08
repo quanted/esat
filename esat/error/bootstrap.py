@@ -6,6 +6,7 @@ import math
 import json
 import numpy as np
 import pandas as pd
+import multiprocessing as mp
 from tqdm import tqdm
 import plotly.graph_objects as go
 from esat.model.sa import SA
@@ -47,6 +48,11 @@ class Bootstrap:
     threshold : float
        The correlation threshold that must be met for a BS factor to be mapped to a base model factor, factor
        correlations must be greater than the threshold or are labeled unmapped.
+    parallel : bool
+        Run the individual models in parallel, not the same as the optimized parallelized option for an SA ws-nmf
+        model. Default = True.
+    cpus : int
+        The number of cpus to use for parallel processing. Default is the number of cpus - 1.
     seed : int
        The random seed for random resampling of the BS datasets. The base model random seed is used for all BS runs,
        which result in the same initial W matrix.
@@ -54,11 +60,13 @@ class Bootstrap:
 
     def __init__(self,
                  sa: SA,
-                 feature_labels: list,
+                 feature_labels: list = None,
                  model_selected: int = -1,
                  bootstrap_n: int = 20,
                  block_size: int = 10,
                  threshold: float = 0.6,
+                 parallel: bool = True,
+                 cpus: int = -1,
                  seed: int = None
                  ):
         """
@@ -66,7 +74,7 @@ class Bootstrap:
         """
         self.sa = sa
         self.model_selected = model_selected
-        self.feature_labels = feature_labels
+        self.feature_labels = feature_labels if feature_labels else list([f"Feature {i+1}" for i in range(self.sa.V.shape[1])])
         self.data = sa.V
         self.uncertainty = sa.U
 
@@ -81,6 +89,8 @@ class Bootstrap:
 
         self.base_seed = self.sa.seed
         self.bs_seed = seed if seed is not None else self.base_seed
+        self.parallel = parallel if isinstance(parallel, bool) else str(parallel).lower() == "true"
+        self.cpus = cpus if cpus > 0 else mp.cpu_count() - 1
 
         self.bs_results = {}
         self.rng = np.random.default_rng(seed=self.bs_seed)
@@ -386,43 +396,91 @@ class Bootstrap:
            Allow resampled blocks to overlap. Default = False
 
         """
-        #TODO: Implement parallelization
-        for i in tqdm(range(1, self.bootstrap_n+1), desc="Bootstrap resampling, training and mapping"):
-            sample_seed = self.rng.integers(low=0, high=1e10, size=1)
-            _V = copy.deepcopy(self.data)
-            _U = copy.deepcopy(self.uncertainty)
-            _W = copy.deepcopy(self.base_W)
-            _H = copy.deepcopy(self.base_H)
-            train_seed = sample_seed
-            if block:
-                bs_data, bs_uncertainty, bs_W, bs_index = self._block_resample(data=_V,
-                                                                               uncertainty=_U,
-                                                                               W=_W,
-                                                                               seed=sample_seed,
-                                                                               overlapping=overlapping)
-            else:
-                bs_data, bs_uncertainty, bs_W, bs_index = self._resample(data=_V,
-                                                                         uncertainty=_U,
-                                                                         W=_W,
-                                                                         seed=sample_seed)
-            if not keep_H:
-                _H = None
-            if reuse_seed:
-                train_seed = self.base_seed
-            bs_i_sa = SA(V=bs_data, U=bs_uncertainty, factors=self.factors, method=self.sa.method, seed=train_seed,
-                           optimized=self.sa.optimized, verbose=False)
-            bs_i_sa.initialize(H=_H)
-            bs_i_sa.train(max_iter=self.sa.metadata["max_iterations"],
-                           converge_delta=self.sa.metadata["converge_delta"],
-                           converge_n=self.sa.metadata["converge_n"])
-            bs_i_mapping = self.map_contributions(W1=bs_i_sa.W, H1=bs_i_sa.H, W2=self.base_W, H2=self.base_H,
-                                                  threshold=self.threshold)
-            bs_i_results = {
-                "model": bs_i_sa,
-                "index": bs_index,
-                "mapping": bs_i_mapping
-            }
-            self.bs_results[i] = bs_i_results
+        pool = mp.Pool(processes=self.cpus)
+        if self.parallel:
+            p_args = []
+            for i in range(1, self.bootstrap_n+1):
+                sample_seed = self.rng.integers(low=0, high=1e10, size=1)
+                _V = copy.deepcopy(self.data)
+                _U = copy.deepcopy(self.uncertainty)
+                _W = copy.deepcopy(self.base_W)
+                _H = copy.deepcopy(self.base_H)
+                p_args.append((i, _V, _U, _W, _H, sample_seed, block, overlapping, keep_H, reuse_seed))
+            results = pool.starmap(self._p_train, p_args)
+            pool.close()
+            pool.join()
+            for r in results:
+                self.bs_results[r[0]] = r[1]
+        else:
+            for i in tqdm(range(1, self.bootstrap_n+1), desc="Bootstrap resampling, training and mapping"):
+                sample_seed = self.rng.integers(low=0, high=1e10, size=1)
+                _V = copy.deepcopy(self.data)
+                _U = copy.deepcopy(self.uncertainty)
+                _W = copy.deepcopy(self.base_W)
+                _H = copy.deepcopy(self.base_H)
+                train_seed = sample_seed
+                if block:
+                    bs_data, bs_uncertainty, bs_W, bs_index = self._block_resample(data=_V,
+                                                                                   uncertainty=_U,
+                                                                                   W=_W,
+                                                                                   seed=sample_seed,
+                                                                                   overlapping=overlapping)
+                else:
+                    bs_data, bs_uncertainty, bs_W, bs_index = self._resample(data=_V,
+                                                                             uncertainty=_U,
+                                                                             W=_W,
+                                                                             seed=sample_seed)
+                if not keep_H:
+                    _H = None
+                if reuse_seed:
+                    train_seed = self.base_seed
+                bs_i_sa = SA(V=bs_data, U=bs_uncertainty, factors=self.factors, method=self.sa.method, seed=train_seed,
+                             optimized=self.sa.optimized, verbose=False)
+                bs_i_sa.initialize(H=_H)
+                bs_i_sa.train(max_iter=self.sa.metadata["max_iterations"],
+                              converge_delta=self.sa.metadata["converge_delta"],
+                              converge_n=self.sa.metadata["converge_n"])
+                bs_i_mapping = self.map_contributions(W1=bs_i_sa.W, H1=bs_i_sa.H, W2=self.base_W, H2=self.base_H,
+                                                      threshold=self.threshold)
+                bs_i_results = {
+                    "model": bs_i_sa,
+                    "index": bs_index,
+                    "mapping": bs_i_mapping
+                }
+                self.bs_results[i] = bs_i_results
+
+    def _p_train(self, i: int, _V, _U, _W, _H, sample_seed: int, block: bool = True, overlapping: bool = False, keep_H: bool = True,
+                 reuse_seed: bool = True):
+        train_seed = sample_seed
+        if block:
+            bs_data, bs_uncertainty, bs_W, bs_index = self._block_resample(data=_V,
+                                                                           uncertainty=_U,
+                                                                           W=_W,
+                                                                           seed=sample_seed,
+                                                                           overlapping=overlapping)
+        else:
+            bs_data, bs_uncertainty, bs_W, bs_index = self._resample(data=_V,
+                                                                     uncertainty=_U,
+                                                                     W=_W,
+                                                                     seed=sample_seed)
+        if not keep_H:
+            _H = None
+        if reuse_seed:
+            train_seed = self.base_seed
+        bs_i_sa = SA(V=bs_data, U=bs_uncertainty, factors=self.factors, method=self.sa.method, seed=train_seed,
+                     optimized=self.sa.optimized, verbose=False)
+        bs_i_sa.initialize(H=_H)
+        bs_i_sa.train(max_iter=self.sa.metadata["max_iterations"],
+                      converge_delta=self.sa.metadata["converge_delta"],
+                      converge_n=self.sa.metadata["converge_n"])
+        bs_i_mapping = self.map_contributions(W1=bs_i_sa.W, H1=bs_i_sa.H, W2=self.base_W, H2=self.base_H,
+                                              threshold=self.threshold)
+        bs_i_results = {
+            "model": bs_i_sa,
+            "index": bs_index,
+            "mapping": bs_i_mapping
+        }
+        return i, bs_i_results
 
     def _compile_results(self):
         """
