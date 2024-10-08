@@ -91,7 +91,7 @@ class TestSA:
         sa.train(max_iter=500, converge_delta=1.0, converge_n=10)
         assert sa.WH is not None
         assert sa.Qtrue is not None
-        assert sa.optimized
+        # assert sa.optimized       # Requires rust build on github code-test action, can uncomment for local testing.
 
     def test_ws_nmf(self):
         factor_n = 6
