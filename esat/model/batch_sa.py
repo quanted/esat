@@ -173,7 +173,8 @@ class BatchSA:
         t0 = time.time()
         if self.parallel:
             # TODO: Add batch processing for large datasets and large number of epochs to reduce memory requirements.
-            logger.info(f"Running batch SA models in parallel using {self.cpus} processes.")
+            if self.verbose:
+                logger.info(f"Running batch SA models in parallel using {self.cpus} processes.")
             pool = mp.Pool(processes=self.cpus)
             input_parameters = []
             for i in range(1, self.models+1):
