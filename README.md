@@ -49,6 +49,10 @@ where the <i>VERSION</i> is the code version, such as <i>2024.1.0</i>, and <i>OS
 compiled version, such as <i>cp312-cp312-win_amd64</i>. If an error message appears during installation stating that the 
 package is not supported check that the correct OS and python version are being installed for that system.
 
+The latest version of the ESAT python package can be found on the github actions page, for users who are signed into github, 
+under the 'Build and Publish Wheel' workflow. The latest version of the package will be available as an artifact for 
+download in the 'Artifacts' section of the completed workflow.
+
 When the package becomes available on pypi, the package will be able to be installed with 
 ```bash
 pip install esat
