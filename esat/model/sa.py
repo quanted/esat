@@ -323,11 +323,14 @@ class SA:
                              f"of factors.")
 
         if prior_H is not None:
-            _p_i = prior_H.shape[0]
-            _H = H[_p_i:]
-            _H = (_H / _H.sum(axis=0)) * (1.0 - H_ratio)
-            _prior_H = (prior_H / prior_H.sum(axis=0)) * H_ratio
-            H = np.vstack((_prior_H, _H))
+            for i in range(prior_H.shape[0]):
+                H[i] = prior_H[i]
+            H = H / H.sum(axis=0)
+            # _p_i = prior_H.shape[0]
+            # _H = H[_p_i:]
+            # _H = (_H / _H.sum(axis=0)) * (1.0 - H_ratio)
+            # _prior_H = (prior_H / prior_H.sum(axis=0)) * H_ratio
+            # H = np.vstack((_prior_H, _H))
         H[H <= 0.0] = 1e-12
         self.H = H
         self.W = W
