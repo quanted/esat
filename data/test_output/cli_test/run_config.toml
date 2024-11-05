@@ -1,0 +1,28 @@
+[project]
+name = cli_test
+directory = D:\git\esat\tests\cli\..\..\data\test_output\cli_test
+
+[data]
+input_path = D:\git\esat\tests\cli\..\..\data\Dataset-BatonRouge-con.csv
+uncertainty_path = D:\git\esat\tests\cli\..\..\data\Dataset-BatonRouge-unc.csv
+index_col = Date
+
+[estimator]
+samples = 250
+min_k = 2
+max_k = 12
+
+[parameters]
+factors = 6
+method = ls-nmf
+models = 2
+init_method = col_means
+init_norm = True
+seed = 42
+max_iter = 500
+converge_delta = 0.1
+converge_n = 50
+verbose = True
+optimized = False
+parallel = False
+
