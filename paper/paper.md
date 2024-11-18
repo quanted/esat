@@ -44,11 +44,11 @@ collection or modeling.
 Environmental Source Apportionment Toolkit (ESAT) is an open-source Python package that provides a flexible and 
 transparent workflow for source apportionment using NMF algorithms, developed to replace the EPA's Positive 
 Matrix Factorization version 5 (PMF5) application [@PMF5:2014; @Paatero:1999]. `ESAT` recreates the source apportionment 
-workflow of PMF5 including pre-post processing analytical tools, batch modeling, uncertainty estimations and customized 
+workflow of PMF5 including pre- and post-processing analytical tools, batch modeling, uncertainty estimations and customized 
 constraints. `ESAT` offers a simulator for generating datasets from synthetic profiles and contributions, allowing for 
 model output evaluation. The synthetic profiles can be randomly generated, use a pre-defined set of profiles, or be a 
-combination of the two. The random synthetic contributions can follow specified curves and value ranges. Running `ESAT` 
-using the synthetic datasets one is able to accurately assess ESAT's ability to find a solution that recreates the 
+combination of the two. The random synthetic contributions can follow specified curves and value ranges. By running `ESAT` 
+using the synthetic datasets, users are able to accurately assess `ESAT`'s ability to find a solution that recreates the 
 original synthetic profiles and contributions. 
 
 # Statement of Need
@@ -77,7 +77,7 @@ $$
 Q = \sum_{i=1}^n \sum_{j=1}^m \bigg[ \frac{V_{ij} - \sum_{k=1}^K W_{ik} H_{kj}}{U_{ij}} \bigg]^2 
 $$
 here $V$ is the input data matrix of features (columns=$M$) by samples (rows=$N$), $U$ is the uncertainty matrix of the 
-input data matrix, $W$ is the factor contribution matrix of samples by factors=$k$, $H$ is the factor profile of 
+input data matrix, $W$ is the factor contribution matrix of samples by factors=$K$, $H$ is the factor profile of 
 factors by features.
 
 The `ESAT` versions of NMF algorithms convert the uncertainty $U$ into weights defined as $Uw = \frac{1}{U^2}$. 
@@ -116,6 +116,6 @@ impacts a source apportionment solution.
 This paper has been reviewed in accordance with EPA policy and approved for publication. 
 ESAT development has been funded by U.S. EPA.  Mention of any trade names, products, or services does not convey, and 
 should not be interpreted as conveying, official EPA approval, endorsement, or recommendation. The views expressed in 
-this paper are those of the authors and do not necessarily represent the views or policies of the US EPA.
+this paper are those of the authors and do not necessarily represent the views or policies of the U.S. EPA.
 
 # References
