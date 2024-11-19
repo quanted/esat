@@ -19,7 +19,7 @@ authors:
       orcid: 0000-0002-5886-7876
       affiliation: 1
     - name: Kurt Wolfe
-      orcid: 
+      orcid: 0009-0009-4679-5922
       affiliation: 1
     - name: Rajbir Parmar
       orcid: 0009-0005-2221-0433
@@ -27,7 +27,7 @@ authors:
 affiliations:
     - name: United States Environmental Protection Agency, Office of Research and Development, Center for Environmental Measurement and Modeling
       index: 1
-date: 9 September 2024
+date: 19 November 2024
 bibliography: paper.bib
 ---
 
