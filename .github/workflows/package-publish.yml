@@ -13,14 +13,15 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        # macos-13 is an intel runner, macos-14 is apple silicon
-        os: [ubuntu-latest, macos-13, macos-14]
+        os: [ubuntu-latest, windows-latest, macos-13, macos-latest]
         python_version: ["3.10", "3.11", "3.12"]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python_version }}
+      - name: Install cibuildwheel
+        run: python -m pip install cibuildwheel==2.22.0
       - name: Install setuptools
         run: |
             python -m pip install --upgrade pip
@@ -29,38 +30,66 @@ jobs:
             rustc --version
             python -m pip install build setuptools setuptools-rust
       - name: Build wheels
-        run:
-            python -m build --outdir py_dist
-      - name: Store the distribution packages
+        run: python -m cibuildwheel --output-dir py_dist
+      - name: Store the compiled packages
         uses: actions/upload-artifact@v4
         with:
           name: esat-wheels-${{ matrix.os }}-py${{matrix.python_version}}
           path: py_dist/
 
-  build_windows_wheel:
-    name: Build wheels on windows-latest
-    runs-on: windows-latest
-    strategy:
-      matrix:
-        python_version: [ "3.10", "3.11", "3.12" ]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python_version }}
-      - name: Install setuptools
-        run: |
-          python -m pip install --upgrade pip
-          curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain=stable
-          echo "${HOME}/.cargo/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-          python -m pip install build setuptools setuptools-rust
-      - name: Build wheels
-        run: python -m build --outdir py_dist
-      - name: Store the distribution packages
-        uses: actions/upload-artifact@v4
-        with:
-          name: esat-wheels-${{ matrix.os }}-py${{matrix.python_version}}
-          path: py_dist/
+#  build_wheels:
+#    name: Build wheels on ${{ matrix.os }}
+#    runs-on: ${{ matrix.os }}
+#    strategy:
+#      matrix:
+#        # macos-13 is an intel runner, macos-14 is apple silicon
+#        os: [ubuntu-latest, macos-13, macos-14]
+#        python_version: ["3.10", "3.11", "3.12"]
+#    steps:
+#      - uses: actions/checkout@v4
+#      - uses: actions/setup-python@v5
+#        with:
+#          python-version: ${{ matrix.python_version }}
+#      - name: Install setuptools
+#        run: |
+#            python -m pip install --upgrade pip
+#            curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain=stable
+#            echo "PATH=${PATH}:${HOME}/.cargo/bin" >> "$GITHUB_ENV"
+#            rustc --version
+#            python -m pip install build setuptools setuptools-rust
+#      - name: Build wheels
+#        run:
+#            python -m build --outdir py_dist
+#      - name: Store the distribution packages
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: esat-wheels-${{ matrix.os }}-py${{matrix.python_version}}
+#          path: py_dist/
+#
+#  build_windows_wheel:
+#    name: Build wheels on windows-latest
+#    runs-on: windows-latest
+#    strategy:
+#      matrix:
+#        python_version: [ "3.10", "3.11", "3.12" ]
+#    steps:
+#      - uses: actions/checkout@v4
+#      - uses: actions/setup-python@v5
+#        with:
+#          python-version: ${{ matrix.python_version }}
+#      - name: Install setuptools
+#        run: |
+#          python -m pip install --upgrade pip
+#          curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain=stable
+#          echo "${HOME}/.cargo/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+#          python -m pip install build setuptools setuptools-rust
+#      - name: Build wheels
+#        run: python -m build --outdir py_dist
+#      - name: Store the distribution packages
+#        uses: actions/upload-artifact@v4
+#        with:
+#          name: esat-wheels-${{ matrix.os }}-py${{matrix.python_version}}
+#          path: py_dist/
 
 #  publish-to-pypi:
 #    name: >-
@@ -132,7 +161,7 @@ jobs:
     name: Publish Python 🐍 distribution 📦 to TestPyPI
     needs:
       - build_wheels
-      - build_windows_wheel
+#      - build_windows_wheel
     runs-on: ubuntu-latest
 
     environment:
