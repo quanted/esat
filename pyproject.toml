@@ -57,5 +57,3 @@ target = "esat_rust"
 path = "Cargo.toml"
 binding = "PyO3"
 debug = false
-
-[tool.
