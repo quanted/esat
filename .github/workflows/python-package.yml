@@ -1,4 +1,4 @@
-name: Build and Publish Wheel
+name: Build and Publish Artifacts
 
 on:
   push:

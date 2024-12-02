@@ -23,8 +23,11 @@ classifiers = [
     "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dynamic = ["dependencies"]
+readme = "README.md"
+license = {file = "LICENSE"}
 
 [project.urls]
+Documentation = "https://quanted.github.io/esat/"
 Repository = "https://github.com/quanted/esat.git"
 Issues = "https://github.com/quanted/esat/issues"
 

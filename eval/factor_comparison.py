@@ -450,3 +450,41 @@ class FactorCompare:
         r_avg_3 = np.mean(r_values_3)
         return factors, r_avg, r_values, r_avg_2, r_values_2, r_avg_3, r_values_3
 
+# class FactorCompareV2:
+#     """
+#
+#     Parameters
+#     ----------
+#     base_model : BaseModel
+#         The base model to compare against.
+#     models : list
+#         A list of models to compare against the base model.
+#     method : str
+#         Correlation method to use
+#     """
+#     def __init__(self, base_model, models, method: str = "all"):
+#         self.base_model = base_model
+#         self.models = models
+#         self.method = method
+#         self.base_factors = base_model.factors
+#         self.base_features = base_model.features
+#
+#         self.model_results = {}
+#
+#         self.factor_map = None
+#
+#     def compare(self, verbose: bool = True):
+#         """
+#
+#         Parameters
+#         ----------
+#         verbose
+#
+#         Returns
+#         -------
+#
+#         """
+#         base_mean_W = np.mean(self.base_model.W, axis=0)[0]
+#         base_mass_matrix = (base_mean_W*self.base_model.H)/np.sum(base_mean_W*self.base_model.H)
+
+

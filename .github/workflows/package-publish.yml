@@ -1,11 +1,11 @@
-name: Build and Publish Wheel
+name: Build and Publish Python Packages
 
 on:
 #  release:
 #    types: [published]
   push:
     branches:
-      - main
+      - dev
 
 jobs:
   build_wheels:
