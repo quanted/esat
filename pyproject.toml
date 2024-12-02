@@ -36,12 +36,11 @@ package-dir = {"esat" = "esat", "esat_eval" = "eval"}
 include-package-data = true
 
 [tool.cibuildwheel]
-skip = "*-musllinux_i686" # No musllinux-i686 rust compiler available.
+skip = "cp36-* cp37-* cp-38* pp37-* *-manylinux_i686 *_ppc64le *_s390x *_universal2 *-musllinux_i686"
 linux.before-all = "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal"
 linux.environment = { PATH="$HOME/.cargo/bin:$PATH" }
 macos.before-all = "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal"
 windows.before-all = "rustup target add aarch64-pc-windows-msvc i586-pc-windows-msvc i686-pc-windows-msvc x86_64-pc-windows-msvc"
-windows.archs = "all"
 
 [tool.setuptools.dynamic]
 dependencies = {file = ["requirements.txt"]}
