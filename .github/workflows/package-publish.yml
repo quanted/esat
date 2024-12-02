@@ -9,10 +9,11 @@ on:
 
 env:
   MACOSX_DEPLOYMENT_TARGET: "10.12"
+  CIBW_BUILD: "cp310-* cp311-* cp312-*"
 
 jobs:
   build_wheels:
-    name: Build wheels on ${{ matrix.os }} ${{ matrix.python_version }}
+    name: Build wheels on ${{ matrix.os }} py-${{ matrix.python_version }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
