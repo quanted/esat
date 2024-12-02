@@ -1,0 +1,152 @@
+name: Build and Publish Wheel
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build_wheels:
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        # macos-13 is an intel runner, macos-14 is apple silicon
+        os: [ubuntu-latest, macos-13, macos-14]
+        python_version: ["3.10", "3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python_version }}
+      - name: Install setuptools
+        run: |
+            python -m pip install --upgrade pip
+            curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain=stable
+            echo "PATH=${PATH}:${HOME}/.cargo/bin" >> "$GITHUB_ENV"
+            rustc --version
+            python -m pip install build setuptools setuptools-rust
+      - name: Build wheels
+        run:
+            python -m build --outdir py_dist
+      - name: Store the distribution packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-package-distributions
+          path: py_dist/
+
+  build_windows_wheel:
+    name: Build wheels on windows-latest
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        python_version: [ "3.10", "3.11", "3.12" ]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python_version }}
+      - name: Install setuptools
+        run: |
+          python -m pip install --upgrade pip
+          curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain=stable
+          echo "${HOME}/.cargo/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          python -m pip install build setuptools setuptools-rust
+      - name: Build wheels
+        run: python -m build --outdir py_dist
+      - name: Store the distribution packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-package-distributions
+          path: py_dist/
+
+#  publish-to-pypi:
+#    name: >-
+#      Publish Python 🐍 distribution 📦 to PyPI
+#    if: startsWith(github.ref, 'refs/tags/')  # only publish to PyPI on tag pushes
+#    needs:
+#      - build_wheels
+#      - build_windows_wheel
+#    runs-on: ubuntu-latest
+#    environment:
+#      name: pypi
+#      url: https://pypi.org/p/esat
+#    permissions:
+#      id-token: write  # IMPORTANT: mandatory for trusted publishing
+#    steps:
+#      - name: Download all the dists
+#        uses: actions/download-artifact@v4
+#        with:
+#          name: python-package-distributions
+#          path: py_dist/
+#      - name: Publish distribution 📦 to PyPI
+#        uses: pypa/gh-action-pypi-publish@release/v1
+#
+#  github-release:
+#    name: >-
+#      Sign the Python 🐍 distribution 📦 with Sigstore
+#      and upload them to GitHub Release
+#    needs:
+#      - publish-to-pypi
+#    runs-on: ubuntu-latest
+#
+#    permissions:
+#      contents: write  # IMPORTANT: mandatory for making GitHub Releases
+#      id-token: write  # IMPORTANT: mandatory for sigstore
+#
+#    steps:
+#      - name: Download all the dists
+#        uses: actions/download-artifact@v4
+#        with:
+#          name: python-package-distributions
+#          path: py_dist/
+#      - name: Sign the dists with Sigstore
+#        uses: sigstore/gh-action-sigstore-python@v3.0.0
+#        with:
+#          inputs: >-
+#            ./py_dist/*.tar.gz
+#            ./py_dist/*.whl
+#      - name: Create GitHub Release
+#        env:
+#          GITHUB_TOKEN: ${{ github.token }}
+#        run: >-
+#          gh release create
+#          '${{ github.ref_name }}'
+#          --repo '${{ github.repository }}'
+#          --notes ""
+#      - name: Upload artifact signatures to GitHub Release
+#        env:
+#          GITHUB_TOKEN: ${{ github.token }}
+#        # Upload to GitHub Release using the `gh` CLI.
+#        # `dist/` contains the built packages, and the
+#        # sigstore-produced signatures and certificates.
+#        run: >-
+#          gh release upload
+#          '${{ github.ref_name }}' py_dist/**
+#          --repo '${{ github.repository }}'
+
+
+  publish-to-testpypi:
+    name: Publish Python 🐍 distribution 📦 to TestPyPI
+    needs:
+      - build_wheels
+      - build_windows_wheel
+    runs-on: ubuntu-latest
+
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/p/esat
+
+    permissions:
+      id-token: write  # IMPORTANT: mandatory for trusted publishing
+
+    steps:
+      - name: Download all the dists
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions
+          path: py_dist/
+      - name: Publish distribution 📦 to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
