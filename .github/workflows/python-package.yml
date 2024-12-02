@@ -4,9 +4,9 @@ on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
+#  pull_request:
+#    branches:
+#      - main
 
 jobs:
   build_wheels:
@@ -40,7 +40,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: python-package-distributions
-          path: dist/
+          path: wheelhouse/
 
   build_windows_wheel:
     name: Build wheels on windows-latest
@@ -69,7 +69,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: python-package-distributions
-          path: dist/
+          path: wheelhouse/
 
 #  publish-to-pypi:
 #    name: >-
@@ -89,7 +89,7 @@ jobs:
 #        uses: actions/download-artifact@v4
 #        with:
 #          name: python-package-distributions
-#          path: py_dist/
+#          path: wheelhouse/
 #      - name: Publish distribution 📦 to PyPI
 #        uses: pypa/gh-action-pypi-publish@release/v1
 #
@@ -110,13 +110,13 @@ jobs:
 #        uses: actions/download-artifact@v4
 #        with:
 #          name: python-package-distributions
-#          path: dist/
+#          path: wheelhouse/
 #      - name: Sign the dists with Sigstore
 #        uses: sigstore/gh-action-sigstore-python@v3.0.0
 #        with:
 #          inputs: >-
-#            ./dist/*.tar.gz
-#            ./dist/*.whl
+#            ./wheelhouse/*.tar.gz
+#            ./wheelhouse/*.whl
 #      - name: Create GitHub Release
 #        env:
 #          GITHUB_TOKEN: ${{ github.token }}
@@ -133,7 +133,7 @@ jobs:
 #        # sigstore-produced signatures and certificates.
 #        run: >-
 #          gh release upload
-#          '${{ github.ref_name }}' dist/**
+#          '${{ github.ref_name }}' wheelhouse/**
 #          --repo '${{ github.repository }}'
 
 
@@ -156,7 +156,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: python-package-distributions
-          path: dist/
+          path: wheelhouse/
       - name: Publish distribution 📦 to TestPyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
