@@ -7,13 +7,16 @@ on:
     branches:
       - dev
 
+env:
+  MACOSX_DEPLOYMENT_TARGET=10.12
+
 jobs:
   build_wheels:
     name: Build wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-13, macos-latest]
+        os: [ubuntu-latest, windows-latest, macos-13, macos-14]
         python_version: ["3.10", "3.11", "3.12"]
     steps:
       - uses: actions/checkout@v4
