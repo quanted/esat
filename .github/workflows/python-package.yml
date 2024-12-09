@@ -5,6 +5,10 @@ on:
     branches:
       - dev
 
+env:
+  MACOSX_DEPLOYMENT_TARGET: "10.12"
+  CIBW_BUILD: "cp310-* cp311-* cp312-*"
+
 jobs:
   build_wheels:
     name: Build wheels on ${{ matrix.os }}
