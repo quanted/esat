@@ -3,9 +3,9 @@ name: Build and Publish Python Packages
 on:
 #  release:
 #    types: [published]
-  push:
+  push:   # Only for testing while publish-to-pypi is commented out
     branches:
-      - dev
+      - main
 
 env:
   MACOSX_DEPLOYMENT_TARGET: "10.12"
@@ -40,13 +40,37 @@ jobs:
           name: esat-wheels-${{ matrix.os }}-${{ strategy.job-index }}
           path: py_dist/
 
+  publish-to-testpypi:
+    name: Publish Python 🐍 distribution 📦 to TestPyPI
+    needs:
+      - build_wheels
+    runs-on: ubuntu-latest
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/p/esat
+    permissions:
+      id-token: write
+    steps:
+      - name: Download all the dists
+        uses: actions/download-artifact@v4
+        with:
+          pattern: esat-wheels-*
+          merge-multiple: true
+          path: py_dist/
+      - name: Publish distribution 📦 to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: py_dist/
+          skip-existing: true
+          repository-url: https://test.pypi.org/legacy/
+
 #  publish-to-pypi:
 #    name: >-
 #      Publish Python 🐍 distribution 📦 to PyPI
 #    if: startsWith(github.ref, 'refs/tags/')  # only publish to PyPI on tag pushes
 #    needs:
 #      - build_wheels
-#      - build_windows_wheel
+#      - publish-to-testpypi
 #    runs-on: ubuntu-latest
 #    environment:
 #      name: pypi
@@ -57,11 +81,16 @@ jobs:
 #      - name: Download all the dists
 #        uses: actions/download-artifact@v4
 #        with:
-#          name: python-package-distributions
+#          pattern: esat-wheels-*
+#          merge-multiple: true
 #          path: py_dist/
 #      - name: Publish distribution 📦 to PyPI
 #        uses: pypa/gh-action-pypi-publish@release/v1
-#
+#        with:
+#          packages-dir: py_dist/
+
+# Currently not intending on using automated github-release as the primary trigger for pypi publishing is by creating
+# a new github version release. This is done manually by the developer.
 #  github-release:
 #    name: >-
 #      Sign the Python 🐍 distribution 📦 with Sigstore
@@ -104,31 +133,3 @@ jobs:
 #          gh release upload
 #          '${{ github.ref_name }}' py_dist/**
 #          --repo '${{ github.repository }}'
-
-
-  publish-to-testpypi:
-    name: Publish Python 🐍 distribution 📦 to TestPyPI
-    needs:
-      - build_wheels
-#      - build_windows_wheel
-    runs-on: ubuntu-latest
-
-    environment:
-      name: testpypi
-      url: https://test.pypi.org/p/esat
-
-    permissions:
-      id-token: write  # IMPORTANT: mandatory for trusted publishing
-
-    steps:
-      - name: Download all the dists
-        uses: actions/download-artifact@v4
-        with:
-          pattern: esat-wheels-*
-          merge-multiple: true
-          path: py_dist/
-      - name: Publish distribution 📦 to TestPyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          packages-dir: py_dist/
-          repository-url: https://test.pypi.org/legacy/
