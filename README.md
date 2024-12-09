@@ -1,5 +1,5 @@
 # Environmental Source Apportionment Toolkit (ESAT)
-Last Update: 08-15-2024
+Last Update: 12-09-2024
 
 ## Table of Contents
  - [Description](#description)
@@ -38,24 +38,25 @@ ESAT supports python version 3.10, 3.11, and 3.12. As the python package contain
 specific versions, supporting Mac Intel, Mac M1+, Linux, and Windows.
 
 ### Documentation
-The Python API and CLI documentation can be found at the Github ESAT IO site: [https://quanted.github.io/esat/](https://quanted.github.io/esat/)
+The Python API and CLI documentation can be found at the GitHub ESAT IO site: [https://quanted.github.io/esat/](https://quanted.github.io/esat/)
 
 ### Installation
 The ESAT python package contains all compiled code and required dependencies and can be installed using pip
 ```bash
-pip install esat-VERSION-OS.whl
-```
-where the <i>VERSION</i> is the code version, such as <i>2024.1.0</i>, and <i>OS</i> is operating system targeted 
-compiled version, such as <i>cp312-cp312-win_amd64</i>. If an error message appears during installation stating that the 
-package is not supported check that the correct OS and python version are being installed for that system.
-
-The latest version of the ESAT python package can be found on the github actions page, for users who are signed into github, 
-under the 'Build and Publish Wheel' workflow. The latest version of the package will be available as an artifact for 
-download in the 'Artifacts' section of the completed workflow.
-
-When the package becomes available on pypi, the package will be able to be installed with 
-```bash
 pip install esat
+```
+which will install the latest version that supports and is available for your python version and OS.
+
+Development versions of ESAT can be found on the GitHub actions page, for logged-in users, 
+under the 'Build and Publish Wheel' workflow. The latest version of the package will be available as an artifact for 
+download in the 'Artifacts' section of the completed workflow. There wheel files can be found for specific versions
+of python and supported operating systems. 
+
+If an error message appears during installation stating that the 
+package is not supported check that the correct OS and python version are being installed for that system. The python 
+wheels can be installed directly using 
+```bash
+pip install <wheel file name>
 ```
 The esat python package is recommended to be installed in its own dedicated python virtual environment or conda environment.
 
