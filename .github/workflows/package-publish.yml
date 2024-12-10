@@ -1,11 +1,11 @@
 name: Build and Publish Python Packages
 
 on:
-#  release:
-#    types: [published]
-  push:   # Only for testing while publish-to-pypi is commented out
-    branches:
-      - main
+  release:
+    types: [published]
+#  push:   # Only for testing while publish-to-pypi is commented out
+#    branches:
+#      - main
 
 env:
   MACOSX_DEPLOYMENT_TARGET: "10.12"
