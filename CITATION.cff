@@ -1,0 +1,51 @@
+cff-version: "1.2.0"
+authors:
+- family-names: Smith
+  given-names: Deron
+  orcid: "https://orcid.org/0009-0009-4015-5270"
+- family-names: Cyterski
+  given-names: Michael
+  orcid: "https://orcid.org/0000-0002-8630-873X"
+- family-names: Johnston
+  given-names: John M
+  orcid: "https://orcid.org/0000-0002-5886-7876"
+- family-names: Wolfe
+  given-names: Kurt
+  orcid: "https://orcid.org/0009-0009-4679-5922"
+- family-names: Parmar
+  given-names: Rajbir
+  orcid: "https://orcid.org/0009-0005-2221-0433"
+doi: 10.23719/1531870
+message: If you use this software, please cite our article in the
+  Journal of Open Source Software.
+preferred-citation:
+  authors:
+  - family-names: Smith
+    given-names: Deron
+    orcid: "https://orcid.org/0009-0009-4015-5270"
+  - family-names: Cyterski
+    given-names: Michael
+    orcid: "https://orcid.org/0000-0002-8630-873X"
+  - family-names: Johnston
+    given-names: John M
+    orcid: "https://orcid.org/0000-0002-5886-7876"
+  - family-names: Wolfe
+    given-names: Kurt
+    orcid: "https://orcid.org/0009-0009-4679-5922"
+  - family-names: Parmar
+    given-names: Rajbir
+    orcid: "https://orcid.org/0009-0005-2221-0433"
+  date-published: 2024-12-10
+  doi: 10.21105/joss.07316
+  issn: 2475-9066
+  issue: 104
+  journal: Journal of Open Source Software
+  publisher:
+    name: Open Journals
+  start: 7316
+  title: "ESAT: Environmental Source Apportionment Toolkit Python
+    package"
+  type: article
+  url: "https://joss.theoj.org/papers/10.21105/joss.07316"
+  volume: 9
+title: "ESAT: Environmental Source Apportionment Toolkit Python package"
