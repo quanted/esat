@@ -64,30 +64,29 @@ jobs:
           skip-existing: true
           repository-url: https://test.pypi.org/legacy/
 
-#  publish-to-pypi:
-#    name: >-
-#      Publish Python 🐍 distribution 📦 to PyPI
+  publish-to-pypi:
+    name: >-
+      Publish Python 🐍 distribution 📦 to PyPI
 #    if: startsWith(github.ref, 'refs/tags/')  # only publish to PyPI on tag pushes
-#    needs:
-#      - build_wheels
-#      - publish-to-testpypi
-#    runs-on: ubuntu-latest
-#    environment:
-#      name: pypi
-#      url: https://pypi.org/p/esat
-#    permissions:
-#      id-token: write  # IMPORTANT: mandatory for trusted publishing
-#    steps:
-#      - name: Download all the dists
-#        uses: actions/download-artifact@v4
-#        with:
-#          pattern: esat-wheels-*
-#          merge-multiple: true
-#          path: py_dist/
-#      - name: Publish distribution 📦 to PyPI
-#        uses: pypa/gh-action-pypi-publish@release/v1
-#        with:
-#          packages-dir: py_dist/
+    needs:
+      - build_wheels
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/esat
+    permissions:
+      id-token: write
+    steps:
+      - name: Download all the dists
+        uses: actions/download-artifact@v4
+        with:
+          pattern: esat-wheels-*
+          merge-multiple: true
+          path: py_dist/
+      - name: Publish distribution 📦 to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: py_dist/
 
 # Currently not intending on using automated github-release as the primary trigger for pypi publishing is by creating
 # a new github version release. This is done manually by the developer.

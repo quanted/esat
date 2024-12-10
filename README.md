@@ -1,5 +1,5 @@
 # Environmental Source Apportionment Toolkit (ESAT)
-Last Update: 12-09-2024
+Last Update: 12-10-2024
 
 ## Table of Contents
  - [Description](#description)
@@ -31,6 +31,10 @@ processing. The source apportionment algorithms provided in ESAT include two var
 factorization (NMF), both of which have been written in Rust and contained within the python package. A collection of 
 data processing and visualization features are included for data and model analytics. The ESAT package includes a 
 synthetic data generator and comparison tools to evaluate ESAT model outputs.
+
+The ESAT python package has been published with the Journal of Open Source Software (JOSS):
+
+[![DOI](https://joss.theoj.org/papers/10.21105/joss.07316/status.svg)](https://doi.org/10.21105/joss.07316)
 
 ## Quick Start
 
