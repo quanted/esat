@@ -32,3 +32,4 @@ docs/_static/
 docs/html/
 
 notebooks/.ipynb_checkpoints/
+notebooks/old/.ipynb_checkpoints/
