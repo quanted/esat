@@ -136,7 +136,7 @@ class BatchSA:
 
         self.runtime = None
         self.parallel = parallel if isinstance(parallel, bool) else str(parallel).lower() == "true"
-        self.cpus = cpus if cpus > 0 else mp.cpu_count() - 1
+        self.cpus = cpus if cpus > 0 else max(int(mp.cpu_count() * 0.75), 1)
         self.optimized = optimized if isinstance(optimized, bool) else str(optimized).lower() == "true"
         self.verbose = verbose if isinstance(verbose, bool) else str(verbose).lower() == "true"
         self.results = []
@@ -262,7 +262,6 @@ class BatchSA:
                         f"Q(robust): {round(self.results[best_model].Qrobust, 4)}, "
                         f"MSE(robust): {round(self.results[best_model].Qrobust/self.V.size, 4)}, "
                         f"Converged: {self.results[best_model].converged}")
-            logger.info(f"Factor Q(True): {self.results[best_model].factor_Q}")
             logger.info(f"Runtime: {round((t1 - t0) / 60, 2)} min(s)")
         self.best_model = best_model
         # results cleanup

@@ -1,14 +1,16 @@
-import math
 import os
-import json
 import logging
 import numpy as np
 import pandas as pd
 from itertools import permutations
 import multiprocessing as mp
-from tqdm import tqdm
+from scipy.sparse import csr_matrix
+from scipy.sparse.csgraph import min_weight_full_bipartite_matching
+from esat.model.sa import SA
 from esat.model.batch_sa import BatchSA
 from esat.metrics import q_loss
+from tqdm import notebook as tqdm_nb
+from tqdm import tqdm
 
 logger = logging.getLogger(__name__)
 
@@ -450,41 +452,156 @@ class FactorCompare:
         r_avg_3 = np.mean(r_values_3)
         return factors, r_avg, r_values, r_avg_2, r_values_2, r_avg_3, r_values_3
 
-# class FactorCompareV2:
-#     """
-#
-#     Parameters
-#     ----------
-#     base_model : BaseModel
-#         The base model to compare against.
-#     models : list
-#         A list of models to compare against the base model.
-#     method : str
-#         Correlation method to use
-#     """
-#     def __init__(self, base_model, models, method: str = "all"):
-#         self.base_model = base_model
-#         self.models = models
-#         self.method = method
-#         self.base_factors = base_model.factors
-#         self.base_features = base_model.features
-#
-#         self.model_results = {}
-#
-#         self.factor_map = None
-#
-#     def compare(self, verbose: bool = True):
-#         """
-#
-#         Parameters
-#         ----------
-#         verbose
-#
-#         Returns
-#         -------
-#
-#         """
-#         base_mean_W = np.mean(self.base_model.W, axis=0)[0]
-#         base_mass_matrix = (base_mean_W*self.base_model.H)/np.sum(base_mean_W*self.base_model.H)
 
+class FactorCompareV2:
+    """
+    Comparing factors between a base model and a list of other models, providing a mapping between the base model and
+    each model in the models list.
 
+    Parameters
+    ----------
+    base_model : BaseModel
+        The base model to compare against.
+    models : list
+        A list of models to compare against the base model.
+
+    """
+
+    def __init__(self, base_model: SA, models: list, in_notebook: bool = False):
+        self.base_model = base_model
+        self.models = models
+        self.factors = base_model.factors
+
+        self.correlation_data = {}
+        self.factor_map = None
+
+        self.calculate_correlation_matrix(in_notebook=in_notebook)
+
+    def calculate_correlation_matrix(self, in_notebook: bool = False):
+        """
+        Correlation matrices are calculated between a reference base model and a collection of separate models
+        (independent or perturbed). The correlation metrics used for comparison are implemented as defined in the
+        publication https://doi.org/10.1021/es800085t.
+
+        Parameters
+        ----------
+        in_notebook : bool
+            If True, the function will display a progress bar formatted for Jupyter notebooks.
+
+        """
+        base_mean_W = np.mean(self.base_model.W, axis=0)[0]
+        base_mass_matrix = (base_mean_W * self.base_model.H) / np.sum(base_mean_W * self.base_model.H)
+        n = 1 / self.base_model.W[:, 0].shape[0]
+
+        pbar = tqdm(range(int(len(self.models))), desc="Calculating correlation between base and model factors",
+                           leave=False)
+        if in_notebook:
+            pbar = tqdm_nb.tqdm(range(int(len(self.models))), desc="Calculating correlation between base and model factors",
+                           leave=False)
+        for i in pbar:
+            i_results = {
+                "corr": [],
+                "corr_mapping": [],
+                "all_corr": [],
+                "raae": [],
+                "raae_mapping": [],
+                "all_raae": [],
+                "emc": [],
+                "emc_mapping": [],
+                "all_emc": []
+            }
+
+            i_model = self.models[i]
+            i_mean_W = np.mean(i_model.W, axis=0)[0]
+            i_mass_matrix = (i_mean_W * i_model.H) / np.sum(i_mean_W * i_model.H)
+
+            for j in range(self.factors):
+                j_W = self.base_model.W[:, j]  # Base model W column j (factor contribution)
+                j_H = self.base_model.H[j]  # Base model H row j (factor profile)
+
+                # Tacking results of equation 4
+                j_r2 = 0.0
+                r2_best = -1
+                all_corr = []
+
+                # Tracking results of equation 5
+                j_raae = float("inf")
+                raae_best = -1
+                all_raae = []
+
+                # Tracking results of equation 7
+                j_emc = 0.0
+                best_emc = -1
+                all_emc = []
+
+                for k in range(self.factors):
+                    k_W = i_model.W[:, k]  # Perturbed model i, W column j (perturbed factor contribution j)
+                    jk_r2 = FactorCompare.calculate_correlation(factor1=j_W.flatten(),
+                                                                factor2=k_W.flatten())  # Equation 4
+                    jk_raae = (np.sum(np.abs(k_W - j_W)) * n) / (np.sum(j_W) * n)  # Equation 5
+                    jk_emc = FactorCompare.calculate_correlation(factor1=base_mass_matrix[j],
+                                                                 factor2=i_mass_matrix[k])  # Equation 7
+
+                    if jk_r2 > j_r2:
+                        r2_best = k
+                        j_r2 = jk_r2
+                    if jk_raae < j_raae:
+                        j_raae = jk_raae
+                        raae_best = k
+                    if jk_emc > j_emc:
+                        j_emc = jk_emc
+                        best_emc = k
+                    all_corr.append(jk_r2)
+                    all_raae.append(jk_raae)
+                    all_emc.append(jk_emc)
+                i_results["corr"].append(j_r2)
+                i_results["corr_mapping"].append(r2_best)
+                i_results["all_corr"].append(all_corr)
+                i_results["raae"].append(j_raae)
+                i_results["raae_mapping"].append(raae_best)
+                i_results["all_raae"].append(all_raae)
+                i_results["emc"].append(j_emc)
+                i_results["emc_mapping"].append(best_emc)
+                i_results["all_emc"].append(all_emc)
+            self.correlation_data[i] = i_results
+
+    def determine_map(self, method: str = "raae"):
+        """
+        Determine the factor mapping between the base model and a collection of models.
+
+        Parameters
+        ----------
+        method : str
+            Correlation method to use, options include: "corr", "raae", "emc".
+        """
+        batch_mapping = {}
+        batch_values = {}
+        for i, p_model in self.correlation_data.items():
+            mapping_values = [-1 for i in range(self.factors)]
+            if method == "raae":
+                optimal_indices = np.array(p_model["all_raae"]).argmin(axis=0)
+                mapping_matrix = np.array(p_model["all_raae"])
+                maximize = False
+            elif method == "emc":
+                optimal_indices = np.array(p_model["all_emc"]).argmax(axis=0)
+                mapping_matrix = np.array(p_model["all_emc"])
+                maximize = True
+            else:
+                optimal_indices = np.array(p_model["all_corr"]).argmax(axis=0)
+                mapping_matrix = np.array(p_model["all_corr"])
+                maximize = True
+
+            # Step 1, all optimal value indices are unique and no other values need to be checked.
+            if (np.unique(optimal_indices, return_counts=True)[1].max() == 1):
+                model_mapping = optimal_indices
+            else:
+                m_bi_matrix = csr_matrix(mapping_matrix)
+                model_mapping = list(min_weight_full_bipartite_matching(m_bi_matrix, maximize=maximize))
+            optimal_index_tuples = list(zip(list(range(self.factors)), model_mapping))
+            for j, oi in enumerate(optimal_index_tuples):
+                ele_values = mapping_matrix[oi]
+                mapping_values[j] = np.round(ele_values, 4)
+
+            batch_mapping[i] = optimal_indices
+            batch_values[i] = mapping_values
+        return batch_mapping, batch_values
