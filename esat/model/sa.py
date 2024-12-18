@@ -101,7 +101,6 @@ class SA:
         self.Qrobust = None
         self.Qtrue = None
         self.WH = None
-        self.factor_Q = None
         self.q_list = None
 
         self.model_i = -1
@@ -490,7 +489,6 @@ class SA:
         self.WH = np.matmul(W, H)
         self.Qtrue = q_loss(V=V, U=U, W=W, H=H)
         self.Qrobust, _ = qr_loss(V=V, U=U, W=W, H=H, alpha=robust_alpha)
-        self.factor_Q = q_factor(V=V, U=U, W=W, H=H)
         self.q_list = q_list
         self.metadata["completion_date"] = datetime.now().strftime("%m/%d/%Y, %H:%M:%S %Z")
         self.metadata["max_iterations"] = int(max_iter)
