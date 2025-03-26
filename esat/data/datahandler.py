@@ -156,17 +156,17 @@ class DataHandler:
         """
         # Drop columns if specified
         if self.drop_col is not None:
-            _input_data = copy.copy(self.input_data.drop(labels=self.drop_col, axis=1))
-            _uncertainty_data = copy.copy(self.uncertainty_data.drop(labels=self.drop_col, axis=1))
+            _input_data = copy.copy(self.input_data.drop(labels=self.drop_col, axis=1)).astype("float64")
+            _uncertainty_data = copy.copy(self.uncertainty_data.drop(labels=self.drop_col, axis=1)).astype("float64")
         else:
-            _input_data = copy.copy(self.input_data)
-            _uncertainty_data = copy.copy(self.uncertainty_data)
+            _input_data = copy.copy(self.input_data).astype("float64")
+            _uncertainty_data = copy.copy(self.uncertainty_data).astype("float64")
 
         # Drop bad category features
         bad_features = list(self.metrics.loc[self.metrics["Category"] == "bad"].index)
         for bf in bad_features:
-            _input_data = self.input_data.drop(labels=bf, axis=1)
-            _uncertainty_data = self.uncertainty_data.drop(labels=bf, axis=1)
+            _input_data = _input_data.drop(labels=bf, axis=1)
+            _uncertainty_data = _uncertainty_data.drop(labels=bf, axis=1)
         # Triple weak category features
         weak_features = list(self.metrics.loc[self.metrics["Category"] == "weak"].index)
         for wf in weak_features:
@@ -366,7 +366,8 @@ class DataHandler:
         data_df = copy.copy(self.input_data)
         data_df.index = pd.to_datetime(data_df.index)
         data_df = data_df.sort_index()
-        #TODO: Enforce datetime steps for index or check and only resample if so.
+        # TODO: Resample at the resolution of the input data timestep, currently resampling at daily resolution.
+        # Create a time delta for that is the timestamp difference between i and i+1 to determine the timestep.
         data_df = data_df.resample('D').mean()
         x = list(data_df.index)
         ts_plot = go.Figure()
