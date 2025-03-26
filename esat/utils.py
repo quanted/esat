@@ -3,6 +3,7 @@ Collection of utility functions used throughout the code base.
 """
 
 import numpy as np
+import pandas as pd
 
 
 def np_encoder(object):
@@ -20,6 +21,32 @@ def np_encoder(object):
     """
     if isinstance(object, np.generic):
         return object.item()
+
+
+def min_timestep(data: pd.DataFrame):
+    """
+    Find the minimum timestep in a dataframe.
+
+    Parameters
+    ----------
+    data
+        Dataframe to be searched.
+
+    Returns
+    -------
+    int
+        Minimum timestep.
+    """
+    time_delta = data.index[1: -1] - data.index[0:-2]
+    if time_delta.min().seconds < 60:
+        resample = f"{time_delta.min().seconds}s"
+    elif time_delta.min().seconds < 60 * 60:
+        resample = f"{int(time_delta.min().seconds / 60)}min"
+    elif time_delta.min().seconds > 60 * 60 and time_delta.min().days <= 0:
+        resample = f"{int(time_delta.min().seconds / (60 * 60))}h"
+    else:
+        resample = "D"
+    return resample
 
 
 def calculate_factor_correlation(factor1, factor2):

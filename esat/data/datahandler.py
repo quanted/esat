@@ -7,6 +7,7 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 from esat.model.recombinator import optimal_block_length
+from esat.utils import min_timestep
 
 logging.basicConfig(format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S', level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -366,9 +367,7 @@ class DataHandler:
         data_df = copy.copy(self.input_data)
         data_df.index = pd.to_datetime(data_df.index)
         data_df = data_df.sort_index()
-        # TODO: Resample at the resolution of the input data timestep, currently resampling at daily resolution.
-        # Create a time delta for that is the timestamp difference between i and i+1 to determine the timestep.
-        data_df = data_df.resample('D').mean()
+        data_df = data_df.resample(min_timestep(data_df)).mean()
         x = list(data_df.index)
         ts_plot = go.Figure()
         for feature_i in feature_label:
