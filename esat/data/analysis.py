@@ -10,6 +10,7 @@ from plotly.subplots import make_subplots
 from esat.data.datahandler import DataHandler
 from esat.model.sa import SA
 from esat.model.batch_sa import BatchSA
+from esat.utils import min_timestep
 
 logging.basicConfig(format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S', level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -255,7 +256,7 @@ class ModelAnalysis:
                                index=self.dh.input_data_df.index)
         data_df.index = pd.to_datetime(data_df.index)
         data_df = data_df.sort_index()
-        data_df = data_df.resample('D').mean()
+        data_df = data_df.resample(min_timestep(data_df)).mean()
 
         ts_subplot = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.01, row_heights=[0.8, 0.2])
 
@@ -318,7 +319,7 @@ class ModelAnalysis:
         data_df[factor_label] = norm_contr
         data_df.index = pd.to_datetime(data_df.index)
         data_df = data_df.sort_index()
-        data_df = data_df.resample('D').mean()
+        data_df = data_df.resample(min_timestep(data_df)).mean()
 
         profile_plot = make_subplots(specs=[[{"secondary_y": True}]], rows=1, cols=1)
         profile_plot.add_trace(go.Scatter(x=self.dh.features, y=norm_profile, mode='markers', marker=dict(color='red'),
@@ -447,7 +448,7 @@ class ModelAnalysis:
         contr_df = pd.DataFrame(normalized_factors_contr, columns=factor_labels)
         contr_df.index = pd.to_datetime(self.dh.input_data_df.index)
         contr_df = contr_df.sort_index()
-        contr_df = contr_df.resample('D').mean()
+        contr_df = contr_df.resample(min_timestep(contr_df)).mean()
 
         contr_fig = go.Figure()
         for factor in factor_labels:

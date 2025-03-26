@@ -3,7 +3,7 @@ import os
 import re
 from esat.model.sa import SA
 from esat.data.datahandler import DataHandler
-from esat.utils import np_encoder
+from esat.utils import np_encoder, min_timestep
 from esat.metrics import q_loss, qr_loss
 from tqdm import trange
 from datetime import datetime
@@ -979,14 +979,15 @@ class ConstrainedModel:
         b_data_df[factor_label] = b_norm_contr
         b_data_df.index = pd.to_datetime(b_data_df.index)
         b_data_df = b_data_df.sort_index()
-        b_data_df = b_data_df.resample('D').mean()
+        b_data_df = b_data_df.resample(min_timestep(b_data_df)).mean()
 
         i_norm_contr = i_W / i_W.mean()
         i_data_df =  copy.copy(self.dh.input_data)
         i_data_df[factor_label] = i_norm_contr
         i_data_df.index = pd.to_datetime(i_data_df.index)
         i_data_df = i_data_df.sort_index()
-        i_data_df = i_data_df.resample('D').mean()
+        i_data_df = i_data_df.resample(min_timestep(i_data_df)).mean()
+
 
         fig = go.Figure()
         fig.add_trace(go.Scatter(x=b_data_df.index, y=b_data_df[factor_label], mode='lines+markers',
@@ -1131,7 +1132,7 @@ class ConstrainedModel:
         contr_df = pd.DataFrame(normalized_factors_contr, columns=factor_labels)
         contr_df.index = pd.to_datetime(self.dh.input_data.index)
         contr_df = contr_df.sort_index()
-        contr_df = contr_df.resample('D').mean()
+        contr_df = contr_df.resample(min_timestep(contr_df)).mean()
 
         contr_fig = go.Figure()
         for factor in factor_labels:
