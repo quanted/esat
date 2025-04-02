@@ -3,7 +3,6 @@ from esat.model.ws_nmf import WSNMF
 from esat.utils import np_encoder, solution_bump
 from esat.metrics import q_loss, qr_loss, EPSILON, q_factor
 from scipy.cluster.vq import kmeans2, whiten
-from fcmeans import FCM
 from tqdm import trange
 from datetime import datetime
 from pathlib import Path
@@ -237,12 +236,10 @@ class SA:
         Initialize the factor profile (H) and factor contribution matrices (W).
 
         The W and H matrices can be created using several methods or be passed in by the user. The shapes of these
-        matrices are W: (M, factors) and H: (factors: N). There are three methods for initializing the W and H matrices:
+        matrices are W: (M, factors) and H: (factors: N). There are two methods for initializing the W and H matrices:
         1) K Means Clustering ('kmeans'), which will cluster the input dataset into the number of factors set, then assign
         the contributions of to those factors, the H matrix is calculated from the centroids of those clusters.
-        2) Fuzzy C-Means Clustering ('cmeans'), which will cluster the input dataset in the same way as kmeans but sets
-        the contributions based upon the ratio of the distance to the clusters.
-        3) A random sampling based upon the square root of the mean of the features (columns), the default method.
+        2) A random sampling based upon the square root of the mean of the features (columns), the default method.
 
         Parameters
         ----------
@@ -255,14 +252,11 @@ class SA:
            The factor contribution matrix of shape (M, factors), provided by the user when not using one of the three
            initialization methods. When using method=ws-nmf, the W matrix can contain negative values.
         init_method : str
-           The default option is column means 'column_mean', other valid options are: 'kmeans' or 'cmeans'. Used when
+           The default option is column means 'column_mean', other valid option is: 'kmeans'. Used when
            W and/or H is not provided.
         init_norm : bool
-           When using init_method either 'kmeans' or 'cmeans', this option allows for normalizing the input dataset
+           When using init_method 'kmeans', this option allows for normalizing the input dataset
            prior to clustering.
-        fuzziness : float
-           The amount of fuzziness to apply to fuzzy c-means clustering. Default is 5. See fuzzy c-means clustering
-           documentation.
         H_ratio : float
             When some number of factors has been provided, H is not None, than the H_ratio determines how much of the
             features in the provided H contribute to the complete feature profile ratio.
@@ -290,16 +284,6 @@ class SA:
             if self.verbose:
                 logger.debug(f"Factor profile and contribution matrices initialized using k-means clustering. "
                              f"The observations were {'not' if not init_norm else ''} normalized.")
-        elif "cmeans" in init_method.lower():
-            self.metadata["init_norm"] = init_norm
-            self.metadata["init_cmeans_fuzziness"] = fuzziness
-            fcm = FCM(n_clusters=self.factors, m=fuzziness, random_state=self.seed)
-            fcm.fit(obs)
-            H = fcm.centers
-            W = fcm.u
-            if self.verbose:
-                logger.debug(f"Factor profile and contribution matrices initialized using fuzzy c-means clustering. "
-                             f"The observations were {'not' if not init_norm else ''} normalized.")
         else:
             if H is None:
                 V_avg = np.sqrt(np.mean(self.V, axis=0) / self.factors)
@@ -325,18 +309,13 @@ class SA:
             for i in range(prior_H.shape[0]):
                 H[i] = prior_H[i]
             H = H / H.sum(axis=0)
-            # _p_i = prior_H.shape[0]
-            # _H = H[_p_i:]
-            # _H = (_H / _H.sum(axis=0)) * (1.0 - H_ratio)
-            # _prior_H = (prior_H / prior_H.sum(axis=0)) * H_ratio
-            # H = np.vstack((_prior_H, _H))
         H[H <= 0.0] = 1e-12
         self.H = H
         self.W = W
         self.init_method = init_method
         self.__initialized = True
-        # if self.verbose:
-        #     logger.debug("Completed initializing the factor profile and contribution matrices.")
+        if self.verbose:
+            logger.debug("Completed initializing the factor profile and contribution matrices.")
         self.__validate()
 
     def summary(self):
