@@ -503,16 +503,16 @@ class ModelAnalysis:
 
         """
         if factor_idx is None and feature_idx is None:
-            logger.warn("A factor or feature index must be provided.")
+            logger.warning("A factor or feature index must be provided.")
             return
         if factor_idx is not None:
             if factor_idx > self.model.factors or factor_idx < 1:
-                logger.warn(f"Invalid factor_idx provided, must be between 1 and {self.model.factors}")
+                logger.warning(f"Invalid factor_idx provided, must be between 1 and {self.model.factors}")
                 return
             factor_idx = factor_idx - 1
         if feature_idx is not None:
             if feature_idx < 1 or feature_idx > self.model.n:
-                logger.warn(f"Invalid feature_idx provided, must be between 1 and {self.model.n}")
+                logger.warning(f"Invalid feature_idx provided, must be between 1 and {self.model.n}")
                 return
             feature_idx = feature_idx - 1
 

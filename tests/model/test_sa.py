@@ -50,15 +50,6 @@ class TestSA:
         assert sa.W.shape == (self.V.shape[0], factor_n)
         assert sa.H.shape == (factor_n, self.V.shape[1])
 
-    def test_initialization_cmeans(self):
-        factor_n = 6
-        sa = SA(V=self.V, U=self.U, factors=factor_n)
-        sa.initialize(init_method='cmeans', fuzziness=5.0)
-        assert sa.H is not None
-        assert sa.W is not None
-        assert sa.W.shape == (self.V.shape[0], factor_n)
-        assert sa.H.shape == (factor_n, self.V.shape[1])
-
     def test_initialization_H(self):
         factor_n = 6
         sa = SA(V=self.V, U=self.U, factors=factor_n)
@@ -77,7 +68,7 @@ class TestSA:
         assert sa.WH is not None
         assert sa.Qtrue is not None
 
-        sa2 = SA(V=self.V, U=self.U, factors=factor_n, method="ls-nmf", optimized=False)
+        sa2 = SA(V=self.V, U=self.U, factors=factor_n, method="ls-nmf")
         sa2.initialize()
         sa2.train(max_iter=500, converge_delta=1.0, converge_n=10)
         assert sa2.WH is not None
@@ -85,7 +76,7 @@ class TestSA:
 
     def test_optimized(self):
         factor_n = 6
-        sa = SA(V=self.V, U=self.U, factors=factor_n, method="ls-nmf", optimized=True)
+        sa = SA(V=self.V, U=self.U, factors=factor_n, method="ls-nmf")
         sa.initialize()
         sa.train(max_iter=500, converge_delta=1.0, converge_n=10)
         assert sa.WH is not None

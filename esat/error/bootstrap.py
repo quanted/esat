@@ -437,7 +437,7 @@ class Bootstrap:
                 if reuse_seed:
                     train_seed = self.base_seed
                 bs_i_sa = SA(V=bs_data, U=bs_uncertainty, factors=self.factors, method=self.sa.method, seed=train_seed,
-                             optimized=self.sa.optimized, verbose=False)
+                             verbose=False)
                 bs_i_sa.initialize(H=_H)
                 bs_i_sa.train(max_iter=self.sa.metadata["max_iterations"],
                               converge_delta=self.sa.metadata["converge_delta"],
@@ -470,7 +470,7 @@ class Bootstrap:
         if reuse_seed:
             train_seed = self.base_seed
         bs_i_sa = SA(V=bs_data, U=bs_uncertainty, factors=self.factors, method=self.sa.method, seed=train_seed,
-                     optimized=self.sa.optimized, verbose=False)
+                     verbose=False)
         bs_i_sa.initialize(H=_H)
         bs_i_sa.train(max_iter=self.sa.metadata["max_iterations"],
                       converge_delta=self.sa.metadata["converge_delta"],

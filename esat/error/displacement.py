@@ -298,9 +298,8 @@ class Displacement:
                             max_dQ = dQ
                         if search_i >= max_high_search:
                             value_found = True
-                    disp_i_sa = SA(V=self.V, U=self.U,
-                                     factors=self.sa.factors, method=self.sa.method,
-                                     seed=self.sa.seed, optimized=self.sa.optimized, verbose=False)
+                    disp_i_sa = SA(V=self.V, U=self.U, factors=self.sa.factors, method=self.sa.method,
+                                   seed=self.sa.seed, verbose=False)
                     disp_i_sa.initialize(H=new_H)
                     disp_i_sa.train(max_iter=self.sa.metadata["max_iterations"],
                                      converge_delta=self.sa.metadata["converge_delta"],
@@ -363,9 +362,8 @@ class Displacement:
                         p_mod = modifier
                         if search_i >= max_search_i:
                             value_found = True
-                    disp_i_sa = SA(V=self.V, U=self.U,
-                                     factors=self.sa.factors, method=self.sa.method,
-                                     seed=self.sa.seed, optimized=self.sa.optimized, verbose=False)
+                    disp_i_sa = SA(V=self.V, U=self.U, factors=self.sa.factors, method=self.sa.method,
+                                   seed=self.sa.seed, verbose=False)
                     disp_i_sa.initialize(H=new_H)
                     disp_i_sa.train(max_iter=self.sa.metadata["max_iterations"],
                                      converge_delta=self.sa.metadata["converge_delta"],

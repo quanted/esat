@@ -98,10 +98,10 @@ def memory_estimate(n_features, n_samples, factors, cores: int = None):
         Estimated memory usage in bytes.
     """
     vm = psutil.virtual_memory()
-    available_memory_bytes = vm.available
+    available_memory_bytes = np.round(vm.available, 4)
     cores = os.cpu_count() if cores is None else cores
 
-    max_bytes = 32 * ((n_features * n_samples)*2 + (n_features * factors) + (n_samples * factors))
+    max_bytes = np.round(32 * ((n_features * n_samples)*3 + (n_features * factors) + (n_samples * factors)),4) * 10
 
     if max_bytes > available_memory_bytes:
         logger.warning(f"Estimated memory usage ({max_bytes:4f} bytes) exceeds available memory ({available_memory_bytes:4f} bytes).")
@@ -109,20 +109,23 @@ def memory_estimate(n_features, n_samples, factors, cores: int = None):
     max_parallel = int(available_memory_bytes // max_bytes)
     max_cores = min(max_parallel, cores)
 
-    if max_bytes % (1024 ** 3) > 1.0:
-        byte_string =  f"{max_bytes / (1024 ** 3)} GB"
-    elif max_bytes % (1024 ** 2) > 1.0:
+    if max_bytes / (1024 ** 3) > 1.0:
+        byte_string = f"{max_bytes / (1024 ** 3)} GB"
+        available_string = f"{available_memory_bytes / (1024 ** 3)} GB"
+    elif max_bytes / (1024 ** 2) > 1.0:
         byte_string =  f"{max_bytes / (1024 ** 2)} MB"
-    elif max_bytes % (1024) > 1.0:
+        available_string = f"{available_memory_bytes / (1024 ** 2)} GB"
+    elif max_bytes / (1024) > 1.0:
         byte_string =  f"{max_bytes / (1024)} KB"
+        available_string = f"{available_memory_bytes / (1024)} GB"
     else:
         byte_string =  f"{max_bytes} Bytes"
-
-
+        available_string = f"{available_memory_bytes} GB"
 
     return {
         "max_cores": max_cores,
         "max_bytes": max_bytes,
-        "available_memory_bytes": available_memory_bytes,
+        "available_memory_bytes": available_memory_bytes/(1024 ** 3),
+        "available_string":available_string,
         "estimate": byte_string
     }
