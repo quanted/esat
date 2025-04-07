@@ -107,7 +107,7 @@ class Simulator:
 
         self.syn_profiles = None
         self.syn_contributions = self.rng.random(size=(self.samples_n, self.factors_n)) * float(contribution_max)
-        start_date = datetime.now() - timedelta(days=1, minutes=samples_n)
+        start_date = datetime.now() - timedelta(days=1, minutes=self.samples_n)
         self.time_steps = pd.date_range(start=start_date, end=datetime.now().strftime("%Y-%m-%d"), freq='1min')
         self.time_steps = self.time_steps[(self.time_steps.shape[0]-self.samples_n):]
 

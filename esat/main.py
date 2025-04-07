@@ -77,7 +77,7 @@ def workflow(V, U):
 
 
 def run_all():
-    # input_df, uncertainty_df = generate_data(seed=42, syn_factors=7, syn_samples=23446, syn_features=34)
+    # input_df, uncertainty_df = generate_data(seed=42, syn_factors=7, syn_samples=1000, syn_features=34)
     input_df, uncertainty_df = generate_data(seed=42, syn_factors=7, syn_samples=23446, syn_features=34)
 
     data_handler = DataHandler.load_dataframe(input_df=input_df, uncertainty_df=uncertainty_df)
@@ -85,6 +85,7 @@ def run_all():
     workflow(V=V, U=U)
 
 if __name__ == '__main__':
+    # input_df, uncertainty_df = generate_data(seed=42, syn_factors=7, syn_samples=5000, syn_features=34)
     input_df, uncertainty_df = generate_data(seed=42, syn_factors=7, syn_samples=23446, syn_features=34)
     # input_df, uncertainty_df = generate_data(seed=42, syn_factors=10, syn_samples=500000, syn_features=100)
     # input_df, uncertainty_df = generate_data(seed=42, syn_factors=10, syn_samples=1000000, syn_features=100)

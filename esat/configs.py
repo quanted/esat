@@ -60,7 +60,6 @@ run_config['parameters'] = {
     'converge_delta': 0.0001,
     'converge_n': 50,
     'verbose': False,
-    'optimized': True,
     'parallel': True
 }
 

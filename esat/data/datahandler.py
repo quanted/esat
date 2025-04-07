@@ -223,7 +223,7 @@ class DataHandler:
                 data = pd.read_table(filepath, sep="\t")
             data.dropna(inplace=True)
         else:
-            logger.warn("Unknown file type provided.")
+            logger.warning("Unknown file type provided.")
             sys.exit()
         return data
 
@@ -232,7 +232,7 @@ class DataHandler:
         Loads the input and uncertainty data from files.
         """
         if self.error:
-            logger.warn("Unable to load data because of setup errors.")
+            logger.warning("Unable to load data because of setup errors.")
             return
         if not existing_data:
             self.input_data = self._read_data(filepath=self.input_path, index_col=self.index_col)

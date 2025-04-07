@@ -78,7 +78,7 @@ class BatchSA:
                  converge_n: int = 100,
                  best_robust: bool = True,
                  parallel: bool = True,
-                 cores: int = -1,
+                 cores: int = None,
                  verbose: bool = True
                  ):
         """
@@ -104,6 +104,7 @@ class BatchSA:
         self.init_norm = bool(init_norm)
 
         system_options = memory_estimate(self.V.shape[1], self.V.shape[0], self.factors, cores=cores)
+        cores = -1 if cores is None else cores
 
         self.runtime = None
         self.parallel = parallel if isinstance(parallel, bool) else str(parallel).lower() == "true"
@@ -116,10 +117,11 @@ class BatchSA:
 
         if self.verbose:
             self.details()
-            logger.info(f"Estimated memory available: {system_options['available_memory_bytes']}")
+            logger.info(f"Estimated memory available: {np.round(system_options['available_memory_bytes'], 4)} Gb")
             logger.info(f"Estimated memory per model: {system_options['estimate']}")
             logger.info(f"Estimated maximum number of cores: {system_options['max_cores']}")
             logger.info(f"Using {self.cores} cores for parallel processing.")
+            logger.info("-------------------------------------------------")
 
     def details(self):
         logger.info(f"Batch Source Apportionment Instance Configuration")
@@ -213,13 +215,11 @@ class BatchSA:
                                init_norm=self.init_norm)
                 run = _sa.train(max_iter=self.max_iter, converge_delta=self.converge_delta, converge_n=self.converge_n,
                                 model_i=model_i, update_step=self.update_step)
-                del _sa.V
-                del _sa.U
                 t4 = time.time()
                 t_delta = datetime.timedelta(seconds=t4-t3)
                 if min_limit:
                     if t_delta.seconds/60 > min_limit:
-                        logger.warn(f"SA model training time exceeded specified runtime limit")
+                        logger.warning(f"SA model training time exceeded specified runtime limit")
                         return False, f"Error: Model train time: {t_delta} exceeded runtime limit: {min_limit} min(s)"
                 if run == -1:
                     logger.error(f"Unable to execute batch run of SA models. Model: {model_i}")
@@ -272,8 +272,6 @@ class BatchSA:
                         f"Q(robust): {round(sa.Qrobust, 4)}, MSE(robust): {round(sa.Qrobust/sa.V.size, 4)}, "
                         f"Steps: {sa.converge_steps}/{self.max_iter}, Converged: {sa.converged}, "
                         f"Runtime: {round(t1 - t0, 2)} sec")
-        del sa.V
-        del sa.U
         return model_i, sa
 
     def save(self, batch_name: str,

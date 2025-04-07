@@ -891,7 +891,7 @@ class ConstrainedModel:
         """
         if factor_idx is not None:
             if factor_idx > self.constrained_model.factors or factor_idx < 1:
-                logger.warn(f"Invalid factor_idx provided, must be between 1 and {self.constrained_model.factors}")
+                logger.warning(f"Invalid factor_idx provided, must be between 1 and {self.constrained_model.factors}")
                 return
         self.plot_profile(factor_idx=factor_idx)
         self.plot_contributions(factor_idx=factor_idx)
@@ -1045,11 +1045,11 @@ class ConstrainedModel:
         """
         if factor_idx1 is not None:
             if factor_idx1 > self.base_model.factors or factor_idx1 < 1:
-                logger.warn(f"Invalid factor_idx1 provided, must be between 1 and {self.base_model.factors}")
+                logger.warning(f"Invalid factor_idx1 provided, must be between 1 and {self.base_model.factors}")
                 return
         if factor_idx2 is not None:
             if factor_idx2 > self.base_model.factors or factor_idx2 < 1:
-                logger.warn(f"Invalid factor_idx2 provided, must be between 1 and {self.base_model.factors}")
+                logger.warning(f"Invalid factor_idx2 provided, must be between 1 and {self.base_model.factors}")
                 return
         f1_idx = factor_idx1 - 1
         f2_idx = factor_idx2 - 1
@@ -1100,7 +1100,7 @@ class ConstrainedModel:
         """
         if feature_idx is not None:
             if feature_idx < 1 or feature_idx > self.base_model.n:
-                logger.warn(f"Invalid feature_idx provided, must be between 1 and {self.base_model.n}")
+                logger.warning(f"Invalid feature_idx provided, must be between 1 and {self.base_model.n}")
                 return
             feature_idx = feature_idx - 1
         else:
