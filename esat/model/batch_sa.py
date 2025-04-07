@@ -7,6 +7,7 @@ import numpy as np
 from pathlib import Path
 import multiprocessing as mp
 from esat.model.sa import SA
+from esat.utils import memory_estimate
 
 logging.basicConfig(format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S', level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -39,18 +40,11 @@ class BatchSA:
         Optional, predefined factor profile matrix. Accepts profiles of size one to 'factors'.
     W : np.ndarray
         Optional, predefined factor contribution matrix.
-    H_ratio : float
-        Optional, when H has been provided and contains one or more profiles. The H_ratio defines how much weight the
-        predefined profiles have relative to the randomly created one, where a value of 1.0 would mean that the
-        predefined profiles are only relative to each other and account for 100% of their features. Default: 0.9
     init_method : str
-       The default option is column means, though any option other than 'kmeans' or 'cmeans' will use the column
-       means initialization when W and/or H is not provided.
+       The default option is column means 'col_means' or 'kmeans' can be specified.
     init_norm : bool
-       When using init_method either 'kmeans' or 'cmeans', this option allows for normalizing the input dataset
+       When using init_method 'kmeans', this option allows for normalizing the input dataset
        prior to clustering.
-    fuzziness : float
-       The amount of fuzziness to apply to fuzzy c-means clustering. Default is 5.
     max_iter : int
        The maximum number of iterations to update W and H matrices. Default: 20000
     converge_delta:  float
@@ -60,24 +54,11 @@ class BatchSA:
        considered converged. Default: 100
     best_robust: bool
        Use the Q(robust) loss value to determine which model is the best, instead of Q(true). Default = True.
-    robust_mode : bool
-       Used to turn on the robust mode, use the robust loss value in the update algorithm. Default: False
-    robust_n : int
-       When robust_mode=True, the number of iterations to use the default mode before turning on the robust mode to
-       prevent reducing the impact of non-outliers. Default: 200
-    robust_alpha : float
-       When robust_mode=True, the cutoff of the uncertainty scaled residuals to decrease the weights. Robust weights
-       are calculated as the uncertainty multiplied by the square root of the scaled residuals over robust_alpha.
-       Default: 4.0
     parallel : bool
         Run the individual models in parallel, not the same as the optimized parallelized option for an SA ws-nmf
         model. Default = True.
-    cpus : int
-        The number of cpus to use for parallel processing. Default is the number of cpus - 1.
-    optimized: bool
-        The two update algorithms have also been written in Rust, which can be compiled with maturin, providing
-        an optimized implementation for rapid training of SA models. Setting optimized to True will run the
-        compiled Rust functions.
+    cores : int
+        The number of cores to use for parallel processing. Default is the number of cores - 1.
     verbose : bool
         Allows for increased verbosity of the initialization and model training steps.
     """
@@ -90,20 +71,14 @@ class BatchSA:
                  seed: int = 42,
                  H: np.ndarray = None,
                  W: np.ndarray = None,
-                 H_ratio: float = 0.9,
                  init_method: str = "column_mean",
                  init_norm: bool = True,
-                 fuzziness: float = 5.0,
                  max_iter: int = 20000,
                  converge_delta: float = 0.1,
                  converge_n: int = 100,
                  best_robust: bool = True,
-                 robust_mode: bool = False,
-                 robust_n: int = 200,
-                 robust_alpha: float = 4.0,
                  parallel: bool = True,
-                 cpus: int = -1,
-                 optimized: bool = True,
+                 cores: int = -1,
                  verbose: bool = True
                  ):
         """
@@ -127,21 +102,24 @@ class BatchSA:
         self.rng = np.random.default_rng(self.seed)
         self.init_method = str(init_method)
         self.init_norm = bool(init_norm)
-        self.fuzziness = float(fuzziness)
-        self.H_ratio = H_ratio
 
-        self.robust_mode = bool(robust_mode)
-        self.robust_n = int(robust_n)
-        self.robust_alpha = float(robust_alpha)
+        system_options = memory_estimate(self.V.shape[1], self.V.shape[0], self.factors, cores=cores)
 
         self.runtime = None
         self.parallel = parallel if isinstance(parallel, bool) else str(parallel).lower() == "true"
-        self.cpus = cpus if cpus > 0 else max(int(mp.cpu_count() * 0.75), 1)
-        self.optimized = optimized if isinstance(optimized, bool) else str(optimized).lower() == "true"
+        self.cores = cores if cores > 0 else max(int(system_options["max_cores"] * 0.75), 1)
+        self.optimized = True
         self.verbose = verbose if isinstance(verbose, bool) else str(verbose).lower() == "true"
         self.results = []
         self.best_model = None
         self.update_step = None
+
+        if self.verbose:
+            self.details()
+            logger.info(f"Estimated memory available: {system_options['available_memory_bytes']}")
+            logger.info(f"Estimated memory per model: {system_options['estimate']}")
+            logger.info(f"Estimated maximum number of cores: {system_options['max_cores']}")
+            logger.info(f"Using {self.cores} cores for parallel processing.")
 
     def details(self):
         logger.info(f"Batch Source Apportionment Instance Configuration")
@@ -174,8 +152,8 @@ class BatchSA:
         if self.parallel:
             # TODO: Add batch processing for large datasets and large number of epochs to reduce memory requirements.
             if self.verbose:
-                logger.info(f"Running batch SA models in parallel using {self.cpus} processes.")
-            pool = mp.Pool(processes=self.cpus)
+                logger.info(f"Running batch SA models in parallel using {self.cores} cores.")
+            pool = mp.Pool(processes=self.cores)
             input_parameters = []
             for i in range(1, self.models+1):
                 _seed = self.rng.integers(low=0, high=1e5)
@@ -185,13 +163,11 @@ class BatchSA:
                     V=self.V,
                     U=self.U,
                     seed=_seed,
-                    optimized=self.optimized,
                     verbose=False
                 )
                 _sa.initialize(H=self.H, W=self.W,
                                init_method=self.init_method,
-                               init_norm=self.init_norm,
-                               fuzziness=self.fuzziness)
+                               init_norm=self.init_norm)
                 input_parameters.append((_sa, i))
 
             results = pool.starmap(self._train_task, input_parameters)
@@ -234,11 +210,11 @@ class BatchSA:
                 )
                 _sa.initialize(H=self.H, W=self.W,
                                init_method=self.init_method,
-                               init_norm=self.init_norm,
-                               fuzziness=self.fuzziness)
+                               init_norm=self.init_norm)
                 run = _sa.train(max_iter=self.max_iter, converge_delta=self.converge_delta, converge_n=self.converge_n,
-                                model_i=model_i, robust_mode=self.robust_mode, robust_n=self.robust_n,
-                                robust_alpha=self.robust_alpha, update_step=self.update_step)
+                                model_i=model_i, update_step=self.update_step)
+                del _sa.V
+                del _sa.U
                 t4 = time.time()
                 t_delta = datetime.timedelta(seconds=t4-t3)
                 if min_limit:
@@ -288,8 +264,7 @@ class BatchSA:
         """
         t0 = time.time()
         sa.train(max_iter=self.max_iter, converge_delta=self.converge_delta, converge_n=self.converge_n,
-                 model_i=model_i, robust_mode=self.robust_mode, robust_n=self.robust_n, robust_alpha=self.robust_alpha,
-                 update_step=self.update_step)
+                 model_i=model_i, update_step=self.update_step)
         t1 = time.time()
         if self.verbose:
             logger.info(f"Model: {model_i}, Seed: {sa.seed}, "
@@ -297,6 +272,8 @@ class BatchSA:
                         f"Q(robust): {round(sa.Qrobust, 4)}, MSE(robust): {round(sa.Qrobust/sa.V.size, 4)}, "
                         f"Steps: {sa.converge_steps}/{self.max_iter}, Converged: {sa.converged}, "
                         f"Runtime: {round(t1 - t0, 2)} sec")
+        del sa.V
+        del sa.U
         return model_i, sa
 
     def save(self, batch_name: str,
