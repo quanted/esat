@@ -12,49 +12,49 @@ use rayon::prelude::*;
 #[pymodule]
 fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
 
-    const EPSILON: f64 = 1e-15;
+    const EPSILON: f32 = 1e-12;
 
     // NMF - Least-Squares Algorithm (LS-NMF)
     // Returns (W, H, Q, converged)
     #[pyfn(m)]
     fn ls_nmf<'py>(
         py: Python<'py>,
-        v: PyReadonlyArrayDyn<'py, f64>,
-        u: PyReadonlyArrayDyn<'py, f64>,
-        we: PyReadonlyArrayDyn<'py, f64>,
-        w: PyReadonlyArrayDyn<'py, f64>,
-        h: PyReadonlyArrayDyn<'py, f64>,
-        max_iter: i32,
-        converge_delta: f64,
-        converge_n: i32,
+        v: PyReadonlyArrayDyn<'py, f32>,
+        u: PyReadonlyArrayDyn<'py, f32>,
+        we: PyReadonlyArrayDyn<'py, f32>,
+        w: PyReadonlyArrayDyn<'py, f32>,
+        h: PyReadonlyArrayDyn<'py, f32>,
+        max_iter: i16,
+        converge_delta: f32,
+        converge_n: i16,
         robust_mode: bool,
-        robust_n: i32,
-        robust_alpha: f64
+        robust_n: i16,
+        robust_alpha: f32
     ) -> Result<&'py PyTuple, PyErr> {
 
-        let v = OMatrix::<f64, Dyn, Dyn>::from_vec(v.dims()[0], v.dims()[1], v.to_vec().unwrap().to_owned());
-        let u = OMatrix::<f64, Dyn, Dyn>::from_vec(u.dims()[0], u.dims()[1], u.to_vec().unwrap().to_owned());
-        let we = OMatrix::<f64, Dyn, Dyn>::from_vec(we.dims()[0], we.dims()[1], we.to_vec().unwrap().to_owned());
+        let v = OMatrix::<f32, Dyn, Dyn>::from_vec(v.dims()[0], v.dims()[1], v.to_vec().unwrap().to_owned());
+        let u = OMatrix::<f32, Dyn, Dyn>::from_vec(u.dims()[0], u.dims()[1], u.to_vec().unwrap().to_owned());
+        let we = OMatrix::<f32, Dyn, Dyn>::from_vec(we.dims()[0], we.dims()[1], we.to_vec().unwrap().to_owned());
 
-        let mut new_w = OMatrix::<f64, Dyn, Dyn>::from_vec(w.dims()[1], w.dims()[0], w.to_vec().unwrap().to_owned()).transpose();
-        let mut new_h = OMatrix::<f64, Dyn, Dyn>::from_vec(h.dims()[1], h.dims()[0], h.to_vec().unwrap().to_owned()).transpose();
+        let mut new_w = OMatrix::<f32, Dyn, Dyn>::from_vec(w.dims()[1], w.dims()[0], w.to_vec().unwrap().to_owned()).transpose();
+        let mut new_h = OMatrix::<f32, Dyn, Dyn>::from_vec(h.dims()[1], h.dims()[0], h.to_vec().unwrap().to_owned()).transpose();
 
         let mut new_we = we.clone();
         let mut q = 0.0;
-        let mut qtrue: f64 = calculate_q(&v, &u, &new_w, &new_h);
-        let mut qrobust: f64 = 0.0;
+        let mut qtrue: f32 = calculate_q(&v, &u, &new_w, &new_h);
+        let mut qrobust: f32 = 0.0;
 
         let mut converged: bool = false;
-        let mut converge_i: i32 = 0;
-        let mut q_list: VecDeque<f64> = VecDeque::new();
-        let mut q_list_full: VecDeque<f64> = VecDeque::new();
+        let mut converge_i: i16 = 0;
+        let mut q_list: VecDeque<f32> = VecDeque::new();
+        let mut q_list_full: VecDeque<f32> = VecDeque::new();
 
-        let mut wh: DMatrix<f64>;
-        let mut h_num: DMatrix<f64>;
-        let mut h_den: DMatrix<f64>;
-        let mut w_num: DMatrix<f64>;
-        let mut w_den: DMatrix<f64>;
-        let mut wev: DMatrix<f64>;
+        let mut wh: DMatrix<f32>;
+        let mut h_num: DMatrix<f32>;
+        let mut h_den: DMatrix<f32>;
+        let mut w_num: DMatrix<f32>;
+        let mut w_den: DMatrix<f32>;
+        let mut wev: DMatrix<f32>;
 
         let mut robust_results = calculate_q_robust(&v, &u, &new_w, &new_h, robust_alpha);
 
@@ -86,7 +86,7 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
             q_list.push_back(q);
             q_list_full.push_back(q);
             converge_i = i;
-            if (q_list.len() as i32) >= converge_n {
+            if (q_list.len() as i16) >= converge_n {
                 if q_list.front().unwrap() - q_list.back().unwrap() < converge_delta {
                         converged = true;
                         break
@@ -111,35 +111,35 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     #[pyfn(m)]
     fn ws_nmf<'py>(
         py: Python<'py>,
-        v: PyReadonlyArrayDyn<'py, f64>,
-        u: PyReadonlyArrayDyn<'py, f64>,
-        we: PyReadonlyArrayDyn<'py, f64>,
-        w: PyReadonlyArrayDyn<'py, f64>,
-        h: PyReadonlyArrayDyn<'py, f64>,
-        max_iter: i32,
-        converge_delta: f64,
-        converge_n: i32,
+        v: PyReadonlyArrayDyn<'py, f32>,
+        u: PyReadonlyArrayDyn<'py, f32>,
+        we: PyReadonlyArrayDyn<'py, f32>,
+        w: PyReadonlyArrayDyn<'py, f32>,
+        h: PyReadonlyArrayDyn<'py, f32>,
+        max_iter: i16,
+        converge_delta: f32,
+        converge_n: i16,
         robust_mode: bool,
-        robust_n: i32,
-        robust_alpha: f64
+        robust_n: i16,
+        robust_alpha: f32
     ) -> Result<&'py PyTuple, PyErr> {
-        let v = OMatrix::<f64, Dyn, Dyn>::from_vec(v.dims()[0], v.dims()[1], v.to_vec().unwrap());
-        let u = OMatrix::<f64, Dyn, Dyn>::from_vec(u.dims()[0], u.dims()[1], u.to_vec().unwrap());
-        let we = OMatrix::<f64, Dyn, Dyn>::from_vec(we.dims()[0], we.dims()[1], we.to_vec().unwrap());
+        let v = OMatrix::<f32, Dyn, Dyn>::from_vec(v.dims()[0], v.dims()[1], v.to_vec().unwrap());
+        let u = OMatrix::<f32, Dyn, Dyn>::from_vec(u.dims()[0], u.dims()[1], u.to_vec().unwrap());
+        let we = OMatrix::<f32, Dyn, Dyn>::from_vec(we.dims()[0], we.dims()[1], we.to_vec().unwrap());
 
-        let mut new_w = OMatrix::<f64, Dyn, Dyn>::from_vec(w.dims()[1], w.dims()[0], w.to_vec().unwrap()).transpose();
-        let mut new_h = OMatrix::<f64, Dyn, Dyn>::from_vec(h.dims()[1], h.dims()[0], h.to_vec().unwrap()).transpose();
+        let mut new_w = OMatrix::<f32, Dyn, Dyn>::from_vec(w.dims()[1], w.dims()[0], w.to_vec().unwrap()).transpose();
+        let mut new_h = OMatrix::<f32, Dyn, Dyn>::from_vec(h.dims()[1], h.dims()[0], h.to_vec().unwrap()).transpose();
         let mut new_we = we.clone();
 
-        let mut qtrue: f64 = calculate_q(&v, &u, &new_w, &new_h);
-        let mut qrobust: f64 = 0.0;
+        let mut qtrue: f32 = calculate_q(&v, &u, &new_w, &new_h);
+        let mut qrobust: f32 = 0.0;
         let mut q = qtrue.clone();
         let mut converged: bool = false;
-        let mut converge_i: i32 = 0;
-        let mut q_list: VecDeque<f64> = VecDeque::new();
-        let mut q_list_full: VecDeque<f64> = VecDeque::new();
+        let mut converge_i: i16 = 0;
+        let mut q_list: VecDeque<f32> = VecDeque::new();
+        let mut q_list_full: VecDeque<f32> = VecDeque::new();
 
-        let mut we_j_diag: DMatrix<f64>;
+        let mut we_j_diag: DMatrix<f32>;
         let mut v_j;
 
         for i in 0..max_iter{
@@ -152,8 +152,8 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
                 let uh = &we_j_diag * &new_h.transpose();
                 let w_d = &new_h * &uh;
                 let w_d_det = w_d.determinant();
-                let w_d_inv: DMatrix<f64> = if w_d_det == 0.0 {
-                    w_d.pseudo_inverse(1e-15).unwrap()
+                let w_d_inv: DMatrix<f32> = if w_d_det == 0.0 {
+                    w_d.pseudo_inverse(1e-12).unwrap()
                 }
                 else{
                     w_d.try_inverse().unwrap()
@@ -202,7 +202,7 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
             q_list.push_back(q);
             q_list_full.push_back(q);
             converge_i = i;
-            if (q_list.len() as i32) >= converge_n {
+            if (q_list.len() as i16) >= converge_n {
                 if q_list.front().unwrap() - q_list.back().unwrap() < converge_delta {
                         converged = true;
                         break
@@ -227,39 +227,39 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     #[pyfn(m)]
     fn ws_nmf_p<'py>(
         py: Python<'py>,
-        v: PyReadonlyArrayDyn<'py, f64>,
-        u: PyReadonlyArrayDyn<'py, f64>,
-        we: PyReadonlyArrayDyn<'py, f64>,
-        w: PyReadonlyArrayDyn<'py, f64>,
-        h: PyReadonlyArrayDyn<'py, f64>,
-        max_iter: i32,
-        converge_delta: f64,
-        converge_n: i32,
+        v: PyReadonlyArrayDyn<'py, f32>,
+        u: PyReadonlyArrayDyn<'py, f32>,
+        we: PyReadonlyArrayDyn<'py, f32>,
+        w: PyReadonlyArrayDyn<'py, f32>,
+        h: PyReadonlyArrayDyn<'py, f32>,
+        max_iter: i16,
+        converge_delta: f32,
+        converge_n: i16,
         robust_mode: bool,
-        robust_n: i32,
-        robust_alpha: f64
+        robust_n: i16,
+        robust_alpha: f32
     ) -> Result<&'py PyTuple, PyErr> {
-        let v = OMatrix::<f64, Dyn, Dyn>::from_vec(v.dims()[0], v.dims()[1], v.to_vec().unwrap());
-        let u = OMatrix::<f64, Dyn, Dyn>::from_vec(u.dims()[0], u.dims()[1], u.to_vec().unwrap());
-        let we = OMatrix::<f64, Dyn, Dyn>::from_vec(we.dims()[0], we.dims()[1], we.to_vec().unwrap());
+        let v = OMatrix::<f32, Dyn, Dyn>::from_vec(v.dims()[0], v.dims()[1], v.to_vec().unwrap());
+        let u = OMatrix::<f32, Dyn, Dyn>::from_vec(u.dims()[0], u.dims()[1], u.to_vec().unwrap());
+        let we = OMatrix::<f32, Dyn, Dyn>::from_vec(we.dims()[0], we.dims()[1], we.to_vec().unwrap());
 
-        let mut new_w = OMatrix::<f64, Dyn, Dyn>::from_vec(w.dims()[1], w.dims()[0], w.to_vec().unwrap()).transpose();
-        let mut new_h = OMatrix::<f64, Dyn, Dyn>::from_vec(h.dims()[1], h.dims()[0], h.to_vec().unwrap()).transpose();
+        let mut new_w = OMatrix::<f32, Dyn, Dyn>::from_vec(w.dims()[1], w.dims()[0], w.to_vec().unwrap()).transpose();
+        let mut new_h = OMatrix::<f32, Dyn, Dyn>::from_vec(h.dims()[1], h.dims()[0], h.to_vec().unwrap()).transpose();
         let mut new_we = we.clone();
 
-        let mut qtrue: f64 = calculate_q(&v, &u, &new_w, &new_h);
-        let mut qrobust: f64 = 0.0;
+        let mut qtrue: f32 = calculate_q(&v, &u, &new_w, &new_h);
+        let mut qrobust: f32 = 0.0;
         let mut q = qtrue.clone();
 
         let mut converged: bool = false;
-        let mut converge_i: i32 = 0;
-        let mut q_list: VecDeque<f64> = VecDeque::new();
-        let mut q_list_full: VecDeque<f64> = VecDeque::new();
+        let mut converge_i: i16 = 0;
+        let mut q_list: VecDeque<f32> = VecDeque::new();
+        let mut q_list_full: VecDeque<f32> = VecDeque::new();
 
         let m = v.nrows();
         let n = v.ncols();
-        let mut w_prime: OMatrix<f64, Dyn, Dyn> = new_w.clone().transpose();
-        let mut h_prime: OMatrix<f64, Dyn, Dyn> = new_h.clone();
+        let mut w_prime: OMatrix<f32, Dyn, Dyn> = new_w.clone().transpose();
+        let mut h_prime: OMatrix<f32, Dyn, Dyn> = new_h.clone();
 
         for i in 0..max_iter{
             let wev = &new_we.component_mul(&v);
@@ -272,7 +272,7 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
                 let w_d = &new_h * &uh;
                 let mut w_d_inv = w_d;
                 if ! w_d_inv.try_inverse_mut() {
-                    w_d_inv = w_d_inv.pseudo_inverse(1e-15).unwrap()
+                    w_d_inv = w_d_inv.pseudo_inverse(1e-12).unwrap()
                 }
                 let _w = w_n * w_d_inv;
                 let _j_w_row = DVector::from_column_slice(_w.as_slice());
@@ -327,7 +327,7 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
             q_list.push_back(q);
             q_list_full.push_back(q);
             converge_i = i;
-            if (q_list.len() as i32) >= converge_n {
+            if (q_list.len() as i16) >= converge_n {
                 if q_list.front().unwrap() - q_list.back().unwrap() < converge_delta {
                         converged = true;
                         break
@@ -352,39 +352,39 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     #[pyfn(m)]
     fn nmf_kl<'py>(
         py: Python<'py>,
-        v: PyReadonlyArrayDyn<'py, f64>, u: PyReadonlyArrayDyn<'py, f64>,
-        w: PyReadonlyArrayDyn<'py, f64>, h: PyReadonlyArrayDyn<'py, f64>,
-        update_weight: f64,
-        max_i: i32, converge_delta: f64, converge_i: i32
+        v: PyReadonlyArrayDyn<'py, f32>, u: PyReadonlyArrayDyn<'py, f32>,
+        w: PyReadonlyArrayDyn<'py, f32>, h: PyReadonlyArrayDyn<'py, f32>,
+        update_weight: f32,
+        max_i: i16, converge_delta: f32, converge_i: i16
     ) -> Result<&'py PyTuple, PyErr> {
 
-        let v = OMatrix::<f64, Dyn, Dyn>::from_vec(v.dims()[0], v.dims()[1], v.to_vec().unwrap());
-        let u = OMatrix::<f64, Dyn, Dyn>::from_vec(u.dims()[0], u.dims()[1], u.to_vec().unwrap());
-        let mut new_w = OMatrix::<f64, Dyn, Dyn>::from_vec(w.dims()[1], w.dims()[0], w.to_vec().unwrap()).transpose();
-        let mut new_h = OMatrix::<f64, Dyn, Dyn>::from_vec(h.dims()[1], h.dims()[0], h.to_vec().unwrap()).transpose();
+        let v = OMatrix::<f32, Dyn, Dyn>::from_vec(v.dims()[0], v.dims()[1], v.to_vec().unwrap());
+        let u = OMatrix::<f32, Dyn, Dyn>::from_vec(u.dims()[0], u.dims()[1], u.to_vec().unwrap());
+        let mut new_w = OMatrix::<f32, Dyn, Dyn>::from_vec(w.dims()[1], w.dims()[0], w.to_vec().unwrap()).transpose();
+        let mut new_h = OMatrix::<f32, Dyn, Dyn>::from_vec(h.dims()[1], h.dims()[0], h.to_vec().unwrap()).transpose();
 
-        let mut q: f64 = calculate_q(&v, &u, &new_w, &new_h);
+        let mut q: f32 = calculate_q(&v, &u, &new_w, &new_h);
         let mut converged: bool = false;
 
         let uv = v.component_div(&u);
         let ur = matrix_reciprocal(&u);
 
-        let mut best_q: f64 = q;
+        let mut best_q: f32 = q;
         let mut best_h = new_h.clone();
         let mut best_w = new_w.clone();
-        let mut q_list: VecDeque<f64> = VecDeque::new();
+        let mut q_list: VecDeque<f32> = VecDeque::new();
 
-        let mut wh: DMatrix<f64>;
-        let mut h1: DMatrix<f64>;
-        let mut h2: DMatrix<f64>;
-        let mut w1: DMatrix<f64>;
-        let mut w2: DMatrix<f64>;
+        let mut wh: DMatrix<f32>;
+        let mut h1: DMatrix<f32>;
+        let mut h2: DMatrix<f32>;
+        let mut w1: DMatrix<f32>;
+        let mut w2: DMatrix<f32>;
         let mut best_i = 0;
 
         let mut update_weight = update_weight;
 
-        let mut h_delta: DMatrix<f64>;
-        let mut w_delta: DMatrix<f64>;
+        let mut h_delta: DMatrix<f32>;
+        let mut w_delta: DMatrix<f32>;
 
         for i in 0..max_i {
             wh = &new_w * &new_h;
@@ -407,9 +407,9 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
                 best_h = new_h.clone();
             }
             q_list.push_back(q);
-            if (q_list.len() as i32) >= converge_i {
-                let q_sum: f64 = q_list.iter().sum();
-                let q_avg: f64 = q_sum / q_list.len() as f64;
+            if (q_list.len() as i16) >= converge_i {
+                let q_sum: f32 = q_list.iter().sum();
+                let q_avg: f32 = q_sum / q_list.len() as f32;
                 if (q_avg - q).abs() < converge_delta {
                     if update_weight < 0.01 {
                         converged = true;
@@ -445,22 +445,22 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     }
 
     fn calculate_q(
-        v: &OMatrix<f64, Dyn, Dyn>, u: &OMatrix<f64, Dyn, Dyn>,
-        w: &OMatrix<f64, Dyn, Dyn>, h: &OMatrix<f64, Dyn, Dyn>
-    ) -> f64 {
+        v: &OMatrix<f32, Dyn, Dyn>, u: &OMatrix<f32, Dyn, Dyn>,
+        w: &OMatrix<f32, Dyn, Dyn>, h: &OMatrix<f32, Dyn, Dyn>
+    ) -> f32 {
         let wh = w * h;
         let residuals = v - &wh;
         let weighted_residuals = residuals.component_div(u).transpose();
         let wr2 = weighted_residuals.component_mul(&weighted_residuals);
-        let q: f64 = wr2.sum();
+        let q: f32 = wr2.sum();
         q
     }
 
     fn calculate_q_robust(
-        v: &OMatrix<f64, Dyn, Dyn>, u: &OMatrix<f64, Dyn, Dyn>,
-        w: &OMatrix<f64, Dyn, Dyn>, h: &OMatrix<f64, Dyn, Dyn>,
-        robust_alpha: f64
-    ) -> (f64, DMatrix<f64>) {
+        v: &OMatrix<f32, Dyn, Dyn>, u: &OMatrix<f32, Dyn, Dyn>,
+        w: &OMatrix<f32, Dyn, Dyn>, h: &OMatrix<f32, Dyn, Dyn>,
+        robust_alpha: f32
+    ) -> (f32, DMatrix<f32>) {
         let wh = w * h;
         let residuals = v - &wh;
         let scaled_residuals = residuals.component_div(u).abs();
@@ -476,10 +476,14 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     }
 
     fn matrix_merge(
-        matrix1: &OMatrix<f64, Dyn, Dyn>, matrix2: &OMatrix<f64, Dyn, Dyn>, matrix4: &OMatrix<f64, Dyn, Dyn>,matrix5: &OMatrix<f64, Dyn, Dyn>, alpha: f64
-    ) -> (DMatrix<f64>, DMatrix<f64>) {
-        let mut matrix3 = DMatrix::<f64>::zeros(matrix1.shape().0, matrix1.shape().1);
-        let mut matrix6 = DMatrix::<f64>::zeros(matrix4.shape().0, matrix4.shape().1);
+        matrix1: &OMatrix<f32, Dyn, Dyn>,
+        matrix2: &OMatrix<f32, Dyn, Dyn>,
+        matrix4: &OMatrix<f32, Dyn, Dyn>,
+        matrix5: &OMatrix<f32, Dyn, Dyn>,
+        alpha: f32
+    ) -> (DMatrix<f32>, DMatrix<f32>) {
+        let mut matrix3 = DMatrix::<f32>::zeros(matrix1.shape().0, matrix1.shape().1);
+        let mut matrix6 = DMatrix::<f32>::zeros(matrix4.shape().0, matrix4.shape().1);
         for (j, col) in matrix1.column_iter().enumerate(){
             for (i, row) in matrix1.row_iter().enumerate(){
                 if matrix1[(i,j)] > alpha {
@@ -495,32 +499,32 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         (matrix3, matrix6)
     }
 
-    fn matrix_reciprocal(m: &DMatrix<f64>) -> DMatrix<f64> {
-        let vec_result: Vec<f64> = m.iter().map(|&i1| (1.0/i1)).collect();
-        let result: DMatrix<f64> = DMatrix::from_vec(m.nrows(), m.ncols(), vec_result);
+    fn matrix_reciprocal(m: &DMatrix<f32>) -> DMatrix<f32> {
+        let vec_result: Vec<f32> = m.iter().map(|&i1| (1.0/i1)).collect();
+        let result: DMatrix<f32> = DMatrix::from_vec(m.nrows(), m.ncols(), vec_result);
         result
     }
 
-    fn matrix_multiply(m1: &DMatrix<f64>, m2: &DMatrix<f64>) -> DMatrix<f64> {
+    fn matrix_multiply(m1: &DMatrix<f32>, m2: &DMatrix<f32>) -> DMatrix<f32> {
         let vec_result = m1.iter().zip(m2.iter()).map(|(&i1, &i2)| (i1 * i2)).collect();
-        let result: DMatrix<f64> = DMatrix::from_vec(m1.nrows(), m1.ncols(), vec_result);
+        let result: DMatrix<f32> = DMatrix::from_vec(m1.nrows(), m1.ncols(), vec_result);
         result
     }
 
-    fn matrix_subtract(m1: &DMatrix<f64>, m2: &DMatrix<f64>) -> DMatrix<f64> {
+    fn matrix_subtract(m1: &DMatrix<f32>, m2: &DMatrix<f32>) -> DMatrix<f32> {
         let vec_result = m1.iter().zip(m2.iter()).map(|(&i1, &i2)| (i1 - i2)).collect();
-        let result: DMatrix<f64> = DMatrix::from_vec(m1.nrows(), m1.ncols(), vec_result);
+        let result: DMatrix<f32> = DMatrix::from_vec(m1.nrows(), m1.ncols(), vec_result);
         result
     }
 
-    fn matrix_mul(m1: &DMatrix<f64>, m2: &DMatrix<f64>) -> DMatrix<f64> {
+    fn matrix_mul(m1: &DMatrix<f32>, m2: &DMatrix<f32>) -> DMatrix<f32> {
         m1 * m2
     }
 
-    fn matrix_mul2(m1: &DMatrix<f64>, m2: &DMatrix<f64>) -> DMatrix<f64> {
+    fn matrix_mul2(m1: &DMatrix<f32>, m2: &DMatrix<f32>) -> DMatrix<f32> {
         let matrix1 = m1.clone();
         let matrix2 = m2.clone();
-        let mut matrix3 = DMatrix::<f64>::zeros(m1.shape().0, m2.shape().1);
+        let mut matrix3 = DMatrix::<f32>::zeros(m1.shape().0, m2.shape().1);
         for (i, x) in matrix1.row_iter().enumerate() {
             for (j, y) in matrix2.column_iter().enumerate() {
                 matrix3[(i, j)] = (x * y).sum();
@@ -529,19 +533,19 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         matrix3
     }
 
-    fn matrix_division(m1: &DMatrix<f64>, m2: &DMatrix<f64>) -> DMatrix<f64> {
+    fn matrix_division(m1: &DMatrix<f32>, m2: &DMatrix<f32>) -> DMatrix<f32> {
         m1.component_div(m2)
     }
 
     #[pyfn(m)]
-    fn py_matrix_sum<'py>(_py: Python<'py>, m: &'py PyArrayDyn<f64>) -> f64 {
-        let new_matrix = OMatrix::<f64, Dyn, Dyn>::from_vec(m.dims()[0], m.dims()[1], m.to_vec().unwrap()).transpose();
+    fn py_matrix_sum<'py>(_py: Python<'py>, m: &'py PyArrayDyn<f32>) -> f32 {
+        let new_matrix = OMatrix::<f32, Dyn, Dyn>::from_vec(m.dims()[0], m.dims()[1], m.to_vec().unwrap()).transpose();
         new_matrix.sum()
     }
 
     #[pyfn(m)]
-    fn py_matrix_reciprocal<'py>(py: Python<'py>, m: &'py PyArrayDyn<f64>) -> &'py PyArrayDyn<f64> {
-        let mut new_matrix = OMatrix::<f64, Dyn, Dyn>::from_vec(m.dims()[0], m.dims()[1], m.to_vec().unwrap()).transpose();
+    fn py_matrix_reciprocal<'py>(py: Python<'py>, m: &'py PyArrayDyn<f32>) -> &'py PyArrayDyn<f32> {
+        let mut new_matrix = OMatrix::<f32, Dyn, Dyn>::from_vec(m.dims()[0], m.dims()[1], m.to_vec().unwrap()).transpose();
         new_matrix = matrix_reciprocal(&new_matrix);
         let result_matrix = new_matrix.data.as_vec().to_owned();
         let result = result_matrix.to_pyarray(py).reshape((m.dims()[0], m.dims()[1])).unwrap().to_dyn();
@@ -549,9 +553,9 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     }
 
     #[pyfn(m)]
-    fn py_matrix_subtract<'py>(py: Python<'py>, m1: &'py PyArrayDyn<f64>, m2: &'py PyArrayDyn<f64>) -> &'py PyArrayDyn<f64> {
-        let new_matrix1 = OMatrix::<f64, Dyn, Dyn>::from_vec(m1.dims()[0], m1.dims()[1], m1.to_vec().unwrap()).transpose();
-        let new_matrix2 = OMatrix::<f64, Dyn, Dyn>::from_vec(m2.dims()[0], m2.dims()[1], m2.to_vec().unwrap()).transpose();
+    fn py_matrix_subtract<'py>(py: Python<'py>, m1: &'py PyArrayDyn<f32>, m2: &'py PyArrayDyn<f32>) -> &'py PyArrayDyn<f32> {
+        let new_matrix1 = OMatrix::<f32, Dyn, Dyn>::from_vec(m1.dims()[0], m1.dims()[1], m1.to_vec().unwrap()).transpose();
+        let new_matrix2 = OMatrix::<f32, Dyn, Dyn>::from_vec(m2.dims()[0], m2.dims()[1], m2.to_vec().unwrap()).transpose();
         let new_matrix = new_matrix1 - new_matrix2;
         let result_matrix = new_matrix.data.as_vec().to_owned();
         let result = result_matrix.to_pyarray(py).reshape(m1.dims()).unwrap().to_dyn();
@@ -559,9 +563,9 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     }
 
     #[pyfn(m)]
-    fn py_matrix_multiply<'py>(py: Python<'py>, m1: &'py PyArrayDyn<f64>, m2: &'py PyArrayDyn<f64>) -> &'py PyArrayDyn<f64> {
-        let new_matrix1 = OMatrix::<f64, Dyn, Dyn>::from_vec(m1.dims()[0], m1.dims()[1], m1.to_vec().unwrap()).transpose();
-        let new_matrix2 = OMatrix::<f64, Dyn, Dyn>::from_vec(m2.dims()[0], m2.dims()[1], m2.to_vec().unwrap()).transpose();
+    fn py_matrix_multiply<'py>(py: Python<'py>, m1: &'py PyArrayDyn<f32>, m2: &'py PyArrayDyn<f32>) -> &'py PyArrayDyn<f32> {
+        let new_matrix1 = OMatrix::<f32, Dyn, Dyn>::from_vec(m1.dims()[0], m1.dims()[1], m1.to_vec().unwrap()).transpose();
+        let new_matrix2 = OMatrix::<f32, Dyn, Dyn>::from_vec(m2.dims()[0], m2.dims()[1], m2.to_vec().unwrap()).transpose();
         let new_matrix = new_matrix1.component_mul(&new_matrix2);
         let result_matrix = new_matrix.data.as_vec().to_owned();
         let result = result_matrix.to_pyarray(py).reshape(m1.dims()).unwrap().to_dyn();
@@ -569,9 +573,9 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     }
 
     #[pyfn(m)]
-    fn py_matrix_mul<'py>(py: Python<'py>, m1: &'py PyArrayDyn<f64>, m2: &'py PyArrayDyn<f64>) -> &'py PyArrayDyn<f64> {
-        let matrix1 = OMatrix::<f64, Dyn, Dyn>::from_row_iterator(m1.dims()[0], m1.dims()[1], m1.to_owned_array().into_iter());
-        let matrix2 = OMatrix::<f64, Dyn, Dyn>::from_row_iterator(m2.dims()[0], m2.dims()[1], m2.to_owned_array().into_iter());
+    fn py_matrix_mul<'py>(py: Python<'py>, m1: &'py PyArrayDyn<f32>, m2: &'py PyArrayDyn<f32>) -> &'py PyArrayDyn<f32> {
+        let matrix1 = OMatrix::<f32, Dyn, Dyn>::from_row_iterator(m1.dims()[0], m1.dims()[1], m1.to_owned_array().into_iter());
+        let matrix2 = OMatrix::<f32, Dyn, Dyn>::from_row_iterator(m2.dims()[0], m2.dims()[1], m2.to_owned_array().into_iter());
         let new_matrix = matrix_mul(&matrix1, &matrix2).transpose();
         let result_matrix = new_matrix.data.as_vec().to_owned();
         let result = result_matrix.to_pyarray(py).reshape((m1.dims()[0], m2.dims()[1])).unwrap().to_dyn();
@@ -579,9 +583,9 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
     }
 
     #[pyfn(m)]
-    fn py_matrix_division<'py>(py: Python<'py>, m1: &'py PyArrayDyn<f64>, m2: &'py PyArrayDyn<f64>) -> &'py PyArrayDyn<f64> {
-        let matrix1 = OMatrix::<f64, Dyn, Dyn>::from_vec(m1.dims()[0], m1.dims()[1], m1.to_vec().unwrap()).transpose();
-        let matrix2 = OMatrix::<f64, Dyn, Dyn>::from_vec(m2.dims()[0], m2.dims()[1], m2.to_vec().unwrap()).transpose();
+    fn py_matrix_division<'py>(py: Python<'py>, m1: &'py PyArrayDyn<f32>, m2: &'py PyArrayDyn<f32>) -> &'py PyArrayDyn<f32> {
+        let matrix1 = OMatrix::<f32, Dyn, Dyn>::from_vec(m1.dims()[0], m1.dims()[1], m1.to_vec().unwrap()).transpose();
+        let matrix2 = OMatrix::<f32, Dyn, Dyn>::from_vec(m2.dims()[0], m2.dims()[1], m2.to_vec().unwrap()).transpose();
         let new_matrix = matrix_division(&matrix1, &matrix2);
         let result_matrix = new_matrix.data.as_vec().to_owned();
         let result = result_matrix.to_pyarray(py).reshape(m1.dims()).unwrap().to_dyn();
@@ -590,23 +594,23 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
 
     #[pyfn(m)]
     fn py_calculate_q<'py>(py: Python<'py>,
-                           v: &'py PyArrayDyn<f64>, u: &'py PyArrayDyn<f64>,
-                           w: &'py PyArrayDyn<f64>, h: &'py PyArrayDyn<f64>) -> f64 {
-        let matrix_v = OMatrix::<f64, Dyn, Dyn>::from_vec(v.dims()[0], v.dims()[1], v.to_vec().unwrap());
-        let matrix_u = OMatrix::<f64, Dyn, Dyn>::from_vec(u.dims()[0], u.dims()[1], u.to_vec().unwrap());
-        let matrix_w = OMatrix::<f64, Dyn, Dyn>::from_vec(w.dims()[1], w.dims()[0], w.to_vec().unwrap()).transpose();
-        let matrix_h = OMatrix::<f64, Dyn, Dyn>::from_vec(h.dims()[1], h.dims()[0], h.to_vec().unwrap()).transpose();
+                           v: &'py PyArrayDyn<f32>, u: &'py PyArrayDyn<f32>,
+                           w: &'py PyArrayDyn<f32>, h: &'py PyArrayDyn<f32>) -> f32 {
+        let matrix_v = OMatrix::<f32, Dyn, Dyn>::from_vec(v.dims()[0], v.dims()[1], v.to_vec().unwrap());
+        let matrix_u = OMatrix::<f32, Dyn, Dyn>::from_vec(u.dims()[0], u.dims()[1], u.to_vec().unwrap());
+        let matrix_w = OMatrix::<f32, Dyn, Dyn>::from_vec(w.dims()[1], w.dims()[0], w.to_vec().unwrap()).transpose();
+        let matrix_h = OMatrix::<f32, Dyn, Dyn>::from_vec(h.dims()[1], h.dims()[0], h.to_vec().unwrap()).transpose();
         calculate_q(&matrix_v, &matrix_u, &matrix_w, &matrix_h)
     }
 
     #[pyfn(m)]
     fn py_calculate_q_robust<'py>(py: Python<'py>,
-                           v: &'py PyArrayDyn<f64>, u: &'py PyArrayDyn<f64>,
-                           w: &'py PyArrayDyn<f64>, h: &'py PyArrayDyn<f64>, robust_alpha: f64) -> (f64, &'py PyArrayDyn<f64>) {
-        let matrix_v = OMatrix::<f64, Dyn, Dyn>::from_vec(v.dims()[0], v.dims()[1], v.to_vec().unwrap());
-        let matrix_u = OMatrix::<f64, Dyn, Dyn>::from_vec(u.dims()[0], u.dims()[1], u.to_vec().unwrap());
-        let matrix_w = OMatrix::<f64, Dyn, Dyn>::from_vec(w.dims()[1], w.dims()[0], w.to_vec().unwrap()).transpose();
-        let matrix_h = OMatrix::<f64, Dyn, Dyn>::from_vec(h.dims()[1], h.dims()[0], h.to_vec().unwrap()).transpose();
+                           v: &'py PyArrayDyn<f32>, u: &'py PyArrayDyn<f32>,
+                           w: &'py PyArrayDyn<f32>, h: &'py PyArrayDyn<f32>, robust_alpha: f32) -> (f32, &'py PyArrayDyn<f32>) {
+        let matrix_v = OMatrix::<f32, Dyn, Dyn>::from_vec(v.dims()[0], v.dims()[1], v.to_vec().unwrap());
+        let matrix_u = OMatrix::<f32, Dyn, Dyn>::from_vec(u.dims()[0], u.dims()[1], u.to_vec().unwrap());
+        let matrix_w = OMatrix::<f32, Dyn, Dyn>::from_vec(w.dims()[1], w.dims()[0], w.to_vec().unwrap()).transpose();
+        let matrix_h = OMatrix::<f32, Dyn, Dyn>::from_vec(h.dims()[1], h.dims()[0], h.to_vec().unwrap()).transpose();
         let results = calculate_q_robust(&matrix_v, &matrix_u, &matrix_w, &matrix_h, robust_alpha);
         let q_robust = results.0;
         let results_uncertainty = results.1.transpose().data.as_vec().to_owned();

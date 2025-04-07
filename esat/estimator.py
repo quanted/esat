@@ -75,7 +75,7 @@ class FactorEstimator:
         i_mask[i_mask == 1] = 0
         i_mask[i_mask == 0] = 1
         m_test = np.count_nonzero(i_mask)
-        _sa = SA(V=V, U=U, factors=factor_n, method="ls-nmf", seed=seed, optimized=True, verbose=False)
+        _sa = SA(V=V, U=U, factors=factor_n, method="ls-nmf", seed=seed, verbose=False)
         _sa.initialize()
         _sa.train(max_iter=max_iter, converge_delta=converge_delta, converge_n=converge_n)
         residuals = V - _sa.WH

@@ -33,3 +33,9 @@ docs/html/
 
 notebooks/.ipynb_checkpoints/
 notebooks/old/.ipynb_checkpoints/
+
+# Memory profile files
+*.dat
+profile.html
+profile.json
+data/test_output/
