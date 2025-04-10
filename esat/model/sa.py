@@ -309,10 +309,10 @@ class SA:
         """
         Provides a summary of the model configuration and results if completed.
         """
-        logger.info("------------\t\tES Model Details\t\t-----------")
+        logger.info("------------\t\tModel Details\t\t-----------")
         logger.info(f"\tMethod: {self.method}\t\t\t\tFactors: {self.factors}")
         logger.info(f"\tNumber of Features: {self.n}\t\tNumber of Samples: {self.m}")
-        logger.info(f"\tRandom Seed: {self.seed}\t\t\t\tOptimized: {self.optimized}")
+        logger.info(f"\tRandom Seed: {self.seed}")
         if self.WH is not None:
             logger.info("---------------\t\tModel Results\t\t--------------")
             logger.info(f"\tQ(true): {round(self.Qtrue, 2)}\t\t\tQ(robust): {round(self.Qrobust, 2)}")
@@ -389,6 +389,10 @@ class SA:
         if self.optimized:
             t0 = time.time()
             try:
+                # logger.info(f"V: {self.V.dtype}, U: {self.U.dtype}, We: {self.We.dtype}, H: {self.H.dtype}, W: {self.W.dtype}")
+                # logger.info(f"max iter: {type(max_iter)}, converge_delta: {type(converge_delta)}, robust_mode: {type(robust_mode)}")
+                # logger.info(f"robust_n: {type(robust_n)}, robust_alpha: {type(robust_alpha)}")
+
                 _results = self.optimized_update(self.V, self.U, self.We, self.W, self.H, max_iter, converge_delta, converge_n,
                                                  robust_mode, robust_n, robust_alpha)[0]
             except RuntimeError as ex:
@@ -400,10 +404,10 @@ class SA:
             t1 = time.time()
             if self.verbose:
                 logger.info(f"R - Model: {model_i}, Seed: {self.seed}, "
-                            f"Q(true): {round(q_true, 4)}, MSE(true): {round(q_true / self.V.size, 4)}, "
-                            f"Q(robust): {round(q_robust, 4)}, MSE(robust): {round(q_robust / self.V.size, 4)}, "
+                            f"Q(true): {np.round(q_true, 4)}, MSE(true): {np.round((q_true / self.V.size), 4)}, "
+                            f"Q(robust): {np.round(q_robust, 4)}, MSE(robust): {np.round((q_robust / self.V.size), 4)}, "
                             f"Steps: {self.converge_steps}/{max_iter}, "
-                            f"Converged: {self.converged}, Runtime: {round(t1 - t0, 2)} sec")
+                            f"Converged: {self.converged}, Runtime: {np.round(t1 - t0, 2)} sec")
         else:
             prior_q = []
             t_iter = trange(max_iter, desc=f"Model: {model_i}, Seed: {self.seed}, Q(true): NA, MSE(true): NA, "
