@@ -24,11 +24,11 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         we: PyReadonlyArrayDyn<'py, f32>,
         w: PyReadonlyArrayDyn<'py, f32>,
         h: PyReadonlyArrayDyn<'py, f32>,
-        max_iter: i16,
+        max_iter: i32,
         converge_delta: f32,
-        converge_n: i16,
+        converge_n: i32,
         robust_mode: bool,
-        robust_n: i16,
+        robust_n: i32,
         robust_alpha: f32
     ) -> Result<&'py PyTuple, PyErr> {
 
@@ -45,7 +45,7 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         let mut qrobust: f32 = 0.0;
 
         let mut converged: bool = false;
-        let mut converge_i: i16 = 0;
+        let mut converge_i: i32 = 0;
         let mut q_list: VecDeque<f32> = VecDeque::new();
         let mut q_list_full: VecDeque<f32> = VecDeque::new();
 
@@ -86,7 +86,7 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
             q_list.push_back(q);
             q_list_full.push_back(q);
             converge_i = i;
-            if (q_list.len() as i16) >= converge_n {
+            if (q_list.len() as i32) >= converge_n {
                 if q_list.front().unwrap() - q_list.back().unwrap() < converge_delta {
                         converged = true;
                         break
@@ -116,11 +116,11 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         we: PyReadonlyArrayDyn<'py, f32>,
         w: PyReadonlyArrayDyn<'py, f32>,
         h: PyReadonlyArrayDyn<'py, f32>,
-        max_iter: i16,
+        max_iter: i32,
         converge_delta: f32,
-        converge_n: i16,
+        converge_n: i32,
         robust_mode: bool,
-        robust_n: i16,
+        robust_n: i32,
         robust_alpha: f32
     ) -> Result<&'py PyTuple, PyErr> {
         let v = OMatrix::<f32, Dyn, Dyn>::from_vec(v.dims()[0], v.dims()[1], v.to_vec().unwrap());
@@ -135,7 +135,7 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         let mut qrobust: f32 = 0.0;
         let mut q = qtrue.clone();
         let mut converged: bool = false;
-        let mut converge_i: i16 = 0;
+        let mut converge_i: i32 = 0;
         let mut q_list: VecDeque<f32> = VecDeque::new();
         let mut q_list_full: VecDeque<f32> = VecDeque::new();
 
@@ -202,7 +202,7 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
             q_list.push_back(q);
             q_list_full.push_back(q);
             converge_i = i;
-            if (q_list.len() as i16) >= converge_n {
+            if (q_list.len() as i32) >= converge_n {
                 if q_list.front().unwrap() - q_list.back().unwrap() < converge_delta {
                         converged = true;
                         break
@@ -232,11 +232,11 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         we: PyReadonlyArrayDyn<'py, f32>,
         w: PyReadonlyArrayDyn<'py, f32>,
         h: PyReadonlyArrayDyn<'py, f32>,
-        max_iter: i16,
+        max_iter: i32,
         converge_delta: f32,
-        converge_n: i16,
+        converge_n: i32,
         robust_mode: bool,
-        robust_n: i16,
+        robust_n: i32,
         robust_alpha: f32
     ) -> Result<&'py PyTuple, PyErr> {
         let v = OMatrix::<f32, Dyn, Dyn>::from_vec(v.dims()[0], v.dims()[1], v.to_vec().unwrap());
@@ -252,7 +252,7 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         let mut q = qtrue.clone();
 
         let mut converged: bool = false;
-        let mut converge_i: i16 = 0;
+        let mut converge_i: i32 = 0;
         let mut q_list: VecDeque<f32> = VecDeque::new();
         let mut q_list_full: VecDeque<f32> = VecDeque::new();
 
@@ -327,7 +327,7 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
             q_list.push_back(q);
             q_list_full.push_back(q);
             converge_i = i;
-            if (q_list.len() as i16) >= converge_n {
+            if (q_list.len() as i32) >= converge_n {
                 if q_list.front().unwrap() - q_list.back().unwrap() < converge_delta {
                         converged = true;
                         break
@@ -355,7 +355,7 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         v: PyReadonlyArrayDyn<'py, f32>, u: PyReadonlyArrayDyn<'py, f32>,
         w: PyReadonlyArrayDyn<'py, f32>, h: PyReadonlyArrayDyn<'py, f32>,
         update_weight: f32,
-        max_i: i16, converge_delta: f32, converge_i: i16
+        max_i: i32, converge_delta: f32, converge_i: i32
     ) -> Result<&'py PyTuple, PyErr> {
 
         let v = OMatrix::<f32, Dyn, Dyn>::from_vec(v.dims()[0], v.dims()[1], v.to_vec().unwrap());
@@ -407,7 +407,7 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
                 best_h = new_h.clone();
             }
             q_list.push_back(q);
-            if (q_list.len() as i16) >= converge_i {
+            if (q_list.len() as i32) >= converge_i {
                 let q_sum: f32 = q_list.iter().sum();
                 let q_avg: f32 = q_sum / q_list.len() as f32;
                 if (q_avg - q).abs() < converge_delta {

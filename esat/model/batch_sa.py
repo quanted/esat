@@ -130,7 +130,7 @@ class BatchSA:
         logger.info(f"Max Iterations: {self.max_iter}, Converge Delta: {self.converge_delta}, "
                     f"Converge N: {self.converge_n}")
         logger.info(f"Random Seed: {self.seed}, Init Method: {self.init_method}")
-        logger.info(f"Parallel: {self.parallel}, Optimized: {self.optimized}, Verbose: {self.verbose}")
+        logger.info(f"Parallel: {self.parallel}, Verbose: {self.verbose}")
         logger.info("-------------------------------------------------")
 
     def train(self, min_limit: int = None):
@@ -268,10 +268,10 @@ class BatchSA:
         t1 = time.time()
         if self.verbose:
             logger.info(f"Model: {model_i}, Seed: {sa.seed}, "
-                        f"Q(true): {round(sa.Qtrue, 4)}, MSE(true): {round(sa.Qtrue/sa.V.size, 4)}, "
-                        f"Q(robust): {round(sa.Qrobust, 4)}, MSE(robust): {round(sa.Qrobust/sa.V.size, 4)}, "
+                        f"Q(true): {np.round(sa.Qtrue, 4)}, MSE(true): {np.round((sa.Qtrue/sa.V.size), 4)}, "
+                        f"Q(robust): {np.round(sa.Qrobust, 4)}, MSE(robust): {np.round((sa.Qrobust/sa.V.size), 4)}, "
                         f"Steps: {sa.converge_steps}/{self.max_iter}, Converged: {sa.converged}, "
-                        f"Runtime: {round(t1 - t0, 2)} sec")
+                        f"Runtime: {np.round(t1 - t0, 2)} sec")
         return model_i, sa
 
     def save(self, batch_name: str,

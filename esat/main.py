@@ -55,12 +55,9 @@ def execute(batch_model):
     _ = batch_model.train()
 
 
-def workflow(V, U):
-    factors = 6
+def workflow(V, U, factors, models):
     method = "ls-nmf"  # "ls-nmf", "ws-nmf"
-    models = 20  # the number of models to train
     init_method = "col_means"  # default is column means "col_means", "kmeans", "cmeans"
-    init_norm = True  # if init_method=kmeans or cmeans, normalize the data prior to clustering.
     seed = 42  # random seed for initialization
     max_iterations = 20000  # the maximum number of iterations for fitting a model
     converge_delta = 0.1  # convergence criteria for the change in loss, Q
@@ -68,7 +65,7 @@ def workflow(V, U):
     parallel = True  # execute the model training in parallel, multiple models at the same time
 
     sa_models = BatchSA(V=V, U=U, factors=factors, models=models, method=method, seed=seed, max_iter=max_iterations,
-                        init_method=init_method, init_norm=init_norm,
+                        init_method=init_method,
                         converge_delta=converge_delta, converge_n=converge_n,
                         parallel=parallel,
                         verbose=True
@@ -77,19 +74,19 @@ def workflow(V, U):
 
 
 def run_all():
-    # input_df, uncertainty_df = generate_data(seed=42, syn_factors=7, syn_samples=1000, syn_features=34)
-    input_df, uncertainty_df = generate_data(seed=42, syn_factors=7, syn_samples=23446, syn_features=34)
+    input_df, uncertainty_df = generate_data(seed=42, syn_factors=7, syn_samples=1000, syn_features=34)
+    # input_df, uncertainty_df = generate_data(seed=42, syn_factors=7, syn_samples=23446, syn_features=34)
 
     data_handler = DataHandler.load_dataframe(input_df=input_df, uncertainty_df=uncertainty_df)
     V, U = data_handler.get_data()
-    workflow(V=V, U=U)
+    workflow(V=V, U=U, factors=7, models=20)
 
 if __name__ == '__main__':
-    # input_df, uncertainty_df = generate_data(seed=42, syn_factors=7, syn_samples=5000, syn_features=34)
-    input_df, uncertainty_df = generate_data(seed=42, syn_factors=7, syn_samples=23446, syn_features=34)
+    input_df, uncertainty_df = generate_data(seed=42, syn_factors=7, syn_samples=2000, syn_features=100)
+    # input_df, uncertainty_df = generate_data(seed=42, syn_factors=7, syn_samples=23446, syn_features=34)
     # input_df, uncertainty_df = generate_data(seed=42, syn_factors=10, syn_samples=500000, syn_features=100)
     # input_df, uncertainty_df = generate_data(seed=42, syn_factors=10, syn_samples=1000000, syn_features=100)
 
     data_handler = DataHandler.load_dataframe(input_df=input_df, uncertainty_df=uncertainty_df)
     V, U = data_handler.get_data()
-    workflow(V=V, U=U)
+    workflow(V=V, U=U, factors=7, models=10)
