@@ -393,8 +393,7 @@ class SA:
                 # logger.info(f"max iter: {type(max_iter)}, converge_delta: {type(converge_delta)}, robust_mode: {type(robust_mode)}")
                 # logger.info(f"robust_n: {type(robust_n)}, robust_alpha: {type(robust_alpha)}")
 
-                _results = self.optimized_update(self.V, self.U, self.We, self.W, self.H, max_iter, converge_delta, converge_n,
-                                                 robust_mode, robust_n, robust_alpha)[0]
+                _results = self.optimized_update(self.V, self.U, self.We, self.W, self.H, max_iter, converge_delta, converge_n, robust_alpha)[0]
             except RuntimeError as ex:
                 logger.error(f"Runtime Exception: {ex}")
                 return False

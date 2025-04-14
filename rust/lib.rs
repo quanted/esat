@@ -6,6 +6,7 @@ use numpy::pyo3::Python;
 use numpy::{PyReadonlyArrayDyn, ToPyArray, PyArrayDyn};
 use nalgebra::*;
 use rayon::prelude::*;
+use indicatif::{ProgressBar, ProgressStyle};
 
 
 /// ESAT Rust module
@@ -27,8 +28,6 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         max_iter: i32,
         converge_delta: f32,
         converge_n: i32,
-        robust_mode: bool,
-        robust_n: i32,
         robust_alpha: f32
     ) -> Result<&'py PyTuple, PyErr> {
 
@@ -48,18 +47,28 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         let mut converge_i: i32 = 0;
         let mut q_list: VecDeque<f32> = VecDeque::new();
         let mut q_list_full: VecDeque<f32> = VecDeque::new();
+        let mut mse: f32 = 0.0;
+        let datapoints = v.len() as f32;
 
         let mut wh: DMatrix<f32>;
         let mut h_num: DMatrix<f32>;
         let mut h_den: DMatrix<f32>;
         let mut w_num: DMatrix<f32>;
         let mut w_den: DMatrix<f32>;
-        let mut wev: DMatrix<f32>;
+        let mut wev: DMatrix<f32> = new_we.component_mul(&v);
 
         let mut robust_results = calculate_q_robust(&v, &u, &new_w, &new_h, robust_alpha);
 
+        // Initialize progress bar
+        let pb = ProgressBar::new(max_iter as u64);
+        pb.set_style(
+            ProgressStyle::default_bar()
+                .template("{spinner:.green} [{elapsed_precise}] {bar:40.cyan/blue} {pos}/{len} ({eta}) - MSE: {msg}")
+                .unwrap()
+                .progress_chars("#>-"),
+        );
+
         for i in 0..max_iter{
-            wev = new_we.component_mul(&v);
             wh = &new_w * &new_h;
             h_num = new_w.transpose() * &wev;
             h_den = &new_w.transpose() * &new_we.component_mul(&wh);
@@ -74,18 +83,14 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
             robust_results = calculate_q_robust(&v, &u, &new_w, &new_h, robust_alpha);
             qrobust = robust_results.0;
             q = qtrue;
-
-            if robust_mode {
-                if i > robust_n {
-                    q = qrobust;
-                    let updated_uncertainty = robust_results.1;
-                    new_we = updated_uncertainty.map(|x| (1.0/x).powi(2));
-                }
-            }
-
+            mse = qtrue / datapoints;
             q_list.push_back(q);
             q_list_full.push_back(q);
             converge_i = i;
+
+            pb.set_message(format!("{:.6}", mse));
+            pb.inc(1);
+
             if (q_list.len() as i32) >= converge_n {
                 if q_list.front().unwrap() - q_list.back().unwrap() < converge_delta {
                         converged = true;
@@ -94,6 +99,7 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
                 q_list.pop_front();
             }
         }
+
         new_w = new_w.transpose();
         new_h = new_h.transpose();
         let w_matrix = Vec::from(new_w.data.as_vec().to_owned());
@@ -119,8 +125,6 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         max_iter: i32,
         converge_delta: f32,
         converge_n: i32,
-        robust_mode: bool,
-        robust_n: i32,
         robust_alpha: f32
     ) -> Result<&'py PyTuple, PyErr> {
         let v = OMatrix::<f32, Dyn, Dyn>::from_vec(v.dims()[0], v.dims()[1], v.to_vec().unwrap());
@@ -134,6 +138,10 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         let mut qtrue: f32 = calculate_q(&v, &u, &new_w, &new_h);
         let mut qrobust: f32 = 0.0;
         let mut q = qtrue.clone();
+
+        let mut mse: f32 = 0.0;
+        let datapoints = v.len() as f32;
+
         let mut converged: bool = false;
         let mut converge_i: i32 = 0;
         let mut q_list: VecDeque<f32> = VecDeque::new();
@@ -142,8 +150,18 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         let mut we_j_diag: DMatrix<f32>;
         let mut v_j;
 
+        let wev = &new_we.component_mul(&v);
+
+        // Initialize progress bar
+        let pb = ProgressBar::new(max_iter as u64);
+        pb.set_style(
+            ProgressStyle::default_bar()
+                .template("{spinner:.green} [{elapsed_precise}] {bar:40.cyan/blue} {pos}/{len} ({eta}) - MSE: {msg}")
+                .unwrap()
+                .progress_chars("#>-"),
+        );
+
         for i in 0..max_iter{
-            let wev = &new_we.component_mul(&v);
             for (j, we_j) in new_we.row_iter().enumerate(){
                 we_j_diag = DMatrix::from_diagonal(&DVector::from_row_slice(we_j.transpose().as_slice()));
                 v_j = DVector::from_row_slice(wev.row(j).transpose().as_slice());
@@ -192,13 +210,10 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
             let robust_results = calculate_q_robust(&v, &u, &new_w, &new_h, robust_alpha);
             qrobust = robust_results.0;
             q = qtrue;
-            if robust_mode {
-                if i > robust_n {
-                    q = qrobust;
-                    let updated_uncertainty = robust_results.1;
-                    new_we = updated_uncertainty.map(|x| (1.0 / x).powi(2));
-                }
-            }
+            mse = qtrue / datapoints;
+            pb.set_message(format!("{:.6}", mse));
+            pb.inc(1);
+
             q_list.push_back(q);
             q_list_full.push_back(q);
             converge_i = i;
@@ -235,8 +250,6 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         max_iter: i32,
         converge_delta: f32,
         converge_n: i32,
-        robust_mode: bool,
-        robust_n: i32,
         robust_alpha: f32
     ) -> Result<&'py PyTuple, PyErr> {
         let v = OMatrix::<f32, Dyn, Dyn>::from_vec(v.dims()[0], v.dims()[1], v.to_vec().unwrap());
@@ -317,13 +330,6 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
             let robust_results = calculate_q_robust(&v, &u, &new_w, &new_h, robust_alpha);
             qrobust = robust_results.0;
             q = qtrue.clone();
-            if robust_mode {
-                if i > robust_n {
-                    q = qrobust.clone();
-                    let updated_uncertainty = robust_results.1;
-                    new_we = updated_uncertainty.map(|x| (1.0/x).powi(2));
-                }
-            }
             q_list.push_back(q);
             q_list_full.push_back(q);
             converge_i = i;
