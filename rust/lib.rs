@@ -6,12 +6,40 @@ use numpy::pyo3::Python;
 use numpy::{PyReadonlyArrayDyn, ToPyArray, PyArrayDyn};
 use nalgebra::*;
 use rayon::prelude::*;
-use indicatif::{ProgressBar, ProgressStyle};
+use indicatif::{ProgressBar, ProgressStyle, MultiProgress};
+use std::sync::Arc;
+
+
+#[pyclass]
+struct MultiProgressHandle {
+    mp: Arc<MultiProgress>,
+}
+
+#[pymethods]
+impl MultiProgressHandle {
+    #[new]
+    fn new() -> Self {
+        let mp = Arc::new(MultiProgress::new());
+        MultiProgressHandle { mp }
+    }
+
+    fn add(&self) -> ProgressBar {
+        self.mp.add(ProgressBar::new(0))
+    }
+}
+
+#[pyfunction]
+fn create_multi_progress() -> MultiProgressHandle {
+    MultiProgressHandle::new()
+}
 
 
 /// ESAT Rust module
 #[pymodule]
 fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
+
+    m.add_class::<MultiProgressHandle>()?;
+    m.add_function::(wrap_pyfunciton!(create_multi_progress)?)?;
 
     const EPSILON: f32 = 1e-12;
 
@@ -28,7 +56,9 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         max_iter: i32,
         converge_delta: f32,
         converge_n: i32,
-        robust_alpha: f32
+        robust_alpha: f32,
+        model_i: i8,
+        handle: &MultiProgressHandle,
     ) -> Result<&'py PyTuple, PyErr> {
 
         let v = OMatrix::<f32, Dyn, Dyn>::from_vec(v.dims()[0], v.dims()[1], v.to_vec().unwrap().to_owned());
@@ -59,11 +89,17 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
 
         let mut robust_results = calculate_q_robust(&v, &u, &new_w, &new_h, robust_alpha);
 
+        let line_position = model_i;
+
+        if handle.mp.is_none() {
+            handle = &MultiProgressHandle::new();
+        }
+        let mp = handle.mp.clone();
         // Initialize progress bar
-        let pb = ProgressBar::new(max_iter as u64);
+        let pb = mp.add(ProgressBar::new(max_iter as u64));
         pb.set_style(
             ProgressStyle::default_bar()
-                .template("{spinner:.green} [{elapsed_precise}] {bar:40.cyan/blue} {pos}/{len} ({eta}) - MSE: {msg}")
+                .template("{spinner:.green} [{elapsed_precise}] {bar:40.cyan/blue} {pos}/{len} ({eta}) - {per_sec} items/sec - MSE: {msg}")
                 .unwrap()
                 .progress_chars("#>-"),
         );
@@ -125,7 +161,9 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         max_iter: i32,
         converge_delta: f32,
         converge_n: i32,
-        robust_alpha: f32
+        robust_alpha: f32,
+        model_i: i8,
+        handle: &MultiProgressHandle,
     ) -> Result<&'py PyTuple, PyErr> {
         let v = OMatrix::<f32, Dyn, Dyn>::from_vec(v.dims()[0], v.dims()[1], v.to_vec().unwrap());
         let u = OMatrix::<f32, Dyn, Dyn>::from_vec(u.dims()[0], u.dims()[1], u.to_vec().unwrap());
@@ -153,10 +191,14 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         let wev = &new_we.component_mul(&v);
 
         // Initialize progress bar
-        let pb = ProgressBar::new(max_iter as u64);
+        if handle.mp.is_none() {
+            handle = &MultiProgressHandle::new();
+        }
+        let mp = handle.mp.clone();
+        let pb = mp.add(ProgressBar::new(max_iter as u64));
         pb.set_style(
             ProgressStyle::default_bar()
-                .template("{spinner:.green} [{elapsed_precise}] {bar:40.cyan/blue} {pos}/{len} ({eta}) - MSE: {msg}")
+                .template("{spinner:.green} [{elapsed_precise}] {bar:40.cyan/blue} {pos}/{len} ({eta}) - {per_sec} items/sec - MSE: {msg}")
                 .unwrap()
                 .progress_chars("#>-"),
         );
@@ -211,6 +253,7 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
             qrobust = robust_results.0;
             q = qtrue;
             mse = qtrue / datapoints;
+
             pb.set_message(format!("{:.6}", mse));
             pb.inc(1);
 

@@ -324,11 +324,12 @@ class SA:
               max_iter: int = 20000,
               converge_delta: float = 0.1,
               converge_n: int = 100,
-              model_i: int = -1,
+              model_i: int = 1,
               robust_mode: bool = False,
               robust_n: int = 200,
               robust_alpha: float = 4,
-              update_step: str = None
+              update_step: str = None,
+              progress_bar = None,
               ):
         """
         Train the SA model by iteratively updating the W and H matrices reducing the loss value Q until convergence.
@@ -393,7 +394,8 @@ class SA:
                 # logger.info(f"max iter: {type(max_iter)}, converge_delta: {type(converge_delta)}, robust_mode: {type(robust_mode)}")
                 # logger.info(f"robust_n: {type(robust_n)}, robust_alpha: {type(robust_alpha)}")
 
-                _results = self.optimized_update(self.V, self.U, self.We, self.W, self.H, max_iter, converge_delta, converge_n, robust_alpha)[0]
+                _results = self.optimized_update(self.V, self.U, self.We, self.W, self.H, max_iter,
+                                                 converge_delta, converge_n, robust_alpha, model_i, progress_bar)[0]
             except RuntimeError as ex:
                 logger.error(f"Runtime Exception: {ex}")
                 return False

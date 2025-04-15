@@ -8,6 +8,7 @@ from pathlib import Path
 import multiprocessing as mp
 from esat.model.sa import SA
 from esat.utils import memory_estimate
+from esat_rust import create_multi_progress
 
 logging.basicConfig(format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S', level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -156,6 +157,7 @@ class BatchSA:
             if self.verbose:
                 logger.info(f"Running batch SA models in parallel using {self.cores} cores.")
             pool = mp.Pool(processes=self.cores)
+            progress_bar = create_multi_progress()
             input_parameters = []
             for i in range(1, self.models+1):
                 _seed = self.rng.integers(low=0, high=1e5)
@@ -170,7 +172,7 @@ class BatchSA:
                 _sa.initialize(H=self.H, W=self.W,
                                init_method=self.init_method,
                                init_norm=self.init_norm)
-                input_parameters.append((_sa, i))
+                input_parameters.append((_sa, i, progress_bar))
 
             results = pool.starmap(self._train_task, input_parameters)
             pool.close()
@@ -245,7 +247,7 @@ class BatchSA:
             self.results.pop(-1)
         return True, ""
 
-    def _train_task(self, sa, model_i) -> (int, SA):
+    def _train_task(self, sa, model_i, progress_bar = None) -> (int, SA):
         """
         Parallelized train task.
 
@@ -264,14 +266,14 @@ class BatchSA:
         """
         t0 = time.time()
         sa.train(max_iter=self.max_iter, converge_delta=self.converge_delta, converge_n=self.converge_n,
-                 model_i=model_i, update_step=self.update_step)
+                 model_i=model_i, update_step=self.update_step, progress_bar=progress_bar)
         t1 = time.time()
-        if self.verbose:
-            logger.info(f"Model: {model_i}, Seed: {sa.seed}, "
-                        f"Q(true): {np.round(sa.Qtrue, 4)}, MSE(true): {np.round((sa.Qtrue/sa.V.size), 4)}, "
-                        f"Q(robust): {np.round(sa.Qrobust, 4)}, MSE(robust): {np.round((sa.Qrobust/sa.V.size), 4)}, "
-                        f"Steps: {sa.converge_steps}/{self.max_iter}, Converged: {sa.converged}, "
-                        f"Runtime: {np.round(t1 - t0, 2)} sec")
+        # if self.verbose:
+        #     logger.info(f"Model: {model_i}, Seed: {sa.seed}, "
+        #                 f"Q(true): {np.round(sa.Qtrue, 4)}, MSE(true): {np.round((sa.Qtrue/sa.V.size), 4)}, "
+        #                 f"Q(robust): {np.round(sa.Qrobust, 4)}, MSE(robust): {np.round((sa.Qrobust/sa.V.size), 4)}, "
+        #                 f"Steps: {sa.converge_steps}/{self.max_iter}, Converged: {sa.converged}, "
+        #                 f"Runtime: {np.round(t1 - t0, 2)} sec")
         return model_i, sa
 
     def save(self, batch_name: str,
