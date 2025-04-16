@@ -1,14 +1,16 @@
 import datetime
 import os
+import sys
 import logging
 import time
 import pickle
 import numpy as np
 from pathlib import Path
 import multiprocessing as mp
+from multiprocessing import Manager
 from esat.model.sa import SA
 from esat.utils import memory_estimate
-from esat_rust import create_multi_progress
+from esat_rust import clear_screen
 
 logging.basicConfig(format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S', level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -152,12 +154,16 @@ class BatchSA:
             an error message explaining the reason training ended.
         """
         t0 = time.time()
+        if self.verbose:
+            logger.info(f"Running batch SA models in {f'parallel using {self.cores} cores.' if self.parallel else 'single-core mode.'}")
+        clear_screen()
+        print("\n" * (max(self.models, self.cores) + 1))
+        print("\033[H")
+        sys.stdout.flush()
+
         if self.parallel:
             # TODO: Add batch processing for large datasets and large number of epochs to reduce memory requirements.
-            if self.verbose:
-                logger.info(f"Running batch SA models in parallel using {self.cores} cores.")
             pool = mp.Pool(processes=self.cores)
-            progress_bar = create_multi_progress()
             input_parameters = []
             for i in range(1, self.models+1):
                 _seed = self.rng.integers(low=0, high=1e5)
@@ -172,7 +178,7 @@ class BatchSA:
                 _sa.initialize(H=self.H, W=self.W,
                                init_method=self.init_method,
                                init_norm=self.init_norm)
-                input_parameters.append((_sa, i, progress_bar))
+                input_parameters.append((_sa, i))
 
             results = pool.starmap(self._train_task, input_parameters)
             pool.close()
@@ -187,15 +193,6 @@ class BatchSA:
                 if _nmf_q < best_q:
                     best_q = _nmf_q
                     best_model = model_i
-            if self.verbose:
-                for i, result in enumerate(ordered_results):
-                    if result is None:
-                        continue
-                    logger.info(f"Model: {i + 1}, "
-                                f"Q(true): {round(result.Qtrue, 4)}, MSE(true): {round(result.Qtrue/self.V.size, 4)}, "
-                                f"Q(robust): {round(result.Qrobust, 4)}, "
-                                f"MSE(robust): {round(result.Qrobust/self.V.size, 4)}, Seed: {result.seed}, "
-                                f"Converged: {result.converged}, Steps: {result.converge_steps}/{self.max_iter}")
             self.results = ordered_results
         else:
             self.results = []
@@ -232,13 +229,31 @@ class BatchSA:
                     best_model = model_i
                 self.results.append(_sa)
         t1 = time.time()
+
+        clear_screen()
+        print("\n" * (max(self.models, self.cores) + 1))
+        print("\033[H")
+        sys.stdout.flush()
+
         self.runtime = round(t1 - t0, 2)
         best_model = best_model - 1
         if self.verbose:
-            logger.info(f"Results - Best Model: {best_model+1}, Q(true): {round(self.results[best_model].Qtrue, 4)}, "
-                        f"MSE(true): {round(self.results[best_model].Qtrue/self.V.size, 4)}, "
-                        f"Q(robust): {round(self.results[best_model].Qrobust, 4)}, "
-                        f"MSE(robust): {round(self.results[best_model].Qrobust/self.V.size, 4)}, "
+            logger.info("------------------------------------------------ Batch Results ------------------------------------------------")
+            for i, result in enumerate(self.results):
+                if result is None:
+                    continue
+                logger.info(f"Model: {i + 1}, "
+                            f"Q(true): {result.Qtrue:.4f}, "
+                            f"MSE(true): {float(result.Qtrue / self.V.size):.4f}, "
+                            f"Q(robust): {float(result.Qrobust):.4f}, "
+                            f"MSE(robust): {float(result.Qrobust / self.V.size):.4f}, Seed: {result.seed}, "
+                            f"Converged: {result.converged}, Steps: {result.converge_steps}/{self.max_iter}")
+
+            logger.info(f"Results - Best Model: {best_model+1}, "
+                        f"Q(true): {float(self.results[best_model].Qtrue):.4f}, "
+                        f"MSE(true): {float(self.results[best_model].Qtrue/self.V.size):.4f}, "
+                        f"Q(robust): {float(self.results[best_model].Qrobust):.4f}, "
+                        f"MSE(robust): {float(self.results[best_model].Qrobust/self.V.size):.4f}, "
                         f"Converged: {self.results[best_model].converged}")
             logger.info(f"Runtime: {round((t1 - t0) / 60, 2)} min(s)")
         self.best_model = best_model
@@ -247,7 +262,7 @@ class BatchSA:
             self.results.pop(-1)
         return True, ""
 
-    def _train_task(self, sa, model_i, progress_bar = None) -> (int, SA):
+    def _train_task(self, sa, model_i) -> (int, SA):
         """
         Parallelized train task.
 
@@ -264,16 +279,8 @@ class BatchSA:
             The model id and the trained SA object.
 
         """
-        t0 = time.time()
         sa.train(max_iter=self.max_iter, converge_delta=self.converge_delta, converge_n=self.converge_n,
-                 model_i=model_i, update_step=self.update_step, progress_bar=progress_bar)
-        t1 = time.time()
-        # if self.verbose:
-        #     logger.info(f"Model: {model_i}, Seed: {sa.seed}, "
-        #                 f"Q(true): {np.round(sa.Qtrue, 4)}, MSE(true): {np.round((sa.Qtrue/sa.V.size), 4)}, "
-        #                 f"Q(robust): {np.round(sa.Qrobust, 4)}, MSE(robust): {np.round((sa.Qrobust/sa.V.size), 4)}, "
-        #                 f"Steps: {sa.converge_steps}/{self.max_iter}, Converged: {sa.converged}, "
-        #                 f"Runtime: {np.round(t1 - t0, 2)} sec")
+                 model_i=model_i, update_step=self.update_step)
         return model_i, sa
 
     def save(self, batch_name: str,

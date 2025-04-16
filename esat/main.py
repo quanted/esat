@@ -59,9 +59,9 @@ def workflow(V, U, factors, models):
     method = "ls-nmf"  # "ls-nmf", "ws-nmf"
     init_method = "col_means"  # default is column means "col_means", "kmeans", "cmeans"
     seed = 42  # random seed for initialization
-    max_iterations = 100000  # the maximum number of iterations for fitting a model
-    converge_delta = 0.001  # convergence criteria for the change in loss, Q
-    converge_n = 50  # convergence criteria for the number of steps where the loss changes by less than converge_delta
+    max_iterations = 20000  # the maximum number of iterations for fitting a model
+    converge_delta = 0.1  # convergence criteria for the change in loss, Q
+    converge_n = 25  # convergence criteria for the number of steps where the loss changes by less than converge_delta
     parallel = True  # execute the model training in parallel, multiple models at the same time
 
     sa_models = BatchSA(V=V, U=U, factors=factors, models=models, method=method, seed=seed, max_iter=max_iterations,

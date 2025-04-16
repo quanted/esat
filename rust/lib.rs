@@ -6,42 +6,23 @@ use numpy::pyo3::Python;
 use numpy::{PyReadonlyArrayDyn, ToPyArray, PyArrayDyn};
 use nalgebra::*;
 use rayon::prelude::*;
-use indicatif::{ProgressBar, ProgressStyle, MultiProgress};
-use std::sync::Arc;
-
-
-#[pyclass]
-struct MultiProgressHandle {
-    mp: Arc<MultiProgress>,
-}
-
-#[pymethods]
-impl MultiProgressHandle {
-    #[new]
-    fn new() -> Self {
-        let mp = Arc::new(MultiProgress::new());
-        MultiProgressHandle { mp }
-    }
-
-    fn add(&self) -> ProgressBar {
-        self.mp.add(ProgressBar::new(0))
-    }
-}
-
-#[pyfunction]
-fn create_multi_progress() -> MultiProgressHandle {
-    MultiProgressHandle::new()
-}
+use indicatif::{ProgressBar, ProgressStyle, ProgressDrawTarget};
+use std::io::{self, Write};
+use console::Term;
 
 
 /// ESAT Rust module
 #[pymodule]
 fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
 
-    m.add_class::<MultiProgressHandle>()?;
-    m.add_function::(wrap_pyfunciton!(create_multi_progress)?)?;
-
     const EPSILON: f32 = 1e-12;
+
+    #[pyfn(m)]
+    fn clear_screen() -> PyResult<()> {
+        print!("\x1B[2J\x1B[H");
+        io::stdout().flush().unwrap_or(());
+        Ok(())
+    }
 
     // NMF - Least-Squares Algorithm (LS-NMF)
     // Returns (W, H, Q, converged)
@@ -58,7 +39,6 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         converge_n: i32,
         robust_alpha: f32,
         model_i: i8,
-        handle: &MultiProgressHandle,
     ) -> Result<&'py PyTuple, PyErr> {
 
         let v = OMatrix::<f32, Dyn, Dyn>::from_vec(v.dims()[0], v.dims()[1], v.to_vec().unwrap().to_owned());
@@ -89,19 +69,16 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
 
         let mut robust_results = calculate_q_robust(&v, &u, &new_w, &new_h, robust_alpha);
 
-        let line_position = model_i;
-
-        if handle.mp.is_none() {
-            handle = &MultiProgressHandle::new();
-        }
-        let mp = handle.mp.clone();
-        // Initialize progress bar
-        let pb = mp.add(ProgressBar::new(max_iter as u64));
+        let location_i = (model_i as usize).try_into().unwrap();
+        let term = Term::buffered_stdout();
+        term.move_cursor_to(0, location_i).unwrap();
+        let draw_target = ProgressDrawTarget::term(term.clone(), 20);
+        let pb = ProgressBar::with_draw_target(Some(max_iter as u64), draw_target);
         pb.set_style(
             ProgressStyle::default_bar()
-                .template("{spinner:.green} [{elapsed_precise}] {bar:40.cyan/blue} {pos}/{len} ({eta}) - {per_sec} items/sec - MSE: {msg}")
+                .template("{spinner:.cyan} [{elapsed_precise}] {bar:40.cyan/blue} {pos}/{len} ({eta}) {per_sec} iter/sec - {msg}")
                 .unwrap()
-                .progress_chars("#>-"),
+                .progress_chars("-|-"),
         );
 
         for i in 0..max_iter{
@@ -124,8 +101,10 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
             q_list_full.push_back(q);
             converge_i = i;
 
-            pb.set_message(format!("{:.6}", mse));
-            pb.inc(1);
+            term.move_cursor_to(0, location_i).unwrap();
+            pb.set_position((i+1) as u64);
+            term.move_cursor_to(0, location_i).unwrap();
+            pb.set_message(format!("Model: {}, Q(True): {:.4}, Q(Robust): {:.4}, MSE: {:.4}", model_i, qtrue, qrobust, mse));
 
             if (q_list.len() as i32) >= converge_n {
                 if q_list.front().unwrap() - q_list.back().unwrap() < converge_delta {
@@ -135,6 +114,8 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
                 q_list.pop_front();
             }
         }
+        term.move_cursor_to(0, location_i).unwrap();
+        pb.abandon_with_message(format!("Model: {}, Q(True): {:.4}, Q(Robust): {:.4}, MSE: {:.4}", model_i, qtrue, qrobust, mse));
 
         new_w = new_w.transpose();
         new_h = new_h.transpose();
@@ -163,7 +144,6 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         converge_n: i32,
         robust_alpha: f32,
         model_i: i8,
-        handle: &MultiProgressHandle,
     ) -> Result<&'py PyTuple, PyErr> {
         let v = OMatrix::<f32, Dyn, Dyn>::from_vec(v.dims()[0], v.dims()[1], v.to_vec().unwrap());
         let u = OMatrix::<f32, Dyn, Dyn>::from_vec(u.dims()[0], u.dims()[1], u.to_vec().unwrap());
@@ -190,17 +170,16 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
 
         let wev = &new_we.component_mul(&v);
 
-        // Initialize progress bar
-        if handle.mp.is_none() {
-            handle = &MultiProgressHandle::new();
-        }
-        let mp = handle.mp.clone();
-        let pb = mp.add(ProgressBar::new(max_iter as u64));
+        let location_i = (model_i as usize).try_into().unwrap();
+        let term = Term::buffered_stdout();
+        term.move_cursor_to(0, location_i).unwrap();
+        let draw_target = ProgressDrawTarget::term(term.clone(), 20);
+        let pb = ProgressBar::with_draw_target(Some(max_iter as u64), draw_target);
         pb.set_style(
             ProgressStyle::default_bar()
-                .template("{spinner:.green} [{elapsed_precise}] {bar:40.cyan/blue} {pos}/{len} ({eta}) - {per_sec} items/sec - MSE: {msg}")
+                .template("{spinner:.cyan} [{elapsed_precise}] {bar:40.cyan/blue} {pos}/{len} ({eta}) {per_sec} iter/sec - {msg}")
                 .unwrap()
-                .progress_chars("#>-"),
+                .progress_chars("-|-"),
         );
 
         for i in 0..max_iter{
@@ -254,8 +233,10 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
             q = qtrue;
             mse = qtrue / datapoints;
 
-            pb.set_message(format!("{:.6}", mse));
-            pb.inc(1);
+            term.move_cursor_to(0, location_i).unwrap();
+            pb.set_position((i+1) as u64);
+            term.move_cursor_to(0, location_i).unwrap();
+            pb.set_message(format!("Model: {}, Q(True): {:.4}, Q(Robust): {:.4}, MSE: {:.4}", model_i, qtrue, qrobust, mse));
 
             q_list.push_back(q);
             q_list_full.push_back(q);
@@ -268,6 +249,9 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
                 q_list.pop_front();
             }
         }
+        term.move_cursor_to(0, location_i).unwrap();
+        pb.abandon_with_message(format!("Model: {}, Q(True): {:.4}, Q(Robust): {:.4}, MSE: {:.4}", model_i, qtrue, qrobust, mse));
+
         new_w = new_w.transpose();
         new_h = new_h.transpose();
         let w_matrix = new_w.data.as_vec().to_owned();
@@ -293,7 +277,8 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         max_iter: i32,
         converge_delta: f32,
         converge_n: i32,
-        robust_alpha: f32
+        robust_alpha: f32,
+        model_i: i8,
     ) -> Result<&'py PyTuple, PyErr> {
         let v = OMatrix::<f32, Dyn, Dyn>::from_vec(v.dims()[0], v.dims()[1], v.to_vec().unwrap());
         let u = OMatrix::<f32, Dyn, Dyn>::from_vec(u.dims()[0], u.dims()[1], u.to_vec().unwrap());
@@ -306,6 +291,7 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         let mut qtrue: f32 = calculate_q(&v, &u, &new_w, &new_h);
         let mut qrobust: f32 = 0.0;
         let mut q = qtrue.clone();
+        let mut mse: f32 = 0.0;
 
         let mut converged: bool = false;
         let mut converge_i: i32 = 0;
@@ -316,6 +302,19 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         let n = v.ncols();
         let mut w_prime: OMatrix<f32, Dyn, Dyn> = new_w.clone().transpose();
         let mut h_prime: OMatrix<f32, Dyn, Dyn> = new_h.clone();
+        let datapoints = v.len() as f32;
+
+        let location_i = (model_i as usize).try_into().unwrap();
+        let term = Term::buffered_stdout();
+        term.move_cursor_to(0, location_i).unwrap();
+        let draw_target = ProgressDrawTarget::term(term.clone(), 20);
+        let pb = ProgressBar::with_draw_target(Some(max_iter as u64), draw_target);
+        pb.set_style(
+            ProgressStyle::default_bar()
+                .template("{spinner:.cyan} [{elapsed_precise}] {bar:40.cyan/blue} {pos}/{len} ({eta}) {per_sec} iter/sec - {msg}")
+                .unwrap()
+                .progress_chars("-|-"),
+        );
 
         for i in 0..max_iter{
             let wev = &new_we.component_mul(&v);
@@ -372,6 +371,13 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
             qtrue = calculate_q(&v, &u, &new_w, &new_h);
             let robust_results = calculate_q_robust(&v, &u, &new_w, &new_h, robust_alpha);
             qrobust = robust_results.0;
+            mse = qtrue / datapoints;
+
+            term.move_cursor_to(0, location_i).unwrap();
+            pb.set_position((i+1) as u64);
+            term.move_cursor_to(0, location_i).unwrap();
+            pb.set_message(format!("Model: {}, Q(True): {:.4}, Q(Robust): {:.4}, MSE: {:.4}", model_i, qtrue, qrobust, mse));
+
             q = qtrue.clone();
             q_list.push_back(q);
             q_list_full.push_back(q);
@@ -384,6 +390,9 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
                 q_list.pop_front();
             }
         }
+        term.move_cursor_to(0, location_i).unwrap();
+        pb.abandon_with_message(format!("Model: {}, Q(True): {:.4}, Q(Robust): {:.4}, MSE: {:.4}", model_i, qtrue, qrobust, mse));
+
         new_w = new_w.transpose();
         new_h = new_h.transpose();
         let w_matrix = new_w.data.as_vec().to_owned();

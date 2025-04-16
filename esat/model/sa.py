@@ -329,7 +329,6 @@ class SA:
               robust_n: int = 200,
               robust_alpha: float = 4,
               update_step: str = None,
-              progress_bar = None,
               ):
         """
         Train the SA model by iteratively updating the W and H matrices reducing the loss value Q until convergence.
@@ -390,12 +389,8 @@ class SA:
         if self.optimized:
             t0 = time.time()
             try:
-                # logger.info(f"V: {self.V.dtype}, U: {self.U.dtype}, We: {self.We.dtype}, H: {self.H.dtype}, W: {self.W.dtype}")
-                # logger.info(f"max iter: {type(max_iter)}, converge_delta: {type(converge_delta)}, robust_mode: {type(robust_mode)}")
-                # logger.info(f"robust_n: {type(robust_n)}, robust_alpha: {type(robust_alpha)}")
-
                 _results = self.optimized_update(self.V, self.U, self.We, self.W, self.H, max_iter,
-                                                 converge_delta, converge_n, robust_alpha, model_i, progress_bar)[0]
+                                                 converge_delta, converge_n, robust_alpha, model_i)[0]
             except RuntimeError as ex:
                 logger.error(f"Runtime Exception: {ex}")
                 return False
@@ -403,12 +398,6 @@ class SA:
             q_true = q_loss(V=self.V, U=self.U, W=self.W, H=self.H)
             q_robust, U_robust = qr_loss(V=self.V, U=self.U, W=self.W, H=self.H, alpha=robust_alpha)
             t1 = time.time()
-            if self.verbose:
-                logger.info(f"R - Model: {model_i}, Seed: {self.seed}, "
-                            f"Q(true): {np.round(q_true, 4)}, MSE(true): {np.round((q_true / self.V.size), 4)}, "
-                            f"Q(robust): {np.round(q_robust, 4)}, MSE(robust): {np.round((q_robust / self.V.size), 4)}, "
-                            f"Steps: {self.converge_steps}/{max_iter}, "
-                            f"Converged: {self.converged}, Runtime: {np.round(t1 - t0, 2)} sec")
         else:
             prior_q = []
             t_iter = trange(max_iter, desc=f"Model: {model_i}, Seed: {self.seed}, Q(true): NA, MSE(true): NA, "
@@ -434,9 +423,9 @@ class SA:
                     if delta_q < converge_delta:
                         converged = True
                 t_iter.set_description(f"Model: {model_i}, Seed: {self.seed}, "
-                                       f"Q(true): {round(q_true, 4)}, MSE(true): {round(q_true/self.V.size, 4)}, "
-                                       f"Q(robust): {round(q_robust, 4)}, MSE(robust): {round(q_robust/self.V.size, 4)}, "
-                                       f"dQ: {round(delta_q, 4)}")
+                                       f"Q(true): {float(q_true):.4f}, MSE(true): {float(q_true/self.V.size):.4f}, "
+                                       f"Q(robust): {float(q_robust):.4f}, MSE(robust): {float(q_robust/self.V.size):.4f}, "
+                                       f"dQ: {float(delta_q):.4f}")
                 t_iter.refresh()
 
                 if converged:
@@ -455,9 +444,6 @@ class SA:
         self.metadata["converge_n"] = int(converge_n)
         self.metadata["model_i"] = int(model_i)
         self.metadata["robust_mode"] = robust_mode
-        if robust_mode:
-            self.metadata["robust_n"] = int(robust_n)
-            self.metadata["robust_alpha"] = float(robust_alpha)
 
     def save(self,
              model_name: str,
