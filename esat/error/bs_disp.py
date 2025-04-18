@@ -2,6 +2,7 @@ import datetime
 import logging
 import pickle
 import os
+import sys
 import copy
 import time
 import json
@@ -14,6 +15,8 @@ from esat.model.sa import SA
 from esat.error.bootstrap import Bootstrap
 from esat.error.displacement import Displacement
 from esat.utils import np_encoder
+from esat_rust import clear_screen
+
 
 logging.basicConfig(format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S', level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -71,6 +74,7 @@ class BSDISP:
                  threshold_dQ: float = 0.1,
                  features: list = None,
                  seed: int = None,
+                 cores: int = 0,
                  ):
         """
         Constructor method.
@@ -87,6 +91,7 @@ class BSDISP:
         self.threshold_dQ = threshold_dQ
         self.features = features
         self.seed = seed if bootstrap is None else bootstrap.bs_seed
+        self.cores = min(cores, int(os.cpu_count() * 0.75)) if cores > 0 else max(int(os.cpu_count() * 0.75), 1)
 
         self.disp_results = {}
         self.compiled_results = None
@@ -106,7 +111,7 @@ class BSDISP:
         }
 
     def run(self,
-            parallel: bool = True,
+            parallel: bool = False,
             keep_H: bool = True,
             reuse_seed: bool = True,
             block: bool = True,
@@ -117,6 +122,10 @@ class BSDISP:
 
         Parameters
         ----------
+        parallel : bool
+           Used to specify which part of the BS-DISP method to run in parallel. If True, the BS-DISP will run the DISP
+           instances in parallel otherwise each instance will be run sequentially with parallelization occuring inside
+           each DISP run. Default is False and is more optimal the more features are being analyzed.
         keep_H : bool
            When retraining the SA models using the resampled input and uncertainty datasets, keep the base model H
            matrix instead of reinitializing. The W matrix is always reinitialized when SA is run on the BS datasets.
@@ -146,25 +155,33 @@ class BSDISP:
 
         bs_keys = list(self.bootstrap.bs_results.keys())
         t0 = time.time()
+
+        clear_screen()
+        print("\n" * (self.bootstrap_n + 1))
+        print("\033[H")
+        sys.stdout.flush()
+
         if parallel:
-            cpus = mp.cpu_count()
-            cpus = cpus - 1 if cpus > 1 else 1
-            pool = mp.Pool(processes=cpus)
+            cpus = int(mp.cpu_count() * 0.75)
             p_args = []
             for i, bs_key in enumerate(bs_keys):
                 i_model = self.bootstrap.bs_results[bs_key]["model"]
                 i_args = (bs_key, i_model, self.feature_labels, self.model_selected, self.threshold_dQ,
                           self.max_search, self.features, self.dQmax)
                 p_args.append(i_args)
-            results = pool.starmap(BSDISP._parallel_disp, p_args)
-            pool.close()
-            pool.join()
-            # for result in pool.starmap(BSDISP._parallel_disp, p_args, chunksize=10):
+
+            with mp.Pool(processes=cpus) as pool:
+                results = []
+                with tqdm(total=len(p_args), desc="BS-DISP - Displacement Stage", position=0, leave=False) as pbar:
+                    for i in pool.imap_unordered(BSDISP._parallel_disp, p_args):
+                        pbar.update(1)
+                        results.append(i)
+
             for result in results:
                 i, i_disp = result
                 self.disp_results[i] = i_disp
         else:
-            for bs_key in tqdm(bs_keys, desc="BS-DISP - Displacement Stage", position=0, leave=True):
+            for bs_key in tqdm(bs_keys, desc="BS-DISP - Displacement Stage", position=0, leave=False):
                 bs_result = self.bootstrap.bs_results[bs_key]
                 bs_model = bs_result["model"]
                 i_disp = Displacement(sa=bs_model,
@@ -188,7 +205,7 @@ class BSDISP:
         t0 = time.time()
         logger.info(f"Starting Displacement Stage for BS run {bs_key}.")
         i_disp = Displacement(sa=bs_model, feature_labels=feature_labels, model_selected=model_selected,
-                              threshold_dQ=threshold_dQ, max_search=max_search, features=features)
+                              threshold_dQ=threshold_dQ, max_search=max_search, features=features, parallel=False)
         i_disp.dQmax = dQmax
         i_disp.run(batch=bs_key)
         t1 = time.time()

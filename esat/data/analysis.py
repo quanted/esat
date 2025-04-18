@@ -214,6 +214,7 @@ class ModelAnalysis:
             return
         x_label = self.dh.input_data_df.columns[feature_idx]
 
+
         observed_data = self.dh.input_data_df[x_label]
         predicted_data = self.model.WH[:, feature_idx]
 

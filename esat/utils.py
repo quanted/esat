@@ -51,7 +51,7 @@ def min_timestep(data: pd.DataFrame):
         resample = f"{int(time_delta.min().seconds / (60 * 60))}h"
     else:
         resample = "D"
-    logger.info(f"Minimum timestep: {resample}")
+    # logger.info(f"Minimum timestep: {resample}")
     return resample
 
 

@@ -39,6 +39,7 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         converge_n: i32,
         robust_alpha: f32,
         model_i: i8,
+        static_h: Option<bool>,
     ) -> Result<&'py PyTuple, PyErr> {
 
         let v = OMatrix::<f32, Dyn, Dyn>::from_vec(v.dims()[0], v.dims()[1], v.to_vec().unwrap().to_owned());
@@ -66,6 +67,7 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         let mut w_num: DMatrix<f32>;
         let mut w_den: DMatrix<f32>;
         let mut wev: DMatrix<f32> = new_we.component_mul(&v);
+        let hold_h = static_h.unwrap_or(false);
 
         let mut robust_results = calculate_q_robust(&v, &u, &new_w, &new_h, robust_alpha);
 
@@ -82,11 +84,12 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         );
 
         for i in 0..max_iter{
-            wh = &new_w * &new_h;
-            h_num = new_w.transpose() * &wev;
-            h_den = &new_w.transpose() * &new_we.component_mul(&wh);
-            new_h = new_h.component_mul(&h_num.component_div(&h_den));
-
+            if !hold_h {
+                wh = &new_w * &new_h;
+                h_num = new_w.transpose() * &wev;
+                h_den = &new_w.transpose() * &new_we.component_mul(&wh);
+                new_h = new_h.component_mul(&h_num.component_div(&h_den));
+            }
             wh = &new_w * &new_h;
             w_num = &wev * new_h.transpose();
             w_den = &new_we.component_mul(&wh) * &new_h.transpose();
@@ -144,6 +147,7 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         converge_n: i32,
         robust_alpha: f32,
         model_i: i8,
+        static_h: Option<bool>,
     ) -> Result<&'py PyTuple, PyErr> {
         let v = OMatrix::<f32, Dyn, Dyn>::from_vec(v.dims()[0], v.dims()[1], v.to_vec().unwrap());
         let u = OMatrix::<f32, Dyn, Dyn>::from_vec(u.dims()[0], u.dims()[1], u.to_vec().unwrap());
@@ -159,6 +163,7 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
 
         let mut mse: f32 = 0.0;
         let datapoints = v.len() as f32;
+        let hold_h = static_h.unwrap_or(false);
 
         let mut converged: bool = false;
         let mut converge_i: i32 = 0;
@@ -202,30 +207,32 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
                 let w_row = &_w_row.column(0).transpose();
                 new_w.set_row(j, &w_row);
             }
-            let w_neg = (Matrix::abs(&new_w) - &new_w) / 2.0;
-            let w_pos = (Matrix::abs(&new_w) + &new_w) / 2.0;
-            for (j, we_j) in new_we.column_iter().enumerate(){
-                we_j_diag = DMatrix::from_diagonal(&DVector::from_column_slice(we_j.as_slice()));
-                v_j = DVector::from_row_slice(wev.column(j).as_slice());
+            if !hold_h {
+                let w_neg = (Matrix::abs(&new_w) - &new_w) / 2.0;
+                let w_pos = (Matrix::abs(&new_w) + &new_w) / 2.0;
+                for (j, we_j) in new_we.column_iter().enumerate(){
+                    we_j_diag = DMatrix::from_diagonal(&DVector::from_column_slice(we_j.as_slice()));
+                    v_j = DVector::from_row_slice(wev.column(j).as_slice());
 
-                let n1 = v_j.transpose() * &w_pos;
-                let d1 = v_j.transpose() * &w_neg;
+                    let n1 = v_j.transpose() * &w_pos;
+                    let d1 = v_j.transpose() * &w_neg;
 
-                let n2a = w_neg.transpose() * &we_j_diag;
-                let n2b = &n2a * &w_neg;
-                let d2a = w_pos.transpose() * &we_j_diag;
-                let d2b = &d2a * &w_pos;
+                    let n2a = w_neg.transpose() * &we_j_diag;
+                    let n2b = &n2a * &w_neg;
+                    let d2a = w_pos.transpose() * &we_j_diag;
+                    let d2b = &d2a * &w_pos;
 
-                let h_j = new_h.column(j).transpose();
-                let n2 = &h_j * &n2b;
-                let d2 = &h_j * &d2b;
-                let _n = (n1 + n2).add_scalar(EPSILON);
-                let _d = (d1 + d2).add_scalar(EPSILON);
-                let mut h_delta = _n.component_div(&_d);
-                h_delta = h_delta.map(|x| x.sqrt());
-                let _h = h_j.component_mul(&h_delta);
-                let h_row = DVector::from_row_slice(_h.as_slice());
-                new_h.set_column(j, &h_row);
+                    let h_j = new_h.column(j).transpose();
+                    let n2 = &h_j * &n2b;
+                    let d2 = &h_j * &d2b;
+                    let _n = (n1 + n2).add_scalar(EPSILON);
+                    let _d = (d1 + d2).add_scalar(EPSILON);
+                    let mut h_delta = _n.component_div(&_d);
+                    h_delta = h_delta.map(|x| x.sqrt());
+                    let _h = h_j.component_mul(&h_delta);
+                    let h_row = DVector::from_row_slice(_h.as_slice());
+                    new_h.set_column(j, &h_row);
+                }
             }
             qtrue = calculate_q(&v, &u, &new_w, &new_h);
             let robust_results = calculate_q_robust(&v, &u, &new_w, &new_h, robust_alpha);
@@ -279,6 +286,7 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         converge_n: i32,
         robust_alpha: f32,
         model_i: i8,
+        static_h: Option<bool>,
     ) -> Result<&'py PyTuple, PyErr> {
         let v = OMatrix::<f32, Dyn, Dyn>::from_vec(v.dims()[0], v.dims()[1], v.to_vec().unwrap());
         let u = OMatrix::<f32, Dyn, Dyn>::from_vec(u.dims()[0], u.dims()[1], u.to_vec().unwrap());
@@ -303,6 +311,7 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         let mut w_prime: OMatrix<f32, Dyn, Dyn> = new_w.clone().transpose();
         let mut h_prime: OMatrix<f32, Dyn, Dyn> = new_h.clone();
         let datapoints = v.len() as f32;
+        let hold_h = static_h.unwrap_or(false);
 
         let location_i = (model_i as usize).try_into().unwrap();
         let term = Term::buffered_stdout();
@@ -337,37 +346,37 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
                 }
             });
             new_w = w_prime.transpose();
+            if !hold_h {
+                let w_neg = (Matrix::abs(&new_w) - &new_w) / 2.0;
+                let w_pos = (Matrix::abs(&new_w) + &new_w) / 2.0;
 
-            let w_neg = (Matrix::abs(&new_w) - &new_w) / 2.0;
-            let w_pos = (Matrix::abs(&new_w) + &new_w) / 2.0;
+                h_prime.par_column_iter_mut().zip(0..n).for_each(|(mut h_col, j)| {
+                    let we_j_diag = DMatrix::from_diagonal(&DVector::from_column_slice(new_we.column(j).as_slice()));
+                    let v_j = DVector::from_row_slice(wev.column(j).as_slice());
 
-            h_prime.par_column_iter_mut().zip(0..n).for_each(|(mut h_col, j)| {
-                let we_j_diag = DMatrix::from_diagonal(&DVector::from_column_slice(new_we.column(j).as_slice()));
-                let v_j = DVector::from_row_slice(wev.column(j).as_slice());
+                    let n1 = v_j.transpose() * &w_pos;
+                    let d1 = v_j.transpose() * &w_neg;
 
-                let n1 = v_j.transpose() * &w_pos;
-                let d1 = v_j.transpose() * &w_neg;
+                    let n2a = w_neg.transpose() * &we_j_diag;
+                    let n2b = &n2a * &w_neg;
+                    let d2a = w_pos.transpose() * &we_j_diag;
+                    let d2b = &d2a * &w_pos;
 
-                let n2a = w_neg.transpose() * &we_j_diag;
-                let n2b = &n2a * &w_neg;
-                let d2a = w_pos.transpose() * &we_j_diag;
-                let d2b = &d2a * &w_pos;
-
-                let h_j = new_h.column(j).transpose();
-                let n2 = &h_j * &n2b;
-                let d2 = &h_j * &d2b;
-                let _n = (n1 + n2).add_scalar(EPSILON);
-                let _d = (d1 + d2).add_scalar(EPSILON);
-                let mut h_delta = _n.component_div(&_d);
-                h_delta = h_delta.map(|x| x.sqrt());
-                let _h = h_j.component_mul(&h_delta);
-                let j_h_row = DVector::from_column_slice(_h.as_slice());
-                for k in 0..h_col.shape().0{
-                    h_col[k] = j_h_row[k];
-                }
-            });
-            new_h = h_prime.to_owned();
-
+                    let h_j = new_h.column(j).transpose();
+                    let n2 = &h_j * &n2b;
+                    let d2 = &h_j * &d2b;
+                    let _n = (n1 + n2).add_scalar(EPSILON);
+                    let _d = (d1 + d2).add_scalar(EPSILON);
+                    let mut h_delta = _n.component_div(&_d);
+                    h_delta = h_delta.map(|x| x.sqrt());
+                    let _h = h_j.component_mul(&h_delta);
+                    let j_h_row = DVector::from_column_slice(_h.as_slice());
+                    for k in 0..h_col.shape().0{
+                        h_col[k] = j_h_row[k];
+                    }
+                });
+                new_h = h_prime.to_owned();
+            }
             qtrue = calculate_q(&v, &u, &new_w, &new_h);
             let robust_results = calculate_q_robust(&v, &u, &new_w, &new_h, robust_alpha);
             qrobust = robust_results.0;

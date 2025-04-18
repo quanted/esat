@@ -7,6 +7,8 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 import plotly.graph_objects as go
+import multiprocessing as mp
+
 from tqdm import tqdm
 from esat.utils import compare_all_factors, np_encoder
 from esat.metrics import q_loss, EPSILON
@@ -53,10 +55,12 @@ class Displacement:
     def __init__(self,
                  sa: SA,
                  feature_labels: list,
-                 model_selected: int = -1,
+                 model_selected: int = 1,
                  max_search: int = 50,
                  threshold_dQ: float = 0.1,
-                 features: list = None
+                 features: list = None,
+                 cores: int = -1,
+                 parallel: bool = True,
                  ):
         """
         Constructor method.
@@ -72,6 +76,9 @@ class Displacement:
         self.features = features if features is not None else [i for i in range(len(self.feature_labels))]
         self.excluded_features = set(range(len(self.feature_labels))).difference(set(self.features))
         self.factors = self.H.shape[0]
+
+        self.cores = cores if cores > 0 else max(int(os.cpu_count() * 0.75), 1)
+        self.parallel = parallel
 
         self.max_search = max_search
         self.threshold_dQ = threshold_dQ
@@ -90,7 +97,7 @@ class Displacement:
             "threshold_dQ": self.threshold_dQ
         }
 
-    def run(self, batch: int = -1):
+    def run(self, batch: int = 1):
         """
         Run the DISP method on the provided SA model.
 
@@ -100,8 +107,12 @@ class Displacement:
            Batch number identifier, used for labeling DISP during parallel runs with BS-DISP.
         """
         logger.info(f"Starting DISP for batch: {batch}")
-        self._increase_disp(batch=batch)
-        self._decrease_disp(batch=batch)
+        if not self.parallel:
+            self._increase_disp(batch=batch)
+            self._decrease_disp(batch=batch)
+        else:
+            self._run_all_increase_disp(batch_i=batch)
+            self._run_all_decrease_disp(batch_i=batch)
         self._compile_results()
         logger.info(f"Completed DISP for batch: {batch}")
 
@@ -243,7 +254,6 @@ class Displacement:
         ----------
         batch : int
            Batch number identifier, used for labeling DISP during parallel runs with BS-DISP.
-
         """
         for factor_i in tqdm(range(self.H.shape[0]), desc="Increasing value for factors", position=0, leave=True):
             factor_results = {}
@@ -260,7 +270,8 @@ class Displacement:
                     new_value = self.H[factor_i, feature_j] * high_modifier
                     new_H[factor_i, feature_j] = new_value
                     disp_i_Q = q_loss(V=self.V, U=self.U, W=self.W, H=new_H)
-                    dQ = np.abs(self.base_Q - disp_i_Q)
+                    dQ = disp_i_Q - self.base_Q
+                    # dQ = np.abs(self.base_Q - disp_i_Q)
                     if dQ < self.dQmax[0]:
                         high_modifier *= 2
                     else:
@@ -269,9 +280,9 @@ class Displacement:
                     if dQ > max_dQ:
                         max_dQ = dQ
                     if high_search_i >= max_high_search:
-                        logging.warn(f"Failed to find upper bound modifier within search limit. "
-                                     f"Batch :{batch}, Factor: {factor_i+1}, Feature: {feature_j}, "
-                                     f"Max iterations: {max_high_search}, max dQ: {max_dQ}")
+                        logging.warning(f"Failed to find upper bound modifier within search limit. "
+                                        f"Batch :{batch}, Factor: {factor_i+1}, Feature: {feature_j}, "
+                                        f"Max iterations: {max_high_search}, max dQ: {max_dQ}")
                         break
                 new_value = 0.0
                 for i in range(len(self.dQmax)):
@@ -284,7 +295,8 @@ class Displacement:
                         new_value = self.H[factor_i, feature_j] * modifier
                         new_H[factor_i, feature_j] = new_value
                         disp_i_Q = q_loss(V=self.V, U=self.U, W=self.W, H=new_H)
-                        dQ = np.abs(self.base_Q - disp_i_Q)
+                        # dQ = np.abs(self.base_Q - disp_i_Q)
+                        dQ = disp_i_Q - self.base_Q
                         if dQ > self.dQmax[i]:
                             high_modifier = modifier
                             modifier = (modifier + low_modifier) / 2.0
@@ -302,8 +314,10 @@ class Displacement:
                                    seed=self.sa.seed, verbose=False)
                     disp_i_sa.initialize(H=new_H)
                     disp_i_sa.train(max_iter=self.sa.metadata["max_iterations"],
-                                     converge_delta=self.sa.metadata["converge_delta"],
-                                     converge_n=self.sa.metadata["converge_n"], robust_mode=False)
+                                    converge_delta=self.sa.metadata["converge_delta"],
+                                    converge_n=self.sa.metadata["converge_n"],
+                                    model_i=batch,
+                                    robust_mode=False)
                     factor_swap = compare_all_factors(disp_i_sa.H, self.H)
                     scaled_profiles = new_H / new_H.sum(axis=0)
                     percent = scaled_profiles[factor_i, feature_j]
@@ -316,6 +330,95 @@ class Displacement:
                                                 "Q_drop": self.base_Q - disp_i_sa.Qtrue}
                 factor_results[f"feature-{feature_j}"] = i_results
             self.increase_results[f"factor-{factor_i+1}"] = factor_results
+
+    def _run_all_increase_disp(self, batch_i):
+        parallel_args = []
+        for factor_i in range(self.H.shape[0]):
+            for feature_j in self.features:
+                parallel_args.append((batch_i, factor_i, feature_j))
+        with mp.Pool(processes=self.cores) as pool:
+            results = []
+            with tqdm(total=len(parallel_args), desc="Checking increasing value for factors", position=0, leave=False, ascii=True) as pbar:
+                for i in pool.imap_unordered(self._increase_disp_p, parallel_args):
+                    pbar.update(1)
+                    results.append(i)
+        for factor_i, feature_j, i_results in results:
+            factor_key = f"factor-{factor_i+1}"
+            feature_key = f"feature-{feature_j}"
+            if factor_key not in self.increase_results:
+                self.increase_results[factor_key] = {}
+            self.increase_results[factor_key][feature_key] = i_results
+
+    def _increase_disp_p(self, args):
+        batch_i, factor_i, feature_j = args
+        model_i = factor_i*len(self.features) + feature_j + 1
+        new_H = copy.copy(self.H)
+        high_modifier = 2.0
+        high_found = False
+        i_results = {}
+        high_search_i = 0
+        max_dQ = 0
+        max_high_search = 100
+        while not high_found:
+            new_value = self.H[factor_i, feature_j] * high_modifier
+            new_H[factor_i, feature_j] = new_value
+            disp_i_Q = q_loss(V=self.V, U=self.U, W=self.W, H=new_H)
+            dQ = disp_i_Q - self.base_Q
+            if dQ < self.dQmax[0]:
+                high_modifier *= 2
+            else:
+                high_found = True
+            high_search_i += 1
+            if dQ > max_dQ:
+                max_dQ = dQ
+            if high_search_i >= max_high_search:
+                logging.warning(f"Failed to find upper bound modifier within search limit. "
+                                f"Batch :{batch_i}, Factor: {factor_i + 1}, Feature: {feature_j}, "
+                                f"Max iterations: {max_high_search}, max dQ: {max_dQ}")
+                break
+        new_value = 0.0
+        for i in range(len(self.dQmax)):
+            low_modifier = 1.0
+            modifier = (high_modifier + low_modifier) / 2.0
+            value_found = False
+            search_i = 0
+            while not value_found:
+                new_H = copy.copy(self.H)
+                new_value = self.H[factor_i, feature_j] * modifier
+                new_H[factor_i, feature_j] = new_value
+                disp_i_Q = q_loss(V=self.V, U=self.U, W=self.W, H=new_H)
+                dQ = disp_i_Q - self.base_Q
+                if dQ > self.dQmax[i]:
+                    high_modifier = modifier
+                    modifier = (modifier + low_modifier) / 2.0
+                elif dQ < self.dQmax[i] - self.threshold_dQ:
+                    low_modifier = modifier
+                    modifier = (high_modifier + modifier) / 2.0
+                else:
+                    value_found = True
+                search_i += 1
+                if dQ > max_dQ:
+                    max_dQ = dQ
+                if search_i >= max_high_search:
+                    value_found = True
+            disp_i_sa = SA(V=self.V, U=self.U, factors=self.sa.factors, method=self.sa.method,
+                           seed=self.sa.seed, verbose=False)
+            disp_i_sa.initialize(H=new_H)
+            disp_i_sa.train(max_iter=self.sa.metadata["max_iterations"],
+                            converge_delta=self.sa.metadata["converge_delta"],
+                            converge_n=self.sa.metadata["converge_n"],
+                            model_i=model_i)
+            factor_swap = compare_all_factors(disp_i_sa.H, self.H)
+            scaled_profiles = new_H / new_H.sum(axis=0)
+            percent = scaled_profiles[factor_i, feature_j]
+            factor_W = self.W[:, factor_i]
+            factor_matrix = np.matmul(factor_W.reshape(len(factor_W), 1), [new_H[factor_i]])
+            factor_conc_sum = factor_matrix.sum(axis=0)
+            factor_conc_i = factor_conc_sum[feature_j]
+            i_results[self.dQmax[i]] = {"dQ": dQ, "value": new_value, "percent": percent,
+                                        "search steps": search_i, "swap": factor_swap, "conc": factor_conc_i,
+                                        "Q_drop": self.base_Q - disp_i_sa.Qtrue}
+        return factor_i, feature_j, i_results
 
     def _decrease_disp(self, batch: int = -1):
         """
@@ -366,8 +469,10 @@ class Displacement:
                                    seed=self.sa.seed, verbose=False)
                     disp_i_sa.initialize(H=new_H)
                     disp_i_sa.train(max_iter=self.sa.metadata["max_iterations"],
-                                     converge_delta=self.sa.metadata["converge_delta"],
-                                     converge_n=self.sa.metadata["converge_n"], robust_mode=False)
+                                    converge_delta=self.sa.metadata["converge_delta"],
+                                    converge_n=self.sa.metadata["converge_n"],
+                                    model_i=batch,
+                                    robust_mode=False)
                     factor_swap = compare_all_factors(disp_i_sa.H, self.H)
                     scaled_profiles = new_H / new_H.sum(axis=0)
                     percent = scaled_profiles[factor_i, feature_j]
@@ -380,6 +485,80 @@ class Displacement:
                                                 "Q_drop": self.base_Q - disp_i_sa.Qtrue}
                 factor_results[f"feature-{feature_j}"] = i_results
             self.decrease_results[f"factor-{factor_i+1}"] = factor_results
+
+    def _run_all_decrease_disp(self, batch_i):
+        parallel_args = []
+        for factor_i in range(self.H.shape[0]):
+            for feature_j in self.features:
+                parallel_args.append((batch_i, factor_i, feature_j))
+
+        with mp.Pool(processes=self.cores) as pool:
+            results = []
+            with tqdm(total=len(parallel_args), desc="Checking decreasing value for factors", position=0, leave=False, ascii=True) as pbar:
+                for i in pool.imap_unordered(self._decrease_disp_p, parallel_args):
+                    pbar.update(1)
+                    results.append(i)
+        for factor_i, feature_j, i_results in results:
+            factor_key = f"factor-{factor_i+1}"
+            feature_key = f"feature-{feature_j}"
+            if factor_key not in self.decrease_results:
+                self.decrease_results[factor_key] = {}
+            self.decrease_results[factor_key][feature_key] = i_results
+
+    def _decrease_disp_p(self, args):
+        batch_i, factor_i, feature_j = args
+        model_i = factor_i*len(self.features) + feature_j + 1
+        i_results = {}
+        for i in range(len(self.dQmax)):
+            high_mod = 1.0
+            low_mod = 0.0
+            modifier = (high_mod + low_mod) / 2
+            value_found = False
+            new_H = None
+            max_dQ = 0
+            search_i = 0
+            p_mod = 0.0
+            max_search_i = 50
+            while not value_found:
+                new_H = copy.copy(self.H)
+                new_value = self.H[factor_i, feature_j] * modifier
+                new_H[factor_i, feature_j] = new_value
+                disp_i_Q = q_loss(V=self.V, U=self.U, W=self.W, H=new_H)
+                dQ = np.abs(self.base_Q - disp_i_Q)
+                if dQ > self.dQmax[i]:
+                    low_mod = modifier
+                    modifier = (modifier + high_mod) / 2
+                elif dQ < self.dQmax[i] - self.threshold_dQ:
+                    high_mod = modifier
+                    modifier = (low_mod + modifier) / 2
+                else:
+                    value_found = True
+                if np.abs(p_mod - modifier) <= 1e-8:  # small value, considered zero. Or no change of modifier.
+                    value_found = True
+                search_i += 1
+                if dQ > max_dQ:
+                    max_dQ = dQ
+                p_mod = modifier
+                if search_i >= max_search_i:
+                    value_found = True
+            disp_i_sa = SA(V=self.V, U=self.U, factors=self.sa.factors, method=self.sa.method,
+                           seed=self.sa.seed, verbose=False)
+            disp_i_sa.initialize(H=new_H)
+            disp_i_sa.train(max_iter=self.sa.metadata["max_iterations"],
+                            converge_delta=self.sa.metadata["converge_delta"],
+                            converge_n=self.sa.metadata["converge_n"],
+                            model_i=model_i)
+            factor_swap = compare_all_factors(disp_i_sa.H, self.H)
+            scaled_profiles = new_H / new_H.sum(axis=0)
+            percent = scaled_profiles[factor_i, feature_j]
+            factor_W = self.W[:, factor_i]
+            factor_matrix = np.matmul(factor_W.reshape(len(factor_W), 1), [new_H[factor_i]])
+            factor_conc_sum = factor_matrix.sum(axis=0)
+            factor_conc_i = factor_conc_sum[feature_j]
+            i_results[self.dQmax[i]] = {"dQ": dQ, "value": new_value, "percent": percent,
+                                        "search steps": search_i, "swap": factor_swap, "conc": factor_conc_i,
+                                        "Q_drop": self.base_Q - disp_i_sa.Qtrue}
+        return factor_i, feature_j, i_results
 
     def _compile_results(self):
         """

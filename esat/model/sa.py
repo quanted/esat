@@ -96,7 +96,7 @@ class SA:
         self.WH = None
         self.q_list = None
 
-        self.model_i = -1
+        self.model_i = 1
         self.metadata = {
             "creation_date": datetime.now().strftime("%m/%d/%Y, %H:%M:%S %Z"),
             "method": self.method,
@@ -328,6 +328,7 @@ class SA:
               robust_mode: bool = False,
               robust_n: int = 200,
               robust_alpha: float = 4,
+              hold_h: bool = False,
               update_step: str = None,
               ):
         """
@@ -367,6 +368,8 @@ class SA:
            When robust_mode=True, the cutoff of the uncertainty scaled residuals to decrease the weights. Robust weights
             are calculated as the uncertainty multiplied by the square root of the scaled residuals over robust_alpha.
             Default: 4.0
+        hold_h : bool
+            A flag to hold the H matrix static during the update procedure. Default: False
         update_step: str
            A replacement to the update method used for algorithm experimentation.
         """
@@ -390,7 +393,7 @@ class SA:
             t0 = time.time()
             try:
                 _results = self.optimized_update(self.V, self.U, self.We, self.W, self.H, max_iter,
-                                                 converge_delta, converge_n, robust_alpha, model_i)[0]
+                                                 converge_delta, converge_n, robust_alpha, model_i, hold_h)[0]
             except RuntimeError as ex:
                 logger.error(f"Runtime Exception: {ex}")
                 return False
@@ -404,7 +407,7 @@ class SA:
                                            f"Q(robust): NA, MSE(robust): NA, dQ: NA",
                             position=0, leave=True, disable=not self.verbose)
             for i in t_iter:
-                self.W, self.H = self.update_step(V=self.V, We=self.We, W=self.W, H=self.H)
+                self.W, self.H = self.update_step(V=self.V, We=self.We, W=self.W, H=self.H, hold_h=hold_h)
                 q_true = q_loss(V=self.V, U=self.U, W=self.W, H=self.H)
                 q_robust, U_robust = qr_loss(V=self.V, U=self.U, W=self.W, H=self.H, alpha=robust_alpha)
                 q = q_true
