@@ -6,8 +6,8 @@ import time
 import pickle
 import numpy as np
 from pathlib import Path
+from tqdm import tqdm
 import multiprocessing as mp
-from multiprocessing import Manager
 from esat.model.sa import SA
 from esat.utils import memory_estimate
 from esat_rust import clear_screen
@@ -62,6 +62,8 @@ class BatchSA:
         model. Default = True.
     cores : int
         The number of cores to use for parallel processing. Default is the number of cores - 1.
+    hold_h : bool
+        Hold the H matrix constant during the model training process. Default is False.
     verbose : bool
         Allows for increased verbosity of the initialization and model training steps.
     """
@@ -82,7 +84,8 @@ class BatchSA:
                  best_robust: bool = True,
                  parallel: bool = True,
                  cores: int = None,
-                 verbose: bool = True
+                 hold_h: bool = False,
+                 verbose: bool = True,
                  ):
         """
         Constructor method.
@@ -105,6 +108,7 @@ class BatchSA:
         self.rng = np.random.default_rng(self.seed)
         self.init_method = str(init_method)
         self.init_norm = bool(init_norm)
+        self.hold_h = hold_h
 
         system_options = memory_estimate(self.V.shape[1], self.V.shape[0], self.factors, cores=cores)
         cores = -1 if cores is None else cores
@@ -162,8 +166,6 @@ class BatchSA:
         sys.stdout.flush()
 
         if self.parallel:
-            # TODO: Add batch processing for large datasets and large number of epochs to reduce memory requirements.
-            pool = mp.Pool(processes=self.cores)
             input_parameters = []
             for i in range(1, self.models+1):
                 _seed = self.rng.integers(low=0, high=1e5)
@@ -179,7 +181,7 @@ class BatchSA:
                                init_method=self.init_method,
                                init_norm=self.init_norm)
                 input_parameters.append((_sa, i))
-
+            pool = mp.Pool(processes=self.cores)
             results = pool.starmap(self._train_task, input_parameters)
             pool.close()
             pool.join()
@@ -280,7 +282,7 @@ class BatchSA:
 
         """
         sa.train(max_iter=self.max_iter, converge_delta=self.converge_delta, converge_n=self.converge_n,
-                 model_i=model_i, update_step=self.update_step)
+                 model_i=model_i, update_step=self.update_step, hold_h=self.hold_h)
         return model_i, sa
 
     def save(self, batch_name: str,

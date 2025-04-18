@@ -398,7 +398,6 @@ class Bootstrap:
            Allow resampled blocks to overlap. Default = False
 
         """
-        pool = mp.Pool(processes=self.cpus)
         if self.parallel:
             p_args = []
             for i in range(1, self.bootstrap_n+1):
@@ -408,9 +407,13 @@ class Bootstrap:
                 _W = copy.deepcopy(self.base_W)
                 _H = copy.deepcopy(self.base_H)
                 p_args.append((i, _V, _U, _W, _H, sample_seed, block, overlapping, keep_H, reuse_seed))
-            results = pool.starmap(self._p_train, p_args)
-            pool.close()
-            pool.join()
+
+            results = []
+            with mp.Pool(processes=self.cpus) as pool:
+                with tqdm(total=len(p_args), desc="Bootstrap resampling, training and mapping") as pbar:
+                    for i in pool.imap_unordered(self._p_train, p_args):
+                        pbar.update(1)
+                        results.append(i)
             for r in results:
                 self.bs_results[r[0]] = r[1]
         else:
@@ -441,7 +444,7 @@ class Bootstrap:
                 bs_i_sa.initialize(H=_H)
                 bs_i_sa.train(max_iter=self.sa.metadata["max_iterations"],
                               converge_delta=self.sa.metadata["converge_delta"],
-                              converge_n=self.sa.metadata["converge_n"])
+                              converge_n=self.sa.metadata["converge_n"], model_i=i)
                 bs_i_mapping = self.map_contributions(W1=bs_i_sa.W, H1=bs_i_sa.H, W2=self.base_W, H2=self.base_H,
                                                       threshold=self.threshold)
                 bs_i_results = {
@@ -451,8 +454,8 @@ class Bootstrap:
                 }
                 self.bs_results[i] = bs_i_results
 
-    def _p_train(self, i: int, _V, _U, _W, _H, sample_seed: int, block: bool = True, overlapping: bool = False, keep_H: bool = True,
-                 reuse_seed: bool = True):
+    def _p_train(self, args):
+        i, _V, _U, _W, _H, sample_seed, block, overlapping, keep_H, reuse_seed = args
         train_seed = sample_seed
         if block:
             bs_data, bs_uncertainty, bs_W, bs_index = self._block_resample(data=_V,
@@ -474,7 +477,7 @@ class Bootstrap:
         bs_i_sa.initialize(H=_H)
         bs_i_sa.train(max_iter=self.sa.metadata["max_iterations"],
                       converge_delta=self.sa.metadata["converge_delta"],
-                      converge_n=self.sa.metadata["converge_n"])
+                      converge_n=self.sa.metadata["converge_n"], model_i=i)
         bs_i_mapping = self.map_contributions(W1=bs_i_sa.W, H1=bs_i_sa.H, W2=self.base_W, H2=self.base_H,
                                               threshold=self.threshold)
         bs_i_results = {

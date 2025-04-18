@@ -8,7 +8,8 @@ class LSNMF:
             V: np.ndarray,
             We: np.ndarray,
             W: np.ndarray,
-            H: np.ndarray
+            H: np.ndarray,
+            hold_h: bool = False,
     ):
         """
         The update procedure for the least-squares nmf (ls-nmf) algorithm.
@@ -26,6 +27,8 @@ class LSNMF:
            The factor contribution matrix.
         H : np.ndarray
            The factor profile matrix.
+        hold_h : bool
+              If True, the H matrix is not updated.
 
         Returns
         -------
@@ -34,10 +37,11 @@ class LSNMF:
 
         """
         WeV = np.multiply(We, V)
-        WH = np.matmul(W, H)
-        H_num = np.matmul(W.T, WeV)
-        H_den = np.matmul(W.T, np.multiply(We, WH))
-        H = np.multiply(H, np.divide(H_num, H_den))
+        if not hold_h:
+            WH = np.matmul(W, H)
+            H_num = np.matmul(W.T, WeV)
+            H_den = np.matmul(W.T, np.multiply(We, WH))
+            H = np.multiply(H, np.divide(H_num, H_den))
 
         WH = np.matmul(W, H)
         W_num = np.matmul(WeV, H.T)
