@@ -157,11 +157,11 @@ class DataHandler:
         """
         # Drop columns if specified
         if self.drop_col is not None:
-            _input_data = copy.copy(self.input_data.drop(labels=self.drop_col, axis=1)).astype("float64")
-            _uncertainty_data = copy.copy(self.uncertainty_data.drop(labels=self.drop_col, axis=1)).astype("float64")
+            _input_data = copy.copy(self.input_data.drop(labels=self.drop_col, axis=1)).astype("float32")
+            _uncertainty_data = copy.copy(self.uncertainty_data.drop(labels=self.drop_col, axis=1)).astype("float32")
         else:
-            _input_data = copy.copy(self.input_data).astype("float64")
-            _uncertainty_data = copy.copy(self.uncertainty_data).astype("float64")
+            _input_data = copy.copy(self.input_data).astype("float32")
+            _uncertainty_data = copy.copy(self.uncertainty_data).astype("float32")
 
         # Drop bad category features
         bad_features = list(self.metrics.loc[self.metrics["Category"] == "bad"].index)
@@ -188,7 +188,7 @@ class DataHandler:
             _uncertainty_data = _uncertainty_data.to_numpy()
 
         _input_data[_input_data == 0] = EPSILON
-        _uncertainty_data[_uncertainty_data < 0] = EPSILON
+        _uncertainty_data[_uncertainty_data == 0] = EPSILON
 
         self.input_data_processed = _input_data.astype("float32")
         self.uncertainty_data_processed = _uncertainty_data.astype("float32")

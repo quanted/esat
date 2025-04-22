@@ -267,7 +267,7 @@ class FactorCatalog:
                 best_factor = f_label
         return best_factor, best_corr
 
-    def add_factor(self, H_i, W_i, model_index, verbose: bool = False):
+    def add_factor(self, H_i, W_i, model_index, profile_only: bool = False, verbose: bool = False):
         """
         Add a new factor to the catalog.
 
@@ -279,6 +279,8 @@ class FactorCatalog:
             The factor contribution matrix.
         model_index : int
             The index of the model that this factor was sourced from.
+        profile_only : bool
+            Only use the profile of the factor in correlation calculations.
         verbose : bool
             Display the results.
 
@@ -288,7 +290,7 @@ class FactorCatalog:
         add_new = False
         if self.idx == 0:
             add_new = True
-        best_factor, best_corr = self.check_factor(H_i=H_i, W_i=W_i)
+        best_factor, best_corr = self.check_factor(H_i=H_i, W_i=W_i, profile_only=profile_only)
         if self.method == "raae":
             if best_corr > self.threshold:
                 add_new = True
@@ -300,7 +302,7 @@ class FactorCatalog:
             if verbose:
                 logger.info(f"New Factor: {self.idx}, Model: {model_index}, Method: {self.method}, "
                             f"Best CORR: {best_corr}")
-            new_factor = Factor(name=self.idx, profile=H_i, contribution=W_i, model_idx=model_index,
+            new_factor = Factor(name=str(self.idx), profile=H_i, contribution=W_i, model_idx=model_index,
                                 method=self.method, threshold=self.threshold)
             self.factors[self.idx] = new_factor
             self.idx += 1
@@ -309,8 +311,9 @@ class FactorCatalog:
                 logger.info(f"Adding to Factor: {best_factor}, Model: {model_index}, Method: {self.method}, "
                             f"Best CORR: {best_corr}")
             self.factors[best_factor].add(H_j=H_i, W_j=W_i, model_index=model_index, corr=best_corr)
+        return add_new
 
-    def add_batch(self, batch_results, verbose: bool = False):
+    def add_batch(self, batch_results, profile_only: bool = False, verbose: bool = False):
         """
         Analyze a batch of models and add the factors to the catalog.
 
@@ -318,6 +321,8 @@ class FactorCatalog:
         ----------
         batch_results : BatchSA
             A completed instance of BatchSA, batch of models, to analyze.
+        profile_only : bool
+            Only use the profile of the factor in correlation calculations.
         verbose : bool
             Display the results.
 
@@ -329,7 +334,7 @@ class FactorCatalog:
                 loss_list.append(model.Qtrue)
             loss_min = np.min(loss_list)
             logger.info(f"Excluding models with loss greater than {np.round(loss_min * self.outlier_threshold, 4)}")
-
+        new_factors = []
         for i in tnrange(len(batch_results.results), desc="Analyzing Models", leave=True):
             model = batch_results.results[i]
             if self.exclude_outliers:
@@ -338,7 +343,33 @@ class FactorCatalog:
             for f in range(model.factors):
                 H_f = model.H[f]
                 W_f = model.W[:,f]
-                self.add_factor(H_i=H_f, W_i=W_f, model_index=i, verbose=verbose)
+                new_factor = self.add_factor(H_i=H_f, W_i=W_f, model_index=i, profile_only=profile_only, verbose=verbose)
+                new_factors.append(new_factor)
+        return sum(new_factors)
+
+    def add_model(self, model_i: int, model, profile_only: bool = False, verbose: bool = False):
+        """
+        Analyze a model and add the factors to the catalog.
+
+        Parameters
+        ----------
+        model_i : int
+            The index of the model that this factor was sourced from.
+        model : SA
+            A completed instance of BatchSA, batch of models, to analyze.
+        profile_only : bool
+            Only use the profile of the factor in correlation calculations.
+        verbose : bool
+            Display the results.
+
+        """
+        new_factors = []
+        for f in range(model.factors):
+            H_f = model.H[f]
+            W_f = model.W[:,f]
+            new_factor = self.add_factor(H_i=H_f, W_i=W_f, model_index=model_i, profile_only=profile_only, verbose=verbose)
+            new_factors.append(new_factor)
+        return sum(new_factors)
 
     def compare_factor(self, factor):
         """
