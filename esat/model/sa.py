@@ -329,7 +329,7 @@ class SA:
               robust_n: int = 200,
               robust_alpha: float = 4,
               hold_h: bool = False,
-              update_step: str = None,
+              update_step: str = None
               ):
         """
         Train the SA model by iteratively updating the W and H matrices reducing the loss value Q until convergence.

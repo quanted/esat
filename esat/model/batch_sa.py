@@ -177,7 +177,14 @@ class BatchSA:
                     seed=_seed,
                     verbose=False
                 )
-                _sa.initialize(H=self.H, W=self.W,
+                i_H = self.H
+                if self.H is not None:
+                    self.H = np.array(self.H)
+                    if len(self.H.shape) == 3:
+                        i_H = self.H[i-1]
+                    elif len(self.H.shape) == 2:
+                        i_H = self.H
+                _sa.initialize(H=i_H, W=self.W,
                                init_method=self.init_method,
                                init_norm=self.init_norm)
                 input_parameters.append((_sa, i))

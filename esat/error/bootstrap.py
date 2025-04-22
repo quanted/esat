@@ -184,9 +184,9 @@ class Bootstrap:
         _data = data
         _W = W
         _uncertainty = uncertainty
-        return np.array(_data, dtype=np.float64), \
-            np.array(_uncertainty, dtype=np.float64), \
-            np.array(_W, dtype=np.float64), index_matrix
+        return np.array(_data, dtype=np.float32), \
+            np.array(_uncertainty, dtype=np.float32), \
+            np.array(_W, dtype=np.float32), index_matrix
 
     def _resample(self,
                   data: np.ndarray,
@@ -218,9 +218,9 @@ class Bootstrap:
         _data = data[random_index]
         _uncertainty = uncertainty[random_index]
         _W = W[random_index]
-        return np.array(_data, dtype=np.float64), \
-            np.array(_uncertainty, dtype=np.float64), \
-            np.array(_W, dtype=np.float64), random_index
+        return np.array(_data, dtype=np.float32), \
+            np.array(_uncertainty, dtype=np.float32), \
+            np.array(_W, dtype=np.float32), random_index
 
     def _calculate_factor_correlation(self,
                                       factor1: np.ndarray,
