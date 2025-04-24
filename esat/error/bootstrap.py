@@ -148,7 +148,7 @@ class Bootstrap:
         """
         N = self.data.shape[0]
         if self.block_size > N/2:
-            logging.warn(f"Block size is greater than half the samples of the data. N: {N}. Setting block size to {N/2}")
+            logging.warning(f"Block size is greater than half the samples of the data. N: {N}. Setting block size to {N/2}")
             self.block_size = N/2
         rng = np.random.default_rng(seed=seed)
         index_blocks = []
