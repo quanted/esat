@@ -311,13 +311,13 @@ class SA:
         """
         logger.info("------------\t\tModel Details\t\t-----------")
         logger.info(f"\tMethod: {self.method}\t\t\t\tFactors: {self.factors}")
-        logger.info(f"\tNumber of Features: {self.n}\t\tNumber of Samples: {self.m}")
+        logger.info(f"\tNumber of Features: {self.n}\t\t\tNumber of Samples: {self.m}")
         logger.info(f"\tRandom Seed: {self.seed}")
         if self.WH is not None:
             logger.info("---------------\t\tModel Results\t\t--------------")
-            logger.info(f"\tQ(true): {round(self.Qtrue, 2)}\t\t\tQ(robust): {round(self.Qrobust, 2)}")
-            logger.info(f"\tConverged: {self.converged}\t\t\t\tConverge Steps: {self.converge_steps}")
-            logger.info(f"\tRobust Mode: {'Yes' if self.metadata['robust_mode'] else 'No'}")
+            logger.info(f"\tQ(true): {self.Qtrue:.4f}\t\t\tQ(robust): {self.Qrobust:.4f}")
+            logger.info(f"\tRMSE(true): {self.Qtrue/self.V.size:.4f)}\t\t\tRMSE(robust): {self.Qrobust/self.V.size:.4f}")
+            logger.info(f"\tConverged: {self.converged}\t\t\tConverge Steps: {self.converge_steps}")
         logger.info("------------------------------------------------------")
 
     def train(self,
