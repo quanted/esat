@@ -315,9 +315,9 @@ class SA:
         logger.info(f"\tRandom Seed: {self.seed}")
         if self.WH is not None:
             logger.info("---------------\t\tModel Results\t\t--------------")
-            logger.info(f"\tQ(true): {self.Qtrue:.4f}\t\t\tQ(robust): {self.Qrobust:.4f}")
-            logger.info(f"\tRMSE(true): {self.Qtrue/self.V.size:.4f)}\t\t\tRMSE(robust): {self.Qrobust/self.V.size:.4f}")
-            logger.info(f"\tConverged: {self.converged}\t\t\tConverge Steps: {self.converge_steps}")
+            logger.info(f"\tQ(true): {float(self.Qtrue):.4f}\t\t\tQ(robust): {float(self.Qrobust):.4f}")
+            logger.info(f"\tMSE(true): {float(self.Qtrue/self.V.size):.4f}\t\t\tMSE(robust): {float(self.Qrobust/self.V.size):.4f}")
+            logger.info(f"\tConverged: {self.converged}\t\t\t\tConverge Steps: {self.converge_steps}")
         logger.info("------------------------------------------------------")
 
     def train(self,
