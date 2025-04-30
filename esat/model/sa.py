@@ -1,3 +1,5 @@
+from idlelib.textview import ViewWindow
+
 from esat.model.ls_nmf import LSNMF
 from esat.model.ws_nmf import WSNMF
 from esat.utils import np_encoder
@@ -272,8 +274,10 @@ class SA:
                 logger.debug(f"Factor profile and contribution matrices initialized using k-means clustering. "
                              f"The observations were {'not' if not init_norm else ''} normalized.")
         else:
+            VH_mean = np.mean(self.V, axis=0)
+            VW_mean = np.mean(self.V, axis=1)
             if H is None:
-                V_avg = np.sqrt(np.mean(self.V, axis=0) / self.factors)
+                V_avg = np.sqrt(VH_mean / self.factors)
                 H = V_avg * self.rng.standard_normal(size=(self.factors, self.n)).astype(self.V.dtype, copy=False)
             if "update" in init_method.lower():
                 if self.method == "ls-nmf":
@@ -281,7 +285,7 @@ class SA:
                 else:
                     W, _ = self.update_step(V=self.V, We=self.We, W=None, H=H)
             if W is None:
-                V_avg = np.sqrt(np.mean(self.V, axis=1) / self.factors)
+                V_avg = np.sqrt(VW_mean / self.factors)
                 V_avg = V_avg.reshape(len(V_avg), 1)
                 W = np.multiply(V_avg, self.rng.standard_normal(size=(self.m, self.factors)).astype(self.V.dtype,
                                                                                                     copy=False))
