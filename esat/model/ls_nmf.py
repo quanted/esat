@@ -28,7 +28,7 @@ class LSNMF:
         H : np.ndarray
            The factor profile matrix.
         hold_h : bool
-              If True, the H matrix is not updated.
+            If True, the H matrix is not updated.
 
         Returns
         -------

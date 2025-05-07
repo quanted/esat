@@ -40,6 +40,7 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         robust_alpha: f32,
         model_i: i8,
         static_h: Option<bool>,
+        delay_h: Option<i32>,
     ) -> Result<&'py PyTuple, PyErr> {
 
         let v = OMatrix::<f32, Dyn, Dyn>::from_vec(v.dims()[0], v.dims()[1], v.to_vec().unwrap().to_owned());
@@ -68,6 +69,7 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         let mut w_den: DMatrix<f32>;
         let mut wev: DMatrix<f32> = new_we.component_mul(&v);
         let hold_h = static_h.unwrap_or(false);
+        let delay_h = delay_h.unwrap_or(-1);
 
         let mut robust_results = calculate_q_robust(&v, &u, &new_w, &new_h, robust_alpha);
 
@@ -84,7 +86,7 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         );
 
         for i in 0..max_iter{
-            if !hold_h {
+            if !hold_h || (delay_h > 0 && i > delay_h) {
                 wh = &new_w * &new_h;
                 h_num = new_w.transpose() * &wev;
                 h_den = &new_w.transpose() * &new_we.component_mul(&wh);
@@ -148,6 +150,7 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         robust_alpha: f32,
         model_i: i8,
         static_h: Option<bool>,
+        delay_h: Option<i32>,
     ) -> Result<&'py PyTuple, PyErr> {
         let v = OMatrix::<f32, Dyn, Dyn>::from_vec(v.dims()[0], v.dims()[1], v.to_vec().unwrap());
         let u = OMatrix::<f32, Dyn, Dyn>::from_vec(u.dims()[0], u.dims()[1], u.to_vec().unwrap());
@@ -164,6 +167,7 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         let mut mse: f32 = 0.0;
         let datapoints = v.len() as f32;
         let hold_h = static_h.unwrap_or(false);
+        let delay_h = delay_h.unwrap_or(-1);
 
         let mut converged: bool = false;
         let mut converge_i: i32 = 0;
@@ -207,7 +211,7 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
                 let w_row = &_w_row.column(0).transpose();
                 new_w.set_row(j, &w_row);
             }
-            if !hold_h {
+            if !hold_h || (delay_h > 0 && i > delay_h) {
                 let w_neg = (Matrix::abs(&new_w) - &new_w) / 2.0;
                 let w_pos = (Matrix::abs(&new_w) + &new_w) / 2.0;
                 for (j, we_j) in new_we.column_iter().enumerate(){
@@ -287,6 +291,7 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         robust_alpha: f32,
         model_i: i8,
         static_h: Option<bool>,
+        delay_h: Option<i32>,
     ) -> Result<&'py PyTuple, PyErr> {
         let v = OMatrix::<f32, Dyn, Dyn>::from_vec(v.dims()[0], v.dims()[1], v.to_vec().unwrap());
         let u = OMatrix::<f32, Dyn, Dyn>::from_vec(u.dims()[0], u.dims()[1], u.to_vec().unwrap());
@@ -312,6 +317,7 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         let mut h_prime: OMatrix<f32, Dyn, Dyn> = new_h.clone();
         let datapoints = v.len() as f32;
         let hold_h = static_h.unwrap_or(false);
+        let delay_h = delay_h.unwrap_or(-1);
 
         let location_i = (model_i as usize).try_into().unwrap();
         let term = Term::buffered_stdout();
@@ -346,7 +352,7 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
                 }
             });
             new_w = w_prime.transpose();
-            if !hold_h {
+            if !hold_h || (delay_h > 0 && i > delay_h) {
                 let w_neg = (Matrix::abs(&new_w) - &new_w) / 2.0;
                 let w_pos = (Matrix::abs(&new_w) + &new_w) / 2.0;
 
