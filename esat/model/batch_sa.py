@@ -138,7 +138,25 @@ class BatchSA:
                     f"Converge N: {self.converge_n}")
         logger.info(f"Random Seed: {self.seed}, Init Method: {self.init_method}")
         logger.info(f"Parallel: {self.parallel}, Verbose: {self.verbose}")
-        logger.info("-------------------------------------------------")
+        if len(self.results) > 0:
+            best_model = self.best_model
+            logger.info("------------------------------------------------ Batch Results ------------------------------------------------")
+            for i, result in enumerate(self.results):
+                if result is None:
+                    continue
+
+                logger.info(f"Model: {i + 1}, "
+                            f"Q(true): {result.Qtrue:.4f}, "
+                            f"MSE(true): {float(result.Qtrue / self.V.size):.4f}, "
+                            f"Q(robust): {float(result.Qrobust):.4f}, "
+                            f"MSE(robust): {float(result.Qrobust / self.V.size):.4f}, Seed: {result.seed}, "
+                            f"Converged: {result.converged}, Steps: {result.converge_steps}/{self.max_iter}")
+            logger.info(f"Results - Best Model: {best_model+1}, "
+                        f"Q(true): {float(self.results[best_model].Qtrue):.4f}, "
+                        f"MSE(true): {float(self.results[best_model].Qtrue/self.V.size):.4f}, "
+                        f"Q(robust): {float(self.results[best_model].Qrobust):.4f}, "
+                        f"MSE(robust): {float(self.results[best_model].Qrobust/self.V.size):.4f}, "
+                        f"Converged: {self.results[best_model].converged}")
 
     def train(self, min_limit: int = None):
         """
@@ -184,7 +202,14 @@ class BatchSA:
                         i_H = self.H[i-1]
                     elif len(self.H.shape) == 2:
                         i_H = self.H
-                _sa.initialize(H=i_H, W=self.W,
+                i_W = self.W
+                if self.W is not None:
+                    self.W = np.array(self.W)
+                    if len(self.W.shape) == 3:
+                        i_W = self.W[i - 1]
+                    elif len(self.W.shape) == 2:
+                        i_W = self.W
+                _sa.initialize(H=i_H, W=i_W,
                                init_method=self.init_method,
                                init_norm=self.init_norm)
                 input_parameters.append((_sa, i))

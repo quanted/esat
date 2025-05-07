@@ -333,6 +333,7 @@ class SA:
               robust_n: int = 200,
               robust_alpha: float = 4,
               hold_h: bool = False,
+              delay_h: int = -1,
               update_step: str = None
               ):
         """
@@ -374,6 +375,8 @@ class SA:
             Default: 4.0
         hold_h : bool
             A flag to hold the H matrix static during the update procedure. Default: False
+        delay_h : int
+            If greater than 0, the number of iterations to delay updating the H matrix. Default: -1
         update_step: str
            A replacement to the update method used for algorithm experimentation.
         """
@@ -397,7 +400,7 @@ class SA:
             t0 = time.time()
             try:
                 _results = self.optimized_update(self.V, self.U, self.We, self.W, self.H, max_iter,
-                                                 converge_delta, converge_n, robust_alpha, model_i, hold_h)[0]
+                                                 converge_delta, converge_n, robust_alpha, model_i, hold_h, delay_h)[0]
             except RuntimeError as ex:
                 logger.error(f"Runtime Exception: {ex}")
                 return False
@@ -411,6 +414,8 @@ class SA:
                                            f"Q(robust): NA, MSE(robust): NA, dQ: NA",
                             position=0, leave=True, disable=not self.verbose)
             for i in t_iter:
+                if delay_h > 0 and i > delay_h:
+                    hold_h = False
                 self.W, self.H = self.update_step(V=self.V, We=self.We, W=self.W, H=self.H, hold_h=hold_h)
                 q_true = q_loss(V=self.V, U=self.U, W=self.W, H=self.H)
                 q_robust, U_robust = qr_loss(V=self.V, U=self.U, W=self.W, H=self.H, alpha=robust_alpha)
