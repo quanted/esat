@@ -85,6 +85,7 @@ class BatchSA:
                  parallel: bool = True,
                  cores: int = None,
                  hold_h: bool = False,
+                 delay_h: int = -1,
                  verbose: bool = True,
                  ):
         """
@@ -109,6 +110,7 @@ class BatchSA:
         self.init_method = str(init_method)
         self.init_norm = bool(init_norm)
         self.hold_h = hold_h
+        self.delay_h = delay_h
 
         system_options = memory_estimate(self.V.shape[1], self.V.shape[0], self.factors, cores=cores)
         cores = -1 if cores is None else cores
@@ -247,7 +249,7 @@ class BatchSA:
                                init_method=self.init_method,
                                init_norm=self.init_norm)
                 run = _sa.train(max_iter=self.max_iter, converge_delta=self.converge_delta, converge_n=self.converge_n,
-                                model_i=model_i, update_step=self.update_step)
+                                model_i=model_i, update_step=self.update_step, hold_h=self.hold_h)
                 t4 = time.time()
                 t_delta = datetime.timedelta(seconds=t4-t3)
                 if min_limit:
@@ -314,7 +316,7 @@ class BatchSA:
 
         """
         sa.train(max_iter=self.max_iter, converge_delta=self.converge_delta, converge_n=self.converge_n,
-                 model_i=model_i, update_step=self.update_step, hold_h=self.hold_h)
+                 model_i=model_i, update_step=self.update_step, hold_h=self.hold_h, delay_h=self.delay_h)
         return model_i, sa
 
     def save(self, batch_name: str,
