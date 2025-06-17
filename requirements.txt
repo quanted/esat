@@ -1,6 +1,6 @@
 click==8.2.1
 numba==0.61.2
-numpy==2.3.0
+numpy==2.2.6
 pandas[excel, performance]==2.3.0
 plotly==6.1.2
 psutil==7.0.0

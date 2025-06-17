@@ -295,7 +295,7 @@ class ModelAnalysis:
             return
         factor_label = f"Factor {factor_idx}"
         factor_idx_l = factor_idx
-        factor_idx = factor_idx-1
+        factor_idx = factor_idx - 1
         if H is None:
             factors_data = self.model.H[factor_idx]
             factors_sum = self.model.H.sum(axis=0)
@@ -345,6 +345,202 @@ class ModelAnalysis:
                                  legend=dict(orientation="h", xanchor="right", yanchor="bottom", x=1, y=1.02))
         contr_plot.update_yaxes(title_text="Normalized Contributions")
         contr_plot.show()
+
+    def plot_all_factors(self, H: np.ndarray = None, W: np.ndarray = None):
+        """
+        Create a vertical set of subplots for all factor profiles, similar to plot_factor_profile.
+
+        Parameters
+        ----------
+        H : np.ndarray
+            Overrides the factor profile matrix in the ESAT model used for the plot.
+        W : np.ndarray
+            Overrides the factor contribution matrix in the ESAT model used for the plot.
+        """
+        if H is None:
+            H = self.model.H
+        if W is None:
+            W = self.model.W
+
+        num_factors = self.model.factors
+        fig = make_subplots(rows=num_factors,
+                            cols=1,
+                            specs=[[{"secondary_y": True}] for _ in range(num_factors)],
+                            shared_xaxes=True,
+                            vertical_spacing=0.02,
+                            subplot_titles=[f"Factor {i + 1}" for i in range(num_factors)])
+
+        for factor_idx in range(num_factors):
+            factors_data = H[factor_idx]
+            factors_sum = H.sum(axis=0)
+            factor_contribution = W[:, factor_idx]
+
+            factor_matrix = np.matmul(factor_contribution.reshape(len(factor_contribution), 1), [factors_data])
+            factor_conc_sums = factor_matrix.sum(axis=0)
+            factor_conc_sums[factor_conc_sums == 0.0] = 1e-12
+            norm_profile = 100 * (factors_data / factors_sum)
+
+            fig.add_trace(go.Bar(x=self.dh.features, y=factor_conc_sums, name="Conc. of Features",
+                                 marker_color='rgb(158,202,225)', marker_line_color='rgb(8,48,107)',
+                                 marker_line_width=1.5, opacity=0.6, legendgroup="group1", showlegend=(factor_idx==0)), secondary_y=False, row=factor_idx + 1, col=1)
+
+            fig.add_trace(go.Scatter(x=self.dh.features, y=norm_profile, mode='markers', marker=dict(color='red'),
+                                     name="% of Features", legendgroup="group2", showlegend=(factor_idx==0)), secondary_y=True, row=factor_idx + 1, col=1)
+
+            fig.update_yaxes(title_text="Conc. of Features", type="log",
+                             range=[0, np.log10(factor_conc_sums).max()], secondary_y=False, row=factor_idx + 1, col=1)
+            fig.update_yaxes(title_text="% of Features", range=[0, 100], secondary_y=True, row=factor_idx + 1, col=1)
+
+        fig.update_layout(title="Factor Profiles - All Factors", width=1200, height=600 * num_factors,
+                          hovermode='x unified')
+        fig.show()
+
+    def plot_all_factors_3d(self, H=None, W=None):
+        """
+        Create a 3D bar plot of the factor profiles and their contributions.
+        Parameters
+        ----------
+        H : np.ndarray, optional
+            The factor profile matrix, if None will use the model's H matrix.
+        W : np.ndarray, optional
+            The factor contribution matrix, if None will use the model's W matrix.
+
+        Returns
+        -------
+
+        """
+        if H is None:
+            H = self.model.H
+        if W is None:
+            W = self.model.W
+
+        num_factors = self.model.factors
+        num_features = len(self.dh.features)
+        conc_z = np.zeros((num_factors, num_features))
+        percent_z = np.zeros((num_factors, num_features))
+
+        for factor_idx in range(num_factors):
+            factors_data = H[factor_idx]
+            factor_contribution = W[:, factor_idx]
+            factor_matrix = np.matmul(factor_contribution.reshape(len(factor_contribution), 1), [factors_data])
+            factor_conc_sums = factor_matrix.sum(axis=0)
+            factor_conc_sums[factor_conc_sums == 0.0] = 1e-12
+            conc_z[factor_idx, :] = np.log10(factor_conc_sums + 1)
+
+            factors_sum = H.sum(axis=0)
+            percent_z[factor_idx, :] = 100 * (factors_data / factors_sum)
+
+        # Bar parameters
+        bar_width = 0.85
+        bar_depth = 0.35
+
+        def _create_mesh3d(z_data, hover_label):
+            X, Y, Z, I, J, K, color, hovertext = [], [], [], [], [], [], [], []
+            idx = 0
+            for i in range(num_factors):
+                for j in range(num_features):
+                    x0 = j - bar_width / 2
+                    x1 = j + bar_width / 2
+                    y0 = i - bar_depth / 2
+                    y1 = i + bar_depth / 2
+                    z0 = 0
+                    z1 = z_data[i, j]
+
+                    # 8 vertices of the cuboid
+                    vertices = [
+                        (x0, y0, z0), (x1, y0, z0), (x1, y1, z0), (x0, y1, z0),  # bottom
+                        (x0, y0, z1), (x1, y0, z1), (x1, y1, z1), (x0, y1, z1)  # top
+                    ]
+                    X.extend([v[0] for v in vertices])
+                    Y.extend([v[1] for v in vertices])
+                    Z.extend([v[2] for v in vertices])
+                    color.extend([z1] * 8)
+
+                    # Add hover text
+                    hovertext.extend([f"Factor: {i + 1}<br>Feature: {self.dh.features[j]}<br>Value: {z1:.2f}"] * 8)
+
+                    # 12 triangles (2 per face)
+                    v = idx * 8
+                    faces = [
+                        (0, 1, 2), (0, 2, 3),  # bottom
+                        (4, 5, 6), (4, 6, 7),  # top
+                        (0, 1, 5), (0, 5, 4),  # front
+                        (1, 2, 6), (1, 6, 5),  # right
+                        (2, 3, 7), (2, 7, 6),  # back
+                        (3, 0, 4), (3, 4, 7)  # left
+                    ]
+                    for f in faces:
+                        I.append(v + f[0])
+                        J.append(v + f[1])
+                        K.append(v + f[2])
+                    idx += 1
+            return go.Mesh3d(
+                x=X, y=Y, z=Z,
+                i=I, j=J, k=K,
+                intensity=color,
+                colorscale='Plasma',
+                opacity=1.0,
+                showscale=True,
+                hoverinfo="text",
+                text=hovertext
+            )
+
+        fig = go.Figure()
+
+        # Add 3D bar graphs for "Conc. of Features"
+        fig.add_trace(_create_mesh3d(conc_z, "Conc. of Features"))
+
+        # Add 3D bar graphs for "% of Features"
+        fig.add_trace(_create_mesh3d(percent_z, "% of Features"))
+        fig.data[1].visible = False  # Initially hide "% of Features"
+
+        # Add dropdown menu
+        fig.update_layout(
+            updatemenus=[
+                {
+                    "buttons": [
+                        {
+                            "label": "Conc. of Features",
+                            "method": "update",
+                            "args": [
+                                {"visible": [True, False]},
+                                {"scene": {
+                                    "xaxis": {"title": "Features"},
+                                    "yaxis": {"title": "Factors"},
+                                    "zaxis": {"title": "Conc. of Features (log)", "range": [1, conc_z.max()]}}}
+                            ]
+                        },
+                        {
+                            "label": "% of Features",
+                            "method": "update",
+                            "args": [
+                                {"visible": [False, True]},
+                                {"scene": {
+                                    "xaxis": {"title": "Features"},
+                                    "yaxis": {"title": "Factors"},
+                                    "zaxis": {"title": "% of Features", "range": [0, 100]}}}
+                            ]
+                        }
+                    ],
+                    "direction": "down",
+                    "showactive": True,
+                    "x": 0.95,
+                    "y": 1.1
+                }
+            ]
+        )
+
+        fig.update_layout(
+            title="3D Factor Profiles",
+            scene=dict(
+                xaxis=dict(title="Features"),
+                yaxis=dict(title="Factors"),
+                zaxis=dict(title="Conc. of Features (log)", range=[1, conc_z.max()])
+            ),
+            width=1200,
+            height=800
+        )
+        fig.show()
 
     def plot_factor_fingerprints(self, grouped: bool = False):
         """

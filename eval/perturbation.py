@@ -6,7 +6,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import multiprocessing as mp
 
-from tqdm.notebook import tqdm
+from tqdm import tqdm
 from plotly.subplots import make_subplots
 from esat.model.sa import SA
 from esat_eval.factor_comparison import FactorCompareV2
@@ -49,6 +49,8 @@ class Perturbation:
         The threshold for the perturbation analysis.
     compare_method : str
         The method to use for comparing the perturbed models.
+    in_notebook : bool
+        Whether to display the comparison results in a Jupyter notebook.
     verbose : bool
         Whether to print verbose output.
     """
@@ -76,6 +78,7 @@ class Perturbation:
                  converge_delta: float = 0.001,
                  threshold: float = 0.1,
                  compare_method: str = "raae",
+                 in_notebook: bool = False,
                  verbose: bool = False
                  ):
         self.V = V
@@ -98,6 +101,9 @@ class Perturbation:
         self.threshold = threshold
         self.compare_method = compare_method
         self.verbose = verbose
+        self.in_notebook = in_notebook
+        if self.in_notebook:
+            from tqdm.notebook import tqdm
 
         self.rng = np.random.default_rng(seed=random_seed)
         self.perturbed_models = None
@@ -112,12 +118,14 @@ class Perturbation:
             sa_model.initialize()
             sa_model.train(max_iter=self.max_iterations, converge_delta=self.converge_delta, converge_n=self.converge_n)
             self.base_model = sa_model
-
-        pool = mp.Pool(processes=int(mp.cpu_count() * 0.75))
+        cores = int(mp.cpu_count() * 0.75)
+        pool = mp.Pool(processes=cores)
         parallel_args = [(i, self.rng.integers(0, 1e5)) for i in range(self.models)]
 
         perturbed_models = []
         perturbed_multipliers = []
+        print("\n" * (max(self.models, cores) + 1))
+        print("\033[H")
         pbar = tqdm(total=self.models, desc="Running Permutations on base model")
         for pool_results in pool.starmap(self._parallel_perturb, parallel_args):
             idx, random_seed, i_sa_model, i_m = pool_results
@@ -133,7 +141,7 @@ class Perturbation:
         i_u, i_m = self.perturb(random_seed)
         i_sa_model = SA(self.V, U=i_u, factors=self.factors, seed=random_seed, verbose=self.verbose, method=self.method)
         i_sa_model.initialize(H=self.base_model.H, W=self.base_model.W)
-        i_sa_model.train(max_iter=self.max_iterations, converge_delta=self.converge_delta, converge_n=self.converge_n)
+        i_sa_model.train(model_i=idx, max_iter=self.max_iterations, converge_delta=self.converge_delta, converge_n=self.converge_n)
         return idx, random_seed, i_sa_model, i_m
 
     def perturb(self, random_seed):
@@ -179,7 +187,7 @@ class Perturbation:
             i_u[:, i] = ij_u
         return i_u, i_m
 
-    def compare(self, compare_method: str = None, in_notebook: bool = False):
+    def compare(self, compare_method: str = None):
         """
         Compare the perturbed models to the base model using the provided comparison method.
 
@@ -187,15 +195,14 @@ class Perturbation:
         ----------
         compare_method : str
             The comparison method to use, options include: "raae", "emc", "corr".
-        in_notebook : bool
-            Whether to display the comparison results in a Jupyter notebook.
+
         """
         if compare_method is not None:
             if compare_method.lower() in ("raae", "emc", "corr"):
                 self.compare_method = compare_method.lower()
         logger.info(f"Comparing {len(self.perturbed_models)} perturbed models using {self.compare_method}")
 
-        self.comparison = FactorCompareV2(self.base_model, self.perturbed_models, in_notebook=in_notebook)
+        self.comparison = FactorCompareV2(self.base_model, self.perturbed_models, in_notebook=self.in_notebook)
         self.perturb_mapping, self.perturb_correlations = self.comparison.determine_map(self.compare_method)
         logger.info(f"Perturbed factor mean values")
         logger.info(pd.DataFrame([np.mean(np.array(list(self.perturb_correlations.values())), axis=0)],
@@ -422,6 +429,4 @@ class Perturbation:
         if return_figure:
             return factor_p0_fig
         factor_p0_fig.show()
-
-
 

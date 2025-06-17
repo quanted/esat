@@ -399,12 +399,23 @@ class SA:
         if self.optimized:
             t0 = time.time()
             try:
-                _results = self.optimized_update(self.V, self.U, self.We, self.W, self.H, max_iter,
-                                                 converge_delta, converge_n, robust_alpha, model_i, hold_h, delay_h)[0]
+                self.W, self.H, q, self.converged, self.converge_steps, q_list = self.optimized_update(
+                    self.V.astype(np.float32),
+                    self.U.astype(np.float32),
+                    self.We.astype(np.float32),
+                    self.W.astype(np.float32),
+                    self.H.astype(np.float32),
+                    max_iter,
+                    converge_delta,
+                    converge_n,
+                    robust_alpha,
+                    model_i,
+                    hold_h,
+                    delay_h
+                )[0]
             except RuntimeError as ex:
                 logger.error(f"Runtime Exception: {ex}")
                 return False
-            self.W, self.H, q, self.converged, self.converge_steps, q_list = _results
             q_true = q_loss(V=self.V, U=self.U, W=self.W, H=self.H)
             q_robust, U_robust = qr_loss(V=self.V, U=self.U, W=self.W, H=self.H, alpha=robust_alpha)
             t1 = time.time()
