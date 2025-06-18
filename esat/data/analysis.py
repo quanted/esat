@@ -148,7 +148,6 @@ class ModelAnalysis:
         self.statistics = pd.DataFrame(data=statistics)
 
     def plot_residual_histogram(self,
-                                feature_idx: int,
                                 abs_threshold: float = 3.0,
                                 est_V: np.ndarray = None
                                 ):
@@ -157,47 +156,95 @@ class ModelAnalysis:
 
         Parameters
         ----------
-        feature_idx : int
-            The index of the feature for the plot.
         abs_threshold : float
             The function generates a list of residuals that exceed this limit, the absolute value of the limit.
         est_V : np.ndarray
             Overrides the use of the ESAT model's WH matrix in the residual calculation. Default = None.
 
-        Returns
-        -------
-            pd.DataFrame
-                The list of residuals that exceed the absolute value of the threshold, as a pd.DataFrame
         """
-        if feature_idx > self.dh.input_data_df.shape[1] - 1 or feature_idx < 0:
-            logger.info(f"Invalid feature index provided, must be between 0 and {self.dh.input_data_df.shape[1]}")
-            return
-        V = self.model.V[:, feature_idx]
+        V = self.model.V
         if est_V is None:
-            est_V = self.model.WH[:, feature_idx]
-        else:
-            est_V = est_V[:, feature_idx]
-        U = self.model.U[:, feature_idx]
-        feature = self.dh.features[feature_idx]
+            est_V = self.model.WH
+        U = self.model.U
 
-        residuals = pd.DataFrame(data={f'{feature}': (V - est_V)/U, 'datetime': self.dh.input_data_df.index})
-        residuals_data = [residuals[feature].values]
-        dist_fig = ff.create_distplot(residuals_data, ['distplot'], curve_type='normal')
+        residuals_dict = {}
+        for feature_idx, feature in enumerate(self.dh.features):
+            residuals = (V[:, feature_idx] - est_V[:, feature_idx]) / U[:, feature_idx]
+            residuals_dict[feature] = residuals
+
+        # Create initial residuals plot for the first feature
+        initial_feature = self.dh.features[0]
+        residuals_data = residuals_dict[initial_feature]
+        dist_fig = ff.create_distplot([residuals_data], [initial_feature], curve_type='normal')
         normal_x = dist_fig.data[1]['x']
         normal_y = dist_fig.data[1]['y']
-        dist_fig2 = ff.create_distplot(residuals_data, ['distplot'], curve_type='kde')
-        normal_x2 = dist_fig2.data[1]['x']
-        normal_y2 = dist_fig2.data[1]['y']
-        residual_fig = px.histogram(residuals, x=feature, histnorm='probability', marginal='box')
-        residual_fig.add_trace(go.Scatter(x=normal_x, y=normal_y, mode='lines', name='Normal'))
-        residual_fig.add_trace(go.Scatter(x=normal_x2, y=normal_y2, mode='lines', name='KDE'))
-        residual_fig.update_layout(title=f"Residual Histrogram for {feature}", xaxis_title="Scaled Residuals", yaxis_title="Percent",
-                                   width=1200, height=600, showlegend=True)
-        residual_fig.update_traces(marker_line_width=1, marker_line_color="white")
-        residual_fig.show()
+        dist_fig2 = ff.create_distplot([residuals_data], [initial_feature], curve_type='kde')
+        kde_x = dist_fig2.data[1]['x']
+        kde_y = dist_fig2.data[1]['y']
 
-        threshold_residuals = residuals[residuals[feature].abs() >= abs_threshold]
-        return threshold_residuals
+        # Create subplots for histogram and box plot
+        residual_fig = make_subplots(rows=2, cols=1, shared_xaxes=True, row_heights=[0.2, 0.8], vertical_spacing=0.01,
+                                     subplot_titles=["Scaled Residuals", None])
+
+        # Add histogram trace
+        residual_fig.add_trace(
+            go.Histogram(x=residuals_data, histnorm='probability'),
+            row=2, col=1
+        )
+
+        # Add box plot trace
+        residual_fig.add_trace(
+            go.Box(x=residuals_data, boxmean=True, name="Dist"),
+            row=1, col=1
+        )
+
+        # Add normal and KDE lines
+        residual_fig.add_trace(go.Scatter(x=normal_x, y=normal_y, mode='lines', name='Normal'), row=2, col=1)
+        residual_fig.add_trace(go.Scatter(x=kde_x, y=kde_y, mode='lines', name='KDE'), row=2, col=1)
+
+        # Add dropdown menu for feature selection
+        buttons = []
+        for feature in self.dh.features:
+            residuals_data = residuals_dict[feature]
+            dist_fig = ff.create_distplot([residuals_data], [feature], curve_type='normal')
+            normal_x = dist_fig.data[1]['x']
+            normal_y = dist_fig.data[1]['y']
+            dist_fig2 = ff.create_distplot([residuals_data], [feature], curve_type='kde')
+            kde_x = dist_fig2.data[1]['x']
+            kde_y = dist_fig2.data[1]['y']
+            buttons.append(
+                dict(
+                    label=feature,
+                    method="update",
+                    args=[
+                        {
+                            "x": [residuals_data, residuals_data, normal_x, kde_x],  # Update x values
+                            "y": [None, None, normal_y, kde_y],  # Update y values
+                        },
+                        {
+                            "title.text": f"Residual Histogram for {feature}"
+                        }
+                    ]
+                )
+            )
+
+        residual_fig.update_layout(
+            updatemenus=[
+                dict(
+                    type="dropdown",
+                    direction="down",
+                    buttons=buttons,
+                    showactive=True
+                )
+            ],
+            title=f"Residual Histogram for {initial_feature}",
+            # xaxis_title="Scaled Residuals",
+            # yaxis_title="Percent",
+            width=1200,
+            height=600,
+            showlegend=True
+        )
+        residual_fig.show()
 
     def plot_estimated_observed(self, feature_idx: int):
         """
@@ -346,12 +393,14 @@ class ModelAnalysis:
         contr_plot.update_yaxes(title_text="Normalized Contributions")
         contr_plot.show()
 
-    def plot_all_factors(self, H: np.ndarray = None, W: np.ndarray = None):
+    def plot_all_factors(self, factor_list: list = None, H: np.ndarray = None, W: np.ndarray = None):
         """
         Create a vertical set of subplots for all factor profiles, similar to plot_factor_profile.
 
         Parameters
         ----------
+        factor_list : list
+            A list of factor indices to plot, if None will plot all factors.
         H : np.ndarray
             Overrides the factor profile matrix in the ESAT model used for the plot.
         W : np.ndarray
@@ -367,10 +416,13 @@ class ModelAnalysis:
                             cols=1,
                             specs=[[{"secondary_y": True}] for _ in range(num_factors)],
                             shared_xaxes=True,
-                            vertical_spacing=0.02,
+                            vertical_spacing=0.01,
                             subplot_titles=[f"Factor {i + 1}" for i in range(num_factors)])
 
         for factor_idx in range(num_factors):
+            if factor_list is not None:
+                if factor_idx not in factor_list:
+                    continue
             factors_data = H[factor_idx]
             factors_sum = H.sum(axis=0)
             factor_contribution = W[:, factor_idx]
@@ -494,51 +546,48 @@ class ModelAnalysis:
         fig.add_trace(_create_mesh3d(percent_z, "% of Features"))
         fig.data[1].visible = False  # Initially hide "% of Features"
 
-        # Add dropdown menu
-        fig.update_layout(
-            updatemenus=[
-                {
-                    "buttons": [
-                        {
-                            "label": "Conc. of Features",
-                            "method": "update",
-                            "args": [
-                                {"visible": [True, False]},
-                                {"scene": {
-                                    "xaxis": {"title": "Features"},
-                                    "yaxis": {"title": "Factors"},
-                                    "zaxis": {"title": "Conc. of Features (log)", "range": [1, conc_z.max()]}}}
-                            ]
-                        },
-                        {
-                            "label": "% of Features",
-                            "method": "update",
-                            "args": [
-                                {"visible": [False, True]},
-                                {"scene": {
-                                    "xaxis": {"title": "Features"},
-                                    "yaxis": {"title": "Factors"},
-                                    "zaxis": {"title": "% of Features", "range": [0, 100]}}}
-                            ]
-                        }
-                    ],
-                    "direction": "down",
-                    "showactive": True,
-                    "x": 0.95,
-                    "y": 1.1
-                }
-            ]
-        )
-
+        # Update layout and add buttons for toggling plot types
         fig.update_layout(
             title="3D Factor Profiles",
+            width=1200,
+            height=800,
             scene=dict(
                 xaxis=dict(title="Features"),
                 yaxis=dict(title="Factors"),
-                zaxis=dict(title="Conc. of Features (log)", range=[1, conc_z.max()])
+                zaxis=dict(title="Value")
             ),
-            width=1200,
-            height=800
+            updatemenus=[
+                dict(
+                    type="buttons",
+                    direction="left",
+                    x=0.9,
+                    y=1.1,
+                    buttons=[
+                        dict(
+                            label="Conc. of Features",
+                            method="update",
+                            args=[{
+                                "visible": [True, False],  # trace visibility
+                                # 'scene.xaxis.title': "Features",
+                                # 'scene.yaxis.title': "Factors",
+                                # 'scene.zaxis.title': "Conc. of Features (log)",
+                                'scene.zaxis.range': [1, conc_z.max()]
+                            }]
+                        ),
+                        dict(
+                            label="% of Features",
+                            method="update",
+                            args=[{
+                                "visible": [False, True],  # trace visibility
+                                # 'scene.xaxis.title': "Features",
+                                # 'scene.yaxis.title': "Factors",
+                                # 'scene.zaxis.title': "% of Features",
+                                'scene.zaxis.range': [0, 100]
+                            }]
+                        )
+                    ]
+                )
+            ]
         )
         fig.show()
 

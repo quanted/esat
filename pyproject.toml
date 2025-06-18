@@ -24,7 +24,8 @@ classifiers = [
 ]
 dynamic = ["dependencies"]
 readme = "README.md"
-license = {file = "LICENSE"}
+license = "Apache-2.0"
+license-files = ["LICENSE"]
 
 [project.urls]
 Documentation = "https://quanted.github.io/esat/"
