@@ -27,7 +27,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain=stable
-          rustup target add i686-pc-windows-msvc
+          rustup target remove i586-pc-windows-msvc
           echo "PATH=${PATH}:${HOME}/.cargo/bin" >> "$GITHUB_ENV"
           rustc --version
           python -m pip install build setuptools setuptools-rust
