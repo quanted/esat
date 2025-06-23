@@ -33,14 +33,14 @@ class TestBootstrap:
         )
         self.V, self.U = self.datahandler.get_data()
         self.batch = BatchSA(V=self.V, U=self.U, models=2, factors=6, method="ls-nmf",
-                             max_iter=500, converge_delta=1.0, converge_n=10, parallel=True)
+                             max_iter=500, converge_delta=1.0, converge_n=10, parallel=False)
         self.batch.train()
 
     def test_run(self):
         selected_model = 1
         bs = Bootstrap(sa=self.batch.results[selected_model], feature_labels=self.datahandler.features,
                        model_selected=selected_model, bootstrap_n=2, block_size=self.datahandler.optimal_block,
-                       threshold=0.6, seed=42)
+                       parallel=False, threshold=0.6, seed=42)
         bs.run()
         assert bs.mapping_df is not None
         assert len(bs.bs_results) == 2
@@ -49,7 +49,7 @@ class TestBootstrap:
         selected_model = 1
         bs = Bootstrap(sa=self.batch.results[selected_model], feature_labels=self.datahandler.features,
                        model_selected=selected_model, bootstrap_n=2, block_size=self.datahandler.optimal_block,
-                       threshold=0.6, seed=42)
+                       parallel=False, threshold=0.6, seed=42)
         bs.run()
         save_path = os.path.join(self.data_path, "test_output")
         saved_file = bs.save(

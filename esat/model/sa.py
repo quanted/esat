@@ -1,16 +1,16 @@
+from idlelib.textview import ViewWindow
+
 from esat.model.ls_nmf import LSNMF
 from esat.model.ws_nmf import WSNMF
-from esat.utils import np_encoder, solution_bump
-from esat.metrics import q_loss, qr_loss, EPSILON, q_factor
+from esat.utils import np_encoder
+from esat.metrics import q_loss, qr_loss, EPSILON
 from scipy.cluster.vq import kmeans2, whiten
-from fcmeans import FCM
 from tqdm import trange
 from datetime import datetime
 from pathlib import Path
 import numpy as np
 import types
 import logging
-import copy
 import pickle
 import json
 import time
@@ -49,11 +49,7 @@ class SA:
         The NMF algorithm to be used for updating the W and H matrices. Options are: 'ls-nmf' and 'ws-nmf'.
     seed : int
         The random seed used for initializing the W and H matrices. Default is 42.
-    optimized : bool
-        The two update algorithms have also been written in Rust, which can be compiled with maturin, providing
-        an optimized implementation for rapid training of SA models. Setting optimized to True will run the
-        compiled Rust functions.
-    parallelized : bool
+    parallel : bool
         The Rust implementation of 'ws-nmf' has a parallelized version for increased optimization. This parameter is
         only used when method='ws-nmf' and optimized=True, then setting parallelized=True will run the parallel
         version of the function.
@@ -67,22 +63,21 @@ class SA:
                  factors: int,
                  method: str = "ls-nmf",
                  seed: int = 42,
-                 optimized: bool = True,
-                 parallelized: bool = True,
+                 parallel: bool = True,
                  verbose: bool = False
                  ):
         """
         Constructor method.
         """
 
-        self.V = V.astype(np.float64)
-        self.U = U.astype(np.float64)
+        self.V = V.astype(np.float32)
+        self.U = U.astype(np.float32)
 
         # The uncertainty matrix must not contain any zeros
         self.U[self.U < EPSILON] = EPSILON
 
         # Weights are calculated from the uncertainty matrix as 1/U^{2}
-        self.We = np.divide(1, self.U ** 2).astype(np.float64)
+        self.We = np.divide(1, self.U ** 2).astype(np.float32)
 
         self.m, self.n = self.V.shape
 
@@ -101,10 +96,9 @@ class SA:
         self.Qrobust = None
         self.Qtrue = None
         self.WH = None
-        self.factor_Q = None
         self.q_list = None
 
-        self.model_i = -1
+        self.model_i = 1
         self.metadata = {
             "creation_date": datetime.now().strftime("%m/%d/%Y, %H:%M:%S %Z"),
             "method": self.method,
@@ -116,7 +110,7 @@ class SA:
         self.converged = False
         self.converge_steps = 0
 
-        self.parallelized = parallelized
+        self.parallel = parallel
         self.verbose = verbose
         self.__has_neg = False
 
@@ -130,7 +124,7 @@ class SA:
         if self.method == "ls-nmf" and not self.__has_neg:
             self.update_step = LSNMF.update
 
-        self.optimized = optimized if isinstance(optimized, bool) else str(optimized).lower() == "true"
+        self.optimized = True
         if self.optimized:
             # Attempt to load rust code for optimized model training
             try:
@@ -139,7 +133,7 @@ class SA:
                 if self.method == "ls-nmf" and not self.__has_neg:
                     self.optimized_update = esat_rust.ls_nmf
                 else:
-                    if self.parallelized:
+                    if self.parallel:
                         self.optimized_update = esat_rust.ws_nmf_p
                     else:
                         self.optimized_update = esat_rust.ws_nmf
@@ -221,8 +215,6 @@ class SA:
         else:
             validated = False
 
-        # if validated and self.verbose:
-        #     logger.debug("All inputs and initialized matrices have been validated.")
         self.__validated = validated
         self.__has_neg = has_neg
 
@@ -231,19 +223,15 @@ class SA:
                    W: np.ndarray = None,
                    init_method: str = "column_mean",
                    init_norm: bool = True,
-                   fuzziness: float = 5.0,
-                   H_ratio: float = 0.9
                    ):
         """
         Initialize the factor profile (H) and factor contribution matrices (W).
 
         The W and H matrices can be created using several methods or be passed in by the user. The shapes of these
-        matrices are W: (M, factors) and H: (factors: N). There are three methods for initializing the W and H matrices:
+        matrices are W: (M, factors) and H: (factors: N). There are two methods for initializing the W and H matrices:
         1) K Means Clustering ('kmeans'), which will cluster the input dataset into the number of factors set, then assign
         the contributions of to those factors, the H matrix is calculated from the centroids of those clusters.
-        2) Fuzzy C-Means Clustering ('cmeans'), which will cluster the input dataset in the same way as kmeans but sets
-        the contributions based upon the ratio of the distance to the clusters.
-        3) A random sampling based upon the square root of the mean of the features (columns), the default method.
+        2) A random sampling based upon the square root of the mean of the features (columns), the default method.
 
         Parameters
         ----------
@@ -256,17 +244,11 @@ class SA:
            The factor contribution matrix of shape (M, factors), provided by the user when not using one of the three
            initialization methods. When using method=ws-nmf, the W matrix can contain negative values.
         init_method : str
-           The default option is column means 'column_mean', other valid options are: 'kmeans' or 'cmeans'. Used when
+           The default option is column means 'column_mean', other valid option is: 'kmeans'. Used when
            W and/or H is not provided.
         init_norm : bool
-           When using init_method either 'kmeans' or 'cmeans', this option allows for normalizing the input dataset
+           When using init_method 'kmeans', this option allows for normalizing the input dataset
            prior to clustering.
-        fuzziness : float
-           The amount of fuzziness to apply to fuzzy c-means clustering. Default is 5. See fuzzy c-means clustering
-           documentation.
-        H_ratio : float
-            When some number of factors has been provided, H is not None, than the H_ratio determines how much of the
-            features in the provided H contribute to the complete feature profile ratio.
         """
 
         self.metadata["init_method"] = init_method
@@ -291,19 +273,11 @@ class SA:
             if self.verbose:
                 logger.debug(f"Factor profile and contribution matrices initialized using k-means clustering. "
                              f"The observations were {'not' if not init_norm else ''} normalized.")
-        elif "cmeans" in init_method.lower():
-            self.metadata["init_norm"] = init_norm
-            self.metadata["init_cmeans_fuzziness"] = fuzziness
-            fcm = FCM(n_clusters=self.factors, m=fuzziness, random_state=self.seed)
-            fcm.fit(obs)
-            H = fcm.centers
-            W = fcm.u
-            if self.verbose:
-                logger.debug(f"Factor profile and contribution matrices initialized using fuzzy c-means clustering. "
-                             f"The observations were {'not' if not init_norm else ''} normalized.")
         else:
+            VH_mean = np.mean(self.V, axis=0)
+            VW_mean = np.mean(self.V, axis=1)
             if H is None:
-                V_avg = np.sqrt(np.mean(self.V, axis=0) / self.factors)
+                V_avg = np.sqrt(VH_mean / self.factors)
                 H = V_avg * self.rng.standard_normal(size=(self.factors, self.n)).astype(self.V.dtype, copy=False)
             if "update" in init_method.lower():
                 if self.method == "ls-nmf":
@@ -311,7 +285,7 @@ class SA:
                 else:
                     W, _ = self.update_step(V=self.V, We=self.We, W=None, H=H)
             if W is None:
-                V_avg = np.sqrt(np.mean(self.V, axis=1) / self.factors)
+                V_avg = np.sqrt(VW_mean / self.factors)
                 V_avg = V_avg.reshape(len(V_avg), 1)
                 W = np.multiply(V_avg, self.rng.standard_normal(size=(self.m, self.factors)).astype(self.V.dtype,
                                                                                                     copy=False))
@@ -326,43 +300,40 @@ class SA:
             for i in range(prior_H.shape[0]):
                 H[i] = prior_H[i]
             H = H / H.sum(axis=0)
-            # _p_i = prior_H.shape[0]
-            # _H = H[_p_i:]
-            # _H = (_H / _H.sum(axis=0)) * (1.0 - H_ratio)
-            # _prior_H = (prior_H / prior_H.sum(axis=0)) * H_ratio
-            # H = np.vstack((_prior_H, _H))
         H[H <= 0.0] = 1e-12
         self.H = H
         self.W = W
         self.init_method = init_method
         self.__initialized = True
-        # if self.verbose:
-        #     logger.debug("Completed initializing the factor profile and contribution matrices.")
+        if self.verbose:
+            logger.debug("Completed initializing the factor profile and contribution matrices.")
         self.__validate()
 
     def summary(self):
         """
         Provides a summary of the model configuration and results if completed.
         """
-        logger.info("------------\t\tES Model Details\t\t-----------")
+        logger.info("------------\t\tModel Details\t\t-----------")
         logger.info(f"\tMethod: {self.method}\t\t\t\tFactors: {self.factors}")
-        logger.info(f"\tNumber of Features: {self.n}\t\tNumber of Samples: {self.m}")
-        logger.info(f"\tRandom Seed: {self.seed}\t\t\t\tOptimized: {self.optimized}")
+        logger.info(f"\tNumber of Features: {self.n}\t\t\tNumber of Samples: {self.m}")
+        logger.info(f"\tRandom Seed: {self.seed}")
         if self.WH is not None:
             logger.info("---------------\t\tModel Results\t\t--------------")
-            logger.info(f"\tQ(true): {round(self.Qtrue, 2)}\t\t\tQ(robust): {round(self.Qrobust, 2)}")
+            logger.info(f"\tQ(true): {float(self.Qtrue):.4f}\t\t\tQ(robust): {float(self.Qrobust):.4f}")
+            logger.info(f"\tMSE(true): {float(self.Qtrue/self.V.size):.4f}\t\t\tMSE(robust): {float(self.Qrobust/self.V.size):.4f}")
             logger.info(f"\tConverged: {self.converged}\t\t\t\tConverge Steps: {self.converge_steps}")
-            logger.info(f"\tRobust Mode: {'Yes' if self.metadata['robust_mode'] else 'No'}")
         logger.info("------------------------------------------------------")
 
     def train(self,
               max_iter: int = 20000,
               converge_delta: float = 0.1,
               converge_n: int = 100,
-              model_i: int = -1,
+              model_i: int = 1,
               robust_mode: bool = False,
               robust_n: int = 200,
               robust_alpha: float = 4,
+              hold_h: bool = False,
+              delay_h: int = -1,
               update_step: str = None
               ):
         """
@@ -402,11 +373,15 @@ class SA:
            When robust_mode=True, the cutoff of the uncertainty scaled residuals to decrease the weights. Robust weights
             are calculated as the uncertainty multiplied by the square root of the scaled residuals over robust_alpha.
             Default: 4.0
+        hold_h : bool
+            A flag to hold the H matrix static during the update procedure. Default: False
+        delay_h : int
+            If greater than 0, the number of iterations to delay updating the H matrix. Default: -1
         update_step: str
            A replacement to the update method used for algorithm experimentation.
         """
         if not self.__initialized:
-            logger.warn("Model is not initialized, initializing with default parameters")
+            logger.warning("Model is not initialized, initializing with default parameters")
             self.initialize()
         if not self.__validated:
             logger.error("Current model inputs and parameters are not valid.")
@@ -418,47 +393,44 @@ class SA:
             exec(update_step, globals(), lcls)
             self.update_step = types.MethodType(lcls['update'], self)
 
-        V = self.V
-        U = self.U
-        W = self.W
-        H = self.H
-        We = self.We
         converged = False
         q_list = []
 
         if self.optimized:
             t0 = time.time()
             try:
-                _results = self.optimized_update(V, U, We, W, H, max_iter, converge_delta, converge_n,
-                                                 robust_mode, robust_n, robust_alpha)[0]
+                self.W, self.H, q, self.converged, self.converge_steps, q_list = self.optimized_update(
+                    self.V.astype(np.float32),
+                    self.U.astype(np.float32),
+                    self.We.astype(np.float32),
+                    self.W.astype(np.float32),
+                    self.H.astype(np.float32),
+                    max_iter,
+                    converge_delta,
+                    converge_n,
+                    robust_alpha,
+                    model_i,
+                    hold_h,
+                    delay_h
+                )[0]
             except RuntimeError as ex:
                 logger.error(f"Runtime Exception: {ex}")
                 return False
-            W, H, q, self.converged, self.converge_steps, q_list = _results
-            q_true = q_loss(V=V, U=U, W=W, H=H)
-            q_robust, U_robust = qr_loss(V=V, U=U, W=W, H=H, alpha=robust_alpha)
+            q_true = q_loss(V=self.V, U=self.U, W=self.W, H=self.H)
+            q_robust, U_robust = qr_loss(V=self.V, U=self.U, W=self.W, H=self.H, alpha=robust_alpha)
             t1 = time.time()
-            if self.verbose:
-                logger.info(f"R - Model: {model_i}, Seed: {self.seed}, "
-                            f"Q(true): {round(q_true, 4)}, MSE(true): {round(q_true / self.V.size, 4)}, "
-                            f"Q(robust): {round(q_robust, 4)}, MSE(robust): {round(q_robust / self.V.size, 4)}, "
-                            f"Steps: {self.converge_steps}/{max_iter}, "
-                            f"Converged: {self.converged}, Runtime: {round(t1 - t0, 2)} sec")
         else:
             prior_q = []
-            We_prime = copy.copy(self.We)
             t_iter = trange(max_iter, desc=f"Model: {model_i}, Seed: {self.seed}, Q(true): NA, MSE(true): NA, "
                                            f"Q(robust): NA, MSE(robust): NA, dQ: NA",
                             position=0, leave=True, disable=not self.verbose)
             for i in t_iter:
-                W, H = self.update_step(V=V, We=We_prime, W=W, H=H)
-                q_true = q_loss(V=V, U=U, W=W, H=H)
-                q_robust, U_robust = qr_loss(V=V, U=U, W=W, H=H, alpha=robust_alpha)
+                if delay_h > 0 and i > delay_h:
+                    hold_h = False
+                self.W, self.H = self.update_step(V=self.V, We=self.We, W=self.W, H=self.H, hold_h=hold_h)
+                q_true = q_loss(V=self.V, U=self.U, W=self.W, H=self.H)
+                q_robust, U_robust = qr_loss(V=self.V, U=self.U, W=self.W, H=self.H, alpha=robust_alpha)
                 q = q_true
-                if robust_mode:
-                    if i > robust_n:
-                        q = q_robust
-                        We_prime = np.divide(1, U_robust ** 2).astype(np.float64)
                 prior_q.append(q)
                 q_list.append(q)
                 if np.isnan(q) or np.isnan(q_robust):
@@ -474,9 +446,9 @@ class SA:
                     if delta_q < converge_delta:
                         converged = True
                 t_iter.set_description(f"Model: {model_i}, Seed: {self.seed}, "
-                                       f"Q(true): {round(q_true, 4)}, MSE(true): {round(q_true/self.V.size, 4)}, "
-                                       f"Q(robust): {round(q_robust, 4)}, MSE(robust): {round(q_robust/self.V.size, 4)}, "
-                                       f"dQ: {round(delta_q, 4)}")
+                                       f"Q(true): {float(q_true):.4f}, MSE(true): {float(q_true/self.V.size):.4f}, "
+                                       f"Q(robust): {float(q_robust):.4f}, MSE(robust): {float(q_robust/self.V.size):.4f}, "
+                                       f"dQ: {float(delta_q):.4f}")
                 t_iter.refresh()
 
                 if converged:
@@ -485,12 +457,9 @@ class SA:
                 self.converge_steps += 1
 
         self.model_i = model_i
-        self.H = H
-        self.W = W
-        self.WH = np.matmul(W, H)
-        self.Qtrue = q_loss(V=V, U=U, W=W, H=H)
-        self.Qrobust, _ = qr_loss(V=V, U=U, W=W, H=H, alpha=robust_alpha)
-        self.factor_Q = q_factor(V=V, U=U, W=W, H=H)
+        self.WH = np.matmul(self.W, self.H)
+        self.Qtrue = q_loss(V=self.V, U=self.U, W=self.W, H=self.H)
+        self.Qrobust, _ = qr_loss(V=self.V, U=self.U, W=self.W, H=self.H, alpha=robust_alpha)
         self.q_list = q_list
         self.metadata["completion_date"] = datetime.now().strftime("%m/%d/%Y, %H:%M:%S %Z")
         self.metadata["max_iterations"] = int(max_iter)
@@ -498,9 +467,6 @@ class SA:
         self.metadata["converge_n"] = int(converge_n)
         self.metadata["model_i"] = int(model_i)
         self.metadata["robust_mode"] = robust_mode
-        if robust_mode:
-            self.metadata["robust_n"] = int(robust_n)
-            self.metadata["robust_alpha"] = float(robust_alpha)
 
     def save(self,
              model_name: str,
@@ -568,7 +534,7 @@ class SA:
                 with open(v_prime_file, 'w') as vpfile:
                     vp_comment = f"Estimated Data (WH=V') Matrix\nMetadata File: {meta_file}\n\n"
                     np.savetxt(vpfile, self.WH, delimiter=',', header=header, comments=vp_comment)
-                    logger.info(f"SA model V' saved to file: {v_prime_file}")
+                    logger.info(f"SA model ' saved to file: {v_prime_file}")
                 residual_file = os.path.join(output_directory, f"{model_name}-residuals.csv")
                 with open(residual_file, 'w') as rfile:
                     residual_comment = f"Residual Matrix (V-V')\nMetadata File: {meta_file}\n\n"
@@ -613,88 +579,5 @@ class SA:
             return None
 
 
-# if __name__ == "__main__":
-#
-#     # Test code for running a single SA model, using both the python and Rust functions, includes model save and loads.
-#     import time
-#     import os
-#     from esat.data.datahandler import DataHandler
-#
-#     logging.getLogger('matplotlib.font_manager').setLevel(logging.ERROR)
-#     logging.getLogger('matplotlib').setLevel(logging.ERROR)
-#
-#     # SA model parameters and training hyper-parameters
-#     factors = 6
-#     method = "ls-nmf"                   # "ls-nmf", "ws-nmf"
-#     init_method = "col_means"           # default is column means, "kmeans", "cmeans"
-#     init_norm = True
-#     seed = 42
-#     max_iterations = 20000
-#     converge_delta = 0.1
-#     converge_n = 10
-#     dataset = "br"                      # "br": Baton Rouge, "b": Baltimore, "sl": St Louis
-#     verbose = True
-#     robust_mode = False
-#     robust_n = 100
-#     robust_alpha = 4
-#
-#     bump = True
-#     bump_n = 100
-#     bump_range = (0.95, 1.05)
-#
-#     # ---- Data Samples ---- #
-#     input_file = None
-#     uncertainty_file = None
-#     data_directory = os.path.join("D:\\", "projects", "esat", "data")
-#     if dataset == "br":
-#         input_file = os.path.join(data_directory, "Dataset-BatonRouge-con.csv")
-#         uncertainty_file = os.path.join(data_directory, "Dataset-BatonRouge-unc.csv")
-#         output_path = os.path.join(data_directory, "output", "BatonRouge")
-#     elif dataset == "b":
-#         input_file = os.path.join(data_directory, "Dataset-Baltimore_con.txt")
-#         uncertainty_file = os.path.join(data_directory, "Dataset-Baltimore_unc.txt")
-#         output_path = os.path.join(data_directory, "output", "Baltimore")
-#     elif dataset == "sl":
-#         input_file = os.path.join(data_directory, "Dataset-StLouis-con.csv")
-#         uncertainty_file = os.path.join(data_directory, "Dataset-StLouis-unc.csv")
-#         output_path = os.path.join(data_directory, "output", "StLouis")
-#
-#     index_col = "Date"
-#     sn_threshold = 2.0
-#
-#     # ------------------- #
-#
-#     dh = DataHandler(
-#         input_path=input_file,
-#         uncertainty_path=uncertainty_file,
-#         index_col=index_col,
-#         sn_threshold=sn_threshold
-#     )
-#     V = dh.input_data_processed
-#     U = dh.uncertainty_data_processed
-#
-#     t0 = time.time()
-#     logger.info("Running python code")
-#     sa = SA(V=V, U=U, factors=factors, method=method, seed=seed, optimized=False, verbose=verbose)
-#     sa.initialize(init_method=init_method, init_norm=init_norm, fuzziness=5.0)
-#     sa.train(max_iter=max_iterations, converge_delta=converge_delta, converge_n=converge_n,
-#              robust_alpha=robust_alpha, robust_n=robust_n, robust_mode=robust_mode,
-#              bump=bump, bump_n=bump_n, bump_range=bump_range)
-#     t1 = time.time()
-#     logger.info(f"Runtime: {round((t1 - t0) / 60, 2)} min(s)")
-#
-#     logger.info("Running rust code")
-#     sa2 = SA(V=V, U=U, factors=factors, method=method, seed=seed, optimized=True, verbose=verbose)
-#     sa2.initialize(init_method=init_method, init_norm=init_norm, fuzziness=5.0)
-#     sa2.train(max_iter=max_iterations, converge_delta=converge_delta, converge_n=converge_n,
-#               robust_alpha=robust_alpha, robust_n=robust_n, robust_mode=robust_mode,
-#               bump=bump, bump_n=bump_n, bump_range=bump_range)
-#     t2 = time.time()
-#     logger.info(f"Runtime: {round((t2 - t1) / 60, 2)} min(s)")
-#
-#     sa2.save(model_name="test", output_directory=os.path.join(data_directory,"output"), pickle_model=False,
-#     header=list(dh.features))
-#     sa2.summary()
-#
-#     _sa = SA.load(file_path=os.path.join(data_directory, "output", "test.pkl"))
+
 

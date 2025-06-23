@@ -44,7 +44,7 @@ class TestBatchSA:
         factor_n = 6
         models = 2
         bs = BatchSA(V=self.V, U=self.U, models=models, factors=factor_n, method="ls-nmf",
-                     max_iter=500, converge_delta=1.0, converge_n=10, parallel=False, optimized=False)
+                     max_iter=500, converge_delta=1.0, converge_n=10, parallel=False)
         bs.train()
         assert len(bs.results) == 2
         assert bs.best_model is not None
@@ -53,7 +53,7 @@ class TestBatchSA:
         factor_n = 6
         models = 2
         bs = BatchSA(V=self.V, U=self.U, models=models, factors=factor_n, method="ws-nmf",
-                     max_iter=500, converge_delta=1.0, converge_n=10, parallel=False, optimized=False)
+                     max_iter=500, converge_delta=1.0, converge_n=10, parallel=False)
         bs.train()
         assert len(bs.results) == 2
         assert bs.best_model is not None

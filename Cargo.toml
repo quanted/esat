@@ -19,6 +19,8 @@ nalgebra = {version="0.32.4", features = ["rayon"]}
 ndarray = "0.15.6"
 rayon = "1.9.0"
 pyo3 = "0.20.3"
+indicatif = "0.17"
+console = "0.15.8"
 
 [features]
 extension-module = ["pyo3/extension-module", "pyo3/generate-import-lib"]

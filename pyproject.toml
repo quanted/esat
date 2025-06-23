@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "esat"
-version = "2024.0.3"
+version = "2025.0.1"
 requires-python = ">=3.10"
 description = "EPA's Environmental Source Apportionment Toolkit python package."
 authors = [
@@ -24,7 +24,8 @@ classifiers = [
 ]
 dynamic = ["dependencies"]
 readme = "README.md"
-license = {file = "LICENSE"}
+license = "Apache-2.0"
+license-files = ["LICENSE"]
 
 [project.urls]
 Documentation = "https://quanted.github.io/esat/"

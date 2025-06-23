@@ -7,6 +7,7 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 from esat.model.recombinator import optimal_block_length
+from esat.utils import min_timestep
 
 logging.basicConfig(format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S', level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -156,17 +157,17 @@ class DataHandler:
         """
         # Drop columns if specified
         if self.drop_col is not None:
-            _input_data = copy.copy(self.input_data.drop(labels=self.drop_col, axis=1))
-            _uncertainty_data = copy.copy(self.uncertainty_data.drop(labels=self.drop_col, axis=1))
+            _input_data = copy.copy(self.input_data.drop(labels=self.drop_col, axis=1)).astype("float32")
+            _uncertainty_data = copy.copy(self.uncertainty_data.drop(labels=self.drop_col, axis=1)).astype("float32")
         else:
-            _input_data = copy.copy(self.input_data)
-            _uncertainty_data = copy.copy(self.uncertainty_data)
+            _input_data = copy.copy(self.input_data).astype("float32")
+            _uncertainty_data = copy.copy(self.uncertainty_data).astype("float32")
 
         # Drop bad category features
         bad_features = list(self.metrics.loc[self.metrics["Category"] == "bad"].index)
         for bf in bad_features:
-            _input_data = self.input_data.drop(labels=bf, axis=1)
-            _uncertainty_data = self.uncertainty_data.drop(labels=bf, axis=1)
+            _input_data = _input_data.drop(labels=bf, axis=1)
+            _uncertainty_data = _uncertainty_data.drop(labels=bf, axis=1)
         # Triple weak category features
         weak_features = list(self.metrics.loc[self.metrics["Category"] == "weak"].index)
         for wf in weak_features:
@@ -187,7 +188,7 @@ class DataHandler:
             _uncertainty_data = _uncertainty_data.to_numpy()
 
         _input_data[_input_data == 0] = EPSILON
-        _uncertainty_data[_uncertainty_data < 0] = EPSILON
+        _uncertainty_data[_uncertainty_data == 0] = EPSILON
 
         self.input_data_processed = _input_data.astype("float32")
         self.uncertainty_data_processed = _uncertainty_data.astype("float32")
@@ -222,7 +223,7 @@ class DataHandler:
                 data = pd.read_table(filepath, sep="\t")
             data.dropna(inplace=True)
         else:
-            logger.warn("Unknown file type provided.")
+            logger.warning("Unknown file type provided.")
             sys.exit()
         return data
 
@@ -231,7 +232,7 @@ class DataHandler:
         Loads the input and uncertainty data from files.
         """
         if self.error:
-            logger.warn("Unable to load data because of setup errors.")
+            logger.warning("Unable to load data because of setup errors.")
             return
         if not existing_data:
             self.input_data = self._read_data(filepath=self.input_path, index_col=self.index_col)
@@ -281,26 +282,61 @@ class DataHandler:
             self.optimal_block = int(input_data.shape[1]/5)
             logger.error(f"Unable to determine optimal block size. Setting default to {self.optimal_block}")
 
-    def plot_data_uncertainty(self, feature_idx):
+    def plot_data_uncertainty(self):
         """
-        Create a plot of the data vs the uncertainty for a specified feature, by the feature index.
-
-        Parameters
-        ----------
-        feature_idx : int
-            The index of the feature, column, of the input and uncertainty dataset to plot.
-
+        Create a plot of the data vs the uncertainty for a specified feature, with a dropdown menu for feature selection.
         """
-        if feature_idx > self.input_data.shape[1] - 1 or feature_idx < 0:
-            logger.info(f"Invalid feature index provided, must be between 0 and {self.input_data.shape[1]}")
+        if self.input_data is None or self.uncertainty_data is None:
+            logger.error("Input or uncertainty data is not loaded.")
             return
-        feature_label = self.input_data.columns[feature_idx]
 
-        feature_data = self.input_data[feature_label]
-        feature_uncertainty = self.uncertainty_data[feature_label]
+        features = self.input_data.columns
+        du_plot = go.Figure()
+        buttons = []
 
-        du_plot = go.Figure(data=go.Scatter(x=feature_data, y=feature_uncertainty, mode='markers', name=feature_label))
-        du_plot.update_layout(title=f"Concentration/Uncertainty Scatter Plot - {feature_label}", width=800, height=600)
+        for feature_idx, feature_label in enumerate(features):
+            feature_data = self.input_data[feature_label]
+            feature_uncertainty = self.uncertainty_data[feature_label]
+
+            # Add traces for each feature (initially hidden)
+            du_plot.add_trace(
+                go.Scatter(
+                    x=feature_data,
+                    y=feature_uncertainty,
+                    mode='markers',
+                    name=feature_label,
+                    visible=(feature_idx == 0)
+                )
+            )
+
+            # Create a button for each feature
+            buttons.append(
+                dict(
+                    label=feature_label,
+                    method="update",
+                    args=[
+                        {"visible": [i == feature_idx for i in range(len(features))]},
+                        {"title.text": f"Concentration/Uncertainty Scatter Plot - {feature_label}"}
+                    ]
+                )
+            )
+
+        # Add dropdown menu
+        du_plot.update_layout(
+            updatemenus=[
+                dict(
+                    type="dropdown",
+                    direction="down",
+                    buttons=buttons,
+                    showactive=True
+                )
+            ],
+            title=f"Concentration/Uncertainty Scatter Plot - {features[0]}",
+            width=800,
+            height=600,
+            xaxis_title="Concentration",
+            yaxis_title="Uncertainty"
+        )
         du_plot.show()
 
     def plot_feature_data(self, x_idx, y_idx):
@@ -366,8 +402,7 @@ class DataHandler:
         data_df = copy.copy(self.input_data)
         data_df.index = pd.to_datetime(data_df.index)
         data_df = data_df.sort_index()
-        #TODO: Enforce datetime steps for index or check and only resample if so.
-        data_df = data_df.resample('D').mean()
+        data_df = data_df.resample(min_timestep(data_df)).mean()
         x = list(data_df.index)
         ts_plot = go.Figure()
         for feature_i in feature_label:

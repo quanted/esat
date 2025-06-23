@@ -16,7 +16,7 @@ sys.path.insert(2, os.path.abspath(os.path.join(".", "eval")))
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'Environmental Source Apportionment Toolkit (ESAT)'
-copyright = '2024, EPA'
+copyright = '2025, EPA'
 author = 'Deron Smith'
 version = str(datetime.now().year)
 release = metadata.version("esat")

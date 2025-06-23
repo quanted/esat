@@ -4,7 +4,7 @@ import pickle
 from pathlib import Path
 import numpy as np
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
 import plotly.graph_objects as go
 import plotly.express as px
 from plotly.subplots import make_subplots
@@ -107,7 +107,9 @@ class Simulator:
 
         self.syn_profiles = None
         self.syn_contributions = self.rng.random(size=(self.samples_n, self.factors_n)) * float(contribution_max)
-        self.time_steps = pd.date_range(datetime.now().strftime("%Y-%m-%d"), periods=self.samples_n, freq='d')
+        start_date = datetime.now() - timedelta(days=1, minutes=self.samples_n)
+        self.time_steps = pd.date_range(start=start_date, end=datetime.now().strftime("%Y-%m-%d"), freq='1min')
+        self.time_steps = self.time_steps[(self.time_steps.shape[0]-self.samples_n):]
 
         self.syn_data = None
         self.syn_uncertainty = None
