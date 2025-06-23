@@ -238,85 +238,129 @@ class ModelAnalysis:
                 )
             ],
             title=f"Residual Histogram for {initial_feature}",
-            # xaxis_title="Scaled Residuals",
-            # yaxis_title="Percent",
+            yaxis2_title="Probability",
             width=1200,
             height=600,
-            showlegend=True
+            showlegend=True,
+            hovermode='x unified'
+
         )
         residual_fig.show()
 
-    def plot_estimated_observed(self, feature_idx: int):
+    def plot_estimated_observed(self):
         """
-        Create a plot that shows the estimates concentrations of a feature vs the observed concentrations.
-
-        Parameters
-        ----------
-        feature_idx: int
-            The index of the feature to plot.
-
+        Create a plot that shows the estimated concentrations of a feature vs the observed concentrations
+        with a dropdown menu for feature selection.
         """
-        if feature_idx > self.dh.input_data_df.shape[1] - 1 or feature_idx < 0:
-            logger.info(f"Invalid feature index provided, must between 0 and {self.dh.input_data_df.shape[1]}")
-            return
-        x_label = self.dh.input_data_df.columns[feature_idx]
-
-
-        observed_data = self.dh.input_data_df[x_label]
-        predicted_data = self.model.WH[:, feature_idx]
-
-        A = np.vstack([observed_data.values, np.ones(len(observed_data))]).T
-        m, c = np.linalg.lstsq(A, predicted_data, rcond=None)[0]
-
-        m1, c1 = np.linalg.lstsq(A, observed_data, rcond=None)[0]
-
+        buttons = []
         xy_plot = go.Figure()
-        xy_plot.add_trace(go.Scatter(x=observed_data, y=predicted_data, mode='markers', name="Data"))
-        xy_plot.add_trace(go.Scatter(x=observed_data, y=(m*observed_data + c),
-                                     line=dict(color='red', dash='dash', width=1), name='Regression'))
-        xy_plot.add_trace(go.Scatter(x=observed_data, y=(m1*observed_data + c1),
-                                     line=dict(color='blue', width=1), name='One-to-One'))
-        xy_plot.update_layout(title=f"Observed/Predicted Scatter Plot - {x_label}", width=800, height=600,
-                              xaxis_title="Observed Concentrations", yaxis_title="Predicted Concentrations")
-        xy_plot.update_xaxes(range=[0, observed_data.max() + 0.5])
-        xy_plot.update_yaxes(range=[0, predicted_data.max() + 0.5])
+
+        for feature_idx, x_label in enumerate(self.dh.input_data_df.columns):
+            observed_data = self.dh.input_data_df[x_label]
+            predicted_data = self.model.WH[:, feature_idx]
+
+            A = np.vstack([observed_data.values, np.ones(len(observed_data))]).T
+            m, c = np.linalg.lstsq(A, predicted_data, rcond=None)[0]
+            m1, c1 = np.linalg.lstsq(A, observed_data, rcond=None)[0]
+
+            # Add traces for each feature (initially hidden)
+            xy_plot.add_trace(
+                go.Scatter(x=observed_data, y=predicted_data, mode='markers', name="Data", visible=(feature_idx == 0)))
+            xy_plot.add_trace(go.Scatter(x=observed_data, y=(m * observed_data + c),
+                                         line=dict(color='red', dash='dash', width=1), name='Regression',
+                                         visible=(feature_idx == 0)))
+            xy_plot.add_trace(go.Scatter(x=observed_data, y=(m1 * observed_data + c1),
+                                         line=dict(color='blue', width=1), name='One-to-One',
+                                         visible=(feature_idx == 0)))
+
+            # Create a button for each feature
+            buttons.append(
+                dict(
+                    label=x_label,
+                    method="update",
+                    args=[
+                        {"visible": [i // 3 == feature_idx for i in range(len(self.dh.input_data_df.columns) * 3)]},
+                        {"title.text": f"Observed/Predicted Scatter Plot - {x_label}"}
+                    ]
+                )
+            )
+
+        # Add dropdown menu
+        xy_plot.update_layout(
+            updatemenus=[
+                dict(
+                    type="dropdown",
+                    direction="down",
+                    buttons=buttons,
+                    showactive=True
+                )
+            ],
+            title=f"Observed/Predicted Scatter Plot - {self.dh.input_data_df.columns[0]}",
+            width=800,
+            height=600,
+            xaxis_title="Observed Concentrations",
+            yaxis_title="Predicted Concentrations",
+            hovermode='x'
+        )
         xy_plot.show()
 
-    def plot_estimated_timeseries(self, feature_idx: int):
+    def plot_estimated_timeseries(self):
         """
-        Create a plot that shows the estimated values of a timeseries for a specific feature, selected by feature index.
-
-        Parameters
-        ----------
-        feature_idx: int
-            The index of the feature to plot.
-
+        Create a plot that shows the estimated values of a timeseries for a specific feature,
+        with a dropdown menu for feature selection.
         """
-        if feature_idx > self.dh.input_data_df.shape[1] - 1 or feature_idx < 0:
-            logger.info(f"Invalid feature index provided, must be between 0 and {self.dh.input_data_df.shape[1]}")
-            return
-        x_label = self.dh.input_data_df.columns[feature_idx]
-
-        observed_data = self.dh.input_data_df[x_label].values
-        predicted_data = self.model.WH[:, feature_idx]
-
-        data_df = pd.DataFrame(data={"observed": observed_data, "predicted": predicted_data},
-                               index=self.dh.input_data_df.index)
-        data_df.index = pd.to_datetime(data_df.index)
-        data_df = data_df.sort_index()
-        data_df = data_df.resample(min_timestep(data_df)).mean()
-
+        buttons = []
         ts_subplot = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.01, row_heights=[0.8, 0.2])
 
-        ts_subplot.add_trace(go.Scatter(x=data_df.index, y=data_df["observed"], line=dict(width=1),
-                                        mode='lines+markers', name="Observed Concentrations"), row=1, col=1)
-        ts_subplot.add_trace(go.Scatter(x=data_df.index, y=data_df["predicted"], line=dict(width=1),
-                                        mode='lines+markers', name="Predicted Concentrations"), row=1, col=1)
-        ts_subplot.add_trace(go.Scatter(x=data_df.index, y=data_df["observed"] - data_df["predicted"],
-                                        line=dict(width=1), mode='lines', name="Residuals"), row=2, col=1)
+        for feature_idx, x_label in enumerate(self.dh.input_data_df.columns):
+            observed_data = self.dh.input_data_df[x_label].values
+            predicted_data = self.model.WH[:, feature_idx]
 
-        ts_subplot.update_layout(title_text=f"Estimated Time-series for {x_label} - Model {self.selected_model}", width=1200, height=800,
-                                 yaxis_title="Concentrations", hovermode='x unified')
+            data_df = pd.DataFrame(data={"observed": observed_data, "predicted": predicted_data},
+                                   index=self.dh.input_data_df.index)
+            data_df.index = pd.to_datetime(data_df.index)
+            data_df = data_df.sort_index()
+            data_df = data_df.resample(min_timestep(data_df)).mean()
+
+            # Add traces for each feature (initially hidden)
+            ts_subplot.add_trace(go.Scatter(x=data_df.index, y=data_df["observed"], line=dict(width=1),
+                                            mode='lines+markers', name="Observed Concentrations",
+                                            visible=(feature_idx == 0)), row=1, col=1)
+            ts_subplot.add_trace(go.Scatter(x=data_df.index, y=data_df["predicted"], line=dict(width=1),
+                                            mode='lines+markers', name="Predicted Concentrations",
+                                            visible=(feature_idx == 0)), row=1, col=1)
+            ts_subplot.add_trace(go.Scatter(x=data_df.index, y=data_df["observed"] - data_df["predicted"],
+                                            line=dict(width=1), mode='lines', name="Residuals",
+                                            visible=(feature_idx == 0)), row=2, col=1)
+
+            # Create a button for each feature
+            buttons.append(
+                dict(
+                    label=x_label,
+                    method="update",
+                    args=[
+                        {"visible": [i // 3 == feature_idx for i in range(len(self.dh.input_data_df.columns) * 3)]},
+                        {"title.text": f"Estimated Time-series for {x_label} - Model {self.selected_model}"}
+                    ]
+                )
+            )
+
+        # Add dropdown menu
+        ts_subplot.update_layout(
+            updatemenus=[
+                dict(
+                    type="dropdown",
+                    direction="down",
+                    buttons=buttons,
+                    showactive=True
+                )
+            ],
+            title=f"Estimated Time-series for {self.dh.input_data_df.columns[0]} - Model {self.selected_model}",
+            width=1200,
+            height=800,
+            yaxis_title="Concentrations",
+            hovermode='x unified'
+        )
         ts_subplot.show()
 
     def plot_factor_profile(self,
@@ -568,9 +612,6 @@ class ModelAnalysis:
                             method="update",
                             args=[{
                                 "visible": [True, False],  # trace visibility
-                                # 'scene.xaxis.title': "Features",
-                                # 'scene.yaxis.title': "Factors",
-                                # 'scene.zaxis.title': "Conc. of Features (log)",
                                 'scene.zaxis.range': [1, conc_z.max()]
                             }]
                         ),
@@ -579,9 +620,6 @@ class ModelAnalysis:
                             method="update",
                             args=[{
                                 "visible": [False, True],  # trace visibility
-                                # 'scene.xaxis.title': "Features",
-                                # 'scene.yaxis.title': "Factors",
-                                # 'scene.zaxis.title': "% of Features",
                                 'scene.zaxis.range': [0, 100]
                             }]
                         )
@@ -875,43 +913,68 @@ class BatchAnalysis:
         b_q_fig.update_layout(width=800, height=800)
         b_q_fig.show()
 
-    def plot_temporal_residuals(self, feature_idx: int):
+    def plot_temporal_residuals(self):
         """
-        Plot the temporal residuals for a specified feature, by index, of all models in the SA batch.
-
-        Parameters
-        ----------
-        feature_idx : int
-            The index of the feature to plot.
+        Plot the temporal residuals for a specified feature, with a dropdown menu for feature selection.
         """
         temporal_residuals = []
-        for i in range(0, len(self.batch_sa.results)):
+        for i in range(len(self.batch_sa.results)):
             result = self.batch_sa.results[i]
             if result is None:
                 continue
             model_residual = np.abs(result.V - result.WH)
             temporal_residuals.append(model_residual)
+
         if self.data_handler is None:
-            x = list(range(1, temporal_residuals[0].shape+1))
-            feature_label = feature_idx + 1
+            x = list(range(1, temporal_residuals[0].shape[0] + 1))
+            features = [f"Feature {i + 1}" for i in range(temporal_residuals[0].shape[1])]
         else:
             x = self.data_handler.input_data_df.index
-            feature_label = self.data_handler.features[feature_idx]
+            features = self.data_handler.features
 
         temporal_fig = go.Figure()
-        temporal_fig.add_trace(
-            go.Scatter(x=x, y=self.batch_sa.V[:, feature_idx], name="Input", line=dict(dash='dash', width=2)))
+        buttons = []
 
-        for i, t in enumerate(temporal_residuals):
-            visible = "legendonly"
-            if i == self.batch_sa.best_model:
-                visible = True
-            y = t[:, feature_idx]
-            temporal_fig.add_trace(go.Scatter(x=x, y=y, mode='lines', name=f"Model {i + 1}", visible=visible))
-        temporal_fig.update_layout(title=f"Model Temporal Residuals - Feature: {feature_label}",
-                                   width=1200,
-                                   height=600,
-                                   hovermode='x'
-                                   )
+        for feature_idx, feature_label in enumerate(features):
+            # Add traces for each feature (initially hidden)
+            temporal_fig.add_trace(
+                go.Scatter(x=x, y=self.batch_sa.V[:, feature_idx], name="Input", line=dict(dash='dash', width=2),
+                           visible=(feature_idx == 0))
+            )
+            for i, t in enumerate(temporal_residuals):
+                visible = (feature_idx == 0)
+                temporal_fig.add_trace(
+                    go.Scatter(x=x, y=t[:, feature_idx], mode='lines', name=f"Model {i + 1}",
+                               visible=visible if i == self.batch_sa.best_model else "legendonly")
+                )
+
+            # Create a button for each feature
+            buttons.append(
+                dict(
+                    label=feature_label,
+                    method="update",
+                    args=[
+                        {"visible": [i // (len(temporal_residuals) + 1) == feature_idx
+                                     for i in range(len(features) * (len(temporal_residuals) + 1))]},
+                        {"title.text": f"Model Temporal Residuals - Feature: {feature_label}"}
+                    ]
+                )
+            )
+
+        # Add dropdown menu
+        temporal_fig.update_layout(
+            updatemenus=[
+                dict(
+                    type="dropdown",
+                    direction="down",
+                    buttons=buttons,
+                    showactive=True
+                )
+            ],
+            title=f"Model Temporal Residuals - Feature: {features[0]}",
+            width=1200,
+            height=600,
+            hovermode='x'
+        )
         temporal_fig.update_yaxes(title_text="Conc.")
         temporal_fig.show()
