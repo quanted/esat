@@ -58,9 +58,14 @@ jobs:
             echo "PATH=${PATH}:${HOME}/.cargo/bin" >> "$GITHUB_ENV"
             rustc --version
             python -m pip install build setuptools setuptools-rust
-      - name: Build wheels
-        run:
-            python -m build --outdir wheelhouse
+      - name: Build wheels with cibuildwheel
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install cibuildwheel==2.22.0
+          python -m cibuildwheel --output-dir wheelhouse
+#      - name: Build wheels
+#        run:
+#            python -m build --outdir wheelhouse
       - uses: actions/upload-artifact@v4
         with:
           name: esat-wheels-${{ matrix.os }}-py${{matrix.python_version}}
@@ -81,10 +86,16 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           curl https://sh.rustup.rs -sSf | sh -s -- -y --default-toolchain=stable
+          rustup target add aarch64-pc-windows-msvc i686-pc-windows-msvc x86_64-pc-windows-msvc
           echo "${HOME}/.cargo/bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
           python -m pip install build setuptools setuptools-rust
-      - name: Build wheels
-        run: python -m build --outdir wheelhouse
+      - name: Build wheels with cibuildwheel
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install cibuildwheel==2.22.0
+          python -m cibuildwheel --output-dir wheelhouse
+#      - name: Build wheels
+#        run: python -m build --outdir wheelhouse
       - uses: actions/upload-artifact@v4
         with:
           name: esat-wheels-windows-py${{matrix.python_version}}
