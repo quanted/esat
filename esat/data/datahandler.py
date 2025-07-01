@@ -38,19 +38,26 @@ class DataHandler:
         The name of the index column if it is not the first column in the dataset. Default = None, which will use
         the 1st column.
     drop_col : list
-            A list of columns to drop from the dataset. Default = None.
+        A list of columns to drop from the dataset. Default = None.
+    loc_cols : str | list
+        Location information columns, such as latitude/longitude or other identifier, that are used to identify the location of the data.
     sn_threshold : float
         The threshold for the signal to noise ratio values.
     load: bool
         Load the input and uncertainty data files, used internally for load_dataframe.
+    loc_metadata : dict
+        Optional dictionary containing metadata about the locations in the dataset, such as latitude and longitude.
     """
     def __init__(self,
                  input_path: str,
                  uncertainty_path: str,
                  index_col: str = None,
                  drop_col: list = None,
+                 loc_cols: str | list = None,
                  sn_threshold: float = 2.0,
-                 load: bool = True):
+                 load: bool = True,
+                 loc_metadata: dict = None
+                 ):
         """
         Constructor method.
         """
@@ -75,6 +82,7 @@ class DataHandler:
 
         self.index_col = index_col
         self.drop_col = drop_col
+        self.loc_cols = loc_cols
 
         self.min_values = None
         self.max_values = None
@@ -128,6 +136,113 @@ class DataHandler:
         logger.info(f"Feature: {feature} category set to {category}")
         return True
 
+    def split_locations(self):
+        """
+        When the input data has location information, this function returns splits the data and uncertainty into
+        separate DataHandler instances for each location.
+
+        Returns
+        -------
+        list
+            A list of DataHandler instances, one for each unique location in the input data.
+        """
+        if self.loc_cols is None:
+            logger.error("No location columns specified, cannot split locations.")
+            return []
+
+        if isinstance(self.loc_cols, str):
+            self.loc_cols = [self.loc_cols]
+
+        if not all(col in self.input_data.columns for col in self.loc_cols):
+            logger.error("One or more location columns not found in input data.")
+            return []
+
+        # If loc_cols are latitude and longitude, round them for comparison
+        if set(self.loc_cols) == {"latitude", "longitude"}:
+            rounded_input = self.input_data.copy()
+            rounded_uncertainty = self.uncertainty_data.copy()
+            for col in self.loc_cols:
+                rounded_input[col] = rounded_input[col].round(5)
+                rounded_uncertainty[col] = rounded_uncertainty[col].round(5)
+            locations = rounded_input[self.loc_cols].drop_duplicates()
+        else:
+            rounded_input = self.input_data
+            rounded_uncertainty = self.uncertainty_data
+            locations = self.input_data[self.loc_cols].drop_duplicates()
+
+        data_handlers = []
+
+        for _, loc in locations.iterrows():
+            if set(self.loc_cols) == {"latitude", "longitude"}:
+                loc_filter = (rounded_input[self.loc_cols].round(5) == loc.values).all(axis=1)
+                input_data_loc = self.input_data[loc_filter]
+                uncertainty_data_loc = self.uncertainty_data[loc_filter]
+            else:
+                loc_filter = (self.input_data[self.loc_cols] == loc.values).all(axis=1)
+                input_data_loc = self.input_data[loc_filter]
+                uncertainty_data_loc = self.uncertainty_data[loc_filter]
+
+            dh = DataHandler.load_dataframe(input_df=input_data_loc, uncertainty_df=uncertainty_data_loc)
+            dh.metadata['location'] = loc.to_dict()
+            data_handlers.append(dh)
+
+        return data_handlers
+
+    def merge(self, data_handlers: list, source_labels: list):
+        """
+        Merge a list of DataHandler instances into this DataHandler instance.
+        All instances must have the same features as the current instance.
+        Adds a 'source_label' column indicating the origin of each row.
+
+        Parameters
+        ----------
+        data_handlers : list
+            A list of DataHandler instances to merge.
+        source_labels : list
+            A list of labels (str) indicating the source of each DataHandler.
+
+        Returns
+        -------
+        bool
+            True if merging was successful, otherwise False.
+        """
+        if len(data_handlers) == 0 or len(data_handlers) != len(source_labels):
+            logger.error("DataHandlers and source_labels must be non-empty and of equal length.")
+            return False
+
+        # Check features match
+        for dh in data_handlers:
+            if list(dh.input_data.columns) != list(self.input_data.columns):
+                logger.error("All DataHandlers must have the same features to merge.")
+                return False
+
+        # Add source_label column
+        merged_input = []
+        merged_uncertainty = []
+        for dh, label in zip(data_handlers, source_labels):
+            input_df = dh.input_data.copy()
+            input_df['source_label'] = label
+            uncertainty_df = dh.uncertainty_data.copy()
+            uncertainty_df['source_label'] = label
+            merged_input.append(input_df)
+            merged_uncertainty.append(uncertainty_df)
+
+        # Add current instance's data
+        self_input = self.input_data.copy()
+        self_input['source_label'] = 'self'
+        self_uncertainty = self.uncertainty_data.copy()
+        self_uncertainty['source_label'] = 'self'
+        merged_input.append(self_input)
+        merged_uncertainty.append(self_uncertainty)
+
+        # Concatenate
+        self.input_data = pd.concat(merged_input, ignore_index=True)
+        self.uncertainty_data = pd.concat(merged_uncertainty, ignore_index=True)
+        self.features = [col for col in self.input_data.columns if col != 'source_label']
+
+        logger.info("DataHandlers merged successfully.")
+        return True
+
     def _check_paths(self):
         """
         Check all file paths to make sure they exist.
@@ -163,18 +278,30 @@ class DataHandler:
             _input_data = copy.copy(self.input_data).astype("float32")
             _uncertainty_data = copy.copy(self.uncertainty_data).astype("float32")
 
+        # Drop location columns if specified
+        if self.loc_cols is not None:
+            if isinstance(self.loc_cols, str):
+                self.loc_cols = [self.loc_cols]
+            _input_data = _input_data.drop(labels=self.loc_cols, axis=1)
+            _uncertainty_data = _uncertainty_data.drop(labels=self.loc_cols, axis=1)
+
         # Drop bad category features
         bad_features = list(self.metrics.loc[self.metrics["Category"] == "bad"].index)
         for bf in bad_features:
             _input_data = _input_data.drop(labels=bf, axis=1)
             _uncertainty_data = _uncertainty_data.drop(labels=bf, axis=1)
-        # Triple weak category features
+        # Multiply the uncertainty of weak category features by 3
         weak_features = list(self.metrics.loc[self.metrics["Category"] == "weak"].index)
         for wf in weak_features:
             _uncertainty_data[wf] = _uncertainty_data[wf] * 3.0
 
-        self.features = _input_data.columns
-        # Ensure data and uncertainty values are numeric
+        # Exclude loc_cols from features
+        if self.loc_cols is not None:
+            self.features = [col for col in _input_data.columns if col not in self.loc_cols]
+        else:
+            self.features = list(_input_data.columns)
+
+        # Ensure data and uncertainty values are numeric !Important!
         for f in self.features:
             _input_data[f] = pd.to_numeric(_input_data[f])
             _uncertainty_data[f] = pd.to_numeric(_uncertainty_data[f])

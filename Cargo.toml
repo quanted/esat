@@ -33,3 +33,7 @@ debug = false
 [profile.release]
 opt-level = 3
 debug = false
+
+[project.optional-dependencies]
+data = ["scikit-learn"]
+workflows = []
