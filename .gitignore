@@ -30,6 +30,7 @@ docs/_downloads/
 docs/_sources/
 docs/_static/
 docs/html/
+build/
 
 notebooks/.ipynb_checkpoints/
 notebooks/old/.ipynb_checkpoints/

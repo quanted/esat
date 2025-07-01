@@ -221,7 +221,7 @@ class DataHandler:
                 data = pd.read_table(filepath, index_col=index_col, sep="\t")
             else:
                 data = pd.read_table(filepath, sep="\t")
-            data.dropna(inplace=True)
+            # data.dropna(inplace=True)
         else:
             logger.warning("Unknown file type provided.")
             sys.exit()
@@ -282,7 +282,7 @@ class DataHandler:
             self.optimal_block = int(input_data.shape[1]/5)
             logger.error(f"Unable to determine optimal block size. Setting default to {self.optimal_block}")
 
-    def plot_data_uncertainty(self):
+    def plot_data_uncertainty(self, show: bool = True, include_menu: bool = True, feature_idx: int = None):
         """
         Create a plot of the data vs the uncertainty for a specified feature, with a dropdown menu for feature selection.
         """
@@ -290,7 +290,10 @@ class DataHandler:
             logger.error("Input or uncertainty data is not loaded.")
             return
 
-        features = self.input_data.columns
+        if not include_menu and feature_idx is not None:
+            features = [self.input_data.columns[feature_idx]]
+        else:
+            features = self.input_data.columns
         du_plot = go.Figure()
         buttons = []
 
@@ -305,7 +308,7 @@ class DataHandler:
                     y=feature_uncertainty,
                     mode='markers',
                     name=feature_label,
-                    visible=(feature_idx == 0)
+                    visible=(feature_idx == 0) or not include_menu,
                 )
             )
 
@@ -320,26 +323,31 @@ class DataHandler:
                     ]
                 )
             )
-
+        if include_menu:
         # Add dropdown menu
+            du_plot.update_layout(
+                updatemenus=[
+                    dict(
+                        type="dropdown",
+                        direction="down",
+                        buttons=buttons,
+                        showactive=True
+                    )
+                ])
         du_plot.update_layout(
-            updatemenus=[
-                dict(
-                    type="dropdown",
-                    direction="down",
-                    buttons=buttons,
-                    showactive=True
-                )
-            ],
             title=f"Concentration/Uncertainty Scatter Plot - {features[0]}",
             width=800,
             height=600,
             xaxis_title="Concentration",
             yaxis_title="Uncertainty"
         )
-        du_plot.show()
+        if show:
+            du_plot.show()
+            return None
+        else:
+            return du_plot
 
-    def plot_feature_data(self, x_idx, y_idx):
+    def plot_feature_data(self, x_idx, y_idx, show: bool = True):
         """
         Create a plot of a data feature, column, vs another data feature, column. Specified by the feature indices.
 
@@ -349,8 +357,6 @@ class DataHandler:
             The feature index for the x-axis values.
         y_idx: int
             The feature index for the y-axis values.
-
-
         """
         if x_idx > self.input_data.shape[1] - 1 or x_idx < 0:
             logger.info(f"Invalid x feature index provided, must be between 0 and {self.input_data.shape[1]}")
@@ -370,17 +376,52 @@ class DataHandler:
         m1, c1 = np.linalg.lstsq(A, x_data.values, rcond=None)[0]
 
         xy_plot = go.Figure()
-        xy_plot.add_trace(go.Scatter(x=x_data, y=y_data, mode='markers', name="Data"))
-        xy_plot.add_trace(go.Scatter(x=x_data, y=(m*x_data.values + c), line=dict(color='red', dash='dash', width=1), name='Regression'))
-        xy_plot.add_trace(go.Scatter(x=x_data, y=(m1*x_data.values + c1), line=dict(color='blue', width=1), name='One-to-One'))
-        xy_plot.update_layout(title=f"Feature vs Feature Plot: {y_label}/{x_label}", width=800, height=600,
-                              xaxis_title=f"{x_label}", yaxis_title=f"{y_label}",
-                              )
+        xy_plot.add_trace(
+            go.Scatter(
+                x=x_data,
+                y=y_data,
+                mode='markers',
+                name="Data",
+                hovertemplate=(
+                    "<b>Date:</b> %{customdata[0]}<br>"
+                    f"<b>{x_label}:</b>" + " %{x}<br>"
+                    f"<b>{y_label}:</b>" + " %{y}<extra></extra>"
+                ),
+                customdata=np.array([x_data.index]).T  # Pass index as custom data
+            )
+        )
+        xy_plot.add_trace(
+            go.Scatter(
+                x=x_data,
+                y=(m * x_data.values + c),
+                line=dict(color='red', dash='dash', width=1),
+                name='Regression'
+            )
+        )
+        xy_plot.add_trace(
+            go.Scatter(
+                x=x_data,
+                y=(m1 * x_data.values + c1),
+                line=dict(color='blue', width=1),
+                name='One-to-One'
+            )
+        )
+        xy_plot.update_layout(
+            title=f"Feature vs Feature Plot: {y_label}/{x_label}",
+            width=800,
+            height=600,
+            xaxis_title=f"{x_label}",
+            yaxis_title=f"{y_label}",
+        )
         xy_plot.update_xaxes(range=[0, x_data.max() + 0.5])
         xy_plot.update_yaxes(range=[0, y_data.max() + 0.5])
-        xy_plot.show()
+        if show:
+            xy_plot.show()
+            return None
+        else:
+            return xy_plot
 
-    def plot_feature_timeseries(self, feature_selection):
+    def plot_feature_timeseries(self, feature_selection, show: bool = True):
         """
         Create a plot of a feature, or list of features, as a timeseries.
 
@@ -412,7 +453,11 @@ class DataHandler:
         ts_plot.update_layout(title=f"Concentration Timeseries", width=800, height=600, hovermode='x unified')
         if len(feature_label) == 1:
             ts_plot.update_layout(showlegend=True)
-        ts_plot.show()
+        if show:
+            ts_plot.show()
+            return None
+        else:
+            return ts_plot
 
     @staticmethod
     def load_dataframe(input_df: pd.DataFrame, uncertainty_df: pd.DataFrame):
