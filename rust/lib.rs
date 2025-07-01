@@ -79,8 +79,7 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         let draw_target = ProgressDrawTarget::term(term.clone(), 20);
         let pb = ProgressBar::with_draw_target(Some(max_iter as u64), draw_target);
         pb.set_style(
-            ProgressStyle::default_bar()
-                .template("{spinner:.cyan} [{elapsed_precise}] {bar:40.cyan/blue} {pos}/{len} ({eta}) {per_sec} iter/sec - {msg}")
+            ProgressStyle::with_template("{spinner:.cyan} [{elapsed_precise}] {bar:40.cyan/blue} {pos}/{len} ({eta}) {per_sec} iter/sec - {msg}")
                 .unwrap()
                 .progress_chars("-|-"),
         );
@@ -185,8 +184,7 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         let draw_target = ProgressDrawTarget::term(term.clone(), 20);
         let pb = ProgressBar::with_draw_target(Some(max_iter as u64), draw_target);
         pb.set_style(
-            ProgressStyle::default_bar()
-                .template("{spinner:.cyan} [{elapsed_precise}] {bar:40.cyan/blue} {pos}/{len} ({eta}) {per_sec} iter/sec - {msg}")
+            ProgressStyle::with_template("{spinner:.cyan} [{elapsed_precise}] {bar:40.cyan/blue} {pos}/{len} ({eta}) {per_sec} iter/sec - {msg}")
                 .unwrap()
                 .progress_chars("-|-"),
         );
@@ -325,8 +323,7 @@ fn esat_rust(_py: Python<'_>, m: &PyModule) -> PyResult<()> {
         let draw_target = ProgressDrawTarget::term(term.clone(), 20);
         let pb = ProgressBar::with_draw_target(Some(max_iter as u64), draw_target);
         pb.set_style(
-            ProgressStyle::default_bar()
-                .template("{spinner:.cyan} [{elapsed_precise}] {bar:40.cyan/blue} {pos}/{len} ({eta}) {per_sec} iter/sec - {msg}")
+            ProgressStyle::with_template("{spinner:.cyan} [{elapsed_precise}] {bar:40.cyan/blue} {pos}/{len} ({eta}) {per_sec} iter/sec - {msg}")
                 .unwrap()
                 .progress_chars("-|-"),
         );
