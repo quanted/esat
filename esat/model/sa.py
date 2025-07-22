@@ -1,5 +1,3 @@
-from idlelib.textview import ViewWindow
-
 from esat.model.ls_nmf import LSNMF
 from esat.model.ws_nmf import WSNMF
 from esat.utils import np_encoder
@@ -334,7 +332,8 @@ class SA:
               robust_alpha: float = 4,
               hold_h: bool = False,
               delay_h: int = -1,
-              update_step: str = None
+              update_step: str = None,
+              progress_callback: callable = None
               ):
         """
         Train the SA model by iteratively updating the W and H matrices reducing the loss value Q until convergence.
@@ -411,7 +410,8 @@ class SA:
                     robust_alpha,
                     model_i,
                     hold_h,
-                    delay_h
+                    delay_h,
+                    progress_callback
                 )[0]
             except RuntimeError as ex:
                 logger.error(f"Runtime Exception: {ex}")

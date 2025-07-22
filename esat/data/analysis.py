@@ -42,6 +42,34 @@ class ModelAnalysis:
         self.model = model
         self.selected_model = selected_model
         self.statistics = None
+        self.V_prime_k = None
+        self.V_prime_plot = None
+
+    def aggregate_factors_for_plotting(self):
+        """
+        Aggregate each factor's V_prime_k for plotting, reducing to max_samples using DataHandler's binning.
+
+        Returns
+        -------
+        dict
+            Dictionary mapping factor index to aggregated V_prime_k DataFrame.
+        """
+        W = self.model.W
+        H = self.model.H
+        factors = self.model.factors
+        factor_agg = {}
+        for k in range(factors):
+            V_prime_k = np.outer(W[:, k], H[k])
+            # Use DataHandler's aggregation for consistent plotting
+            agg_df = self.dh.aggregate_output(V_prime_k)
+            factor_agg[k] = agg_df
+        # sum of aggregated factors, into v_prime (same dimensions as V)
+        factor_vprime = sum([agg_df.values for agg_df in factor_agg.values()])
+        factor_vprime = pd.DataFrame(factor_vprime, columns=self.dh.input_data_df.columns,
+                                     index=self.dh.input_data_df.index)
+        self.V_prime_plot = factor_vprime
+        self.V_prime_k = factor_agg
+        return factor_agg, factor_vprime
 
     def features_metrics(self, est_V: np.ndarray = None):
         """
@@ -148,225 +176,216 @@ class ModelAnalysis:
         self.statistics = pd.DataFrame(data=statistics)
 
     def plot_residual_histogram(self,
+                                feature_idx: int = None,
+                                feature_name: str = None,
                                 abs_threshold: float = 3.0,
-                                est_V: np.ndarray = None
+                                est_V: np.ndarray = None,
+                                show: bool = True
                                 ):
         """
         Create a plot of a histogram of the residuals for a specific feature.
 
         Parameters
         ----------
+        feature_idx : int, optional
+            The index of the feature to plot.
+        feature_name : str, optional
+            The name of the feature to plot.
         abs_threshold : float
             The function generates a list of residuals that exceed this limit, the absolute value of the limit.
         est_V : np.ndarray
             Overrides the use of the ESAT model's WH matrix in the residual calculation. Default = None.
-
+        show : bool
+            If True, the plot will be displayed. Default is True.
         """
         V = self.model.V
         if est_V is None:
             est_V = self.model.WH
         U = self.model.U
 
-        residuals_dict = {}
-        for feature_idx, feature in enumerate(self.dh.features):
-            residuals = (V[:, feature_idx] - est_V[:, feature_idx]) / U[:, feature_idx]
-            residuals_dict[feature] = residuals
+        # Determine feature index
+        if feature_idx is not None:
+            if feature_idx < 0 or feature_idx >= len(self.dh.features):
+                logger.info(f"Invalid feature_idx provided, must be between 0 and {len(self.dh.features) - 1}")
+                return
+            feature = self.dh.features[feature_idx]
+        elif feature_name is not None:
+            if feature_name not in self.dh.features:
+                logger.info(f"Invalid feature_name provided, must be one of {self.dh.features}")
+                return
+            feature = feature_name
+            feature_idx = self.dh.features.index(feature_name)
+        else:
+            logger.info("Either feature_idx or feature_name must be provided.")
+            return
 
-        # Create initial residuals plot for the first feature
-        initial_feature = self.dh.features[0]
-        residuals_data = residuals_dict[initial_feature]
-        dist_fig = ff.create_distplot([residuals_data], [initial_feature], curve_type='normal')
+        residuals_data = (V[:, feature_idx] - est_V[:, feature_idx]) / U[:, feature_idx]
+        dist_fig = ff.create_distplot([residuals_data], [feature], curve_type='normal')
         normal_x = dist_fig.data[1]['x']
         normal_y = dist_fig.data[1]['y']
-        dist_fig2 = ff.create_distplot([residuals_data], [initial_feature], curve_type='kde')
+        dist_fig2 = ff.create_distplot([residuals_data], [feature], curve_type='kde')
         kde_x = dist_fig2.data[1]['x']
         kde_y = dist_fig2.data[1]['y']
 
-        # Create subplots for histogram and box plot
         residual_fig = make_subplots(rows=2, cols=1, shared_xaxes=True, row_heights=[0.2, 0.8], vertical_spacing=0.01,
                                      subplot_titles=["Scaled Residuals", None])
 
-        # Add histogram trace
         residual_fig.add_trace(
             go.Histogram(x=residuals_data, histnorm='probability'),
             row=2, col=1
         )
-
-        # Add box plot trace
         residual_fig.add_trace(
             go.Box(x=residuals_data, boxmean=True, name="Dist"),
             row=1, col=1
         )
-
-        # Add normal and KDE lines
         residual_fig.add_trace(go.Scatter(x=normal_x, y=normal_y, mode='lines', name='Normal'), row=2, col=1)
         residual_fig.add_trace(go.Scatter(x=kde_x, y=kde_y, mode='lines', name='KDE'), row=2, col=1)
 
-        # Add dropdown menu for feature selection
-        buttons = []
-        for feature in self.dh.features:
-            residuals_data = residuals_dict[feature]
-            dist_fig = ff.create_distplot([residuals_data], [feature], curve_type='normal')
-            normal_x = dist_fig.data[1]['x']
-            normal_y = dist_fig.data[1]['y']
-            dist_fig2 = ff.create_distplot([residuals_data], [feature], curve_type='kde')
-            kde_x = dist_fig2.data[1]['x']
-            kde_y = dist_fig2.data[1]['y']
-            buttons.append(
-                dict(
-                    label=feature,
-                    method="update",
-                    args=[
-                        {
-                            "x": [residuals_data, residuals_data, normal_x, kde_x],  # Update x values
-                            "y": [None, None, normal_y, kde_y],  # Update y values
-                        },
-                        {
-                            "title.text": f"Residual Histogram for {feature}"
-                        }
-                    ]
-                )
-            )
-
         residual_fig.update_layout(
-            updatemenus=[
-                dict(
-                    type="dropdown",
-                    direction="down",
-                    buttons=buttons,
-                    showactive=True
-                )
-            ],
-            title=f"Residual Histogram for {initial_feature}",
+            title=f"Residual Histogram for {feature}",
             yaxis2_title="Probability",
             width=1200,
             height=600,
             showlegend=True,
             hovermode='x unified'
-
         )
-        residual_fig.show()
+        if show:
+            residual_fig.show()
 
-    def plot_estimated_observed(self):
+        residuals_df = pd.DataFrame(residuals_data, index=self.dh.input_data_df.index, columns=[feature])
+        residuals_df = residuals_df[residuals_df[feature].abs() > abs_threshold]
+        return residual_fig, residuals_df
+
+    def plot_estimated_observed(self,
+                                feature_idx: int = None,
+                                feature_name: str = None,
+                                show: bool = True):
         """
-        Create a plot that shows the estimated concentrations of a feature vs the observed concentrations
-        with a dropdown menu for feature selection.
+        Create a plot that shows the estimated concentrations of a feature vs the observed concentrations.
+
+        Parameters
+        ----------
+        feature_idx : int, optional
+            The index of the feature to plot.
+        feature_name : str, optional
+            The name of the feature to plot.
+        show : bool
+            If True, the plot will be displayed. Default is True.
         """
-        buttons = []
+        # Determine feature index
+        if feature_idx is not None:
+            if feature_idx < 0 or feature_idx >= len(self.dh.features):
+                logger.info(f"Invalid feature_idx provided, must be between 0 and {len(self.dh.features) - 1}")
+                return
+            feature = self.dh.features[feature_idx]
+        elif feature_name is not None:
+            if feature_name not in self.dh.features:
+                logger.info(f"Invalid feature_name provided, must be one of {self.dh.features}")
+                return
+            feature = feature_name
+            feature_idx = self.dh.features.index(feature_name)
+        else:
+            logger.info("Either feature_idx or feature_name must be provided.")
+            return
+
+        observed_data = self.dh.input_data_plot[feature]
+        predicted_data = self.V_prime_plot[:, feature_idx]
+
+        # Perform regression
+        A = np.vstack([observed_data.values, np.ones(len(observed_data))]).T
+        m, c = np.linalg.lstsq(A, predicted_data, rcond=None)[0]
+        m1, c1 = np.linalg.lstsq(A, observed_data, rcond=None)[0]
+
+        # Create the plot
         xy_plot = go.Figure()
+        xy_plot.add_trace(go.Scatter(x=observed_data, y=predicted_data, mode='markers', name="Data"))
+        xy_plot.add_trace(go.Scatter(x=observed_data, y=(m * observed_data + c),
+                                     line=dict(color='red', dash='dash', width=1), name='Regression'))
+        xy_plot.add_trace(go.Scatter(x=observed_data, y=(m1 * observed_data + c1),
+                                     line=dict(color='blue', width=1), name='One-to-One'))
 
-        for feature_idx, x_label in enumerate(self.dh.input_data_df.columns):
-            observed_data = self.dh.input_data_df[x_label]
-            predicted_data = self.model.WH[:, feature_idx]
-
-            A = np.vstack([observed_data.values, np.ones(len(observed_data))]).T
-            m, c = np.linalg.lstsq(A, predicted_data, rcond=None)[0]
-            m1, c1 = np.linalg.lstsq(A, observed_data, rcond=None)[0]
-
-            # Add traces for each feature (initially hidden)
-            xy_plot.add_trace(
-                go.Scatter(x=observed_data, y=predicted_data, mode='markers', name="Data", visible=(feature_idx == 0)))
-            xy_plot.add_trace(go.Scatter(x=observed_data, y=(m * observed_data + c),
-                                         line=dict(color='red', dash='dash', width=1), name='Regression',
-                                         visible=(feature_idx == 0)))
-            xy_plot.add_trace(go.Scatter(x=observed_data, y=(m1 * observed_data + c1),
-                                         line=dict(color='blue', width=1), name='One-to-One',
-                                         visible=(feature_idx == 0)))
-
-            # Create a button for each feature
-            buttons.append(
-                dict(
-                    label=x_label,
-                    method="update",
-                    args=[
-                        {"visible": [i // 3 == feature_idx for i in range(len(self.dh.input_data_df.columns) * 3)]},
-                        {"title.text": f"Observed/Predicted Scatter Plot - {x_label}"}
-                    ]
-                )
-            )
-
-        # Add dropdown menu
         xy_plot.update_layout(
-            updatemenus=[
-                dict(
-                    type="dropdown",
-                    direction="down",
-                    buttons=buttons,
-                    showactive=True
-                )
-            ],
-            title=f"Observed/Predicted Scatter Plot - {self.dh.input_data_df.columns[0]}",
+            title=f"Observed/Predicted Scatter Plot - {feature}",
             width=800,
             height=600,
             xaxis_title="Observed Concentrations",
             yaxis_title="Predicted Concentrations",
             hovermode='x'
         )
-        xy_plot.show()
 
-    def plot_estimated_timeseries(self):
+        if show:
+            xy_plot.show()
+
+        return xy_plot
+
+    def plot_estimated_timeseries(self,
+                                  feature_idx: int = None,
+                                  feature_name: str = None,
+                                  show: bool = True):
         """
-        Create a plot that shows the estimated values of a timeseries for a specific feature,
-        with a dropdown menu for feature selection.
+        Create a plot that shows the estimated values of a timeseries for a specific feature.
+
+        Parameters
+        ----------
+        feature_idx : int, optional
+            The index of the feature to plot.
+        feature_name : str, optional
+            The name of the feature to plot.
+        show : bool
+            If True, the plot will be displayed. Default is True.
         """
-        buttons = []
+        # Determine feature index
+        if feature_idx is not None:
+            if feature_idx < 0 or feature_idx >= len(self.dh.features):
+                logger.info(f"Invalid feature_idx provided, must be between 0 and {len(self.dh.features) - 1}")
+                return
+            feature = self.dh.features[feature_idx]
+        elif feature_name is not None:
+            if feature_name not in self.dh.features:
+                logger.info(f"Invalid feature_name provided, must be one of {self.dh.features}")
+                return
+            feature = feature_name
+            feature_idx = self.dh.features.index(feature_name)
+        else:
+            logger.info("Either feature_idx or feature_name must be provided.")
+            return
+
+        observed_data = self.dh.input_data_plot[feature].values
+        predicted_data = self.V_prime_plot[:, feature_idx]
+
+        data_df = pd.DataFrame(data={"observed": observed_data, "predicted": predicted_data},
+                               index=self.dh.input_data_plot.index)
+        data_df.index = pd.to_datetime(data_df.index)
+        data_df = data_df.sort_index()
+        data_df = data_df.resample(min_timestep(data_df)).mean()
+
         ts_subplot = make_subplots(rows=2, cols=1, shared_xaxes=True, vertical_spacing=0.01, row_heights=[0.8, 0.2])
 
-        for feature_idx, x_label in enumerate(self.dh.input_data_df.columns):
-            observed_data = self.dh.input_data_df[x_label].values
-            predicted_data = self.model.WH[:, feature_idx]
+        ts_subplot.add_trace(go.Scatter(x=data_df.index, y=data_df["observed"], line=dict(width=1),
+                                        mode='lines+markers', name="Observed Concentrations"), row=1, col=1)
+        ts_subplot.add_trace(go.Scatter(x=data_df.index, y=data_df["predicted"], line=dict(width=1),
+                                        mode='lines+markers', name="Predicted Concentrations"), row=1, col=1)
+        ts_subplot.add_trace(go.Scatter(x=data_df.index, y=data_df["observed"] - data_df["predicted"],
+                                        line=dict(width=1), mode='lines', name="Residuals"), row=2, col=1)
 
-            data_df = pd.DataFrame(data={"observed": observed_data, "predicted": predicted_data},
-                                   index=self.dh.input_data_df.index)
-            data_df.index = pd.to_datetime(data_df.index)
-            data_df = data_df.sort_index()
-            data_df = data_df.resample(min_timestep(data_df)).mean()
-
-            # Add traces for each feature (initially hidden)
-            ts_subplot.add_trace(go.Scatter(x=data_df.index, y=data_df["observed"], line=dict(width=1),
-                                            mode='lines+markers', name="Observed Concentrations",
-                                            visible=(feature_idx == 0)), row=1, col=1)
-            ts_subplot.add_trace(go.Scatter(x=data_df.index, y=data_df["predicted"], line=dict(width=1),
-                                            mode='lines+markers', name="Predicted Concentrations",
-                                            visible=(feature_idx == 0)), row=1, col=1)
-            ts_subplot.add_trace(go.Scatter(x=data_df.index, y=data_df["observed"] - data_df["predicted"],
-                                            line=dict(width=1), mode='lines', name="Residuals",
-                                            visible=(feature_idx == 0)), row=2, col=1)
-
-            # Create a button for each feature
-            buttons.append(
-                dict(
-                    label=x_label,
-                    method="update",
-                    args=[
-                        {"visible": [i // 3 == feature_idx for i in range(len(self.dh.input_data_df.columns) * 3)]},
-                        {"title.text": f"Estimated Time-series for {x_label} - Model {self.selected_model}"}
-                    ]
-                )
-            )
-
-        # Add dropdown menu
         ts_subplot.update_layout(
-            updatemenus=[
-                dict(
-                    type="dropdown",
-                    direction="down",
-                    buttons=buttons,
-                    showactive=True
-                )
-            ],
-            title=f"Estimated Time-series for {self.dh.input_data_df.columns[0]} - Model {self.selected_model}",
+            title=f"Estimated Time-series for {feature} - Model {self.selected_model}",
             width=1200,
             height=800,
             yaxis_title="Concentrations",
             hovermode='x unified'
         )
-        ts_subplot.show()
+
+        if show:
+            ts_subplot.show()
+
+        return ts_subplot
 
     def plot_factor_profile(self,
                             factor_idx: int,
                             H: np.ndarray = None,
-                            W: np.ndarray = None
+                            W: np.ndarray = None,
+                            show: bool = True
                             ):
         """
         Create a bar plot of a factor profile.
@@ -379,8 +398,10 @@ class ModelAnalysis:
             Overrides the factor profile matrix in the ESAT model used for the plot.
         W : np.ndarray
             Overrides the factor contribution matrix in the ESAT model used for the plot.
-
+        show : bool
+            If True, the plot will be displayed. Default is True.
         """
+        #TODO: Manage case where the number of samples is very high and plotting will take a long time.
         if factor_idx > self.model.factors or factor_idx < 1:
             logger.info(f"Invalid factor provided, must be between 1 and {self.model.factors}")
             return
@@ -426,7 +447,8 @@ class ModelAnalysis:
         profile_plot.update_yaxes(title_text="% of Features", secondary_y=True, row=1, col=1, range=[0, 100])
         profile_plot.update_layout(title=f"Factor Profile - Model {self.selected_model} - Factor {factor_idx_l}",
                                    width=1200, height=600, hovermode='x unified')
-        profile_plot.show()
+        if show:
+            profile_plot.show()
 
         contr_plot = go.Figure()
         contr_plot.add_trace(go.Scatter(x=data_df.index, y=data_df[factor_label], mode='lines+markers',
@@ -435,7 +457,9 @@ class ModelAnalysis:
                                  width=1200, height=600, showlegend=True,
                                  legend=dict(orientation="h", xanchor="right", yanchor="bottom", x=1, y=1.02))
         contr_plot.update_yaxes(title_text="Normalized Contributions")
-        contr_plot.show()
+        if show:
+            contr_plot.show()
+        return profile_plot, contr_plot
 
     def plot_all_factors(self, factor_list: list = None, H: np.ndarray = None, W: np.ndarray = None):
         """
@@ -491,7 +515,7 @@ class ModelAnalysis:
                           hovermode='x unified')
         fig.show()
 
-    def plot_all_factors_3d(self, H=None, W=None):
+    def plot_all_factors_3d(self, H=None, W=None, show: bool = True):
         """
         Create a 3D bar plot of the factor profiles and their contributions.
         Parameters
@@ -500,6 +524,8 @@ class ModelAnalysis:
             The factor profile matrix, if None will use the model's H matrix.
         W : np.ndarray, optional
             The factor contribution matrix, if None will use the model's W matrix.
+        show : bool
+            If True, the plot will be displayed. Default is True.
 
         Returns
         -------
@@ -627,9 +653,11 @@ class ModelAnalysis:
                 )
             ]
         )
-        fig.show()
+        if show:
+            fig.show()
+        return fig
 
-    def plot_factor_fingerprints(self, grouped: bool = False):
+    def plot_factor_fingerprints(self, grouped: bool = False, show: bool = True):
         """
         Create a stacked bar plot of the factor profile, fingerprints.
 
@@ -640,18 +668,19 @@ class ModelAnalysis:
         fig = go.Figure()
         for idx in range(self.model.factors-1, -1, -1):
             fig.add_trace(go.Bar(name=f"Factor {idx+1}", x=self.dh.features, y=normalized_factors_data[idx]))
-        if grouped:
             fig.update_layout(title=f"Factor Fingerprints - Model {self.selected_model}",
-                              width=1200, height=800, barmode='group', hovermode='x unified')
-        else:
-            fig.update_layout(title=f"Factor Fingerprints - Model {self.selected_model}",
-                              width=1200, height=800, barmode='stack', hovermode='x unified')
+                              width=1200, height=800, barmode='group' if grouped else 'stack',
+                              hovermode='x unified')
         fig.update_yaxes(title_text="% Feature Concentration", range=[0, 100])
-        fig.show()
+        if show:
+            fig.show()
+        return fig
+
 
     def plot_g_space(self,
                      factor_1: int,
-                     factor_2: int
+                     factor_2: int,
+                     show: bool = True
                      ):
         """
         Create a scatter plot showing a factor contributions vs another factor contributions.
@@ -662,6 +691,8 @@ class ModelAnalysis:
             The index of the factor to plot along the x-axis.
         factor_2 : int
             The index of the factor to plot along the y-axis.
+        show : bool
+            If True, the plot will be displayed. Default is True.
 
         """
         if factor_1 > self.model.factors or factor_1 < 1:
@@ -682,11 +713,14 @@ class ModelAnalysis:
         fig.update_layout(title=f"G-Space Plot - Model {self.selected_model}", width=800, height=800)
         fig.update_yaxes(title_text=f"Factor {factor_2} Contributions (avg=1)")
         fig.update_xaxes(title_text=f"Factor {factor_1} Contributions (avg=1)")
-        fig.show()
+        if show:
+            fig.show()
+        return fig
 
     def plot_factor_contributions(self,
                                   feature_idx: int,
-                                  contribution_threshold: float = 0.05
+                                  contribution_threshold: float = 0.05,
+                                  show: bool = True
                                   ):
         """
         Create a plot of the factor contributions and the normalized contribution.
@@ -697,6 +731,8 @@ class ModelAnalysis:
             The index of the feature to plot.
         contribution_threshold : float
             The contribution percentage of a factor above which to include on the plot.
+        show : bool
+            If True, the plot will be displayed. Default is True.
 
         """
         if feature_idx > self.dh.input_data_df.shape[1] - 1 or feature_idx < 0:
@@ -724,7 +760,8 @@ class ModelAnalysis:
                                              hoverinfo="label+value", textinfo="percent")])
         feature_fig.update_layout(title=f"Factor Contributions to Feature: {x_label} - Model {self.selected_model}", width=1200, height=600,
                                   legend_title_text=f"Factor Contribution > {contribution_threshold}%")
-        feature_fig.show()
+        if show:
+            feature_fig.show()
 
         factors_contr = self.model.W
         normalized_factors_contr = 100 * (factors_contr / factors_contr.sum(axis=0))
@@ -742,7 +779,9 @@ class ModelAnalysis:
                                 width=1200, height=600, hovermode='x unified',
                                 legend=dict(orientation="h", xanchor="right", yanchor="bottom", x=1, y=1.02))
         contr_fig.update_yaxes(title_text="Normalized Contribution")
-        contr_fig.show()
+        if show:
+            contr_fig.show()
+        return feature_fig, contr_fig
 
     def plot_factor_composition(self):
         """
@@ -863,8 +902,9 @@ class BatchAnalysis:
     def __init__(self, batch_sa: BatchSA, data_handler: DataHandler = None):
         self.batch_sa = batch_sa
         self.data_handler = data_handler
+        self.aggregated_output = {}
 
-    def plot_loss(self):
+    def plot_loss(self, show: bool = True):
         """
         Plot the loss value for each model in the batch solution as it changes over time.
 
@@ -881,9 +921,12 @@ class BatchAnalysis:
         q_fig.update_layout(width=1200, height=600, hovermode='x')
         q_fig.update_xaxes(title_text="Iterations")
         q_fig.update_yaxes(title_text="Q(True)")
-        q_fig.show()
+        if show:
+            q_fig.show()
+            return None
+        return q_fig
 
-    def plot_loss_distribution(self):
+    def plot_loss_distribution(self, show: bool = True):
         """
         Plot the distribution of batch model Q(True) and Q(Robust).
 
@@ -911,70 +954,68 @@ class BatchAnalysis:
         b_q_fig.update_xaxes(title_text="")
         b_q_fig.update_traces(hovertemplate='Model: %{text}<br>%{x}: %{y:.2f}<extra></extra>')
         b_q_fig.update_layout(width=800, height=800)
-        b_q_fig.show()
+        if show:
+            b_q_fig.show()
+            return None
+        return b_q_fig
 
-    def plot_temporal_residuals(self):
+    def plot_temporal_residuals(self, feature_idx: int, show: bool = True):
         """
-        Plot the temporal residuals for a specified feature, with a dropdown menu for feature selection.
+        Plot the temporal residuals for a specified feature.
+        Only the best model's residuals are visible initially; others are legendonly.
         """
-        temporal_residuals = []
-        for i in range(len(self.batch_sa.results)):
-            result = self.batch_sa.results[i]
-            if result is None:
-                continue
-            model_residual = np.abs(result.V - result.WH)
-            temporal_residuals.append(model_residual)
+        if feature_idx is None:
+            raise ValueError("feature_idx must be provided.")
 
         if self.data_handler is None:
-            x = list(range(1, temporal_residuals[0].shape[0] + 1))
-            features = [f"Feature {i + 1}" for i in range(temporal_residuals[0].shape[1])]
+            V = self.batch_sa.V
+            V_primes = [r.WH for r in self.batch_sa.results if r is not None]
+            features = [f"Feature {i + 1}" for i in range(V.shape[1])]
+            x = list(range(1, V.shape[0] + 1))
+            feature_label = features[feature_idx]
+            col_idx = feature_idx
         else:
-            x = self.data_handler.input_data_df.index
-            features = self.data_handler.features
+            V = self.data_handler.input_data_plot.values
+            if len(self.aggregated_output) == 0:
+                for i, r in enumerate(self.batch_sa.results):
+                    if r is not None:
+                        self.aggregated_output[i] = self.data_handler.aggregate_output(r.WH)
+            # Ensure V_primes is a list, not a dict
+            V_primes = [self.aggregated_output.get(i, None) for i in range(len(self.batch_sa.results))]
+            feature_label = self.data_handler.features[feature_idx]
+            col_idx = feature_idx
+            x = self.data_handler.input_data_plot.index
 
         temporal_fig = go.Figure()
-        buttons = []
+        # Add input trace
+        y_input = V[:, col_idx]
+        temporal_fig.add_trace(
+            go.Scatter(x=x, y=y_input, name="Input", line=dict(dash='dash', width=2), visible=True)
+        )
 
-        for feature_idx, feature_label in enumerate(features):
-            # Add traces for each feature (initially hidden)
+        # Add residual traces for each model
+        for i, V_prime in enumerate(V_primes):
+            if V_prime is None:
+                continue
+            if self.data_handler is not None:
+                if not isinstance(V_prime, pd.DataFrame):
+                    V_prime = pd.DataFrame(V_prime, columns=self.data_handler.features, index=x)
+                y_res = V[:, col_idx] - V_prime[feature_label].values
+            else:
+                y_res = V[:, col_idx] - V_prime[:, col_idx]
+            visible = True if i == self.batch_sa.best_model else "legendonly"
             temporal_fig.add_trace(
-                go.Scatter(x=x, y=self.batch_sa.V[:, feature_idx], name="Input", line=dict(dash='dash', width=2),
-                           visible=(feature_idx == 0))
-            )
-            for i, t in enumerate(temporal_residuals):
-                visible = (feature_idx == 0)
-                temporal_fig.add_trace(
-                    go.Scatter(x=x, y=t[:, feature_idx], mode='lines', name=f"Model {i + 1}",
-                               visible=visible if i == self.batch_sa.best_model else "legendonly")
-                )
-
-            # Create a button for each feature
-            buttons.append(
-                dict(
-                    label=feature_label,
-                    method="update",
-                    args=[
-                        {"visible": [i // (len(temporal_residuals) + 1) == feature_idx
-                                     for i in range(len(features) * (len(temporal_residuals) + 1))]},
-                        {"title.text": f"Model Temporal Residuals - Feature: {feature_label}"}
-                    ]
-                )
+                go.Scatter(x=x, y=y_res, mode='lines', name=f"Model {i + 1}", visible=visible)
             )
 
-        # Add dropdown menu
         temporal_fig.update_layout(
-            updatemenus=[
-                dict(
-                    type="dropdown",
-                    direction="down",
-                    buttons=buttons,
-                    showactive=True
-                )
-            ],
-            title=f"Model Temporal Residuals - Feature: {features[0]}",
             width=1200,
             height=600,
-            hovermode='x'
+            hovermode='x',
+            title=f"Model Temporal Residuals - Feature: {feature_label}"
         )
         temporal_fig.update_yaxes(title_text="Conc.")
-        temporal_fig.show()
+        if show:
+            temporal_fig.show()
+            return None
+        return temporal_fig

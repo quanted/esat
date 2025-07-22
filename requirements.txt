@@ -4,6 +4,7 @@ numpy==2.2.6
 pandas[excel, performance]==2.3.0
 plotly==6.1.2
 psutil==7.0.0
+scikit-learn==1.6.1
 scipy==1.15.3
 tabulate==0.9.0
 tqdm==4.67.1

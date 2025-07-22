@@ -1,13 +1,18 @@
-import math
 import os
 import sys
+import math
 import logging
 import copy
 import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
+import plotly.colors as plotly_colors
+
+from scipy.stats import gaussian_kde
+
 from esat.model.recombinator import optimal_block_length
 from esat.utils import min_timestep
+
 
 logging.basicConfig(format='%(asctime)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S', level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -53,10 +58,12 @@ class DataHandler:
                  uncertainty_path: str,
                  index_col: str = None,
                  drop_col: list = None,
+                 drop_nans: bool = True,
                  loc_cols: str | list = None,
                  sn_threshold: float = 2.0,
                  load: bool = True,
-                 loc_metadata: dict = None
+                 loc_metadata: dict = None,
+                 max_plotting_n: int = 10000,
                  ):
         """
         Constructor method.
@@ -69,8 +76,13 @@ class DataHandler:
         self.input_data = None
         self.uncertainty_data = None
 
+        self.input_data_plot = None
+        self.uncertainty_data_plot = None
+        self.max_plotting_n = max_plotting_n
+
         self.sn_mask = None
         self.sn_threshold = sn_threshold
+        self.drop_nans = drop_nans
 
         self.metrics = None
 
@@ -96,6 +108,7 @@ class DataHandler:
             self._check_paths()
             self._load_data()
             self._determine_optimal_block()
+            self._aggregate_data()
 
     def get_data(self):
         """
@@ -306,6 +319,13 @@ class DataHandler:
             _input_data[f] = pd.to_numeric(_input_data[f])
             _uncertainty_data[f] = pd.to_numeric(_uncertainty_data[f])
 
+        # Ensure no zero values in data or uncertainty
+        if self.drop_nans:
+            _input_nans = _input_data.isna().any(axis=1)
+            _uncertainty_nans = _uncertainty_data.isna().any(axis=1)
+            _input_data = _input_data[~_input_nans | ~_uncertainty_nans]
+            _uncertainty_data = _uncertainty_data[~_input_nans | ~_uncertainty_nans]
+
         self.input_data_df = _input_data
         self.uncertainty_data_df = _uncertainty_data
 
@@ -338,20 +358,21 @@ class DataHandler:
             If the file successfully loads the function returns a pd.DataFrame otherwise it will exit.
 
         """
-        if ".csv" in filepath:
+        ext = filepath.split(".")[-1]
+        if ext in ["csv", "txt"]:
             if index_col:
-                data = pd.read_csv(filepath, index_col=index_col)
+                data = pd.read_csv(filepath, index_col=index_col, sep=None, engine="python")
             else:
-                data = pd.read_csv(filepath)
-        elif ".txt" in filepath:
+                data = pd.read_csv(filepath, sep=None, engine="python")
+        elif ext in ["xls", "xlsx"]:
             if index_col:
-                data = pd.read_table(filepath, index_col=index_col, sep="\t")
+                data = pd.read_excel(filepath, index_col=index_col)
             else:
-                data = pd.read_table(filepath, sep="\t")
-            # data.dropna(inplace=True)
+                data = pd.read_excel(filepath)
         else:
-            logger.warning("Unknown file type provided.")
-            sys.exit()
+            logger.warning(f"Unknown file type provided. Ext: {ext}, file: {filepath}")
+            #TODO: Add custom exception for unknown file types.
+            return None
         return data
 
     def _load_data(self, existing_data: bool = False):
@@ -409,24 +430,77 @@ class DataHandler:
             self.optimal_block = int(input_data.shape[1]/5)
             logger.error(f"Unable to determine optimal block size. Setting default to {self.optimal_block}")
 
+    def _aggregate_data(self):
+        """
+        Aggregate input and uncertainty data for plotting if sample count exceeds max_plotting_n.
+        Stores aggregation bins/labels for reuse.
+        """
+        self._agg_bins = {}
+        self._agg_labels = {}
+        if self.input_data is None or self.uncertainty_data is None:
+            self.input_data_plot = None
+            self.uncertainty_data_plot = None
+            return
+        n_samples = len(self.input_data)
+        if n_samples <= self.max_plotting_n:
+            self.input_data_plot = self.input_data
+            self.uncertainty_data_plot = self.uncertainty_data
+            return
+        bins = np.linspace(0, 1, self.max_plotting_n + 1)
+        agg_input = pd.DataFrame()
+        agg_uncertainty = pd.DataFrame()
+        for col in self.input_data.columns:
+            quantiles = self.input_data[col].quantile(bins)
+            labels = range(self.max_plotting_n)
+            binned = pd.cut(self.input_data[col], quantiles, labels=labels, include_lowest=True, duplicates='drop')
+            agg_input[col] = self.input_data.groupby(binned, observed=True)[col].mean().reset_index(drop=True)
+            agg_uncertainty[col] = self.uncertainty_data.groupby(binned, observed=True)[col].mean().reset_index(
+                drop=True)
+            self._agg_bins[col] = quantiles
+            self._agg_labels[col] = labels
+        self.V_prime_plot = agg_input
+        self.uncertainty_data_plot = agg_uncertainty
+        logger.info(f"Aggregated data for plotting: {n_samples} samples reduced to {self.max_plotting_n} samples.")
+
+    def aggregate_output(self, output_array: np.ndarray) -> pd.DataFrame:
+        """
+        Aggregate an output numpy array using the same bins/labels as used in _aggregate_data.
+        Returns a pandas DataFrame.
+        """
+        if not hasattr(self, "_agg_bins") or not hasattr(self, "_agg_labels"):
+            logger.error("No aggregation bins/labels found. Run _aggregate_data first.")
+            # Fallback: return as DataFrame with feature names
+            return pd.DataFrame(output_array, columns=self.features)
+        # Convert array to DataFrame with correct columns
+        output_df = pd.DataFrame(output_array, columns=self.features)
+        agg_output = pd.DataFrame()
+        for col in output_df.columns:
+            if col in self._agg_bins:
+                binned = pd.cut(output_df[col], self._agg_bins[col], labels=self._agg_labels[col], include_lowest=True,
+                                duplicates='drop')
+                agg_output[col] = output_df.groupby(binned, observed=True)[col].mean().reset_index(drop=True)
+            else:
+                agg_output[col] = output_df[col]
+        return agg_output
+
     def plot_data_uncertainty(self, show: bool = True, include_menu: bool = True, feature_idx: int = None):
         """
         Create a plot of the data vs the uncertainty for a specified feature, with a dropdown menu for feature selection.
         """
-        if self.input_data is None or self.uncertainty_data is None:
+        if self.input_data_plot is None or self.uncertainty_data_plot is None:
             logger.error("Input or uncertainty data is not loaded.")
             return
 
         if not include_menu and feature_idx is not None:
-            features = [self.input_data.columns[feature_idx]]
+            features = [self.input_data_plot.columns[feature_idx]]
         else:
-            features = self.input_data.columns
+            features = self.input_data_plot.columns
         du_plot = go.Figure()
         buttons = []
 
         for feature_idx, feature_label in enumerate(features):
-            feature_data = self.input_data[feature_label]
-            feature_uncertainty = self.uncertainty_data[feature_label]
+            feature_data = self.input_data_plot[feature_label]
+            feature_uncertainty = self.uncertainty_data_plot[feature_label]
 
             # Add traces for each feature (initially hidden)
             du_plot.add_trace(
@@ -485,17 +559,17 @@ class DataHandler:
         y_idx: int
             The feature index for the y-axis values.
         """
-        if x_idx > self.input_data.shape[1] - 1 or x_idx < 0:
-            logger.info(f"Invalid x feature index provided, must be between 0 and {self.input_data.shape[1]}")
+        if x_idx > self.input_data_plot.shape[1] - 1 or x_idx < 0:
+            logger.info(f"Invalid x feature index provided, must be between 0 and {self.input_data_plot.shape[1]}")
             return
-        x_label = self.input_data.columns[x_idx]
-        if y_idx > self.input_data.shape[1] - 1 or y_idx < 0:
-            logger.info(f"Invalid y feature index provided, must be between 0 and {self.input_data.shape[1]}")
+        x_label = self.input_data_plot.columns[x_idx]
+        if y_idx > self.input_data_plot.shape[1] - 1 or y_idx < 0:
+            logger.info(f"Invalid y feature index provided, must be between 0 and {self.input_data_plot.shape[1]}")
             return
-        y_label = self.input_data.columns[y_idx]
+        y_label = self.input_data_plot.columns[y_idx]
 
-        x_data = self.input_data[x_label]
-        y_data = self.input_data[y_label]
+        x_data = self.input_data_plot[x_label]
+        y_data = self.input_data_plot[y_label]
 
         A = np.vstack([x_data.values, np.ones(len(x_data.values))]).T
         m, c = np.linalg.lstsq(A, y_data.values, rcond=None)[0]
@@ -559,15 +633,15 @@ class DataHandler:
 
         """
         if type(feature_selection) is int:
-            feature_selection = feature_selection % self.input_data.shape[0]
-            feature_selection = self.input_data.columns[feature_selection]
+            feature_selection = feature_selection % self.input_data_plot.shape[0]
+            feature_selection = self.input_data_plot.columns[feature_selection]
             feature_label = [feature_selection]
         else:
             if type(feature_selection) is list:
-                feature_label = self.input_data.columns[feature_selection]
+                feature_label = self.input_data_plot.columns[feature_selection]
             else:
                 feature_label = [feature_selection]
-        data_df = copy.copy(self.input_data)
+        data_df = copy.copy(self.input_data_plot)
         data_df.index = pd.to_datetime(data_df.index)
         data_df = data_df.sort_index()
         data_df = data_df.resample(min_timestep(data_df)).mean()
@@ -585,6 +659,208 @@ class DataHandler:
             return None
         else:
             return ts_plot
+
+    def plot_feature_correlation_heatmap(self, method: str = "pearson", show: bool = True):
+        """
+        Plots a correlation heatmap for the features in the DataFrame.
+
+        Parameters
+        ----------
+        df : pd.DataFrame
+            The input DataFrame with features as columns.
+        method : str
+            Correlation method: 'pearson', 'spearman', or 'kendall'.
+        show : bool
+            Whether to display the plot immediately.
+
+        Returns
+        -------
+        plotly.graph_objects.Figure
+            The Plotly heatmap figure.
+        """
+        corr = self.input_data_plot.corr(method=method)
+        fig = go.Figure(
+            data=go.Heatmap(
+                z=corr.values,
+                x=corr.columns,
+                y=corr.columns,
+                colorscale="rdylbu",
+                reversescale=True,
+                colorbar=dict(title="Correlation"),
+                zmin=-1, zmax=1
+            )
+        )
+        fig.update_layout(
+            title=dict(x=0.5, xanchor="center", text=f"Feature Correlation Heatmap ({method.title()})"),
+            xaxis_title="Features",
+            yaxis_title="Features",
+            width=800,
+            height=800,
+            margin=dict(l=0, r=0, t=50, b=0)
+        )
+        if show:
+            fig.show()
+            return None
+        return fig
+
+    def plot_superimposed_histograms(self, show: bool = True, nbins: int = 50):
+        """
+        Plots superimposed histograms for each feature in the input data using a colormap.
+        """
+        fig = go.Figure()
+        # Use a qualitative color palette from Plotly
+        colors = getattr(plotly_colors.qualitative, "Plotly")
+        n_colors = len(colors)
+        for i, col in enumerate(self.input_data_plot.columns):
+            fig.add_trace(go.Histogram(
+                x=self.input_data_plot[col],
+                name=str(col),
+                opacity=0.5,
+                nbinsx=nbins,
+                marker_color=colors[i % n_colors]
+            ))
+        fig.update_layout(
+            barmode='overlay',
+            title=dict(x=0.5, xanchor="center", text='Histograms of Features'),
+            xaxis_title='Value',
+            yaxis_title='Count',
+            width=1200,
+            height=800,
+            margin=dict(l=10, r=10, t=50, b=10),
+            hovermode='x unified'
+        )
+        if show:
+            fig.show()
+            return None
+        return fig
+
+    def plot_2d_histogram(self, x_col: str, y_col: str, show: bool=True, nbins:int=100):
+        """
+        Plots a 2D histogram of two features in the input data.
+        Parameters
+        ----------
+        x_col : str
+            The name of the feature to plot on the x-axis.
+        y_col : str
+            The name of the feature to plot on the y-axis.
+        show : bool
+            Whether to display the plot immediately.
+        nbins : int
+            The number of bins to use for the histogram in both x and y dimensions.
+
+        Returns
+        -------
+        Plotly.graph_objects.Figure
+            The Plotly figure object containing the 2D histogram.
+        """
+        fig = go.Figure(data=go.Histogram2d(
+            x=self.input_data_plot[x_col],
+            y=self.input_data_plot[y_col],
+            nbinsx=nbins,
+            nbinsy=nbins,
+            colorscale='Blues'
+        ))
+        fig.update_layout(
+            title=dict(x=0.5, xanchor="center", text=f'2D Histogram: {x_col} vs {y_col}'),
+            xaxis_title=x_col,
+            yaxis_title=y_col,
+            width=800,
+            height=800,
+            margin=dict(l=20, r=20, t=60, b=20),
+        )
+        if show:
+            fig.show()
+            return None
+        else:
+            return fig
+
+    def plot_ridgeline(self, log_x=True, fill=False, max_height=800, min_spacing=0.5, max_spacing=1.5, nbins=500,
+                         show=True):
+        """
+        Create a ridgeline plot of the feature distributions in the input data.
+
+        Parameters
+        ----------
+        log_x : bool
+            Whether to use a logarithmic scale for the x-axis.
+        fill : bool
+            Whether to fill the area under the curves.
+        max_height : int
+            The maximum height of the plot in pixels.
+        min_spacing : float
+            The minimum spacing between the ridgelines.
+        max_spacing : float
+            The maximum spacing between the ridgelines.
+        nbins : int
+            The number of bins to use for the histogram in the x-axis.
+        show : bool
+            Whether to display the plot immediately.
+
+        Returns
+        -------
+        plotly.graph_objects.Figure
+            The Plotly figure object containing the ridgeline plot.
+        """
+        n = len(self.input_data_plot.columns)
+        spacing = min(max_spacing, max(min_spacing, (max_height - 100) / n / 50))
+        fig = go.Figure()
+        y_ticks = []
+        y_labels = []
+        for i, col in enumerate(self.input_data_plot.columns):
+            data = self.input_data_plot[col].dropna().values
+            if log_x:
+                data = data[data > 0]
+                log_data = np.log10(data)
+                x_grid = np.linspace(log_data.min(), log_data.max(), nbins)
+                actual_x = 10 ** x_grid
+                kde = gaussian_kde(log_data)
+                y = kde(x_grid)
+                feature_names = np.full_like(x_grid, col, dtype=object)
+                customdata = np.stack([actual_x, x_grid, feature_names], axis=-1)
+            else:
+                if len(data) < 2:
+                    continue
+                x_grid = np.linspace(data.min(), data.max(), nbins)
+                kde = gaussian_kde(data)
+                y = kde(x_grid)
+                feature_names = np.full_like(x_grid, col, dtype=object)
+                customdata = np.stack([x_grid, np.log10(x_grid + 1e-12), feature_names], axis=-1)
+            y_offset = i * spacing
+            y_ticks.append(y_offset)
+            y_labels.append(str(col))
+            fig.add_trace(go.Scatter(
+                x=x_grid if log_x else x_grid,
+                y=y + y_offset,
+                mode='lines',
+                fill='tozeroy' if fill else None,
+                name=str(col),
+                line=dict(width=2),
+                customdata=customdata,
+                hovertemplate=(
+                    "Feature: %{customdata[2]}<br>"
+                    "log10(Value): %{customdata[1]:.3f}<br>"
+                    "Value: %{customdata[0]:.3g}<br>"
+                    "Density: %{y:.3g}<extra></extra>"
+                )
+            ))
+        fig.update_layout(
+            yaxis=dict(
+                tickvals=y_ticks,
+                ticktext=y_labels,
+                title='Feature'
+            ),
+            xaxis_title='log10(Value)' if log_x else 'Value',
+            title='Ridgeline Plot of Feature Distributions',
+            showlegend=False,
+            height=max_height,
+            width=900,
+            margin=dict(l=80, r=40, t=60, b=40)
+        )
+        if show:
+            fig.show()
+            return None
+        else:
+            return fig
 
     @staticmethod
     def load_dataframe(input_df: pd.DataFrame, uncertainty_df: pd.DataFrame):

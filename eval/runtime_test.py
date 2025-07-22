@@ -8,136 +8,154 @@ sys.path.append(cwd + "..\\src")
 import time
 import json
 import logging
+import plotly.graph_objects as go
+
 from esat.data.datahandler import DataHandler
 from esat.model.batch_sa import BatchSA
 
 
+def plot_runtime_results_plotly(analysis_file_path, output_dir):
+    if os.path.exists(analysis_file_path):
+        with open(analysis_file_path, 'r') as json_file:
+            results = json.load(json_file)
+
+        # Prepare data for plotting
+        plot_data = {}
+
+        for key, value in results.items():
+            dataset = value["dataset"]
+            if dataset not in plot_data:
+                plot_data[dataset] = {}
+
+            for method in ["ls-nmf", "ws-nmf"]:  # Explicitly handle known methods
+                runtime_key = f"{method}-runtime"
+                if runtime_key in value:
+                    if method not in plot_data[dataset]:
+                        plot_data[dataset][method] = []
+                    plot_data[dataset][method].append((value["factors"], value[runtime_key]))
+
+        # Create Plotly figure
+        fig = go.Figure()
+
+        for dataset, method_data in plot_data.items():
+            for method, data in method_data.items():
+                data.sort(key=lambda x: x[0])  # Sort by factors
+                if data:  # Ensure data is not empty
+                    factors, runtimes = zip(*data)
+                    fig.add_trace(go.Scatter(
+                        x=factors,
+                        y=runtimes,
+                        mode='lines+markers',
+                        name=f"{dataset} - {method}"
+                    ))
+
+        # Update layout
+        fig.update_layout(
+            title="Runtime Analysis",
+            xaxis_title="Factors",
+            yaxis_title="Runtime (seconds)",
+            legend_title="Dataset - Method",
+            template="plotly_white"
+        )
+
+        # Save the plot
+        output_file = os.path.join(output_dir, "runtime_results_plot.html")
+        fig.write_html(output_file)
+
+
 if __name__ == "__main__":
     """
-    Runtime comparison analysis compares how long it takes for the ESAT algorithms to converge with a loss value that 
-    is within 10% of the optimal PMF5 solution. 
-    
-    The target Q from PMF5 has been recorded and used to set the Q target range, the BatchSA is executed with the 
-    default hyper-parameters (convergence criteria). If the optimal ESAT solution has a lower Q value than the target
-    range,  converge_delta is increased by (mid+high)/2, and if the solution has a higher Q value than the target 
-    range, converge_delta is decreased by (mid+low)/2. Where mid = 1e-3, high=10.0, and low = 1e-5, converge_n is fixed
-    at 10 for ls-nmf and 5 for ws-nmf. 
+    This script runs a runtime analysis for different datasets and factorization algorithms, evaluating the performance 
+    of different compiling optimization levels.
     """
 
     logging.getLogger('matplotlib.font_manager').setLevel(logging.ERROR)
     logging.getLogger('matplotlib').setLevel(logging.ERROR)
 
-    # q_targets_file = os.path.join(cwd, "eval", "results", "type_runtime_analysis.json")
-    # q_targets = {}
-    # with open(q_targets_file, 'r') as q_file:
-    #     q_ = json.load(q_file)
-    #     for k, v in q_.items():
-    #         q_targets[k] = v["pmf-Q"]
+    project_dir = os.path.join("D:\\", "git", "esat")
+
+    analysis_file_path = os.path.join(project_dir, "eval", "results", "runtime_analysis.json")
+    plot_file_path = os.path.join(project_dir, "eval", "results", "runtime_results_plot.html")
+    # delete the analysis file if it exists
+    if os.path.exists(analysis_file_path):
+        os.remove(analysis_file_path)
+    if os.path.exists(analysis_file_path):
+        os.remove(plot_file_path)
 
     t0 = time.time()
-    for dataset in ["sl"]:           # "br", "sl", "b", "w"
-        init_method = "col_means"  # default is column means, "kmeans", "cmeans"
-        init_norm = True
+    for dataset in ["b"]:           # "br", "sl", "b", "w"
+        init_method = "col_means"
         seed = 42
         models = 10
         index_col = "Date"
 
         if dataset == "br":
-            input_file = os.path.join("D:\\", "projects", "esat", "data", "Dataset-BatonRouge-con.csv")
-            uncertainty_file = os.path.join("D:\\", "projects", "esat", "data", "Dataset-BatonRouge-unc.csv")
-            output_path = os.path.join("D:\\", "projects", "esat", "output", "BatonRouge")
-            # pmf_profile_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test",
-            #                                 f"br{factors}f_profiles.txt")
-            # pmf_contribution_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test",
-            #                                      f"br{factors}f_contributions.txt")
-            # pmf_residuals_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test",
-            #                                   f"br{factors}f_residuals.txt")
+            input_file = os.path.join(project_dir, "data", "Dataset-BatonRouge-con.csv")
+            uncertainty_file = os.path.join(project_dir, "data", "Dataset-BatonRouge-unc.csv")
+            output_path = os.path.join(project_dir, "data", "output", "BatonRouge")
         elif dataset == "b":
-            input_file = os.path.join("D:\\", "projects", "esat", "data", "Dataset-Baltimore_con.txt")
-            uncertainty_file = os.path.join("D:\\", "projects", "esat", "data", "Dataset-Baltimore_unc.txt")
-            output_path = os.path.join("D:\\", "projects", "esat", "output", "Baltimore")
-            # pmf_profile_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test",
-            #                                 f"b{factors}f_profiles.txt")
-            # pmf_contribution_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test",
-            #                                      f"b{factors}f_contributions.txt")
-            # pmf_residuals_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test",
-            #                                   f"b{factors}f_residuals.txt")
+            input_file = os.path.join(project_dir, "data", "Dataset-Baltimore_con.txt")
+            uncertainty_file = os.path.join(project_dir, "data", "Dataset-Baltimore_unc.txt")
+            output_path = os.path.join(project_dir, "data", "output", "Baltimore")
         elif dataset == "sl":
-            input_file = os.path.join("D:\\", "projects", "esat", "data", "Dataset-StLouis-con.csv")
-            uncertainty_file = os.path.join("D:\\", "projects", "esat", "data", "Dataset-StLouis-unc.csv")
-            output_path = os.path.join("D:\\", "projects", "esat", "output", "StLouis")
-            # pmf_profile_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test",
-            #                                 f"sl{factors}f_profiles.txt")
-            # pmf_contribution_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test",
-            #                                      f"sl{factors}f_contributions.txt")
-            # pmf_residuals_file = os.path.join("D:\\", "projects", "nmf_py", "data", "factor_test",
-            #                                   f"sl{factors}f_residuals.txt")
-
-        sn_threshold = 2.0
+            input_file = os.path.join(project_dir, "data", "Dataset-StLouis-con.csv")
+            uncertainty_file = os.path.join(project_dir, "data", "Dataset-StLouis-unc.csv")
+            output_path = os.path.join(project_dir, "data", "output", "StLouis")
 
         dh = DataHandler(
             input_path=input_file,
             uncertainty_path=uncertainty_file,
-            index_col=index_col,
-            sn_threshold=sn_threshold
+            index_col=index_col
         )
-        V = dh.input_data_processed
-        U = dh.uncertainty_data_processed
+        V, U = dh.get_data()
 
-        for method in ["ws-nmf"]:     # "ls-nmf", "ws-nmf"
-            if method == "ws-nmf":
-                max_iterations = 10000
-            else:
-                max_iterations = 50000
-            # converge_delta = 0.01 if method == "ls-nmf" else 1.0 if dataset != "sl" else 0.1
-            # converge_n = 50 if method == "ls-nmf" else 20
+        for method in ["ls-nmf", "ws-nmf"]:
             converge_delta = 0.1
             converge_n = 25
-            for factors in range(3, 13):
+            if method == "ws-nmf":
+                max_iterations = 10000
+                converge_delta = 1.0
+            else:
+                max_iterations = 50000
+
+            for factors in range(3, 9):
                 run_key = f"{dataset}-{factors}"
-                # if run_key not in q_targets.keys():
-                #     continue
-                for (parallel, optimized) in ((True, True),):
-                    batch_sa = BatchSA(V=V, U=U, factors=factors, models=models, method=method, seed=seed,
-                                       init_method=init_method, init_norm=init_norm, fuzziness=5.0,
-                                       max_iter=max_iterations, converge_delta=converge_delta, converge_n=converge_n,
-                                       parallel=parallel, optimized=optimized)
-                    t0 = time.time()
-                    batch_sa.train()
+                batch_sa = BatchSA(V=V, U=U, factors=factors, models=models, method=method, seed=seed, init_method=init_method, max_iter=max_iterations, converge_delta=converge_delta, converge_n=converge_n)
+                t0 = time.time()
+                batch_sa.train()
 
-                    t1 = time.time()
-                    runtime = round(t1 - t0, 2)
-                    current_q = batch_sa.results[batch_sa.best_model].Qtrue
-                    for k, s in enumerate(batch_sa.results):
-                        if s is not None:
-                            if s.Qtrue < current_q:
-                                current_q = s.Qtrue
-                    run_type = "rust" if optimized else "py"
-                    print(f"Runtime: {round((t1 - t0) / 60, 2)} min(s)")
+                t1 = time.time()
+                runtime = round(t1 - t0, 2)
+                current_q = batch_sa.results[batch_sa.best_model].Qtrue
+                for k, s in enumerate(batch_sa.results):
+                    if s is not None:
+                        if s.Qtrue < current_q:
+                            current_q = s.Qtrue
+                print(f"Runtime: {round((t1 - t0) / 60, 2)} min(s)")
 
-                    analysis_results = {
-                        run_key:
-                            {
-                                "dataset": dataset,
-                                "factors": factors,
-                                f"{method}-{run_type}-runtime": runtime,
-                                f"{method}-Q": current_q
-                            }
-                    }
-                    current_results = {}
-                    analysis_file = "type_runtime_analysis2.json"
-                    analysis_file_path = os.path.join(cwd, "eval", "results", analysis_file)
-                    if os.path.exists(analysis_file_path):
-                        with open(analysis_file_path, 'r') as json_file:
-                            current_results = json.load(json_file)
-                            if run_key in current_results.keys():
-                                for k, v in analysis_results[run_key].items():
-                                    current_results[run_key].update({k: v})
-                            else:
-                                current_results[run_key] = analysis_results[run_key]
-                    else:
-                        current_results = analysis_results
-                    with open(analysis_file_path, 'w') as json_file:
-                        current_results = dict(sorted(current_results.items()))
-                        json.dump(current_results, json_file)
-                    logging.info(f"Completed method: {method}, type: {run_type}, factors: {factors}, dataset: {dataset}")
+                analysis_results = {
+                    run_key:
+                        {
+                            "dataset": dataset,
+                            "factors": factors,
+                            f"{method}-runtime": runtime,
+                            f"{method}-Q": float(current_q)
+                        }
+                }
+                current_results = {}
+                if os.path.exists(analysis_file_path):
+                    with open(analysis_file_path, 'r') as json_file:
+                        current_results = json.load(json_file)
+                        if run_key in current_results.keys():
+                            for k, v in analysis_results[run_key].items():
+                                current_results[run_key].update({k: v})
+                        else:
+                            current_results[run_key] = analysis_results[run_key]
+                else:
+                    current_results = analysis_results
+                with open(analysis_file_path, 'w') as json_file:
+                    current_results = dict(sorted(current_results.items()))
+                    json.dump(current_results, json_file)
+                logging.info(f"Completed method: {method}, factors: {factors}, dataset: {dataset}, Runtime: {round((t1 - t0) / 60, 2)} min(s)")
+    output_dir = os.path.join("D:\\", "git", "esat", "eval", "results")
+    plot_runtime_results_plotly(analysis_file_path, output_dir)
