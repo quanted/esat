@@ -43,7 +43,9 @@ def min_timestep(data: pd.DataFrame):
         Minimum timestep.
     """
     time_delta = data.index[1: -1] - data.index[0:-2]
-    if time_delta.min().seconds < 60:
+    if time_delta.min().days >= 1:
+        resample = f"{int(time_delta.min().days)}D"
+    elif time_delta.min().seconds < 60:
         resample = f"{time_delta.min().seconds}s"
     elif time_delta.min().seconds < 60 * 60:
         resample = f"{int(time_delta.min().seconds / 60)}min"
