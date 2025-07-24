@@ -62,7 +62,8 @@ class SA:
                  method: str = "ls-nmf",
                  seed: int = 42,
                  parallel: bool = True,
-                 verbose: bool = False
+                 verbose: bool = False,
+                 use_gpu: bool = True,
                  ):
         """
         Constructor method.
@@ -90,6 +91,7 @@ class SA:
         self.init_method = "column_mean"
         self.seed = 42 if seed is None else seed
         self.rng = np.random.default_rng(self.seed)
+        self.use_gpu = use_gpu
 
         self.Qrobust = None
         self.Qtrue = None
@@ -411,8 +413,9 @@ class SA:
                     model_i,
                     hold_h,
                     delay_h,
-                    progress_callback
-                )[0]
+                    progress_callback,
+                    self.use_gpu
+                )
             except RuntimeError as ex:
                 logger.error(f"Runtime Exception: {ex}")
                 return False

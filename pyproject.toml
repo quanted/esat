@@ -48,6 +48,7 @@ dependencies = {file = ["requirements.txt"]}
 
 [tool.setuptools-rust]
 profile = "release"
+features = ["gpu"]
 
 [project.scripts]
 esat = "esat.cli.esat_cli:esat_cli"

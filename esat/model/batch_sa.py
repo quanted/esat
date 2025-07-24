@@ -89,7 +89,8 @@ class BatchSA:
                  hold_h: bool = False,
                  delay_h: int = -1,
                  verbose: bool = True,
-                 progress_callback: callable = None
+                 progress_callback: callable = None,
+                 use_gpu: bool = False,
                  ):
         """
         Constructor method.
@@ -114,6 +115,7 @@ class BatchSA:
         self.init_norm = bool(init_norm)
         self.hold_h = hold_h
         self.delay_h = delay_h
+        self.use_gpu = use_gpu
 
         self.progress_callback = progress_callback if callable(progress_callback) else None
 
@@ -223,7 +225,8 @@ class BatchSA:
                             V=self.V,
                             U=self.U,
                             seed=_seed,
-                            verbose=False
+                            verbose=False,
+                            use_gpu=self.use_gpu
                         )
                         i_H = self.H
                         if self.H is not None:
@@ -287,6 +290,7 @@ class BatchSA:
                             U=self.U,
                             seed=_seed,
                             verbose=self.verbose,
+                            use_gpu=self.use_gpu
                         )
                         _sa.initialize(H=self.H, W=self.W,
                                        init_method=self.init_method,
