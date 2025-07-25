@@ -2,9 +2,9 @@ extern crate core;
 
 use std::collections::vec_deque::VecDeque;
 use pyo3::prelude::*;
-use pyo3::{PyObject, wrap_pyfunction, IntoPyObjectExt, IntoPyObject};
-use pyo3::types::{PyTuple, PyFloat};
-use numpy::{PyReadonlyArrayDyn, ToPyArray, PyArrayDyn, PyArray, PyArray2, PyArrayMethods, IntoPyArray};
+use pyo3::{PyObject, wrap_pyfunction};
+use pyo3::types::{PyFloat, PyBool, PyInt, PyDict};
+use numpy::{PyReadonlyArrayDyn, ToPyArray, PyArrayMethods, IntoPyArray};
 use ndarray::{Array2};
 use nalgebra::*;
 use rayon::prelude::*;
@@ -59,7 +59,7 @@ struct GpuBackend {
 impl GpuBackend {
     fn new() -> Result<Self, Box<dyn Error>> {
         let device = Device::cuda_if_available(0).unwrap_or(Device::Cpu);
-        println!("Selected device: {:?}", device);
+        println!("CUDA device available: {:?}", device);
         Ok(Self {
             device,
             gpu_threshold: 1000, // adjust as needed
@@ -220,19 +220,16 @@ fn ls_nmf<'py>(
             let final_w = final_w.into_pyarray(py);
             let final_h = final_h.into_pyarray(py);
             let q_list_full_py = q_list_full.to_pyarray(py);
-            let q_py = PyFloat::new(py, q as f64);
 
-            Ok(PyTuple::new(
-                py,
-                [
-                    final_w.into_pyobject(py),
-                    final_h.into_pyobject(py),
-                    q_py,
-                    converged,
-                    converge_i,
-                    q_list_full_py.into_pyobject(py),
-                ],
-            )?.into_py_any(py)?)
+            let py_results = PyDict::new(py);
+            py_results.set_item("w", final_w)?;
+            py_results.set_item("h", final_h)?;
+            py_results.set_item("q", PyFloat::new(py, q as f64).into_any())?;
+            py_results.set_item("converged", PyBool::new(py, converged))?;
+            py_results.set_item("converge_i", PyInt::new(py, converge_i))?;
+            py_results.set_item("q_list", q_list_full_py)?;
+
+            Ok(py_results.into())
         }
         Err(e) => Err(PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{}", e)))
     }
@@ -259,9 +256,9 @@ fn ls_nmf_gpu<'py>(
     let backend = create_backend(prefer_gpu.unwrap_or(false));
 
     // Convert to f64 for backend trait compatibility
-    let mut v64 = v.mapv(|x| x as f64);
-    let mut u64 = u.mapv(|x| x as f64);
-    let mut we64 = we.mapv(|x| x as f64);
+    let v64 = v.mapv(|x| x as f64);
+    let u64 = u.mapv(|x| x as f64);
+    let we64 = we.mapv(|x| x as f64);
     let mut w64 = w.mapv(|x| x as f64);
     let mut h64 = h.mapv(|x| x as f64);
 
@@ -371,7 +368,7 @@ fn ws_nmf<'py>(
 
     let mut new_w = OMatrix::<f32, Dyn, Dyn>::from_vec(w.dims()[1], w.dims()[0], w.as_array().to_owned().into_raw_vec_and_offset().0).transpose();
     let mut new_h = OMatrix::<f32, Dyn, Dyn>::from_vec(h.dims()[1], h.dims()[0], h.as_array().to_owned().into_raw_vec_and_offset().0).transpose();
-    let mut new_we = we.clone();
+    let new_we = we.clone();
 
     let mut qtrue: f32 = calculate_q(&v, &u, &new_w, &new_h);
     let mut qrobust: f32 = 0.0;
@@ -485,19 +482,20 @@ fn ws_nmf<'py>(
     new_h = new_h.transpose();
     let w_matrix = new_w.data.as_vec().to_owned();
     let h_matrix = new_h.data.as_vec().to_owned();
-    let final_w = w_matrix.to_pyarray(py).reshape(w.dims()).unwrap().to_dyn();
-    let final_h = h_matrix.to_pyarray(py).reshape(h.dims()).unwrap().to_dyn();
+    let final_w = w_matrix.to_pyarray(py).reshape(w.dims()).unwrap();
+    let final_h = h_matrix.to_pyarray(py).reshape(h.dims()).unwrap();
 
     let q_list_full_py = q_list_full.into_iter().collect::<Vec<_>>().to_pyarray(py);
-    Ok((
-        final_w,
-        final_h,
-        q,
-        converged,
-        converge_i,
-        q_list_full_py,
-    ).into_py(py))
 
+    let py_results = PyDict::new(py);
+    py_results.set_item("w", final_w)?;
+    py_results.set_item("h", final_h)?;
+    py_results.set_item("q", PyFloat::new(py, q as f64).into_any())?;
+    py_results.set_item("converged", PyBool::new(py, converged))?;
+    py_results.set_item("converge_i", PyInt::new(py, converge_i))?;
+    py_results.set_item("q_list", q_list_full_py)?;
+
+    Ok(py_results.into())
 }
 
 // NMF - Weight Semi-NMF algorithm
@@ -525,7 +523,7 @@ fn ws_nmf_p<'py>(
 
     let mut new_w = OMatrix::<f32, Dyn, Dyn>::from_vec(w.dims()[1], w.dims()[0], w.to_vec().unwrap()).transpose();
     let mut new_h = OMatrix::<f32, Dyn, Dyn>::from_vec(h.dims()[1], h.dims()[0], h.to_vec().unwrap()).transpose();
-    let mut new_we = we.clone();
+    let new_we = we.clone();
 
     let mut qtrue: f32 = calculate_q(&v, &u, &new_w, &new_h);
     let mut qrobust: f32 = 0.0;
@@ -643,115 +641,21 @@ fn ws_nmf_p<'py>(
     new_h = new_h.transpose();
     let w_matrix = new_w.data.as_vec().to_owned();
     let h_matrix = new_h.data.as_vec().to_owned();
-    let final_w = w_matrix.to_pyarray(py).reshape(w.dims()).unwrap().to_dyn();
-    let final_h = h_matrix.to_pyarray(py).reshape(h.dims()).unwrap().to_dyn();
+    let final_w = w_matrix.to_pyarray(py).reshape(w.dims()).unwrap();
+    let final_h = h_matrix.to_pyarray(py).reshape(h.dims()).unwrap();
 
     let q_list_full_py = q_list_full.into_iter().collect::<Vec<_>>().to_pyarray(py);
-    Ok((
-        final_w,
-        final_h,
-        q,
-        converged,
-        converge_i,
-        q_list_full_py,
-    ).into_py(py))
-}
 
-/// NMF - Multiplicative-Update (Kullback-Leibler)
-/// Returns (W, H, Q, converged)
-// #[pyfunction]
-// fn nmf_kl<'py>(
-//     py: Python<'py>,
-//     v: PyReadonlyArrayDyn<'py, f32>, u: PyReadonlyArrayDyn<'py, f32>,
-//     w: PyReadonlyArrayDyn<'py, f32>, h: PyReadonlyArrayDyn<'py, f32>,
-//     update_weight: f32,
-//     max_i: i32, converge_delta: f32, converge_i: i32
-// ) -> PyResult<PyObject> {
-//
-//     let v = OMatrix::<f32, Dyn, Dyn>::from_vec(v.dims()[0], v.dims()[1], v.to_vec().unwrap());
-//     let u = OMatrix::<f32, Dyn, Dyn>::from_vec(u.dims()[0], u.dims()[1], u.to_vec().unwrap());
-//     let mut new_w = OMatrix::<f32, Dyn, Dyn>::from_vec(w.dims()[1], w.dims()[0], w.to_vec().unwrap()).transpose();
-//     let mut new_h = OMatrix::<f32, Dyn, Dyn>::from_vec(h.dims()[1], h.dims()[0], h.to_vec().unwrap()).transpose();
-//
-//     let mut q: f32 = calculate_q(&v, &u, &new_w, &new_h);
-//     let mut converged: bool = false;
-//
-//     let uv = v.component_div(&u);
-//     let ur = matrix_reciprocal(&u);
-//
-//     let mut best_q: f32 = q;
-//     let mut best_h = new_h.clone();
-//     let mut best_w = new_w.clone();
-//     let mut q_list: VecDeque<f32> = VecDeque::new();
-//
-//     let mut wh: DMatrix<f32>;
-//     let mut h1: DMatrix<f32>;
-//     let mut h2: DMatrix<f32>;
-//     let mut w1: DMatrix<f32>;
-//     let mut w2: DMatrix<f32>;
-//     let mut best_i = 0;
-//
-//     let mut update_weight = update_weight;
-//
-//     let mut h_delta: DMatrix<f32>;
-//     let mut w_delta: DMatrix<f32>;
-//
-//     for i in 0..max_i {
-//         wh = &new_w * &new_h;
-//         h1 = &new_w.transpose() * uv.component_div(&wh);
-//         h2 = matrix_reciprocal(&(new_w.transpose() * &ur));
-//         h_delta = update_weight * h2.component_mul(&h1);
-//         new_h = new_h.component_mul(&h_delta);
-//
-//         wh = &new_w * &new_h;
-//         w1 = uv.component_div(&wh) * &new_h.transpose();
-//         w2 = matrix_reciprocal(&(&ur * &new_h.transpose()));
-//         w_delta = update_weight * w2.component_mul(&w1);
-//         new_w = new_w.component_mul(&w_delta);
-//
-//         q = calculate_q(&v, &u, &new_w, &new_h);
-//         best_i = i;
-//         if q < best_q {
-//             best_q = q;
-//             best_w = new_w.clone();
-//             best_h = new_h.clone();
-//         }
-//         q_list.push_back(q);
-//         if (q_list.len() as i32) >= converge_i {
-//             let q_sum: f32 = q_list.iter().sum();
-//             let q_avg: f32 = q_sum / q_list.len() as f32;
-//             if (q_avg - q).abs() < converge_delta {
-//                 if update_weight < 0.01 {
-//                     converged = true;
-//                     break
-//                 }
-//                 else {
-//                     new_w = best_w.clone();
-//                     new_h = best_h.clone();
-//                     update_weight = &update_weight - 0.1;
-//                     q_list.clear();
-//                 }
-//             }
-//             else if (q_list.front().unwrap() - q_list.back().unwrap()) > 1.0 {
-//                 new_w = best_w.clone();
-//                 new_h = best_h.clone();
-//                 update_weight = &update_weight - 0.1;
-//                 q_list.clear();
-//             }
-//             q_list.pop_front();
-//         }
-//     }
-//
-//     best_w = best_w.transpose();
-//     best_h = best_h.transpose();
-//     let w_matrix = best_w.data.as_vec().to_owned();
-//     let h_matrix = best_h.data.as_vec().to_owned();
-//     let final_w = w_matrix.to_pyarray(py).reshape(w.dims()).unwrap().to_dyn();
-//     let final_h = h_matrix.to_pyarray(py).reshape(h.dims()).unwrap().to_dyn();
-//
-//     let results = PyTuple::new(py, &[final_w, final_h, q.into_py(py), converged.into_py(py), converge_i.into_py(py), q_list_full.into_py(py)]);
-//     Ok(results.into_py(py))
-// }
+    let py_results = PyDict::new(py);
+    py_results.set_item("w", final_w)?;
+    py_results.set_item("h", final_h)?;
+    py_results.set_item("q", PyFloat::new(py, q as f64).into_any())?;
+    py_results.set_item("converged", PyBool::new(py, converged))?;
+    py_results.set_item("converge_i", PyInt::new(py, converge_i))?;
+    py_results.set_item("q_list", q_list_full_py)?;
+
+    Ok(py_results.into())
+}
 
 fn calculate_q(
     v: &OMatrix<f32, Dyn, Dyn>, u: &OMatrix<f32, Dyn, Dyn>,
@@ -793,8 +697,8 @@ fn matrix_merge(
 ) -> (DMatrix<f32>, DMatrix<f32>) {
     let mut matrix3 = DMatrix::<f32>::zeros(matrix1.shape().0, matrix1.shape().1);
     let mut matrix6 = DMatrix::<f32>::zeros(matrix4.shape().0, matrix4.shape().1);
-    for (j, col) in matrix1.column_iter().enumerate(){
-        for (i, row) in matrix1.row_iter().enumerate(){
+    for (j, _col) in matrix1.column_iter().enumerate(){
+        for (i, _row) in matrix1.row_iter().enumerate(){
             if matrix1[(i,j)] > alpha {
                 matrix3[(i,j)] = matrix2[(i,j)];
                 matrix6[(i,j)] = matrix5[(i,j)];
@@ -808,134 +712,6 @@ fn matrix_merge(
     (matrix3, matrix6)
 }
 
-fn matrix_reciprocal(m: &DMatrix<f32>) -> DMatrix<f32> {
-    let vec_result: Vec<f32> = m.iter().map(|&i1| (1.0/i1)).collect();
-    let result: DMatrix<f32> = DMatrix::from_vec(m.nrows(), m.ncols(), vec_result);
-    result
-}
-
-// fn matrix_multiply(m1: &DMatrix<f32>, m2: &DMatrix<f32>) -> DMatrix<f32> {
-//     let vec_result = m1.iter().zip(m2.iter()).map(|(&i1, &i2)| (i1 * i2)).collect();
-//     let result: DMatrix<f32> = DMatrix::from_vec(m1.nrows(), m1.ncols(), vec_result);
-//     result
-// }
-//
-// fn matrix_subtract(m1: &DMatrix<f32>, m2: &DMatrix<f32>) -> DMatrix<f32> {
-//     let vec_result = m1.iter().zip(m2.iter()).map(|(&i1, &i2)| (i1 - i2)).collect();
-//     let result: DMatrix<f32> = DMatrix::from_vec(m1.nrows(), m1.ncols(), vec_result);
-//     result
-// }
-//
-// fn matrix_mul(m1: &DMatrix<f32>, m2: &DMatrix<f32>) -> DMatrix<f32> {
-//     m1 * m2
-// }
-//
-// fn matrix_mul2(m1: &DMatrix<f32>, m2: &DMatrix<f32>) -> DMatrix<f32> {
-//     let matrix1 = m1.clone();
-//     let matrix2 = m2.clone();
-//     let mut matrix3 = DMatrix::<f32>::zeros(m1.shape().0, m2.shape().1);
-//     for (i, x) in matrix1.row_iter().enumerate() {
-//         for (j, y) in matrix2.column_iter().enumerate() {
-//             matrix3[(i, j)] = (x * y).sum();
-//         }
-//     }
-//     matrix3
-// }
-//
-// fn matrix_division(m1: &DMatrix<f32>, m2: &DMatrix<f32>) -> DMatrix<f32> {
-//     m1.component_div(m2)
-// }
-
-// #[pyfunction]
-// fn py_matrix_sum<'py>(_py: Python<'py>, m: &'py PyArrayDyn<f32>) -> f32 {
-//     let new_matrix = OMatrix::<f32, Dyn, Dyn>::from_vec(m.dims()[0], m.dims()[1], m.to_vec().unwrap()).transpose();
-//     new_matrix.sum()
-// }
-//
-// #[pyfunction]
-// fn py_matrix_reciprocal<'py>(py: Python<'py>, m: &'py PyArrayDyn<f32>) -> &'py PyArrayDyn<f32> {
-//     let mut new_matrix = OMatrix::<f32, Dyn, Dyn>::from_vec(m.dims()[0], m.dims()[1], m.to_vec().unwrap()).transpose();
-//     new_matrix = matrix_reciprocal(&new_matrix);
-//     let result_matrix = new_matrix.data.as_vec().to_owned();
-//     let result = result_matrix.to_pyarray(py).reshape((m.dims()[0], m.dims()[1])).unwrap().to_dyn();
-//     result
-// }
-//
-// #[pyfunction]
-// fn py_matrix_subtract<'py>(py: Python<'py>, m1: &'py PyArrayDyn<f32>, m2: &'py PyArrayDyn<f32>) -> &'py PyArrayDyn<f32> {
-//     let new_matrix1 = OMatrix::<f32, Dyn, Dyn>::from_vec(m1.dims()[0], m1.dims()[1], m1.to_vec().unwrap()).transpose();
-//     let new_matrix2 = OMatrix::<f32, Dyn, Dyn>::from_vec(m2.dims()[0], m2.dims()[1], m2.to_vec().unwrap()).transpose();
-//     let new_matrix = new_matrix1 - new_matrix2;
-//     let result_matrix = new_matrix.data.as_vec().to_owned();
-//     let result = result_matrix.to_pyarray(py).reshape(m1.dims()).unwrap().to_dyn();
-//     result
-// }
-
-// #[pyfunction]
-// fn py_matrix_multiply<'py>(py: Python<'py>, m1: &'py PyArrayDyn<f32>, m2: &'py PyArrayDyn<f32>) -> &'py PyArrayDyn<f32> {
-//     let new_matrix1 = OMatrix::<f32, Dyn, Dyn>::from_vec(m1.dims()[0], m1.dims()[1], m1.to_vec().unwrap()).transpose();
-//     let new_matrix2 = OMatrix::<f32, Dyn, Dyn>::from_vec(m2.dims()[0], m2.dims()[1], m2.to_vec().unwrap()).transpose();
-//     let new_matrix = new_matrix1.component_mul(&new_matrix2);
-//     let result_matrix = new_matrix.data.as_vec().to_owned();
-//     let result = result_matrix.to_pyarray(py).reshape(m1.dims()).unwrap().to_dyn();
-//     result
-// }
-//
-// #[pyfunction]
-// fn py_matrix_mul<'py>(py: Python<'py>, m1: &'py PyArrayDyn<f32>, m2: &'py PyArrayDyn<f32>) -> &'py PyArrayDyn<f32> {
-//     let matrix1 = OMatrix::<f32, Dyn, Dyn>::from_row_iterator(m1.dims()[0], m1.dims()[1], m1.to_owned_array().into_iter());
-//     let matrix2 = OMatrix::<f32, Dyn, Dyn>::from_row_iterator(m2.dims()[0], m2.dims()[1], m2.to_owned_array().into_iter());
-//     let new_matrix = matrix_mul(&matrix1, &matrix2).transpose();
-//     let result_matrix = new_matrix.data.as_vec().to_owned();
-//     let result = result_matrix.to_pyarray(py).reshape((m1.dims()[0], m2.dims()[1])).unwrap().to_dyn();
-//     result
-// }
-//
-// #[pyfunction]
-// fn py_matrix_division<'py>(py: Python<'py>, m1: &'py PyArrayDyn<f32>, m2: &'py PyArrayDyn<f32>) -> &'py PyArrayDyn<f32> {
-//     let matrix1 = OMatrix::<f32, Dyn, Dyn>::from_vec(m1.dims()[0], m1.dims()[1], m1.to_vec().unwrap()).transpose();
-//     let matrix2 = OMatrix::<f32, Dyn, Dyn>::from_vec(m2.dims()[0], m2.dims()[1], m2.to_vec().unwrap()).transpose();
-//     let new_matrix = matrix_division(&matrix1, &matrix2);
-//     let result_matrix = new_matrix.data.as_vec().to_owned();
-//     let result = result_matrix.to_pyarray(py).reshape(m1.dims())?.to_dyn();
-//     result
-// }
-//
-// #[pyfunction]
-// fn py_calculate_q<'py>(
-//     _py: Python<'py>,
-//     v: PyReadonlyArrayDyn<'py, f32>,
-//     u: PyReadonlyArrayDyn<'py, f32>,
-//     w: PyReadonlyArrayDyn<'py, f32>,
-//     h: PyReadonlyArrayDyn<'py, f32>
-// ) -> f32 {
-//     let matrix_v = OMatrix::<f32, Dyn, Dyn>::from_vec(v.dims()[0], v.dims()[1], v.as_array().to_owned().into_raw_vec_and_offset());
-//     let matrix_u = OMatrix::<f32, Dyn, Dyn>::from_vec(u.dims()[0], u.dims()[1], u.as_array().to_owned().into_raw_vec_and_offset());
-//     let matrix_w = OMatrix::<f32, Dyn, Dyn>::from_vec(w.dims()[1], w.dims()[0], w.as_array().to_owned().into_raw_vec_and_offset()).transpose();
-//     let matrix_h = OMatrix::<f32, Dyn, Dyn>::from_vec(h.dims()[1], h.dims()[0], h.as_array().to_owned().into_raw_vec_and_offset()).transpose();
-//     calculate_q(&matrix_v, &matrix_u, &matrix_w, &matrix_h)
-// }
-
-// #[pyfunction]
-// fn py_calculate_q_robust<'py>(
-//     py: Python<'py>,
-//     v: PyReadonlyArrayDyn<'py, f32>,
-//     u: PyReadonlyArrayDyn<'py, f32>,
-//     w: PyReadonlyArrayDyn<'py, f32>,
-//     h: PyReadonlyArrayDyn<'py, f32>,
-//     robust_alpha: f32
-// ) -> (f32, PyObject) {
-//     let matrix_v = OMatrix::<f32, Dyn, Dyn>::from_vec(v.dims()[0], v.dims()[1], v.as_array().to_owned().into_raw_vec_and_offset());
-//     let matrix_u = OMatrix::<f32, Dyn, Dyn>::from_vec(u.dims()[0], u.dims()[1], u.as_array().to_owned().into_raw_vec_and_offset());
-//     let matrix_w = OMatrix::<f32, Dyn, Dyn>::from_vec(w.dims()[1], w.dims()[0], w.as_array().to_owned().into_raw_vec_and_offset()).transpose();
-//     let matrix_h = OMatrix::<f32, Dyn, Dyn>::from_vec(h.dims()[1], h.dims()[0], h.as_array().to_owned().into_raw_vec_and_offset()).transpose();
-//
-//     let results = calculate_q_robust(&matrix_v, &matrix_u, &matrix_w, &matrix_h, robust_alpha);
-//     let q_robust = results.0;
-//     let results_uncertainty = results.1.transpose().data.as_vec().to_owned();
-//     let updated_uncertainty = results_uncertainty.to_pyarray(py);
-//     (q_robust, updated_uncertainty)
-// }
 
 /// ESAT Rust module
 #[pymodule]
@@ -946,17 +722,6 @@ fn esat_rust(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(ls_nmf, m)?)?;
     m.add_function(wrap_pyfunction!(ws_nmf, m)?)?;
     m.add_function(wrap_pyfunction!(ws_nmf_p, m)?)?;
-    // m.add_function(wrap_pyfunction!(nmf_kl, m)?)?;
-
-    // m.add_function(wrap_pyfunction!(py_matrix_reciprocal, m)?)?;
-    // m.add_function(wrap_pyfunction!(py_matrix_sum, m)?)?;
-    // m.add_function(wrap_pyfunction!(py_matrix_subtract, m)?)?;
-    // m.add_function(wrap_pyfunction!(py_matrix_multiply, m)?)?;
-    // m.add_function(wrap_pyfunction!(py_matrix_mul, m)?)?;
-    // m.add_function(wrap_pyfunction!(py_matrix_division, m)?)?;
-    //
-    // m.add_function(wrap_pyfunction!(py_calculate_q, m)?)?;
-    // m.add_function(wrap_pyfunction!(py_calculate_q_robust, m)?)?;
 
     m.add_function(wrap_pyfunction!(get_selected_device, m)?)?;
 

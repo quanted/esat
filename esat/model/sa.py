@@ -400,7 +400,7 @@ class SA:
         if self.optimized:
             t0 = time.time()
             try:
-                self.W, self.H, q, self.converged, self.converge_steps, q_list = self.optimized_update(
+                results_dict = self.optimized_update(
                     self.V.astype(np.float32),
                     self.U.astype(np.float32),
                     self.We.astype(np.float32),
@@ -416,6 +416,12 @@ class SA:
                     progress_callback,
                     self.use_gpu
                 )
+                self.W = results_dict['w']
+                self.H = results_dict['h']
+                q = results_dict['q']
+                self.converged = results_dict['converged']
+                self.converge_steps = results_dict['converge_i']
+                q_list = results_dict['q_list']
             except RuntimeError as ex:
                 logger.error(f"Runtime Exception: {ex}")
                 return False
