@@ -320,11 +320,10 @@ class DataHandler:
             _uncertainty_data[f] = pd.to_numeric(_uncertainty_data[f])
 
         # Ensure no zero values in data or uncertainty
-        if self.drop_nans:
-            _input_nans = _input_data.isna().any(axis=1)
-            _uncertainty_nans = _uncertainty_data.isna().any(axis=1)
-            _input_data = _input_data[~_input_nans | ~_uncertainty_nans]
-            _uncertainty_data = _uncertainty_data[~_input_nans | ~_uncertainty_nans]
+        _input_nans = _input_data.isna().any(axis=1)
+        _uncertainty_nans = _uncertainty_data.isna().any(axis=1)
+        _input_data = _input_data[~_input_nans | ~_uncertainty_nans]
+        _uncertainty_data = _uncertainty_data[~_input_nans | ~_uncertainty_nans]
 
         self.input_data_df = _input_data
         self.uncertainty_data_df = _uncertainty_data
@@ -386,6 +385,11 @@ class DataHandler:
             self.input_data = self._read_data(filepath=self.input_path, index_col=self.index_col)
             self.uncertainty_data = self._read_data(filepath=self.uncertainty_path, index_col=self.index_col)
             self.features = list(self.input_data.columns) if self.features is None else self.features
+
+        # drop rows were all values are NaN, by creating a mask to use on both input and uncertainty
+        nan_rows = self.input_data.isna().all(axis=1) | self.uncertainty_data.isna().all(axis=1)
+        self.input_data = self.input_data[~nan_rows]
+        self.uncertainty_data = self.uncertainty_data[~nan_rows]
 
         self.min_values = self.input_data.min(axis=0)
         self.max_values = self.input_data.max(axis=0)

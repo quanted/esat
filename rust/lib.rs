@@ -1,6 +1,11 @@
 extern crate core;
 
+use std::time::Instant;
+use std::error::Error;
+use std::io::{self, Write};
 use std::collections::vec_deque::VecDeque;
+use console::Term;
+
 use pyo3::prelude::*;
 use pyo3::{PyObject, wrap_pyfunction};
 use pyo3::types::{PyFloat, PyBool, PyInt, PyDict};
@@ -9,9 +14,7 @@ use ndarray::{Array2};
 use nalgebra::*;
 use rayon::prelude::*;
 use indicatif::{ProgressBar, ProgressStyle, ProgressDrawTarget};
-use std::io::{self, Write};
-use console::Term;
-use std::error::Error;
+
 
 // GPU support requires the `candle` crate
 use candle_core::{Device, Tensor, Result as CandleResult};
@@ -19,9 +22,29 @@ use candle_core::{Device, Tensor, Result as CandleResult};
 
 trait MatrixBackend: Send + Sync {
     fn matmul(&self, a: &Array2<f64>, b: &Array2<f64>) -> Result<Array2<f64>, Box<dyn Error>>;
-    fn element_wise_divide(&self, a: &mut Array2<f64>, b: &Array2<f64>) -> Result<(), Box<dyn Error>>;
-    fn element_wise_multiply(&self, a: &mut Array2<f64>, b: &Array2<f64>) -> Result<(), Box<dyn Error>>;
+    fn element_wise_divide(&self, a: &Array2<f64>, b: &Array2<f64>) -> Result<Array2<f64>, Box<dyn Error>>;
+    fn element_wise_multiply(&self, a: &Array2<f64>, b: &Array2<f64>) -> Result<Array2<f64>, Box<dyn Error>>;
     fn should_use_gpu(&self, rows: usize, cols: usize) -> bool;
+    fn ls_nmf_update(
+        &self,
+        w: &Array2<f64>,
+        h: &Array2<f64>,
+        wev: &Array2<f64>,
+        we: &Array2<f64>,
+        hold_h: bool,
+        delay_h: i32,
+        iter: i32,
+    ) -> Result<(Array2<f64>, Array2<f64>), Box<dyn Error>>;
+    fn ws_nmf_update(
+        &self,
+        w: &Array2<f64>,
+        h: &Array2<f64>,
+        wev: &Array2<f64>,
+        we: &Array2<f64>,
+        hold_h: bool,
+        delay_h: i32,
+        iter: i32,
+    ) -> Result<(Array2<f64>, Array2<f64>), Box<dyn Error>>;
 }
 
 struct CpuBackend;
@@ -33,23 +56,53 @@ impl MatrixBackend for CpuBackend {
         }
         Ok(a.dot(b))
     }
-    fn element_wise_divide(&self, a: &mut Array2<f64>, b: &Array2<f64>) -> Result<(), Box<dyn Error>> {
+    fn element_wise_divide(&self, a: &Array2<f64>, b: &Array2<f64>) -> Result<Array2<f64>, Box<dyn Error>> {
         if a.shape() != b.shape() {
             return Err("Shapes do not match for element-wise division".into());
         }
-        *a /= b;
-        Ok(())
+        let result = a / b;
+        Ok(result)
     }
-    fn element_wise_multiply(&self, a: &mut Array2<f64>, b: &Array2<f64>) -> Result<(), Box<dyn Error>> {
+    fn element_wise_multiply(&self, a: &Array2<f64>, b: &Array2<f64>) -> Result<Array2<f64>, Box<dyn Error>> {
         if a.shape() != b.shape() {
             return Err("Shapes do not match for element-wise multiplication".into());
         }
-        *a *= b;
-        Ok(())
+        let result = a * b;
+        Ok(result)
     }
     fn should_use_gpu(&self, _rows: usize, _cols: usize) -> bool {
         false
     }
+    fn ls_nmf_update(
+        &self,
+        w: &Array2<f64>,
+        h: &Array2<f64>,
+        wev: &Array2<f64>,
+        we: &Array2<f64>,
+        hold_h: bool,
+        delay_h: i32,
+        iter: i32,
+    ) -> Result<(Array2<f64>, Array2<f64>), Box<dyn Error>> {
+        let mut new_h = h.clone();
+        let mut new_w = w.clone();
+
+        let w_t = w.t().to_owned(); // Precompute transpose
+
+        if !hold_h || (delay_h > 0 && iter > delay_h) {
+            let wh = w.dot(h); // Compute once
+            let h_num = w_t.dot(wev);
+            let h_den = w_t.dot(&(we * &wh));
+            new_h *= &(h_num / h_den); // Element-wise multiplication
+        }
+        let h_t = new_h.t().to_owned(); // Precompute transpose
+        let wh = new_w.dot(&new_h); // Reuse updated `new_h`
+        let w_num = wev.dot(&h_t);
+        let w_den = (we * &wh).dot(&h_t);
+        new_w *= &(w_num / w_den); // Element-wise multiplication
+
+        Ok((new_w, new_h))
+    }
+
 }
 
 struct GpuBackend {
@@ -91,10 +144,10 @@ impl MatrixBackend for GpuBackend {
         let result_tensor = a_tensor.matmul(&b_tensor)?;
         self.tensor_to_array(&result_tensor).map_err(|e| Box::new(e) as Box<dyn std::error::Error>)
     }
-    fn element_wise_divide(&self, a: &mut Array2<f64>, b: &Array2<f64>) -> Result<(), Box<dyn Error>> {
+    fn element_wise_divide(&self, a: &Array2<f64>, b: &Array2<f64>) -> Result<Array2<f64>, Box<dyn Error>> {
         if ! self.should_use_gpu(a.nrows(), a.ncols()){
-            *a /= b;
-            return Ok(());
+            let result = a / b;
+            return Ok(result);
         }
         if a.shape() != b.shape() {
             return Err("Shapes do not match for element-wise division".into());
@@ -102,13 +155,13 @@ impl MatrixBackend for GpuBackend {
         let a_tensor = self.array_to_tensor(a)?;
         let b_tensor = self.array_to_tensor(b)?;
         let result_tensor = a_tensor.div(&b_tensor)?;
-        *a = self.tensor_to_array(&result_tensor)?;
-        Ok(())
+        self.tensor_to_array(&result_tensor).map_err(|e| Box::new(e) as Box<dyn std::error::Error>)
+
     }
-    fn element_wise_multiply(&self, a: &mut Array2<f64>, b: &Array2<f64>) -> Result<(), Box<dyn Error>> {
+    fn element_wise_multiply(&self, a: &Array2<f64>, b: &Array2<f64>) -> Result<Array2<f64>, Box<dyn Error>> {
         if ! self.should_use_gpu(a.nrows(), a.ncols()) {
-            *a *= b;
-            return Ok(());
+            let result = a * b;
+            return Ok(result);
         }
         if a.shape() != b.shape() {
             return Err("Shapes do not match for element-wise multiplication".into());
@@ -116,11 +169,50 @@ impl MatrixBackend for GpuBackend {
         let a_tensor = self.array_to_tensor(a)?;
         let b_tensor = self.array_to_tensor(b)?;
         let result_tensor = a_tensor.mul(&b_tensor)?;
-        *a = self.tensor_to_array(&result_tensor)?;
-        Ok(())
+        self.tensor_to_array(&result_tensor).map_err(|e| Box::new(e) as Box<dyn std::error::Error>)
     }
     fn should_use_gpu(&self, rows: usize, cols: usize) -> bool {
         self.device.is_cuda() && (rows * cols) > self.gpu_threshold
+    }
+    fn ls_nmf_update(
+        &self,
+        w: &Array2<f64>,
+        h: &Array2<f64>,
+        wev: &Array2<f64>,
+        we: &Array2<f64>,
+        hold_h: bool,
+        delay_h: i32,
+        iter: i32,
+    ) -> Result<(Array2<f64>, Array2<f64>), Box<dyn Error>> {
+        if !self.should_use_gpu(w.nrows().max(w.ncols()), h.nrows().max(h.ncols())) {
+            // Fallback to CPU
+            return CpuBackend.ls_nmf_update(w, h, wev, we, hold_h, delay_h, iter);
+        }
+        let w_tensor = self.array_to_tensor(w)?;
+        let h_tensor = self.array_to_tensor(h)?;
+        let wev_tensor = self.array_to_tensor(wev)?;
+        let we_tensor = self.array_to_tensor(we)?;
+
+        let mut new_h = h_tensor.clone();
+
+        // Update H
+        if !hold_h || (delay_h > 0 && iter > delay_h) {
+            let wh = w_tensor.matmul(&h_tensor)?;
+            let h_num = w_tensor.t().unwrap().matmul(&wev_tensor)?;
+            let h_den = w_tensor.t().unwrap().matmul(&we_tensor.mul(&wh)?)?;
+            let h_delta = h_num.div(&h_den)?;
+            let new_h = h_tensor.mul(&h_delta)?;
+        }
+        // Update W
+        let wh = w_tensor.matmul(&new_h)?;
+        let w_num = wev_tensor.matmul(&new_h.t().unwrap())?;
+        let w_den = we_tensor.mul(&wh)?.matmul(&new_h.t().unwrap())?;
+        let w_delta = w_num.div(&w_den)?;
+        let new_w = w_tensor.mul(&w_delta)?;
+        Ok((
+            self.tensor_to_array(&new_w)?,
+            self.tensor_to_array(&new_h)?
+        ))
     }
 }
 fn create_backend(prefer_gpu: bool) -> Box<dyn MatrixBackend> {
@@ -182,8 +274,7 @@ fn clear_screen() -> PyResult<()> {
     Ok(())
 }
 
-// NMF - Least-Squares Algorithm (LS-NMF)
-// Returns (W, H, Q, converged)
+// ESAT:NMF - Least-Squares Algorithm (LS-NMF)
 #[pyfunction]
 fn ls_nmf<'py>(
     py: Python<'py>,
@@ -210,7 +301,7 @@ fn ls_nmf<'py>(
     let h_arr = h.as_array().to_owned().into_dimensionality::<ndarray::Ix2>().unwrap();
 
     // Call the Rust function with the converted arrays
-    match ls_nmf_gpu(
+    match ls_nmf_alg(
         v_arr, u_arr, we_arr, w_arr, h_arr,
         max_iter, converge_delta, converge_n, robust_alpha, model_i,
         static_h, delay_h, progress_callback, prefer_gpu, py
@@ -235,7 +326,7 @@ fn ls_nmf<'py>(
     }
 }
 
-fn ls_nmf_gpu<'py>(
+fn ls_nmf_alg<'py>(
     v: Array2<f32>,
     u: Array2<f32>,
     we: Array2<f32>,
@@ -251,7 +342,7 @@ fn ls_nmf_gpu<'py>(
     progress_callback: Option<PyObject>,
     prefer_gpu: Option<bool>,
     py: Python<'py>,
-) -> Result<(Vec<f32>, Vec<f32>, f32, bool, i32, Vec<f32>), Box<dyn Error>> {
+) -> Result<(Array2<f64>, Array2<f64>, f32, bool, i32, Vec<f32>), Box<dyn Error>> {
 
     let backend = create_backend(prefer_gpu.unwrap_or(false));
 
@@ -273,6 +364,10 @@ fn ls_nmf_gpu<'py>(
     let datapoints = v.len() as f32;
 
     let location_i = (model_i as usize).try_into().unwrap();
+
+    let mut last_callback = Instant::now();
+    let callback_interval = std::time::Duration::from_secs_f32(1.0 / 60.0);
+
     let term = Term::buffered_stdout();
     term.move_cursor_to(0, location_i).unwrap();
     let draw_target = ProgressDrawTarget::term(term.clone(), 20);
@@ -283,24 +378,11 @@ fn ls_nmf_gpu<'py>(
             .progress_chars("-|-"),
     );
 
+    let wev64 = backend.element_wise_multiply(&we64, &v64)?;
     for i in 0..max_iter {
-        let wev64 = &we64 * &v64;
-
-        if !hold_h || (delay_h > 0 && i > delay_h) {
-            let wh = backend.matmul(&w64, &h64)?;
-            let h_num = backend.matmul(&w64.t().to_owned(), &wev64)?;
-            let h_den = backend.matmul(&w64.t().to_owned(), &(&we64 * &wh))?;
-            let mut h_delta = h_num.clone();
-            backend.element_wise_divide(&mut h_delta, &h_den)?;
-            h64 = &h64 * &h_delta;
-        }
-
-        let wh = backend.matmul(&w64, &h64)?;
-        let w_num = backend.matmul(&wev64, &h64.t().to_owned())?;
-        let w_den = backend.matmul(&(&we64 * &wh), &h64.t().to_owned())?;
-        let mut w_delta = w_num.clone();
-        backend.element_wise_divide(&mut w_delta, &w_den)?;
-        w64 = &w64 * &w_delta;
+        let (new_w, new_h) = backend.ls_nmf_update(&w64, &h64, &wev64, &we64, hold_h, delay_h, i)?;
+        w64 = new_w;
+        h64 = new_h;
 
         // Calculate Q (sum of squared residuals, as in original)
         let wh = w64.dot(&h64);
@@ -325,8 +407,12 @@ fn ls_nmf_gpu<'py>(
             q_list.pop_front();
         }
         if let Some(ref cb) = progress_callback {
-            let completed = converged || (i + 1) == max_iter;
-            let _ = cb.call1(py, (model_i, i, max_iter, qtrue, 0.0, mse, completed));
+            let now = Instant::now();
+            if now.duration_since(last_callback) >= callback_interval || converged || (i + 1) == max_iter {
+                let completed = converged || (i + 1) == max_iter;
+                let _ = cb.call1(py, (model_i, i, max_iter, qtrue, 0.0, mse, completed));
+                last_callback = now;
+            }
         }
         if converged {
             break;
@@ -335,13 +421,168 @@ fn ls_nmf_gpu<'py>(
     term.move_cursor_to(0, location_i).unwrap();
     pb.abandon_with_message(format!("Model: {}, Q(True): {:.4}, MSE: {:.4}", model_i, q, q / datapoints));
 
-    // Convert back to f32 and flatten for Python
-    let final_w = w64.mapv(|x| x as f32).into_raw_vec_and_offset().0;
-    let final_h = h64.mapv(|x| x as f32).into_raw_vec_and_offset().0;
+    let final_w = w64.to_owned();
+    let final_h = h64.to_owned();
     let q_list_full_vec = q_list_full.into_iter().collect();
 
     Ok((final_w, final_h, q, converged, converge_i, q_list_full_vec))
 }
+
+
+#[pyfunction]
+fn ws_nmf<'py>(
+    py: Python<'py>,
+    v: PyReadonlyArrayDyn<'py, f32>,
+    u: PyReadonlyArrayDyn<'py, f32>,
+    we: PyReadonlyArrayDyn<'py, f32>,
+    w: PyReadonlyArrayDyn<'py, f32>,
+    h: PyReadonlyArrayDyn<'py, f32>,
+    max_iter: i32,
+    converge_delta: f32,
+    converge_n: i32,
+    robust_alpha: f32,
+    model_i: i8,
+    static_h: Option<bool>,
+    delay_h: Option<i32>,
+    progress_callback: Option<PyObject>,
+    prefer_gpu: Option<bool>,
+) -> PyResult<PyObject> {
+    // Convert Python arrays to Array2<f32>
+    let v_arr = v.as_array().to_owned().into_dimensionality::<ndarray::Ix2>().unwrap();
+    let u_arr = u.as_array().to_owned().into_dimensionality::<ndarray::Ix2>().unwrap();
+    let we_arr = we.as_array().to_owned().into_dimensionality::<ndarray::Ix2>().unwrap();
+    let w_arr = w.as_array().to_owned().into_dimensionality::<ndarray::Ix2>().unwrap();
+    let h_arr = h.as_array().to_owned().into_dimensionality::<ndarray::Ix2>().unwrap();
+
+    // Call the Rust function with the converted arrays
+    match ws_nmf_alg(
+        v_arr, u_arr, we_arr, w_arr, h_arr,
+        max_iter, converge_delta, converge_n, robust_alpha, model_i,
+        static_h, delay_h, progress_callback, prefer_gpu, py
+    ) {
+        Ok((final_w, final_h, q, converged, converge_i, q_list_full)) => {
+            // Convert Rust Vecs back to numpy arrays
+            let final_w = final_w.into_pyarray(py);
+            let final_h = final_h.into_pyarray(py);
+            let q_list_full_py = q_list_full.to_pyarray(py);
+
+            let py_results = PyDict::new(py);
+            py_results.set_item("w", final_w)?;
+            py_results.set_item("h", final_h)?;
+            py_results.set_item("q", PyFloat::new(py, q as f64).into_any())?;
+            py_results.set_item("converged", PyBool::new(py, converged))?;
+            py_results.set_item("converge_i", PyInt::new(py, converge_i))?;
+            py_results.set_item("q_list", q_list_full_py)?;
+
+            Ok(py_results.into())
+        }
+        Err(e) => Err(PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("{}", e)))
+    }
+}
+
+fn ws_nmf_alg<'py>(
+    v: Array2<f32>,
+    u: Array2<f32>,
+    we: Array2<f32>,
+    w: Array2<f32>,
+    h: Array2<f32>,
+    max_iter: i32,
+    converge_delta: f32,
+    converge_n: i32,
+    robust_alpha: f32,
+    model_i: i8,
+    static_h: Option<bool>,
+    delay_h: Option<i32>,
+    progress_callback: Option<PyObject>,
+    prefer_gpu: Option<bool>,
+    py: Python<'py>,
+) -> Result<(Array2<f64>, Array2<f64>, f32, bool, i32, Vec<f32>), Box<dyn Error>> {
+
+    let backend = create_backend(prefer_gpu.unwrap_or(false));
+
+    // Convert to f64 for backend trait compatibility
+    let v64 = v.mapv(|x| x as f64);
+    let u64 = u.mapv(|x| x as f64);
+    let we64 = we.mapv(|x| x as f64);
+    let mut w64 = w.mapv(|x| x as f64);
+    let mut h64 = h.mapv(|x| x as f64);
+
+    let hold_h = static_h.unwrap_or(false);
+    let delay_h = delay_h.unwrap_or(-1);
+
+    let mut q = 0.0;
+    let mut converged = false;
+    let mut converge_i = 0;
+    let mut q_list: VecDeque<f32> = VecDeque::new();
+    let mut q_list_full: VecDeque<f32> = VecDeque::new();
+    let datapoints = v.len() as f32;
+
+    let location_i = (model_i as usize).try_into().unwrap();
+
+    let mut last_callback = Instant::now();
+    let callback_interval = std::time::Duration::from_secs_f32(1.0 / 60.0);
+
+    let term = Term::buffered_stdout();
+    term.move_cursor_to(0, location_i).unwrap();
+    let draw_target = ProgressDrawTarget::term(term.clone(), 20);
+    let pb = ProgressBar::with_draw_target(Some(max_iter as u64), draw_target);
+    pb.set_style(
+        ProgressStyle::with_template("{spinner:.cyan} [{elapsed_precise}] {bar:40.cyan/blue} {pos}/{len} ({eta}) {per_sec} iter/sec - {msg}")
+            .unwrap()
+            .progress_chars("-|-"),
+    );
+
+    let wev64 = backend.element_wise_multiply(&we64, &v64)?;
+    for i in 0..max_iter {
+        let (new_w, new_h) = backend.ls_nmf_update(&w64, &h64, &wev64, &we64, hold_h, delay_h, i)?;
+        w64 = new_w;
+        h64 = new_h;
+
+        // Calculate Q (sum of squared residuals, as in original)
+        let wh = w64.dot(&h64);
+        let residuals = &v64 - &wh;
+        let weighted_residuals = &residuals / &u64;
+        let qtrue = weighted_residuals.mapv(|x| x * x).sum() as f32;
+        q = qtrue;
+        let mse = qtrue / datapoints;
+        q_list.push_back(q);
+        q_list_full.push_back(q);
+        converge_i = i;
+
+        term.move_cursor_to(0, location_i).unwrap();
+        pb.set_position((i + 1) as u64);
+        term.move_cursor_to(0, location_i).unwrap();
+        pb.set_message(format!("Model: {}, Q(True): {:.4}, MSE: {:.4}", model_i, qtrue, mse));
+
+        if (q_list.len() as i32) >= converge_n {
+            if q_list.front().unwrap() - q_list.back().unwrap() < converge_delta {
+                converged = true;
+            }
+            q_list.pop_front();
+        }
+        if let Some(ref cb) = progress_callback {
+            let now = Instant::now();
+            if now.duration_since(last_callback) >= callback_interval || converged || (i + 1) == max_iter {
+                let completed = converged || (i + 1) == max_iter;
+                let _ = cb.call1(py, (model_i, i, max_iter, qtrue, 0.0, mse, completed));
+                last_callback = now;
+            }
+        }
+        if converged {
+            break;
+        }
+    }
+    term.move_cursor_to(0, location_i).unwrap();
+    pb.abandon_with_message(format!("Model: {}, Q(True): {:.4}, MSE: {:.4}", model_i, q, q / datapoints));
+
+    let final_w = w64.to_owned();
+    let final_h = h64.to_owned();
+    let q_list_full_vec = q_list_full.into_iter().collect();
+
+    Ok((final_w, final_h, q, converged, converge_i, q_list_full_vec))
+}
+
+
 
 // NMF - Weight Semi-NMF algorithm
 // Returns (W, H, Q, converged)
