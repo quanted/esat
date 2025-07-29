@@ -9,10 +9,9 @@ use console::Term;
 use pyo3::prelude::*;
 use pyo3::{PyObject, wrap_pyfunction};
 use pyo3::types::{PyFloat, PyBool, PyInt, PyDict};
-use numpy::{PyReadonlyArrayDyn, ToPyArray, PyArrayMethods, IntoPyArray};
+use numpy::{PyReadonlyArrayDyn, ToPyArray, IntoPyArray};
 use ndarray::{Array2};
 use nalgebra::*;
-use rayon::prelude::*;
 use indicatif::{ProgressBar, ProgressStyle, ProgressDrawTarget};
 
 
@@ -99,6 +98,59 @@ impl MatrixBackend for CpuBackend {
         let w_num = wev.dot(&h_t);
         let w_den = (we * &wh).dot(&h_t);
         new_w *= &(w_num / w_den); // Element-wise multiplication
+
+        Ok((new_w, new_h))
+    }
+
+    fn ws_nmf_update(
+        &self,
+        w: &Array2<f64>,
+        h: &Array2<f64>,
+        wev: &Array2<f64>,
+        we: &Array2<f64>,
+        hold_h: bool,
+        delay_h: i32,
+        iter: i32,
+    ) -> Result<(Array2<f64>, Array2<f64>), Box<dyn Error>> {
+        let mut new_w = w.clone();
+        let mut new_h = h.clone();
+
+        // Update W
+        for (j, we_j) in we.rows().into_iter().enumerate() {
+            let we_j_diag = Array2::from_diag(&we_j);
+            let v_j = wev.row(j).to_owned();
+
+            let w_n = new_h.dot(&v_j);
+            let w_d = new_h.dot(&(we_j_diag.dot(&new_h.t())));
+            let mut w_d_inv = ndarray_to_na(&w_d);
+            if ! w_d_inv.try_inverse_mut() {
+                w_d_inv = w_d_inv.pseudo_inverse(1e-10)?
+            }
+            let w_row = w_n.dot(&na_to_ndarray(&w_d_inv));
+            new_w.row_mut(j).assign(&w_row);
+        }
+
+        // Update H
+        if !hold_h || (delay_h > 0 && iter > delay_h) {
+            let w_neg = (&new_w.mapv(|x| x.abs()) - &new_w) / 2.0;
+            let w_pos = (&new_w.mapv(|x| x.abs()) + &new_w) / 2.0;
+
+            for (j, we_j) in we.columns().into_iter().enumerate() {
+                let we_j_diag = Array2::from_diag(&we_j);
+                let v_j = wev.column(j).to_owned();
+
+                let n1 = v_j.t().dot(&w_pos);
+                let d1 = v_j.t().dot(&w_neg);
+
+                let n2 = new_h.row(j).dot(&(w_neg.t().dot(&(we_j_diag.dot(&w_neg)))));
+                let d2 = new_h.row(j).dot(&(w_pos.t().dot(&(we_j_diag.dot(&w_pos)))));
+
+                let h_delta = (&n1 + &n2 + EPSILON) / (&d1 + &d2 + EPSILON);
+                let current_column = new_h.column(j).to_owned();
+                let updated_column = current_column * h_delta.mapv(|x| x.sqrt());
+                new_h.column_mut(j).assign(&updated_column);
+            }
+        }
 
         Ok((new_w, new_h))
     }
@@ -201,7 +253,7 @@ impl MatrixBackend for GpuBackend {
             let h_num = w_tensor.t().unwrap().matmul(&wev_tensor)?;
             let h_den = w_tensor.t().unwrap().matmul(&we_tensor.mul(&wh)?)?;
             let h_delta = h_num.div(&h_den)?;
-            let new_h = h_tensor.mul(&h_delta)?;
+            new_h = h_tensor.mul(&h_delta)?;
         }
         // Update W
         let wh = w_tensor.matmul(&new_h)?;
@@ -209,6 +261,68 @@ impl MatrixBackend for GpuBackend {
         let w_den = we_tensor.mul(&wh)?.matmul(&new_h.t().unwrap())?;
         let w_delta = w_num.div(&w_den)?;
         let new_w = w_tensor.mul(&w_delta)?;
+        Ok((
+            self.tensor_to_array(&new_w)?,
+            self.tensor_to_array(&new_h)?
+        ))
+    }
+
+    fn ws_nmf_update(
+        &self,
+        w: &Array2<f64>,
+        h: &Array2<f64>,
+        wev: &Array2<f64>,
+        we: &Array2<f64>,
+        hold_h: bool,
+        delay_h: i32,
+        iter: i32,
+    ) -> Result<(Array2<f64>, Array2<f64>), Box<dyn Error>> {
+        if !self.should_use_gpu(w.nrows().max(w.ncols()), h.nrows().max(h.ncols())) {
+            // Fallback to CPU
+            return CpuBackend.ws_nmf_update(w, h, wev, we, hold_h, delay_h, iter);
+        }
+
+        let w_tensor = self.array_to_tensor(w)?;
+        let h_tensor = self.array_to_tensor(h)?;
+        let wev_tensor = self.array_to_tensor(wev)?;
+        let we_tensor = self.array_to_tensor(we)?;
+
+        let mut new_w = w_tensor.clone();
+        let mut new_h = h_tensor.clone();
+
+        let EPS = Tensor::from_vec(vec![EPSILON], (1,), &self.device)?;
+
+        // Update W
+        for j in 0..we.shape()[0] {
+            let we_j_diag: Tensor = create_diagonal(&we_tensor, j, &self.device).unwrap();
+            let v_j: Tensor = wev_tensor.get(j)?;
+            let w_n: Tensor = h_tensor.matmul(&v_j)?;
+            let w_d: Tensor = h_tensor.matmul(&(we_j_diag.matmul(&h_tensor.t()?)?))?;
+            let w_d_inv: Tensor = calculate_inverse(&w_d, &self.device)?;
+            let w_row: Tensor = w_n.matmul(&w_d_inv)?;
+            new_w.slice_set(&w_row, j, 0)?;
+        }
+
+        // Update H
+        if !hold_h || (delay_h > 0 && iter > delay_h) {
+            let w_neg = ((&new_w.abs()? - &new_w)? / 2.0)?;
+            let w_pos =((&new_w.abs()? + &new_w)? / 2.0)?;
+
+            for j in 0..we.shape()[1] {
+                let we_j_diag = create_diagonal(&we_tensor, j, &self.device).unwrap();
+                let v_j = wev_tensor.get(j)?;
+                let n1 = v_j.t()?.matmul(&w_pos)?;
+                let d1 = v_j.t()?.matmul(&w_neg)?;
+
+                let n2 = new_h.get(j)?.matmul(&(w_neg.t()?.matmul(&(we_j_diag.matmul(&w_neg)?))?))?;
+                let d2 = new_h.get(j)?.matmul(&(w_pos.t()?.matmul(&(we_j_diag.matmul(&w_pos)?))?))?;
+
+                let h_delta = (&n1 + &n2)?.add(&EPS)? / (&d1 + &d2)?.add(&EPS)?;
+                let new_h_col = new_h.get(j)?.reshape((new_h.shape().dims2()?.0, 1))?;
+                new_h.slice_set(&new_h_col.mul(&h_delta?.sqrt()?)?, j, 1)?;
+            }
+        }
+
         Ok((
             self.tensor_to_array(&new_w)?,
             self.tensor_to_array(&new_h)?
@@ -249,7 +363,7 @@ fn get_selected_device(prefer_gpu: Option<bool>) -> String {
 }
 
 //--------------------- NMF Functions ---------------------//
-const EPSILON: f32 = 1e-12;
+const EPSILON: f64 = 1e-12;
 
 
 // Convert nalgebra matrix (f32) to ndarray Array2<f64>
@@ -264,6 +378,156 @@ fn ndarray_to_na(arr: &Array2<f64>) -> OMatrix<f32, Dyn, Dyn> {
     let (rows, cols) = arr.dim();
     let data: Vec<f32> = arr.iter().map(|&x| x as f32).collect();
     OMatrix::<f32, Dyn, Dyn>::from_vec(rows, cols, data)
+}
+
+fn create_diagonal(tensor: &Tensor, index: usize, device: &Device) -> CandleResult<Tensor> {
+    let vector = tensor.get_on_dim(index, 0)?;
+    let size = vector.shape().dims1()?;
+    let mut diagonal_elements = vec![0.0; size * size];
+
+    for i in 0..size {
+        diagonal_elements[i * size + i] = vector.get(i)?.to_scalar()?;
+    }
+
+    Tensor::from_vec(diagonal_elements, (size, size), device)
+}
+
+fn calculate_inverse(tensor: &Tensor, device: &Device) -> CandleResult<Tensor> {
+    let shape = tensor.shape().dims2()?;
+    let (rows, cols) = (shape.0, shape.1);
+
+    if rows != cols {
+        return Err(candle_core::Error::msg("Matrix must be square for inverse calculation"));
+    }
+
+    // Calculate determinant
+    let determinant = calculate_determinant(&tensor, device)?;
+    if determinant.to_scalar::<f64>()? != 0.0 {
+        // Calculate inverse using adjoint and determinant
+        let adjoint = calculate_adjoint(&tensor, device)?;
+        let inverse = adjoint.div(&Tensor::from_vec(vec![determinant.to_scalar::<f64>()?], (1,), device)?)?;
+        return Ok(inverse);
+    }
+
+    // Pseudo-inverse using SVD decomposition
+    let (u, s, vt) = calculate_svd(&tensor, device)?;
+    let s_data = s.to_dtype(candle_core::DType::F64)?.to_vec1()?; // Convert tensor to a vector
+    let s_inv_data: Vec<f64> = s_data
+        .iter()
+        .map(|&x: &f64| if x > 1e-12 { 1.0 / x } else { 0.0 })
+        .collect();
+    let s_inv = Tensor::from_vec(s_inv_data, s.shape().dims1()?, device)?; // Create GPU tensor
+    let s_inv_diag = create_diagonal(&s_inv, 0, device)?;
+    let pseudo_inverse = vt.matmul(&s_inv_diag)?.matmul(&u.t()?)?;
+    Ok(pseudo_inverse)
+}
+
+fn calculate_adjoint(tensor: &Tensor, device: &Device) -> CandleResult<Tensor> {
+    let shape = tensor.shape().dims2()?;
+    let (rows, cols) = (shape.0, shape.1);
+
+    if rows != cols {
+        return Err(candle_core::Error::msg("Matrix must be square for adjoint calculation"));
+    }
+
+    let mut cofactor_matrix = vec![0.0; rows * cols];
+    for i in 0..rows {
+        for j in 0..cols {
+            let minor = extract_minor(&tensor, i, j, device)?;
+            let cofactor = (-1.0f64).powi((i + j) as i32) * calculate_determinant(&minor, device)?.to_scalar::<f64>()?;
+            cofactor_matrix[j * rows + i] = cofactor; // Transpose while calculating
+        }
+    }
+
+    Tensor::from_vec(cofactor_matrix, (rows, cols), device)
+}
+
+fn calculate_determinant(tensor: &Tensor, device: &Device) -> CandleResult<Tensor> {
+    let shape = tensor.shape().dims2()?;
+    let (rows, cols) = (shape.0, shape.1);
+
+    if rows != cols {
+        return Err(candle_core::Error::msg("Matrix must be square for determinant calculation"));
+    }
+
+    if rows == 1 {
+        let scalar = tensor.to_dtype(candle_core::DType::F64)?.get(0)?.to_scalar::<f64>()?;
+        return Ok(Tensor::from_vec(vec![scalar], (1,), device)?);
+    }
+
+    let mut determinant = Tensor::from_vec(vec![0.0], (1,), device);
+    for i in 0..cols {
+        let minor = extract_minor(&tensor, 0, i, device)?;
+        let cofactor = tensor.to_dtype(candle_core::DType::F64)?.get(0)?.get(i)?.to_scalar::<f64>()? * (-1.0f64).powi(i as i32);
+        determinant = determinant?.add(&Tensor::from_vec(vec![cofactor], (1,), device)?.mul(&calculate_determinant(&minor, device)?)?);
+    }
+
+    Ok(determinant?)
+}
+
+fn calculate_svd(tensor: &Tensor, device: &Device) -> CandleResult<(Tensor, Tensor, Tensor)> {
+    let shape = tensor.shape().dims2()?;
+    let (rows, cols) = (shape.0, shape.1);
+
+    let mut u = Tensor::eye(rows, candle_core::DType::U32, device)?;
+    let mut vt = Tensor::eye(cols, candle_core::DType::U32, device)?;
+    let mut s = tensor.clone();
+
+    for _ in 0..100 { // Iterative refinement
+        let (q, r) = qr_decomposition(&s, device)?; // QR decomposition
+        s = r.matmul(&q)?;
+        u = u.matmul(&q)?;
+        vt = q.matmul(&vt)?;
+    }
+
+    Ok((u, s, vt))
+}
+
+fn extract_minor(tensor: &Tensor, row: usize, col: usize, device: &Device) -> CandleResult<Tensor> {
+    let shape = tensor.shape().dims2()?;
+    let (rows, cols) = (shape.0, shape.1);
+
+    if row >= rows || col >= cols {
+        return Err(candle_core::Error::msg("Row or column index out of bounds"));
+    }
+
+    let mut minor_data = Vec::new();
+    for i in 0..rows {
+        if i == row {
+            continue;
+        }
+        for j in 0..cols {
+            if j == col {
+                continue;
+            }
+            minor_data.push(tensor.to_dtype(candle_core::DType::F64)?.get(i)?.get(j)?.to_scalar::<f64>()?);
+        }
+    }
+
+    Tensor::from_vec(minor_data, (rows - 1, cols - 1), device)
+}
+
+fn qr_decomposition(tensor: &Tensor, device: &Device) -> CandleResult<(Tensor, Tensor)> {
+    let shape = tensor.shape().dims2()?;
+    let (rows, cols) = (shape.0, shape.1);
+
+    let mut q = Tensor::zeros((rows, cols), candle_core::DType::F32, device)?;
+    let mut r = Tensor::zeros((cols, cols), candle_core::DType::F32, device)?;
+
+    for i in 0..cols {
+        let mut v = tensor.get(i)?;
+        for j in 0..i {
+            let q_col = q.get(j)?;
+            let r_val = q_col.t()?.matmul(&v)?.to_scalar::<f64>()?;
+            r.slice_set(&Tensor::from_vec(vec![r_val], (1,), device)?, j, i)?;
+            v = v.sub(&q_col.mul(&Tensor::from_vec(vec![r_val], (1,), device)?)?)?;
+        }
+        let norm = v.sqr()?.sum(0)?.sqrt()?;
+        r.slice_set(&norm, i, i)?;
+        q.slice_set(&v.div(&norm)?, i, 1)?;
+    }
+
+    Ok((q, r))
 }
 
 
@@ -366,7 +630,7 @@ fn ls_nmf_alg<'py>(
     let location_i = (model_i as usize).try_into().unwrap();
 
     let mut last_callback = Instant::now();
-    let callback_interval = std::time::Duration::from_secs_f32(1.0 / 60.0);
+    let callback_interval = std::time::Duration::from_secs_f32(1.0 / 30.0);
 
     let term = Term::buffered_stdout();
     term.move_cursor_to(0, location_i).unwrap();
@@ -520,7 +784,7 @@ fn ws_nmf_alg<'py>(
     let location_i = (model_i as usize).try_into().unwrap();
 
     let mut last_callback = Instant::now();
-    let callback_interval = std::time::Duration::from_secs_f32(1.0 / 60.0);
+    let callback_interval = std::time::Duration::from_secs_f32(1.0 / 30.0);
 
     let term = Term::buffered_stdout();
     term.move_cursor_to(0, location_i).unwrap();
@@ -534,7 +798,7 @@ fn ws_nmf_alg<'py>(
 
     let wev64 = backend.element_wise_multiply(&we64, &v64)?;
     for i in 0..max_iter {
-        let (new_w, new_h) = backend.ls_nmf_update(&w64, &h64, &wev64, &we64, hold_h, delay_h, i)?;
+        let (new_w, new_h) = backend.ws_nmf_update(&w64, &h64, &wev64, &we64, hold_h, delay_h, i)?;
         w64 = new_w;
         h64 = new_h;
 
@@ -580,322 +844,6 @@ fn ws_nmf_alg<'py>(
     let q_list_full_vec = q_list_full.into_iter().collect();
 
     Ok((final_w, final_h, q, converged, converge_i, q_list_full_vec))
-}
-
-
-
-// NMF - Weight Semi-NMF algorithm
-// Returns (W, H, Q, converged)
-#[pyfunction]
-fn ws_nmf<'py>(
-    py: Python<'py>,
-    v: PyReadonlyArrayDyn<'py, f32>,
-    u: PyReadonlyArrayDyn<'py, f32>,
-    we: PyReadonlyArrayDyn<'py, f32>,
-    w: PyReadonlyArrayDyn<'py, f32>,
-    h: PyReadonlyArrayDyn<'py, f32>,
-    max_iter: i32,
-    converge_delta: f32,
-    converge_n: i32,
-    robust_alpha: f32,
-    model_i: i8,
-    static_h: Option<bool>,
-    delay_h: Option<i32>,
-    progress_callback: Option<PyObject>,
-) -> PyResult<PyObject> {
-    let v = OMatrix::<f32, Dyn, Dyn>::from_vec(v.dims()[0], v.dims()[1], v.as_array().to_owned().into_raw_vec_and_offset().0);
-    let u = OMatrix::<f32, Dyn, Dyn>::from_vec(u.dims()[0], u.dims()[1], u.as_array().to_owned().into_raw_vec_and_offset().0);
-    let we = OMatrix::<f32, Dyn, Dyn>::from_vec(we.dims()[0], we.dims()[1], we.as_array().to_owned().into_raw_vec_and_offset().0);
-
-    let mut new_w = OMatrix::<f32, Dyn, Dyn>::from_vec(w.dims()[1], w.dims()[0], w.as_array().to_owned().into_raw_vec_and_offset().0).transpose();
-    let mut new_h = OMatrix::<f32, Dyn, Dyn>::from_vec(h.dims()[1], h.dims()[0], h.as_array().to_owned().into_raw_vec_and_offset().0).transpose();
-    let new_we = we.clone();
-
-    let mut qtrue: f32 = calculate_q(&v, &u, &new_w, &new_h);
-    let mut qrobust: f32 = 0.0;
-    let mut q = qtrue.clone();
-
-    let mut mse: f32 = 0.0;
-    let datapoints = v.len() as f32;
-    let hold_h = static_h.unwrap_or(false);
-    let delay_h = delay_h.unwrap_or(-1);
-
-    let mut converged: bool = false;
-    let mut converge_i: i32 = 0;
-    let mut q_list: VecDeque<f32> = VecDeque::new();
-    let mut q_list_full: VecDeque<f32> = VecDeque::new();
-
-    let mut we_j_diag: DMatrix<f32>;
-    let mut v_j;
-
-    let wev = &new_we.component_mul(&v);
-
-    let location_i = (model_i as usize).try_into().unwrap();
-    let term = Term::buffered_stdout();
-    term.move_cursor_to(0, location_i).unwrap();
-    let draw_target = ProgressDrawTarget::term(term.clone(), 20);
-    let pb = ProgressBar::with_draw_target(Some(max_iter as u64), draw_target);
-    pb.set_style(
-        ProgressStyle::with_template("{spinner:.cyan} [{elapsed_precise}] {bar:40.cyan/blue} {pos}/{len} ({eta}) {per_sec} iter/sec - {msg}")
-            .unwrap()
-            .progress_chars("-|-"),
-    );
-
-    for i in 0..max_iter{
-        for (j, we_j) in new_we.row_iter().enumerate(){
-            we_j_diag = DMatrix::from_diagonal(&DVector::from_row_slice(we_j.transpose().as_slice()));
-            v_j = DVector::from_row_slice(wev.row(j).transpose().as_slice());
-
-            let w_n = (&new_h * v_j).transpose();
-            let uh = &we_j_diag * &new_h.transpose();
-            let w_d = &new_h * &uh;
-            let w_d_det = w_d.determinant();
-            let w_d_inv: DMatrix<f32> = if w_d_det == 0.0 {
-                w_d.pseudo_inverse(1e-12).unwrap()
-            }
-            else{
-                w_d.try_inverse().unwrap()
-            };
-            let _w = w_n * w_d_inv;
-            let _w_row = DVector::from_column_slice(_w.as_slice());
-            let w_row = &_w_row.column(0).transpose();
-            new_w.set_row(j, &w_row);
-        }
-        if !hold_h || (delay_h > 0 && i > delay_h) {
-            let w_neg = (Matrix::abs(&new_w) - &new_w) / 2.0;
-            let w_pos = (Matrix::abs(&new_w) + &new_w) / 2.0;
-            for (j, we_j) in new_we.column_iter().enumerate(){
-                we_j_diag = DMatrix::from_diagonal(&DVector::from_column_slice(we_j.as_slice()));
-                v_j = DVector::from_row_slice(wev.column(j).as_slice());
-
-                let n1 = v_j.transpose() * &w_pos;
-                let d1 = v_j.transpose() * &w_neg;
-
-                let n2a = w_neg.transpose() * &we_j_diag;
-                let n2b = &n2a * &w_neg;
-                let d2a = w_pos.transpose() * &we_j_diag;
-                let d2b = &d2a * &w_pos;
-
-                let h_j = new_h.column(j).transpose();
-                let n2 = &h_j * &n2b;
-                let d2 = &h_j * &d2b;
-                let _n = (n1 + n2).add_scalar(EPSILON);
-                let _d = (d1 + d2).add_scalar(EPSILON);
-                let mut h_delta = _n.component_div(&_d);
-                h_delta = h_delta.map(|x| x.sqrt());
-                let _h = h_j.component_mul(&h_delta);
-                let h_row = DVector::from_row_slice(_h.as_slice());
-                new_h.set_column(j, &h_row);
-            }
-        }
-        qtrue = calculate_q(&v, &u, &new_w, &new_h);
-        let robust_results = calculate_q_robust(&v, &u, &new_w, &new_h, robust_alpha);
-        qrobust = robust_results.0;
-        q = qtrue;
-        mse = qtrue / datapoints;
-
-        term.move_cursor_to(0, location_i).unwrap();
-        pb.set_position((i+1) as u64);
-        term.move_cursor_to(0, location_i).unwrap();
-        pb.set_message(format!("Model: {}, Q(True): {:.4}, Q(Robust): {:.4}, MSE: {:.4}", model_i, qtrue, qrobust, mse));
-
-        q_list.push_back(q);
-        q_list_full.push_back(q);
-        converge_i = i;
-        if (q_list.len() as i32) >= converge_n {
-            if q_list.front().unwrap() - q_list.back().unwrap() < converge_delta {
-                    converged = true;
-            }
-            q_list.pop_front();
-        }
-        if let Some(ref cb) = progress_callback {
-            let completed = converged || (i + 1) == max_iter;
-            let _ = cb.call1(py, (model_i, i, max_iter, qtrue, qrobust, mse, completed));
-        }
-        if converged {
-            break
-        }
-    }
-    term.move_cursor_to(0, location_i).unwrap();
-    pb.abandon_with_message(format!("Model: {}, Q(True): {:.4}, Q(Robust): {:.4}, MSE: {:.4}", model_i, qtrue, qrobust, mse));
-
-    new_w = new_w.transpose();
-    new_h = new_h.transpose();
-    let w_matrix = new_w.data.as_vec().to_owned();
-    let h_matrix = new_h.data.as_vec().to_owned();
-    let final_w = w_matrix.to_pyarray(py).reshape(w.dims()).unwrap();
-    let final_h = h_matrix.to_pyarray(py).reshape(h.dims()).unwrap();
-
-    let q_list_full_py = q_list_full.into_iter().collect::<Vec<_>>().to_pyarray(py);
-
-    let py_results = PyDict::new(py);
-    py_results.set_item("w", final_w)?;
-    py_results.set_item("h", final_h)?;
-    py_results.set_item("q", PyFloat::new(py, q as f64).into_any())?;
-    py_results.set_item("converged", PyBool::new(py, converged))?;
-    py_results.set_item("converge_i", PyInt::new(py, converge_i))?;
-    py_results.set_item("q_list", q_list_full_py)?;
-
-    Ok(py_results.into())
-}
-
-// NMF - Weight Semi-NMF algorithm
-// Returns (W, H, Q, converged)
-#[pyfunction]
-fn ws_nmf_p<'py>(
-    py: Python<'py>,
-    v: PyReadonlyArrayDyn<'py, f32>,
-    u: PyReadonlyArrayDyn<'py, f32>,
-    we: PyReadonlyArrayDyn<'py, f32>,
-    w: PyReadonlyArrayDyn<'py, f32>,
-    h: PyReadonlyArrayDyn<'py, f32>,
-    max_iter: i32,
-    converge_delta: f32,
-    converge_n: i32,
-    robust_alpha: f32,
-    model_i: i8,
-    static_h: Option<bool>,
-    delay_h: Option<i32>,
-    progress_callback: Option<PyObject>,
-) -> PyResult<PyObject> {
-    let v = OMatrix::<f32, Dyn, Dyn>::from_vec(v.dims()[0], v.dims()[1], v.to_vec().unwrap());
-    let u = OMatrix::<f32, Dyn, Dyn>::from_vec(u.dims()[0], u.dims()[1], u.to_vec().unwrap());
-    let we = OMatrix::<f32, Dyn, Dyn>::from_vec(we.dims()[0], we.dims()[1], we.to_vec().unwrap());
-
-    let mut new_w = OMatrix::<f32, Dyn, Dyn>::from_vec(w.dims()[1], w.dims()[0], w.to_vec().unwrap()).transpose();
-    let mut new_h = OMatrix::<f32, Dyn, Dyn>::from_vec(h.dims()[1], h.dims()[0], h.to_vec().unwrap()).transpose();
-    let new_we = we.clone();
-
-    let mut qtrue: f32 = calculate_q(&v, &u, &new_w, &new_h);
-    let mut qrobust: f32 = 0.0;
-    let mut q = qtrue.clone();
-    let mut mse: f32 = 0.0;
-
-    let mut converged: bool = false;
-    let mut converge_i: i32 = 0;
-    let mut q_list: VecDeque<f32> = VecDeque::new();
-    let mut q_list_full: VecDeque<f32> = VecDeque::new();
-
-    let m = v.nrows();
-    let n = v.ncols();
-    let mut w_prime: OMatrix<f32, Dyn, Dyn> = new_w.clone().transpose();
-    let mut h_prime: OMatrix<f32, Dyn, Dyn> = new_h.clone();
-    let datapoints = v.len() as f32;
-    let hold_h = static_h.unwrap_or(false);
-    let delay_h = delay_h.unwrap_or(-1);
-
-    let location_i = (model_i as usize).try_into().unwrap();
-    let term = Term::buffered_stdout();
-    term.move_cursor_to(0, location_i).unwrap();
-    let draw_target = ProgressDrawTarget::term(term.clone(), 20);
-    let pb = ProgressBar::with_draw_target(Some(max_iter as u64), draw_target);
-    pb.set_style(
-        ProgressStyle::with_template("{spinner:.cyan} [{elapsed_precise}] {bar:40.cyan/blue} {pos}/{len} ({eta}) {per_sec} iter/sec - {msg}")
-            .unwrap()
-            .progress_chars("-|-"),
-    );
-
-    for i in 0..max_iter{
-        let wev = &new_we.component_mul(&v);
-        w_prime.par_column_iter_mut().zip(0..m).for_each(|(mut w_col, j)| {
-            let we_j_diag = DMatrix::from_diagonal(&DVector::from_row_slice(new_we.row(j).transpose().as_slice()));
-            let v_j = DVector::from_row_slice(wev.row(j).transpose().as_slice());
-
-            let w_n = (&new_h * v_j).transpose();
-            let uh = &we_j_diag * &new_h.transpose();
-            let w_d = &new_h * &uh;
-            let mut w_d_inv = w_d;
-            if ! w_d_inv.try_inverse_mut() {
-                w_d_inv = w_d_inv.pseudo_inverse(1e-12).unwrap()
-            }
-            let _w = w_n * w_d_inv;
-            let _j_w_row = DVector::from_column_slice(_w.as_slice());
-            let j_w_row = _j_w_row.column(0);
-            for k in 0..w_col.shape().0{
-                w_col[k] = j_w_row[k];
-            }
-        });
-        new_w = w_prime.transpose();
-        if !hold_h || (delay_h > 0 && i > delay_h) {
-            let w_neg = (Matrix::abs(&new_w) - &new_w) / 2.0;
-            let w_pos = (Matrix::abs(&new_w) + &new_w) / 2.0;
-
-            h_prime.par_column_iter_mut().zip(0..n).for_each(|(mut h_col, j)| {
-                let we_j_diag = DMatrix::from_diagonal(&DVector::from_column_slice(new_we.column(j).as_slice()));
-                let v_j = DVector::from_row_slice(wev.column(j).as_slice());
-
-                let n1 = v_j.transpose() * &w_pos;
-                let d1 = v_j.transpose() * &w_neg;
-
-                let n2a = w_neg.transpose() * &we_j_diag;
-                let n2b = &n2a * &w_neg;
-                let d2a = w_pos.transpose() * &we_j_diag;
-                let d2b = &d2a * &w_pos;
-
-                let h_j = new_h.column(j).transpose();
-                let n2 = &h_j * &n2b;
-                let d2 = &h_j * &d2b;
-                let _n = (n1 + n2).add_scalar(EPSILON);
-                let _d = (d1 + d2).add_scalar(EPSILON);
-                let mut h_delta = _n.component_div(&_d);
-                h_delta = h_delta.map(|x| x.sqrt());
-                let _h = h_j.component_mul(&h_delta);
-                let j_h_row = DVector::from_column_slice(_h.as_slice());
-                for k in 0..h_col.shape().0{
-                    h_col[k] = j_h_row[k];
-                }
-            });
-            new_h = h_prime.to_owned();
-        }
-        qtrue = calculate_q(&v, &u, &new_w, &new_h);
-        let robust_results = calculate_q_robust(&v, &u, &new_w, &new_h, robust_alpha);
-        qrobust = robust_results.0;
-        mse = qtrue / datapoints;
-
-        term.move_cursor_to(0, location_i).unwrap();
-        pb.set_position((i+1) as u64);
-        term.move_cursor_to(0, location_i).unwrap();
-        pb.set_message(format!("Model: {}, Q(True): {:.4}, Q(Robust): {:.4}, MSE: {:.4}", model_i, qtrue, qrobust, mse));
-
-        q = qtrue.clone();
-        q_list.push_back(q);
-        q_list_full.push_back(q);
-        converge_i = i;
-        if (q_list.len() as i32) >= converge_n {
-            if q_list.front().unwrap() - q_list.back().unwrap() < converge_delta {
-                    converged = true;
-            }
-            q_list.pop_front();
-        }
-        if let Some(ref cb) = progress_callback {
-            let completed = converged || (i + 1) == max_iter;
-            let _ = cb.call1(py, (model_i, i, max_iter, qtrue, qrobust, mse, completed));
-        }
-        if converged {
-            break
-        }
-    }
-    term.move_cursor_to(0, location_i).unwrap();
-    pb.abandon_with_message(format!("Model: {}, Q(True): {:.4}, Q(Robust): {:.4}, MSE: {:.4}", model_i, qtrue, qrobust, mse));
-
-    new_w = new_w.transpose();
-    new_h = new_h.transpose();
-    let w_matrix = new_w.data.as_vec().to_owned();
-    let h_matrix = new_h.data.as_vec().to_owned();
-    let final_w = w_matrix.to_pyarray(py).reshape(w.dims()).unwrap();
-    let final_h = h_matrix.to_pyarray(py).reshape(h.dims()).unwrap();
-
-    let q_list_full_py = q_list_full.into_iter().collect::<Vec<_>>().to_pyarray(py);
-
-    let py_results = PyDict::new(py);
-    py_results.set_item("w", final_w)?;
-    py_results.set_item("h", final_h)?;
-    py_results.set_item("q", PyFloat::new(py, q as f64).into_any())?;
-    py_results.set_item("converged", PyBool::new(py, converged))?;
-    py_results.set_item("converge_i", PyInt::new(py, converge_i))?;
-    py_results.set_item("q_list", q_list_full_py)?;
-
-    Ok(py_results.into())
 }
 
 fn calculate_q(
@@ -962,7 +910,6 @@ fn esat_rust(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
     m.add_function(wrap_pyfunction!(ls_nmf, m)?)?;
     m.add_function(wrap_pyfunction!(ws_nmf, m)?)?;
-    m.add_function(wrap_pyfunction!(ws_nmf_p, m)?)?;
 
     m.add_function(wrap_pyfunction!(get_selected_device, m)?)?;
 
