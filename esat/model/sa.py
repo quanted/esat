@@ -133,10 +133,8 @@ class SA:
                 if self.method == "ls-nmf" and not self.__has_neg:
                     self.optimized_update = esat_rust.ls_nmf
                 else:
-                    if self.parallel:
-                        self.optimized_update = esat_rust.ws_nmf_p
-                    else:
-                        self.optimized_update = esat_rust.ws_nmf
+                    self.optimized_update = esat_rust.ws_nmf
+
             except ModuleNotFoundError:
                 logger.error("Unable to load optimized Rust module, reverting to python code.")
                 self.optimized = False
