@@ -91,20 +91,28 @@ class ModelAnalysis:
         features = self.dh.features
 
         feature_mean = []
+        feature_var = []
+        est_means = []
+        est_vars = []
         feature_rmse = []
-        feature_p_rmse = []
         for column_i in range(V.shape[1]):
             c_mean = round(float(V[:, column_i].mean()), 4)
+            c_var = round(float(V[:, column_i].var()), 4)
+            est_mean = round(float(est_V[:, column_i].mean()), 4)
+            est_var = round(float(est_V[:, column_i].var()), 4)
             c_rmse = round(np.sqrt(np.sum((V[:, column_i] - est_V[:, column_i]) ** 2)) / 14, 4)
-            c_percent = round((c_rmse/c_mean) * 100, 2)
             feature_mean.append(c_mean)
+            feature_var.append(c_var)
+            est_means.append(est_mean)
+            est_vars.append(est_var)
             feature_rmse.append(c_rmse)
-            feature_p_rmse.append(c_percent)
         df = pd.DataFrame(data={
             "Feature": features,
-            "Mean": feature_mean,
+            "Input Mean": feature_mean,
+            "Input Var": feature_var,
+            "Est Mean": est_means,
+            "Est Var": est_vars,
             "RMSE": feature_rmse,
-            "Percentage": feature_p_rmse
         })
         return df
 
@@ -231,7 +239,7 @@ class ModelAnalysis:
                                      subplot_titles=["Scaled Residuals", None])
 
         residual_fig.add_trace(
-            go.Histogram(x=residuals_data, histnorm='probability'),
+            go.Histogram(x=residuals_data, histnorm='probability', name='Histogram'),
             row=2, col=1
         )
         residual_fig.add_trace(
@@ -289,7 +297,7 @@ class ModelAnalysis:
             return
 
         observed_data = self.dh.input_data_plot[feature]
-        predicted_data = self.V_prime_plot[:, feature_idx]
+        predicted_data = self.V_prime_plot.iloc[:, feature_idx]
 
         # Perform regression
         A = np.vstack([observed_data.values, np.ones(len(observed_data))]).T
@@ -351,7 +359,7 @@ class ModelAnalysis:
             return
 
         observed_data = self.dh.input_data_plot[feature].values
-        predicted_data = self.V_prime_plot[:, feature_idx]
+        predicted_data = self.V_prime_plot.iloc[:, feature_idx]
 
         data_df = pd.DataFrame(data={"observed": observed_data, "predicted": predicted_data},
                                index=self.dh.input_data_plot.index)
@@ -378,8 +386,8 @@ class ModelAnalysis:
 
         if show:
             ts_subplot.show()
-
-        return ts_subplot
+        else:
+            return ts_subplot
 
     def plot_factor_profile(self,
                             factor_idx: int,
@@ -459,7 +467,8 @@ class ModelAnalysis:
         contr_plot.update_yaxes(title_text="Normalized Contributions")
         if show:
             contr_plot.show()
-        return profile_plot, contr_plot
+        else:
+            return profile_plot, contr_plot
 
     def plot_all_factors(self, factor_list: list = None, H: np.ndarray = None, W: np.ndarray = None):
         """
@@ -515,7 +524,7 @@ class ModelAnalysis:
                           hovermode='x unified')
         fig.show()
 
-    def plot_all_factors_3d(self, H=None, W=None, show: bool = True):
+    def plot_all_factors_3d(self, H=None, W=None, show: bool = True, plot_type: str = "profile"):
         """
         Create a 3D bar plot of the factor profiles and their contributions.
         Parameters
@@ -526,6 +535,8 @@ class ModelAnalysis:
             The factor contribution matrix, if None will use the model's W matrix.
         show : bool
             If True, the plot will be displayed. Default is True.
+        plot_type : str
+            Should be either "profile", "conc", or "both".
 
         Returns
         -------
@@ -609,13 +620,16 @@ class ModelAnalysis:
 
         fig = go.Figure()
 
+        add_button = False
         # Add 3D bar graphs for "Conc. of Features"
-        fig.add_trace(_create_mesh3d(conc_z, "Conc. of Features"))
-
-        # Add 3D bar graphs for "% of Features"
-        fig.add_trace(_create_mesh3d(percent_z, "% of Features"))
-        fig.data[1].visible = False  # Initially hide "% of Features"
-
+        if plot_type.lower() in ["conc", "both"]:
+            fig.add_trace(_create_mesh3d(conc_z, "Conc. of Features"))
+        else:
+            # Add 3D bar graphs for "% of Features"
+            fig.add_trace(_create_mesh3d(percent_z, "% of Features"))
+        if plot_type.lower() == "both":
+            fig.data[1].visible = False  # Initially hide "% of Features"
+            add_button = True
         # Update layout and add buttons for toggling plot types
         fig.update_layout(
             title="3D Factor Profiles",
@@ -649,13 +663,14 @@ class ModelAnalysis:
                                 'scene.zaxis.range': [0, 100]
                             }]
                         )
-                    ]
+                    ] if add_button else None
                 )
             ]
         )
         if show:
             fig.show()
-        return fig
+        else:
+            return fig
 
     def plot_factor_fingerprints(self, grouped: bool = False, show: bool = True):
         """
@@ -674,7 +689,8 @@ class ModelAnalysis:
         fig.update_yaxes(title_text="% Feature Concentration", range=[0, 100])
         if show:
             fig.show()
-        return fig
+        else:
+            return fig
 
 
     def plot_g_space(self,
@@ -715,7 +731,8 @@ class ModelAnalysis:
         fig.update_xaxes(title_text=f"Factor {factor_1} Contributions (avg=1)")
         if show:
             fig.show()
-        return fig
+        else:
+            return fig
 
     def plot_factor_contributions(self,
                                   feature_idx: int,
@@ -781,7 +798,8 @@ class ModelAnalysis:
         contr_fig.update_yaxes(title_text="Normalized Contribution")
         if show:
             contr_fig.show()
-        return feature_fig, contr_fig
+        else:
+            return feature_fig, contr_fig
 
     def plot_factor_composition(self):
         """
