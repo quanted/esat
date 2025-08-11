@@ -377,7 +377,7 @@ class ModelAnalysis:
                                         line=dict(width=1), mode='lines', name="Residuals"), row=2, col=1)
 
         ts_subplot.update_layout(
-            title=f"Estimated Time-series for {feature} - Model {self.selected_model}",
+            title=f"Estimated Time-series for {feature} - Model {self.selected_model+1}",
             width=1200,
             height=800,
             yaxis_title="Concentrations",
