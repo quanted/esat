@@ -42,6 +42,7 @@ class ModelAnalysis:
         self.model = model
         self.selected_model = selected_model
         self.statistics = None
+        self.residual_metrics = None
         self.V_prime_k = None
         self.V_prime_plot = None
 
@@ -114,6 +115,7 @@ class ModelAnalysis:
             "Est Var": est_vars,
             "RMSE": feature_rmse,
         })
+        self.residual_metrics = df
         return df
 
     def calculate_statistics(self, results: np.ndarray = None):
@@ -295,6 +297,8 @@ class ModelAnalysis:
         else:
             logger.info("Either feature_idx or feature_name must be provided.")
             return
+        if self.V_prime_plot is None:
+            self.aggregate_factors_for_plotting()
 
         observed_data = self.dh.input_data_plot[feature]
         predicted_data = self.V_prime_plot.iloc[:, feature_idx]
@@ -357,6 +361,9 @@ class ModelAnalysis:
         else:
             logger.info("Either feature_idx or feature_name must be provided.")
             return
+
+        if self.V_prime_plot is None:
+            self.aggregate_factors_for_plotting()
 
         observed_data = self.dh.input_data_plot[feature].values
         predicted_data = self.V_prime_plot.iloc[:, feature_idx]
