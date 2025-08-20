@@ -1,0 +1,1651 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Command Line Interface &#8212; Environmental Source Apportionment Toolkit (ESAT) 2025.0.2 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=eba8b062" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="../_static/documentation_options.js?v=b7785327"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'docs/cli';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="eval package" href="eval.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">Environmental Source Apportionment Toolkit (ESAT) 2025.0.2 documentation</p>
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">EPA’s ESAT Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../README.html">Environmental Source Apportionment Toolkit (ESAT)</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="modules.html">Python API</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="esat.html">esat package</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="esat.cli.html">esat.cli package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="esat.data.html">esat.data package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="esat.error.html">esat.error package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="esat.model.html">esat.model package</a></li>
+<li class="toctree-l3"><a class="reference internal" href="esat.rotational.html">esat.rotational package</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2"><a class="reference internal" href="esat.data.html">esat.data package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="esat.error.html">esat.error package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="esat.model.html">esat.model package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="esat.rotational.html">esat.rotational package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="eval.html">eval package</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Command Line Interface</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/docs/cli.rst" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.rst</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Command Line Interface</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#esat">esat</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-batch">analysis-batch</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-batch-plot-distribution">plot-distribution</a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#parameters">Parameters</a></li>
+</ul>
+</li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-batch-plot-loss">plot-loss</a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Parameters</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-constrained">analysis-constrained</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-constrained-eval-constraints">eval-constraints</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-constrained-eval-expressions">eval-expressions</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-constrained-plot-contributions">plot-contributions</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-constrained-plot-fingerprints">plot-fingerprints</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-constrained-plot-gspace">plot-gspace</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-constrained-plot-q">plot-q</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-constrained-summary">summary</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-error">analysis-error</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-error-error-results">error-results</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-error-summary">summary</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-input">analysis-input</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-input-metrics">metrics</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-input-plot-data">plot-data</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-input-plot-feature">plot-feature</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-input-plot-timeseries">plot-timeseries</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-solution">analysis-solution</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-solution-plot-composition">plot-composition</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-solution-plot-contributions">plot-contributions</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-solution-plot-estimated">plot-estimated</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-solution-plot-fingerprints">plot-fingerprints</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-solution-plot-gspace">plot-gspace</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-solution-plot-profile">plot-profile</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-solution-plot-residuals">plot-residuals</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-solution-plot-surface">plot-surface</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-solution-plot-timeseries">plot-timeseries</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-solution-statistics">statistics</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-estimate">estimate</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-run">run</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-run-constrained">run-constrained</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-run-error">run-error</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-setup">setup</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-setup-constrained">setup-constrained</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-setup-error">setup-error</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-simulator">simulator</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-simulator-compare">compare</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-simulator-generate">generate</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-simulator-plot">plot</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-simulator-setup">setup</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="command-line-interface">
+<h1>Command Line Interface<a class="headerlink" href="#command-line-interface" title="Link to this heading">#</a></h1>
+<section id="esat">
+<h2>esat<a class="headerlink" href="#esat" title="Link to this heading">#</a></h2>
+<div class="line-block">
+<div class="line">The EPA’s Environmental Source Apportionment Toolkit (ESAT) CLI provides access to the ESAT workflow available in</div>
+<div class="line">the Jupyter notebooks. The workflow sequence is as follows:</div>
+<div class="line">1) setup : specify where you want your project directory for all solution outputs.</div>
+<div class="line">2) analysis-input : (optional) review your input/uncertainty data with metric tables and plots.</div>
+<div class="line">3) run : executes a batch source apportionment (SA) run using the values in the setup configuration file.</div>
+<div class="line">4) analysis-solution : (optional) review the solutions of the batch SA run with metric tables and plots.</div>
+<div class="line">5) setup-error : create an error estimation methods configuration file in the project directory.</div>
+<div class="line">6) run-error: executes one or more of the error estimation methods using the error configuration.</div>
+<div class="line">7) error-analysis : (optional) review the results of the error estimation methods.</div>
+<div class="line">8) setup-constrained : create a constrained model run configuration file in the project directory.</div>
+<div class="line">9) analysis-constrained : (optional) review the results of the constrained model run.</div>
+</div>
+<p>An error estimation run can occur before or after a constrained model run, though the solution of a constrained
+model run can be used in an error estimation run by adding the path to the constrained model run configuration file
+in the error method configuration. If left empty, the error estimation run will default to the base solution from
+run.</p>
+<p>The ESAT simulator and synthetic datasets can be used by running the ‘setup-sim’ command in place of ‘setup’. To
+generate the synthetic dataset for analysis run ‘generate-sim’, if this is not executed prior to ‘run’ the command
+will be executed in the run command sequence. The ‘run’ command will use the generated synthetic data as it would
+real data. The model outputs can then be compared to the synthetic profiles with the ‘sim-analysis’ command.
+All other commands are available on the simulated data.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>esat<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>COMMAND<span class="w"> </span><span class="o">[</span>ARGS<span class="o">]</span>...
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-version">
+<span class="sig-name descname"><span class="pre">--version</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-esat-version" title="Link to this definition">#</a></dt>
+<dd><p>Show the version and exit.</p>
+</dd></dl>
+
+<section id="esat-analysis-batch">
+<h3>analysis-batch<a class="headerlink" href="#esat-analysis-batch" title="Link to this heading">#</a></h3>
+<p>The collection of commands for batch model analysis.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>esat<span class="w"> </span>analysis-batch<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>COMMAND<span class="w"> </span><span class="o">[</span>ARGS<span class="o">]</span>...
+</pre></div>
+</div>
+<section id="esat-analysis-batch-plot-distribution">
+<h4>plot-distribution<a class="headerlink" href="#esat-analysis-batch-plot-distribution" title="Link to this heading">#</a></h4>
+<p>Plots the loss value distribution Q(true) and Q(robust) for the batch solution.</p>
+<section id="parameters">
+<h5>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">#</a></h5>
+<p>project_directory : The project directory where all configuration output files are saved.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>esat<span class="w"> </span>analysis-batch<span class="w"> </span>plot-distribution<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>PROJECT_DIRECTORY
+</pre></div>
+</div>
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-batch-plot-distribution-arg-PROJECT_DIRECTORY">
+<span class="sig-name descname"><span class="pre">PROJECT_DIRECTORY</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-esat-analysis-batch-plot-distribution-arg-PROJECT_DIRECTORY" title="Link to this definition">#</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+</section>
+<section id="esat-analysis-batch-plot-loss">
+<h4>plot-loss<a class="headerlink" href="#esat-analysis-batch-plot-loss" title="Link to this heading">#</a></h4>
+<p>Plots the loss value Q(true) over the training iterations for the batch solution.</p>
+<section id="id1">
+<h5>Parameters<a class="headerlink" href="#id1" title="Link to this heading">#</a></h5>
+<p>project_directory : The project directory where all configuration output files are saved.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>esat<span class="w"> </span>analysis-batch<span class="w"> </span>plot-loss<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>PROJECT_DIRECTORY
+</pre></div>
+</div>
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-batch-plot-loss-arg-PROJECT_DIRECTORY">
+<span class="sig-name descname"><span class="pre">PROJECT_DIRECTORY</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-esat-analysis-batch-plot-loss-arg-PROJECT_DIRECTORY" title="Link to this definition">#</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+</section>
+</section>
+<section id="esat-analysis-constrained">
+<h3>analysis-constrained<a class="headerlink" href="#esat-analysis-constrained" title="Link to this heading">#</a></h3>
+<p>The collection of commands for analyzing the constrained model results.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>esat<span class="w"> </span>analysis-constrained<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>COMMAND<span class="w"> </span><span class="o">[</span>ARGS<span class="o">]</span>...
+</pre></div>
+</div>
+<section id="esat-analysis-constrained-eval-constraints">
+<h4>eval-constraints<a class="headerlink" href="#esat-analysis-constrained-eval-constraints" title="Link to this heading">#</a></h4>
+<p>Display the evaluation table of the constrained model results, for each constraint.</p>
+<p>Parameters</p>
+<p>project_directory : The project directory containing .toml configuration files.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>esat<span class="w"> </span>analysis-constrained<span class="w"> </span>eval-constraints<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>PROJECT_DIRECTORY
+</pre></div>
+</div>
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-constrained-eval-constraints-arg-PROJECT_DIRECTORY">
+<span class="sig-name descname"><span class="pre">PROJECT_DIRECTORY</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-esat-analysis-constrained-eval-constraints-arg-PROJECT_DIRECTORY" title="Link to this definition">#</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="esat-analysis-constrained-eval-expressions">
+<h4>eval-expressions<a class="headerlink" href="#esat-analysis-constrained-eval-expressions" title="Link to this heading">#</a></h4>
+<p>Display the evaluation table of the constrained model results, for each expression.</p>
+<p>Parameters</p>
+<p>project_directory : The project directory containing .toml configuration files.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>esat<span class="w"> </span>analysis-constrained<span class="w"> </span>eval-expressions<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>PROJECT_DIRECTORY
+</pre></div>
+</div>
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-constrained-eval-expressions-arg-PROJECT_DIRECTORY">
+<span class="sig-name descname"><span class="pre">PROJECT_DIRECTORY</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-esat-analysis-constrained-eval-expressions-arg-PROJECT_DIRECTORY" title="Link to this definition">#</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="esat-analysis-constrained-plot-contributions">
+<h4>plot-contributions<a class="headerlink" href="#esat-analysis-constrained-plot-contributions" title="Link to this heading">#</a></h4>
+<p>Display the factor contributions for the specified feature (feature_idx).</p>
+<p>Parameters</p>
+<p>project_directory : The project directory containing .toml configuration files.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>esat<span class="w"> </span>analysis-constrained<span class="w"> </span>plot-contributions<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>PROJECT_DIRECTORY
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-constrained-plot-contributions-i">
+<span id="cmdoption-esat-analysis-constrained-plot-contributions-feature_idx"></span><span class="sig-name descname"><span class="pre">-i</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--feature_idx</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;feature_idx&gt;</span></span><a class="headerlink" href="#cmdoption-esat-analysis-constrained-plot-contributions-i" title="Link to this definition">#</a></dt>
+<dd><p>The feature index to display.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-constrained-plot-contributions-arg-PROJECT_DIRECTORY">
+<span class="sig-name descname"><span class="pre">PROJECT_DIRECTORY</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-esat-analysis-constrained-plot-contributions-arg-PROJECT_DIRECTORY" title="Link to this definition">#</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="esat-analysis-constrained-plot-fingerprints">
+<h4>plot-fingerprints<a class="headerlink" href="#esat-analysis-constrained-plot-fingerprints" title="Link to this heading">#</a></h4>
+<p>Display the constrained solution factor fingerprints.</p>
+<p>Parameters</p>
+<p>project_directory : The project directory containing .toml configuration files.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>esat<span class="w"> </span>analysis-constrained<span class="w"> </span>plot-fingerprints<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>PROJECT_DIRECTORY
+</pre></div>
+</div>
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-constrained-plot-fingerprints-arg-PROJECT_DIRECTORY">
+<span class="sig-name descname"><span class="pre">PROJECT_DIRECTORY</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-esat-analysis-constrained-plot-fingerprints-arg-PROJECT_DIRECTORY" title="Link to this definition">#</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="esat-analysis-constrained-plot-gspace">
+<h4>plot-gspace<a class="headerlink" href="#esat-analysis-constrained-plot-gspace" title="Link to this heading">#</a></h4>
+<p>Display a specified factor index (factor_idx1) vs factor index (factor_idx2) g-space plot.</p>
+<p>Parameters</p>
+<p>project_directory : The project directory containing .toml configuration files.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>esat<span class="w"> </span>analysis-constrained<span class="w"> </span>plot-gspace<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>PROJECT_DIRECTORY
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-constrained-plot-gspace-x">
+<span id="cmdoption-esat-analysis-constrained-plot-gspace-factor_idx1"></span><span class="sig-name descname"><span class="pre">-x</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--factor_idx1</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;factor_idx1&gt;</span></span><a class="headerlink" href="#cmdoption-esat-analysis-constrained-plot-gspace-x" title="Link to this definition">#</a></dt>
+<dd><p>The factor index for the x-axis.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-constrained-plot-gspace-y">
+<span id="cmdoption-esat-analysis-constrained-plot-gspace-factor_idx2"></span><span class="sig-name descname"><span class="pre">-y</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--factor_idx2</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;factor_idx2&gt;</span></span><a class="headerlink" href="#cmdoption-esat-analysis-constrained-plot-gspace-y" title="Link to this definition">#</a></dt>
+<dd><p>The factor index for the y-axis.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">1</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-constrained-plot-gspace-show_base">
+<span class="sig-name descname"><span class="pre">--show_base</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-esat-analysis-constrained-plot-gspace-show_base" title="Link to this definition">#</a></dt>
+<dd><p>Show the base solution values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-constrained-plot-gspace-show_delta">
+<span class="sig-name descname"><span class="pre">--show_delta</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-esat-analysis-constrained-plot-gspace-show_delta" title="Link to this definition">#</a></dt>
+<dd><p>Show the change between the constrained solution values and  the base solution values</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">True</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-constrained-plot-gspace-arg-PROJECT_DIRECTORY">
+<span class="sig-name descname"><span class="pre">PROJECT_DIRECTORY</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-esat-analysis-constrained-plot-gspace-arg-PROJECT_DIRECTORY" title="Link to this definition">#</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="esat-analysis-constrained-plot-q">
+<h4>plot-q<a class="headerlink" href="#esat-analysis-constrained-plot-q" title="Link to this heading">#</a></h4>
+<p>Display the loss function plotted over all training iterations. Loss value options for Q include: True, Robust, and
+Aux (the loss value difference between the current solution values and the target values as defined from the
+constraints and expressions).</p>
+<p>Parameters</p>
+<p>project_directory : The project directory containing .toml configuration files.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>esat<span class="w"> </span>analysis-constrained<span class="w"> </span>plot-q<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>PROJECT_DIRECTORY
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-constrained-plot-q-q">
+<span id="cmdoption-esat-analysis-constrained-plot-q-qtype"></span><span class="sig-name descname"><span class="pre">-q</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--qtype</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;qtype&gt;</span></span><a class="headerlink" href="#cmdoption-esat-analysis-constrained-plot-q-q" title="Link to this definition">#</a></dt>
+<dd><p>Plot the loss value for qtype: True, Robust, Aux</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">'Aux'</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-constrained-plot-q-arg-PROJECT_DIRECTORY">
+<span class="sig-name descname"><span class="pre">PROJECT_DIRECTORY</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-esat-analysis-constrained-plot-q-arg-PROJECT_DIRECTORY" title="Link to this definition">#</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="esat-analysis-constrained-summary">
+<h4>summary<a class="headerlink" href="#esat-analysis-constrained-summary" title="Link to this heading">#</a></h4>
+<p>Display the results of a constrained model run.</p>
+<p>Parameters</p>
+<p>project_directory : The project directory containing .toml configuration files.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>esat<span class="w"> </span>analysis-constrained<span class="w"> </span>summary<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>PROJECT_DIRECTORY
+</pre></div>
+</div>
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-constrained-summary-arg-PROJECT_DIRECTORY">
+<span class="sig-name descname"><span class="pre">PROJECT_DIRECTORY</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-esat-analysis-constrained-summary-arg-PROJECT_DIRECTORY" title="Link to this definition">#</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+</section>
+<section id="esat-analysis-error">
+<h3>analysis-error<a class="headerlink" href="#esat-analysis-error" title="Link to this heading">#</a></h3>
+<p>The collection of commands for analyzing the results of error estimation methods.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>esat<span class="w"> </span>analysis-error<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>COMMAND<span class="w"> </span><span class="o">[</span>ARGS<span class="o">]</span>...
+</pre></div>
+</div>
+<section id="esat-analysis-error-error-results">
+<h4>error-results<a class="headerlink" href="#esat-analysis-error-error-results" title="Link to this heading">#</a></h4>
+<p>Show the results of an error estimation method. One method must be selected.</p>
+<p>Parameters</p>
+<p>project_directory : The project directory containing .toml configuration files.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>esat<span class="w"> </span>analysis-error<span class="w"> </span>error-results<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>PROJECT_DIRECTORY
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-error-error-results-disp">
+<span class="sig-name descname"><span class="pre">--disp</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-esat-analysis-error-error-results-disp" title="Link to this definition">#</a></dt>
+<dd><p>Summarize the displacement (DISP) error estimation results.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-error-error-results-bs">
+<span class="sig-name descname"><span class="pre">--bs</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-esat-analysis-error-error-results-bs" title="Link to this definition">#</a></dt>
+<dd><p>Summarize the bootstrap (BS) error estimation results.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-error-error-results-bsdisp">
+<span class="sig-name descname"><span class="pre">--bsdisp</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-esat-analysis-error-error-results-bsdisp" title="Link to this definition">#</a></dt>
+<dd><p>Summarize the bootstrap-displacement (BSDISP) error estimation results.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-error-error-results-factor_idx">
+<span class="sig-name descname"><span class="pre">--factor_idx</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;factor_idx&gt;</span></span><a class="headerlink" href="#cmdoption-esat-analysis-error-error-results-factor_idx" title="Link to this definition">#</a></dt>
+<dd><p>The factor index to display results.</p>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-error-error-results-arg-PROJECT_DIRECTORY">
+<span class="sig-name descname"><span class="pre">PROJECT_DIRECTORY</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-esat-analysis-error-error-results-arg-PROJECT_DIRECTORY" title="Link to this definition">#</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="esat-analysis-error-summary">
+<h4>summary<a class="headerlink" href="#esat-analysis-error-summary" title="Link to this heading">#</a></h4>
+<p>Summarize the results of an error estimation method results.</p>
+<p>Parameters</p>
+<p>project_directory : The project directory containing .toml configuration files.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>esat<span class="w"> </span>analysis-error<span class="w"> </span>summary<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>PROJECT_DIRECTORY
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-error-summary-disp">
+<span class="sig-name descname"><span class="pre">--disp</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-esat-analysis-error-summary-disp" title="Link to this definition">#</a></dt>
+<dd><p>Summarize the displacement (DISP) error estimation results.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-error-summary-bs">
+<span class="sig-name descname"><span class="pre">--bs</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-esat-analysis-error-summary-bs" title="Link to this definition">#</a></dt>
+<dd><p>Summarize the bootstrap (BS) error estimation results.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-error-summary-bsdisp">
+<span class="sig-name descname"><span class="pre">--bsdisp</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-esat-analysis-error-summary-bsdisp" title="Link to this definition">#</a></dt>
+<dd><p>Summarize the bootstrap-displacement (BSDISP) error estimation results.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-error-summary-arg-PROJECT_DIRECTORY">
+<span class="sig-name descname"><span class="pre">PROJECT_DIRECTORY</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-esat-analysis-error-summary-arg-PROJECT_DIRECTORY" title="Link to this definition">#</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+</section>
+<section id="esat-analysis-input">
+<h3>analysis-input<a class="headerlink" href="#esat-analysis-input" title="Link to this heading">#</a></h3>
+<p>The collection of commands for analyzing the input/uncertainty datasets.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>esat<span class="w"> </span>analysis-input<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>COMMAND<span class="w"> </span><span class="o">[</span>ARGS<span class="o">]</span>...
+</pre></div>
+</div>
+<section id="esat-analysis-input-metrics">
+<h4>metrics<a class="headerlink" href="#esat-analysis-input-metrics" title="Link to this heading">#</a></h4>
+<p>Display the input metrics for the input/uncertainty data specified in the configuration file.</p>
+<p>Parameters</p>
+<p>project_directory : The project directory containing .toml configuration files.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>esat<span class="w"> </span>analysis-input<span class="w"> </span>metrics<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>PROJECT_DIRECTORY
+</pre></div>
+</div>
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-input-metrics-arg-PROJECT_DIRECTORY">
+<span class="sig-name descname"><span class="pre">PROJECT_DIRECTORY</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-esat-analysis-input-metrics-arg-PROJECT_DIRECTORY" title="Link to this definition">#</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="esat-analysis-input-plot-data">
+<h4>plot-data<a class="headerlink" href="#esat-analysis-input-plot-data" title="Link to this heading">#</a></h4>
+<p>Display the feature vs feature scatter plot.</p>
+<p>Parameters</p>
+<p>project_directory : The project directory containing .toml configuration files.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>esat<span class="w"> </span>analysis-input<span class="w"> </span>plot-data<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>PROJECT_DIRECTORY
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-input-plot-data-x">
+<span id="cmdoption-esat-analysis-input-plot-data-feature_idx1"></span><span class="sig-name descname"><span class="pre">-x</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--feature_idx1</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;feature_idx1&gt;</span></span><a class="headerlink" href="#cmdoption-esat-analysis-input-plot-data-x" title="Link to this definition">#</a></dt>
+<dd><p>The index of the first (x-axis) input data feature, column in the dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-input-plot-data-y">
+<span id="cmdoption-esat-analysis-input-plot-data-feature_idx2"></span><span class="sig-name descname"><span class="pre">-y</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--feature_idx2</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;feature_idx2&gt;</span></span><a class="headerlink" href="#cmdoption-esat-analysis-input-plot-data-y" title="Link to this definition">#</a></dt>
+<dd><p>The index of the second (y-axis) input data feature, column in the dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">1</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-input-plot-data-arg-PROJECT_DIRECTORY">
+<span class="sig-name descname"><span class="pre">PROJECT_DIRECTORY</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-esat-analysis-input-plot-data-arg-PROJECT_DIRECTORY" title="Link to this definition">#</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="esat-analysis-input-plot-feature">
+<h4>plot-feature<a class="headerlink" href="#esat-analysis-input-plot-feature" title="Link to this heading">#</a></h4>
+<p>Display the Concentration/Uncertainty scatter plot for the specified feature.</p>
+<p>Parameters</p>
+<p>project_directory : The project directory containing .toml configuration files.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>esat<span class="w"> </span>analysis-input<span class="w"> </span>plot-feature<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>PROJECT_DIRECTORY
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-input-plot-feature-i">
+<span id="cmdoption-esat-analysis-input-plot-feature-feature_idx"></span><span class="sig-name descname"><span class="pre">-i</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--feature_idx</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;feature_idx&gt;</span></span><a class="headerlink" href="#cmdoption-esat-analysis-input-plot-feature-i" title="Link to this definition">#</a></dt>
+<dd><p>The index of the input/uncertainty data feature, column in the dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-input-plot-feature-arg-PROJECT_DIRECTORY">
+<span class="sig-name descname"><span class="pre">PROJECT_DIRECTORY</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-esat-analysis-input-plot-feature-arg-PROJECT_DIRECTORY" title="Link to this definition">#</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="esat-analysis-input-plot-timeseries">
+<h4>plot-timeseries<a class="headerlink" href="#esat-analysis-input-plot-timeseries" title="Link to this heading">#</a></h4>
+<p>Display the feature(s) timeseries.</p>
+<p>Parameters</p>
+<p>project_directory : The project directory containing .toml configuration files.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>esat<span class="w"> </span>analysis-input<span class="w"> </span>plot-timeseries<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>PROJECT_DIRECTORY
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-input-plot-timeseries-i">
+<span id="cmdoption-esat-analysis-input-plot-timeseries-feature_idx"></span><span class="sig-name descname"><span class="pre">-i</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--feature_idx</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;feature_idx&gt;</span></span><a class="headerlink" href="#cmdoption-esat-analysis-input-plot-timeseries-i" title="Link to this definition">#</a></dt>
+<dd><p>The indices of the input data feature, columns in the dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-input-plot-timeseries-arg-PROJECT_DIRECTORY">
+<span class="sig-name descname"><span class="pre">PROJECT_DIRECTORY</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-esat-analysis-input-plot-timeseries-arg-PROJECT_DIRECTORY" title="Link to this definition">#</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+</section>
+<section id="esat-analysis-solution">
+<h3>analysis-solution<a class="headerlink" href="#esat-analysis-solution" title="Link to this heading">#</a></h3>
+<p>The collection of commands for analyzing an SA project base solution.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>esat<span class="w"> </span>analysis-solution<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>COMMAND<span class="w"> </span><span class="o">[</span>ARGS<span class="o">]</span>...
+</pre></div>
+</div>
+<section id="esat-analysis-solution-plot-composition">
+<h4>plot-composition<a class="headerlink" href="#esat-analysis-solution-plot-composition" title="Link to this heading">#</a></h4>
+<p>Plot factor composition for a specified solution model (selected_model).</p>
+<p>Parameters</p>
+<p>project_directory : The project directory containing .toml configuration files.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>esat<span class="w"> </span>analysis-solution<span class="w"> </span>plot-composition<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>PROJECT_DIRECTORY
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-solution-plot-composition-m">
+<span id="cmdoption-esat-analysis-solution-plot-composition-selected_model"></span><span class="sig-name descname"><span class="pre">-m</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--selected_model</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;selected_model&gt;</span></span><a class="headerlink" href="#cmdoption-esat-analysis-solution-plot-composition-m" title="Link to this definition">#</a></dt>
+<dd><p>The index of the model from the solution. Default: -1, the best performing model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">-1</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-solution-plot-composition-arg-PROJECT_DIRECTORY">
+<span class="sig-name descname"><span class="pre">PROJECT_DIRECTORY</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-esat-analysis-solution-plot-composition-arg-PROJECT_DIRECTORY" title="Link to this definition">#</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="esat-analysis-solution-plot-contributions">
+<h4>plot-contributions<a class="headerlink" href="#esat-analysis-solution-plot-contributions" title="Link to this heading">#</a></h4>
+<p>Plot factor contributions for a specified feature index (feature_idx) and solution model (selected_model).</p>
+<p>Parameters</p>
+<p>project_directory : The project directory containing .toml configuration files.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>esat<span class="w"> </span>analysis-solution<span class="w"> </span>plot-contributions<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>PROJECT_DIRECTORY
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-solution-plot-contributions-m">
+<span id="cmdoption-esat-analysis-solution-plot-contributions-selected_model"></span><span class="sig-name descname"><span class="pre">-m</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--selected_model</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;selected_model&gt;</span></span><a class="headerlink" href="#cmdoption-esat-analysis-solution-plot-contributions-m" title="Link to this definition">#</a></dt>
+<dd><p>The index of the model from the solution. Default: -1, the best performing model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">-1</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-solution-plot-contributions-i">
+<span id="cmdoption-esat-analysis-solution-plot-contributions-feature_idx"></span><span class="sig-name descname"><span class="pre">-i</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--feature_idx</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;feature_idx&gt;</span></span><a class="headerlink" href="#cmdoption-esat-analysis-solution-plot-contributions-i" title="Link to this definition">#</a></dt>
+<dd><p>The index of the feature to plot.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-solution-plot-contributions-arg-PROJECT_DIRECTORY">
+<span class="sig-name descname"><span class="pre">PROJECT_DIRECTORY</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-esat-analysis-solution-plot-contributions-arg-PROJECT_DIRECTORY" title="Link to this definition">#</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="esat-analysis-solution-plot-estimated">
+<h4>plot-estimated<a class="headerlink" href="#esat-analysis-solution-plot-estimated" title="Link to this heading">#</a></h4>
+<p>Plot the estimated vs observed for a specified feature index (feature_idx) and solution model (selected_model).</p>
+<p>Parameters</p>
+<p>project_directory : The project directory containing .toml configuration files.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>esat<span class="w"> </span>analysis-solution<span class="w"> </span>plot-estimated<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>PROJECT_DIRECTORY
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-solution-plot-estimated-m">
+<span id="cmdoption-esat-analysis-solution-plot-estimated-selected_model"></span><span class="sig-name descname"><span class="pre">-m</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--selected_model</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;selected_model&gt;</span></span><a class="headerlink" href="#cmdoption-esat-analysis-solution-plot-estimated-m" title="Link to this definition">#</a></dt>
+<dd><p>The index of the model from the solution. Default: -1, the best performing model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">-1</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-solution-plot-estimated-i">
+<span id="cmdoption-esat-analysis-solution-plot-estimated-feature_idx"></span><span class="sig-name descname"><span class="pre">-i</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--feature_idx</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;feature_idx&gt;</span></span><a class="headerlink" href="#cmdoption-esat-analysis-solution-plot-estimated-i" title="Link to this definition">#</a></dt>
+<dd><p>The index of the feature to plot.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-solution-plot-estimated-arg-PROJECT_DIRECTORY">
+<span class="sig-name descname"><span class="pre">PROJECT_DIRECTORY</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-esat-analysis-solution-plot-estimated-arg-PROJECT_DIRECTORY" title="Link to this definition">#</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="esat-analysis-solution-plot-fingerprints">
+<h4>plot-fingerprints<a class="headerlink" href="#esat-analysis-solution-plot-fingerprints" title="Link to this heading">#</a></h4>
+<p>Plot the factor fingerprints for a specified solution model (selected_model).</p>
+<p>Parameters</p>
+<p>project_directory : The project directory containing .toml configuration files.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>esat<span class="w"> </span>analysis-solution<span class="w"> </span>plot-fingerprints<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>PROJECT_DIRECTORY
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-solution-plot-fingerprints-m">
+<span id="cmdoption-esat-analysis-solution-plot-fingerprints-selected_model"></span><span class="sig-name descname"><span class="pre">-m</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--selected_model</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;selected_model&gt;</span></span><a class="headerlink" href="#cmdoption-esat-analysis-solution-plot-fingerprints-m" title="Link to this definition">#</a></dt>
+<dd><p>The index of the model from the solution. Default: -1, the best performing model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">-1</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-solution-plot-fingerprints-arg-PROJECT_DIRECTORY">
+<span class="sig-name descname"><span class="pre">PROJECT_DIRECTORY</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-esat-analysis-solution-plot-fingerprints-arg-PROJECT_DIRECTORY" title="Link to this definition">#</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="esat-analysis-solution-plot-gspace">
+<h4>plot-gspace<a class="headerlink" href="#esat-analysis-solution-plot-gspace" title="Link to this heading">#</a></h4>
+<p>Plot two factor g-space graph for a specified solution model (selected_model).</p>
+<p>Parameters</p>
+<p>project_directory : The project directory containing .toml configuration files.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>esat<span class="w"> </span>analysis-solution<span class="w"> </span>plot-gspace<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>PROJECT_DIRECTORY
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-solution-plot-gspace-m">
+<span id="cmdoption-esat-analysis-solution-plot-gspace-selected_model"></span><span class="sig-name descname"><span class="pre">-m</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--selected_model</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;selected_model&gt;</span></span><a class="headerlink" href="#cmdoption-esat-analysis-solution-plot-gspace-m" title="Link to this definition">#</a></dt>
+<dd><p>The index of the model from the solution. Default: -1, the best performing model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">-1</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-solution-plot-gspace-x">
+<span id="cmdoption-esat-analysis-solution-plot-gspace-factor_idx1"></span><span class="sig-name descname"><span class="pre">-x</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--factor_idx1</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;factor_idx1&gt;</span></span><a class="headerlink" href="#cmdoption-esat-analysis-solution-plot-gspace-x" title="Link to this definition">#</a></dt>
+<dd><p>The index of the x-axis factor profile.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-solution-plot-gspace-y">
+<span id="cmdoption-esat-analysis-solution-plot-gspace-factor_idx2"></span><span class="sig-name descname"><span class="pre">-y</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--factor_idx2</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;factor_idx2&gt;</span></span><a class="headerlink" href="#cmdoption-esat-analysis-solution-plot-gspace-y" title="Link to this definition">#</a></dt>
+<dd><p>The index of the y-axis factor profile.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">1</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-solution-plot-gspace-arg-PROJECT_DIRECTORY">
+<span class="sig-name descname"><span class="pre">PROJECT_DIRECTORY</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-esat-analysis-solution-plot-gspace-arg-PROJECT_DIRECTORY" title="Link to this definition">#</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="esat-analysis-solution-plot-profile">
+<h4>plot-profile<a class="headerlink" href="#esat-analysis-solution-plot-profile" title="Link to this heading">#</a></h4>
+<p>Plot the factor profile for a specified factor index (factor_idx) and solution model (selected_model).</p>
+<p>Parameters</p>
+<p>project_directory : The project directory containing .toml configuration files.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>esat<span class="w"> </span>analysis-solution<span class="w"> </span>plot-profile<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>PROJECT_DIRECTORY
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-solution-plot-profile-m">
+<span id="cmdoption-esat-analysis-solution-plot-profile-selected_model"></span><span class="sig-name descname"><span class="pre">-m</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--selected_model</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;selected_model&gt;</span></span><a class="headerlink" href="#cmdoption-esat-analysis-solution-plot-profile-m" title="Link to this definition">#</a></dt>
+<dd><p>The index of the model from the solution. Default: -1, the best performing model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">-1</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-solution-plot-profile-i">
+<span id="cmdoption-esat-analysis-solution-plot-profile-factor_idx"></span><span class="sig-name descname"><span class="pre">-i</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--factor_idx</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;factor_idx&gt;</span></span><a class="headerlink" href="#cmdoption-esat-analysis-solution-plot-profile-i" title="Link to this definition">#</a></dt>
+<dd><p>The index of the factor profile.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-solution-plot-profile-arg-PROJECT_DIRECTORY">
+<span class="sig-name descname"><span class="pre">PROJECT_DIRECTORY</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-esat-analysis-solution-plot-profile-arg-PROJECT_DIRECTORY" title="Link to this definition">#</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="esat-analysis-solution-plot-residuals">
+<h4>plot-residuals<a class="headerlink" href="#esat-analysis-solution-plot-residuals" title="Link to this heading">#</a></h4>
+<p>Plot the residual histogram for a specified feature index (feature_idx) and solution model (selected_model).</p>
+<p>Parameters</p>
+<p>project_directory : The project directory containing .toml configuration files.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>esat<span class="w"> </span>analysis-solution<span class="w"> </span>plot-residuals<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>PROJECT_DIRECTORY
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-solution-plot-residuals-m">
+<span id="cmdoption-esat-analysis-solution-plot-residuals-selected_model"></span><span class="sig-name descname"><span class="pre">-m</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--selected_model</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;selected_model&gt;</span></span><a class="headerlink" href="#cmdoption-esat-analysis-solution-plot-residuals-m" title="Link to this definition">#</a></dt>
+<dd><p>The index of the model from the solution. Default: -1, the best performing model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">-1</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-solution-plot-residuals-i">
+<span id="cmdoption-esat-analysis-solution-plot-residuals-feature_idx"></span><span class="sig-name descname"><span class="pre">-i</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--feature_idx</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;feature_idx&gt;</span></span><a class="headerlink" href="#cmdoption-esat-analysis-solution-plot-residuals-i" title="Link to this definition">#</a></dt>
+<dd><p>The index of the feature to plot.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-solution-plot-residuals-arg-PROJECT_DIRECTORY">
+<span class="sig-name descname"><span class="pre">PROJECT_DIRECTORY</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-esat-analysis-solution-plot-residuals-arg-PROJECT_DIRECTORY" title="Link to this definition">#</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="esat-analysis-solution-plot-surface">
+<h4>plot-surface<a class="headerlink" href="#esat-analysis-solution-plot-surface" title="Link to this heading">#</a></h4>
+<p>Plot factor surface for a specified factor index (factor_idx), set of features (feature_idx), and solution model
+(selected_model). Multiple feature indices can be provided as ‘-f 0 -f 1 -f 2’.</p>
+<p>Parameters</p>
+<p>project_directory : The project directory containing .toml configuration files.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>esat<span class="w"> </span>analysis-solution<span class="w"> </span>plot-surface<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>PROJECT_DIRECTORY
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-solution-plot-surface-m">
+<span id="cmdoption-esat-analysis-solution-plot-surface-selected_model"></span><span class="sig-name descname"><span class="pre">-m</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--selected_model</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;selected_model&gt;</span></span><a class="headerlink" href="#cmdoption-esat-analysis-solution-plot-surface-m" title="Link to this definition">#</a></dt>
+<dd><p>The index of the model from the solution. Default: -1, the best performing model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">-1</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-solution-plot-surface-i">
+<span id="cmdoption-esat-analysis-solution-plot-surface-factor_idx"></span><span class="sig-name descname"><span class="pre">-i</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--factor_idx</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;factor_idx&gt;</span></span><a class="headerlink" href="#cmdoption-esat-analysis-solution-plot-surface-i" title="Link to this definition">#</a></dt>
+<dd><p>The index of the factor profile.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-solution-plot-surface-f">
+<span id="cmdoption-esat-analysis-solution-plot-surface-feature_idx"></span><span class="sig-name descname"><span class="pre">-f</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--feature_idx</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;feature_idx&gt;</span></span><a class="headerlink" href="#cmdoption-esat-analysis-solution-plot-surface-f" title="Link to this definition">#</a></dt>
+<dd><p>The index/indices of the factor feature to include. Default: -1, includes all features which contribution to the factor_idx. Multiple indices can be provided.</p>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-solution-plot-surface-arg-PROJECT_DIRECTORY">
+<span class="sig-name descname"><span class="pre">PROJECT_DIRECTORY</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-esat-analysis-solution-plot-surface-arg-PROJECT_DIRECTORY" title="Link to this definition">#</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="esat-analysis-solution-plot-timeseries">
+<h4>plot-timeseries<a class="headerlink" href="#esat-analysis-solution-plot-timeseries" title="Link to this heading">#</a></h4>
+<p>Plot the estimated timeseries for a specified feature index (feature_idx) and solution model (selected_model).</p>
+<p>Parameters</p>
+<p>project_directory : The project directory containing .toml configuration files.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>esat<span class="w"> </span>analysis-solution<span class="w"> </span>plot-timeseries<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>PROJECT_DIRECTORY
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-solution-plot-timeseries-m">
+<span id="cmdoption-esat-analysis-solution-plot-timeseries-selected_model"></span><span class="sig-name descname"><span class="pre">-m</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--selected_model</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;selected_model&gt;</span></span><a class="headerlink" href="#cmdoption-esat-analysis-solution-plot-timeseries-m" title="Link to this definition">#</a></dt>
+<dd><p>The index of the model from the solution. Default: -1, the best performing model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">-1</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-solution-plot-timeseries-i">
+<span id="cmdoption-esat-analysis-solution-plot-timeseries-feature_idx"></span><span class="sig-name descname"><span class="pre">-i</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--feature_idx</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;feature_idx&gt;</span></span><a class="headerlink" href="#cmdoption-esat-analysis-solution-plot-timeseries-i" title="Link to this definition">#</a></dt>
+<dd><p>The index of the feature to plot.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">0</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-solution-plot-timeseries-arg-PROJECT_DIRECTORY">
+<span class="sig-name descname"><span class="pre">PROJECT_DIRECTORY</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-esat-analysis-solution-plot-timeseries-arg-PROJECT_DIRECTORY" title="Link to this definition">#</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="esat-analysis-solution-statistics">
+<h4>statistics<a class="headerlink" href="#esat-analysis-solution-statistics" title="Link to this heading">#</a></h4>
+<p>Display the solution statistics for a specified solution model (selected_model).</p>
+<p>Parameters</p>
+<p>project_directory : The project directory containing .toml configuration files.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>esat<span class="w"> </span>analysis-solution<span class="w"> </span>statistics<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>PROJECT_DIRECTORY
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-solution-statistics-m">
+<span id="cmdoption-esat-analysis-solution-statistics-selected_model"></span><span class="sig-name descname"><span class="pre">-m</span></span><span class="sig-prename descclassname"></span><span class="sig-prename descclassname"><span class="pre">,</span> </span><span class="sig-name descname"><span class="pre">--selected_model</span></span><span class="sig-prename descclassname"> <span class="pre">&lt;selected_model&gt;</span></span><a class="headerlink" href="#cmdoption-esat-analysis-solution-statistics-m" title="Link to this definition">#</a></dt>
+<dd><p>The index of the model from the solution. Default: -1, the best performing model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">-1</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-analysis-solution-statistics-arg-PROJECT_DIRECTORY">
+<span class="sig-name descname"><span class="pre">PROJECT_DIRECTORY</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-esat-analysis-solution-statistics-arg-PROJECT_DIRECTORY" title="Link to this definition">#</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+</section>
+<section id="esat-estimate">
+<h3>estimate<a class="headerlink" href="#esat-estimate" title="Link to this heading">#</a></h3>
+<p>Run a factor estimation using the provided configuration file.</p>
+<p>Parameters</p>
+<p>project_directory : The project directory containing .toml configuration files.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>esat<span class="w"> </span>estimate<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>PROJECT_DIRECTORY
+</pre></div>
+</div>
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-estimate-arg-PROJECT_DIRECTORY">
+<span class="sig-name descname"><span class="pre">PROJECT_DIRECTORY</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-esat-estimate-arg-PROJECT_DIRECTORY" title="Link to this definition">#</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="esat-run">
+<h3>run<a class="headerlink" href="#esat-run" title="Link to this heading">#</a></h3>
+<p>Run a batch source apportionment run using the provided configuration file.</p>
+<p>Parameters</p>
+<p>project_directory : The project directory containing .toml configuration files.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>esat<span class="w"> </span>run<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>PROJECT_DIRECTORY
+</pre></div>
+</div>
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-run-arg-PROJECT_DIRECTORY">
+<span class="sig-name descname"><span class="pre">PROJECT_DIRECTORY</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-esat-run-arg-PROJECT_DIRECTORY" title="Link to this definition">#</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="esat-run-constrained">
+<h3>run-constrained<a class="headerlink" href="#esat-run-constrained" title="Link to this heading">#</a></h3>
+<p>Run a constrained model with the specified configuration file.</p>
+<p>Parameters</p>
+<p>project_directory : The project directory containing .toml configuration files.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>esat<span class="w"> </span>run-constrained<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>PROJECT_DIRECTORY
+</pre></div>
+</div>
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-run-constrained-arg-PROJECT_DIRECTORY">
+<span class="sig-name descname"><span class="pre">PROJECT_DIRECTORY</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-esat-run-constrained-arg-PROJECT_DIRECTORY" title="Link to this definition">#</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="esat-run-error">
+<h3>run-error<a class="headerlink" href="#esat-run-error" title="Link to this heading">#</a></h3>
+<p>Run one or more of the error estimation methods using the specified error configuration file.</p>
+<p>Parameters</p>
+<p>project_directory : The project directory containing .toml configuration files.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>esat<span class="w"> </span>run-error<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>PROJECT_DIRECTORY
+</pre></div>
+</div>
+<p class="rubric">Options</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-run-error-disp">
+<span class="sig-name descname"><span class="pre">--disp</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-esat-run-error-disp" title="Link to this definition">#</a></dt>
+<dd><p>Run the displacement (DISP) error estimation method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-run-error-bs">
+<span class="sig-name descname"><span class="pre">--bs</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-esat-run-error-bs" title="Link to this definition">#</a></dt>
+<dd><p>Run the bootstrap (BS) error estimation method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-run-error-bsdisp">
+<span class="sig-name descname"><span class="pre">--bsdisp</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-esat-run-error-bsdisp" title="Link to this definition">#</a></dt>
+<dd><p>Run the bootstrap-displacement (BSDISP) error estimation method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Default<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-run-error-arg-PROJECT_DIRECTORY">
+<span class="sig-name descname"><span class="pre">PROJECT_DIRECTORY</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-esat-run-error-arg-PROJECT_DIRECTORY" title="Link to this definition">#</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="esat-setup">
+<h3>setup<a class="headerlink" href="#esat-setup" title="Link to this heading">#</a></h3>
+<p>Create the configuration file for a batch source apportionment run in the provided directory.</p>
+<p>Parameters</p>
+<p>project_directory : The project directory where all configuration output files are saved.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>esat<span class="w"> </span>setup<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>PROJECT_DIRECTORY
+</pre></div>
+</div>
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-setup-arg-PROJECT_DIRECTORY">
+<span class="sig-name descname"><span class="pre">PROJECT_DIRECTORY</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-esat-setup-arg-PROJECT_DIRECTORY" title="Link to this definition">#</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="esat-setup-constrained">
+<h3>setup-constrained<a class="headerlink" href="#esat-setup-constrained" title="Link to this heading">#</a></h3>
+<p>Create a configuration file for executing a constrained model run on a specified project.</p>
+<p>Parameters</p>
+<p>project_directory : The project directory where all output files are saved.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>esat<span class="w"> </span>setup-constrained<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>PROJECT_DIRECTORY
+</pre></div>
+</div>
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-setup-constrained-arg-PROJECT_DIRECTORY">
+<span class="sig-name descname"><span class="pre">PROJECT_DIRECTORY</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-esat-setup-constrained-arg-PROJECT_DIRECTORY" title="Link to this definition">#</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="esat-setup-error">
+<h3>setup-error<a class="headerlink" href="#esat-setup-error" title="Link to this heading">#</a></h3>
+<p>Create an error estimation configuration file for the specified project.</p>
+<p>Parameters</p>
+<p>project_directory : The project directory where all output files are saved.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>esat<span class="w"> </span>setup-error<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>PROJECT_DIRECTORY
+</pre></div>
+</div>
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-setup-error-arg-PROJECT_DIRECTORY">
+<span class="sig-name descname"><span class="pre">PROJECT_DIRECTORY</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-esat-setup-error-arg-PROJECT_DIRECTORY" title="Link to this definition">#</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="esat-simulator">
+<h3>simulator<a class="headerlink" href="#esat-simulator" title="Link to this heading">#</a></h3>
+<p>The collection of commands for managing ESAT simulator instances.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>esat<span class="w"> </span>simulator<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>COMMAND<span class="w"> </span><span class="o">[</span>ARGS<span class="o">]</span>...
+</pre></div>
+</div>
+<section id="esat-simulator-compare">
+<h4>compare<a class="headerlink" href="#esat-simulator-compare" title="Link to this heading">#</a></h4>
+<p>Compares the models generated from the synthetic data to show how similar the modelled profiles are to the known
+synthetic profiles.</p>
+<p>Parameters</p>
+<p>project_directory : The project directory where all configuration output files are saved.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>esat<span class="w"> </span>simulator<span class="w"> </span>compare<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>PROJECT_DIRECTORY
+</pre></div>
+</div>
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-simulator-compare-arg-PROJECT_DIRECTORY">
+<span class="sig-name descname"><span class="pre">PROJECT_DIRECTORY</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-esat-simulator-compare-arg-PROJECT_DIRECTORY" title="Link to this definition">#</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="esat-simulator-generate">
+<h4>generate<a class="headerlink" href="#esat-simulator-generate" title="Link to this heading">#</a></h4>
+<p>Generate the synthetic data and uncertainty datasets as defined in the sim_config.toml. Only required for data
+analysis functions, run will check for a simulated config if no file is found in the project_directory and generate
+if required.</p>
+<p>Parameters</p>
+<p>project_directory : The project directory where all configuration output files are saved.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>esat<span class="w"> </span>simulator<span class="w"> </span>generate<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>PROJECT_DIRECTORY
+</pre></div>
+</div>
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-simulator-generate-arg-PROJECT_DIRECTORY">
+<span class="sig-name descname"><span class="pre">PROJECT_DIRECTORY</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-esat-simulator-generate-arg-PROJECT_DIRECTORY" title="Link to this definition">#</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="esat-simulator-plot">
+<h4>plot<a class="headerlink" href="#esat-simulator-plot" title="Link to this heading">#</a></h4>
+<p>Plots the results of the simulator output comparison to the synthetic profiles.</p>
+<p>Parameters</p>
+<p>project_directory : The project directory where all configuration output files are saved.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>esat<span class="w"> </span>simulator<span class="w"> </span>plot<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>PROJECT_DIRECTORY
+</pre></div>
+</div>
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-simulator-plot-arg-PROJECT_DIRECTORY">
+<span class="sig-name descname"><span class="pre">PROJECT_DIRECTORY</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-esat-simulator-plot-arg-PROJECT_DIRECTORY" title="Link to this definition">#</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+<section id="esat-simulator-setup">
+<h4>setup<a class="headerlink" href="#esat-simulator-setup" title="Link to this heading">#</a></h4>
+<p>Create the configuration file for a batch source apportionment simulated run in the provided directory.</p>
+<p>Parameters</p>
+<p>project_directory : The project directory where all configuration output files are saved.</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>esat<span class="w"> </span>simulator<span class="w"> </span>setup<span class="w"> </span><span class="o">[</span>OPTIONS<span class="o">]</span><span class="w"> </span>PROJECT_DIRECTORY
+</pre></div>
+</div>
+<p class="rubric">Arguments</p>
+<dl class="std option">
+<dt class="sig sig-object std" id="cmdoption-esat-simulator-setup-arg-PROJECT_DIRECTORY">
+<span class="sig-name descname"><span class="pre">PROJECT_DIRECTORY</span></span><span class="sig-prename descclassname"></span><a class="headerlink" href="#cmdoption-esat-simulator-setup-arg-PROJECT_DIRECTORY" title="Link to this definition">#</a></dt>
+<dd><p>Required argument</p>
+</dd></dl>
+
+</section>
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="eval.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">eval package</p>
+      </div>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#esat">esat</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-batch">analysis-batch</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-batch-plot-distribution">plot-distribution</a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#parameters">Parameters</a></li>
+</ul>
+</li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-batch-plot-loss">plot-loss</a><ul class="nav section-nav flex-column">
+<li class="toc-h5 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Parameters</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-constrained">analysis-constrained</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-constrained-eval-constraints">eval-constraints</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-constrained-eval-expressions">eval-expressions</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-constrained-plot-contributions">plot-contributions</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-constrained-plot-fingerprints">plot-fingerprints</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-constrained-plot-gspace">plot-gspace</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-constrained-plot-q">plot-q</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-constrained-summary">summary</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-error">analysis-error</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-error-error-results">error-results</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-error-summary">summary</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-input">analysis-input</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-input-metrics">metrics</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-input-plot-data">plot-data</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-input-plot-feature">plot-feature</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-input-plot-timeseries">plot-timeseries</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-solution">analysis-solution</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-solution-plot-composition">plot-composition</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-solution-plot-contributions">plot-contributions</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-solution-plot-estimated">plot-estimated</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-solution-plot-fingerprints">plot-fingerprints</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-solution-plot-gspace">plot-gspace</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-solution-plot-profile">plot-profile</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-solution-plot-residuals">plot-residuals</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-solution-plot-surface">plot-surface</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-solution-plot-timeseries">plot-timeseries</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-analysis-solution-statistics">statistics</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-estimate">estimate</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-run">run</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-run-constrained">run-constrained</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-run-error">run-error</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-setup">setup</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-setup-constrained">setup-constrained</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-setup-error">setup-error</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-simulator">simulator</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-simulator-compare">compare</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-simulator-generate">generate</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-simulator-plot">plot</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-simulator-setup">setup</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Deron Smith
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2025, EPA.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

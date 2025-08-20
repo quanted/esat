@@ -1,0 +1,658 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Environmental Source Apportionment Toolkit (ESAT) &#8212; Environmental Source Apportionment Toolkit (ESAT) 2025.0.2 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=eba8b062" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="_static/documentation_options.js?v=b7785327"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'README';</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Python API" href="docs/modules.html" />
+    <link rel="prev" title="EPA’s ESAT Documentation" href="index.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<div id="searchbox"></div></div>
+        <div class="sidebar-primary-item">
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="index.html"
+                          title="previous chapter">EPA’s ESAT Documentation</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="docs/modules.html"
+                          title="next chapter">Python API</a></p>
+  </div></div>
+        <div class="sidebar-primary-item">
+<h3><a href="index.html">Table of Contents</a></h3>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="index.html">EPA’s ESAT Documentation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Environmental Source Apportionment Toolkit (ESAT)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="docs/modules.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="docs/cli.html">Command Line Interface</a></li>
+</ul>
+</div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="_sources/README.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Environmental Source Apportionment Toolkit (ESAT)</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#table-of-contents">Table of Contents</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#description">Description</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-start">Quick Start</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#documentation">Documentation</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example-code">Example Code</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#background">Background</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-predecessor">ESAT Predecessor</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#features">Features</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#limitations">Limitations</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#notebooks">Notebooks</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#development">Development</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#requirements">Requirements</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#rust-compiling">Rust Compiling</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#creating-docs">Creating Docs</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#building-wheels-and-compiling-rust">Building Wheels and Compiling Rust</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#code-tests">Code Tests</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#community-contributions">Community Contributions</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#disclaimer">Disclaimer</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="environmental-source-apportionment-toolkit-esat">
+<h1>Environmental Source Apportionment Toolkit (ESAT)<a class="headerlink" href="#environmental-source-apportionment-toolkit-esat" title="Link to this heading">#</a></h1>
+<p>Last Update: 04-16-2025</p>
+<section id="table-of-contents">
+<h2>Table of Contents<a class="headerlink" href="#table-of-contents" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="#description">Description</a></p></li>
+<li><p><a class="reference internal" href="#quick-start">Quick Start</a></p>
+<ul>
+<li><p><a class="reference internal" href="#installation">Installation</a></p></li>
+<li><p><a class="reference internal" href="#example-code">Example Code</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#background">Background</a></p>
+<ul>
+<li><p><a class="reference internal" href="#esat-predecessor">ESAT Predecessor</a></p></li>
+<li><p><a class="reference internal" href="#features">Features</a></p></li>
+<li><p><a class="reference internal" href="#notebooks">Notebooks</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#development">Development</a></p>
+<ul>
+<li><p><a class="reference internal" href="#requirements">Requirements</a></p></li>
+<li><p><a class="reference internal" href="#rust-compiling">Rust Compiling</a></p></li>
+<li><p><a class="reference internal" href="#creating-docs">Creating Docs</a></p></li>
+<li><p><a class="reference internal" href="#building-wheels-and-compiling-rust">Building Wheels and Compiling Rust</a></p></li>
+<li><p><a class="reference internal" href="#code-tests">Code Tests</a></p></li>
+<li><p><a class="reference internal" href="#community-contributions">Community Contributions</a></p></li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="description">
+<h2>Description<a class="headerlink" href="#description" title="Link to this heading">#</a></h2>
+<p>The Environmental Source Apportionment Toolkit (ESAT) is an open-source software package that provides API and CLI
+functionality to create source apportionment workflows specifically targeting environmental datasets. Source
+apportionment in environment science is the process of mathematically estimating the profiles and contributions of
+multiple sources in some dataset, and in the case of ESAT, while considering data uncertainty. There are many potential
+use cases for source apportionment in environmental science research, such as in the fields of air quality, water
+quality and potentially many others.</p>
+<p>The ESAT toolkit is written in Python and Rust, and uses common packages such as numpy, scipy and pandas for data
+processing. The source apportionment algorithms provided in ESAT include two variants of non-negative matrix
+factorization (NMF), both of which have been written in Rust and contained within the python package. A collection of
+data processing and visualization features are included for data and model analytics. The ESAT package includes a
+synthetic data generator and comparison tools to evaluate ESAT model outputs.</p>
+<p>The ESAT python package has been published with the Journal of Open Source Software (JOSS):</p>
+<p><a class="reference external" href="https://doi.org/10.21105/joss.07316"><img alt="DOI" src="https://joss.theoj.org/papers/10.21105/joss.07316/status.svg" /></a></p>
+</section>
+<section id="quick-start">
+<h2>Quick Start<a class="headerlink" href="#quick-start" title="Link to this heading">#</a></h2>
+<p>ESAT supports python version 3.10, 3.11, and 3.12. As the python package contains compiled code there are OS and python
+specific versions, supporting Mac Intel, Mac M1+, Linux, and Windows.</p>
+<section id="documentation">
+<h3>Documentation<a class="headerlink" href="#documentation" title="Link to this heading">#</a></h3>
+<p>The Python API and CLI documentation can be found at the GitHub ESAT IO site: <a class="reference external" href="https://quanted.github.io/esat/">https://quanted.github.io/esat/</a></p>
+</section>
+<section id="installation">
+<h3>Installation<a class="headerlink" href="#installation" title="Link to this heading">#</a></h3>
+<p>The ESAT python package contains all compiled code and required dependencies and can be installed using pip</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>esat
+</pre></div>
+</div>
+<p>which will install the latest version that supports and is available for your python version and OS.</p>
+<p>Development versions of ESAT can be found on the GitHub actions page, for logged-in users,
+under the ‘Build and Publish Wheel’ workflow. The latest version of the package will be available as an artifact for
+download in the ‘Artifacts’ section of the completed workflow. There wheel files can be found for specific versions
+of python and supported operating systems.</p>
+<p>If an error message appears during installation stating that the
+package is not supported check that the correct OS and python version are being installed for that system. The python
+wheels can be installed directly using</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>&lt;wheel<span class="w"> </span>file<span class="w"> </span>name&gt;
+</pre></div>
+</div>
+<p>The esat python package is recommended to be installed in its own dedicated python virtual environment or conda environment.</p>
+<p>To run the jupyter notebooks, install jupyterlab into the esat python environmental</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>jupyterlab
+</pre></div>
+</div>
+</section>
+<section id="example-code">
+<h3>Example Code<a class="headerlink" href="#example-code" title="Link to this heading">#</a></h3>
+<p>Jupyter notebooks containing complete code examples, using sample datasets, are available for the
+<a class="reference download internal" download="" href="_downloads/0a43fd882cb1af304a19f3e49ab3e42a/epa_esat_workflow_01.ipynb"><span class="xref download myst">source apportionment workflow</span></a> and the <a class="reference download internal" download="" href="_downloads/a3b41c1272ddd01b26d3d8a510314b15/epa_esat_simulator_01.ipynb"><span class="xref download myst">simulator workflow</span></a>.</p>
+</section>
+</section>
+<section id="background">
+<h2>Background<a class="headerlink" href="#background" title="Link to this heading">#</a></h2>
+<section id="esat-predecessor">
+<h3>ESAT Predecessor<a class="headerlink" href="#esat-predecessor" title="Link to this heading">#</a></h3>
+<p>A widely used application used for environmental source apportionment is the EPA’s Positive Matrix Factorization version
+5 (PMF5), which is a broadly used tool with an international user community. The PMF5 application is a mathematical tool
+that processes a dataset of feature concentrations across many samples (and concentration uncertainties) to estimate a
+set of source profiles and their contributions. PMF5 can be used on a wide range of environmental data and is a powerful
+tool for estimating source apportionment:
+https://www.epa.gov/air-research/positive-matrix-factorization-model-environmental-data-analyses</p>
+<p>PMF5 was released in 2014 and is no longer being supported. The math engine used in PMF5 is proprietary and the source
+code has not been made public. One of the primary purposes of ESAT was to recreate the source apportionment workflow and
+mathematics as an open-source software package to offer a modernized option for environmental source apportionment.
+Other reasons for developing ESAT was to offer increased maintainability, development efficient, thorough documentation,
+modern optimizations, new features and customized workflows for novel use cases.</p>
+</section>
+<section id="features">
+<h3>Features<a class="headerlink" href="#features" title="Link to this heading">#</a></h3>
+<p>ESAT python package focuses on source apportionment estimates using NMF algorithms. These
+algorithms are implemented both in python using numpy functions and in Rust (default) for an optimization option. The
+two currently available are:</p>
+<ol class="arabic simple">
+<li><p>LS-NMF: Least-squares NMF, a well documented and widely uses NMF algorithm. The ls-nmf algorithm is available in the NMF R package.</p></li>
+<li><p>WS-NMF: Weight-Semi NMF, a variant of the NMF algorithm which allows for negative values in both the input data matrix and in the factor contribution matrix.</p></li>
+</ol>
+<p>Source apportionment solution error estimation methods are also available, which are the same methods that are found in PMF5.
+These are:</p>
+<ol class="arabic simple">
+<li><p>Bootstrap (BS): the input dataset is divided into multiple blocks and randomly reassembled to attempt to quantify the variability in the factor profiles and contributions.</p></li>
+<li><p>Displacement (DISP): the solution factor profiles are all individually shifted (both increased and decreased) to determine the amount of change required for the loss value to reach specific dQ (change in Q) values.</p></li>
+<li><p>Bootstrap-Displacement (BS-DISP): the combination of the two error estimation methods. Where for each Bootstrap dataset/model, all or targeted factor profile values are adjusted using the DISP method.</p></li>
+</ol>
+<p>ESAT includes constrained models, as found in PMF5, where selecting a source apportionment model there is the option to add constraints through defining specific value constraints or define value correlations as a collection of linear equations.</p>
+<p>Lastly, ESAT includes a data simulator which allows for random or use defined synthetic source profiles and contributions to be used in ESAT to evaluating how well the original synthetic data can be recreated.</p>
+</section>
+<section id="limitations">
+<h3>Limitations<a class="headerlink" href="#limitations" title="Link to this heading">#</a></h3>
+<p>Matrix factorization algorithms are fall under the group of optimization, or minimization, algorithms which attempt to
+find a minima based upon some loss function and stopping condition. These algorithms are classified as NP-Complete, a
+category of algorithms which are nondeterministic polynomial time complete and there is no known way to quickly find a
+solution. Given this limitation of NMF, a solution can only be considered a local minima with no known way to guarantee
+or prove it is the globally optimal solution. One approach for helping determine that a solution is a good solution is
+by producing many such solutions with a constricted convergence criteria or stopping condition. Then evaluating these
+solutions to determine which, if any, correspond to the best actual representation or model of the data given domain
+knowledge and expertise.</p>
+<p>NMF algorithms are data-agnostic, operates the same on any correctly structured data regardless of domain, potential
+leading to another limitation, interpretation of the solution. An important component in evaluating whether or not to
+use ESAT, or any NMF algorithm, on a dataset is to determine how to interpret factor profiles and contributions. How
+this is done is fully dependent on the data and domain of the input dataset, such as units, types of features, temporal
+or spatial considerations, etc.</p>
+</section>
+<section id="notebooks">
+<h3>Notebooks<a class="headerlink" href="#notebooks" title="Link to this heading">#</a></h3>
+<p>Juypter notebooks are available that demonstrate the complete source apportionment and error estimation workflow found in PMF5, demonstrated in notebooks/epa_esat_workflow_01.ipynb</p>
+<p>The simulator notebook provides examples for creating the synthetic profiles and contributions dataset and using the evaluation features to see how ‘well’ ESAT can recreate those profiles and contributions.</p>
+<p>Other notebooks are included which were used during development and verifying visualizations.</p>
+</section>
+</section>
+<section id="development">
+<h2>Development<a class="headerlink" href="#development" title="Link to this heading">#</a></h2>
+<section id="requirements">
+<h3>Requirements<a class="headerlink" href="#requirements" title="Link to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Core ESAT python package requirements can be found in the requirements.txt file.</p></li>
+<li><p>The python requirements for creating the code documentation can be found in the doc-requirements.txt file.</p></li>
+<li><p>Full development python package requirements can be found in the _dev-requirements.txt file (not actively maintained).</p></li>
+</ul>
+<p>The ESAT python codebase includes github workflow actions which run:</p>
+<ol class="arabic simple">
+<li><p>Run python build to compile the Rust code and create python packages for python 3.10, 3.11 and 3.12 on Linux, Windows and MacOS.</p></li>
+<li><p>Recreate code documentation from the README.md file, code docstrings for the Python API and CLI. Documentation is used to update the github documentation site for ESAT.</p></li>
+</ol>
+</section>
+<section id="rust-compiling">
+<h3>Rust Compiling<a class="headerlink" href="#rust-compiling" title="Link to this heading">#</a></h3>
+<p>The python package includes a Rust module for running the algorithm update procedures, which requires local compiling to execute.</p>
+<p>To run the Rust functions that is specified by the optimized parameter, requires that Rust is installed (https://www.rust-lang.org/tools/install) and the python package maturin (https://pypi.org/project/maturin/) is installed to the python development environment.
+Then from the python env and the project root, executing <i>maturin develop</i> will compile the Rust code and place it in your python environment path. To compile optimized Rust code, include the <i>-r</i> or <i>–release</i> tags.</p>
+<p>The Rust code can also be compiled to the target directory inside of project root using <i>maturin build</i>.</p>
+<p>The rust functions are imported as python functions, with the ‘from esat_rust import esat_rust’.</p>
+<p>When creating the python package the pyproject.toml specifies that both setuptools and setuptool-rust are used. Setuptools-rust is required for compiling the Rust code during package build.</p>
+</section>
+<section id="creating-docs">
+<h3>Creating Docs<a class="headerlink" href="#creating-docs" title="Link to this heading">#</a></h3>
+<p>The documentation is created using sphinx and several extensions.</p>
+<p>To create or add new rst files run <i>sphinx-apidoc -o docs esat</i>.</p>
+<p>To create, update or modify the existing documentation html, run
+<i>sphinx-build -M html . docs</i> from the command line at the project root directory running the python environment with the necessary sphinx packages.</p>
+</section>
+<section id="building-wheels-and-compiling-rust">
+<h3>Building Wheels and Compiling Rust<a class="headerlink" href="#building-wheels-and-compiling-rust" title="Link to this heading">#</a></h3>
+<p>The ESAT python package and cli are built using setuptools and setuptools-rust, with configuration details defined in pyproject.toml and Cargo.toml.</p>
+<p>The python package can be built with the standard <i>python -m build</i> from the project root directory.</p>
+<p>Build will compile the rust code and package up the python
+code combining them into the wheel for distribution. The resulting wheel with the compiled code is available on github as a workflow artifact for the targeted architecture and python version.</p>
+<p>The python package will be available on pypi.org in the near future.</p>
+</section>
+<section id="code-tests">
+<h3>Code Tests<a class="headerlink" href="#code-tests" title="Link to this heading">#</a></h3>
+<p>A collection of pytest tests have been created to test functionality, mostly as systems tests, which can be executed as</p>
+<p><i>coverage run -m pytest tests</i></p>
+<p>with the coverage results displayed by</p>
+<p><i>coverage report</i></p>
+<p>While the overall coverage percentage is low, the majority of the untested code is for visualization functions with all
+core functionality covered by tests.</p>
+</section>
+<section id="community-contributions">
+<h3>Community Contributions<a class="headerlink" href="#community-contributions" title="Link to this heading">#</a></h3>
+<p>For those in the user community wishing to contribute to this project:</p>
+<ul class="simple">
+<li><p>Code updates can be made through pull requests that will be reviewed by repository maintainers.</p></li>
+<li><p>Software, code, or algorithm related bugs and issues can be submitted directly as issues on the GitHub repository.</p></li>
+<li><p>Support can be requested through GitHub issues or through email at <a class="reference external" href="mailto:esat&#37;&#52;&#48;epa&#46;gov">esat<span>&#64;</span>epa<span>&#46;</span>gov</a>.</p></li>
+</ul>
+</section>
+</section>
+<section id="disclaimer">
+<h2>Disclaimer<a class="headerlink" href="#disclaimer" title="Link to this heading">#</a></h2>
+<p>ESAT development has been funded by U.S. EPA.  Mention of any trade names, products, or services does not convey, and
+should not be interpreted as conveying, official EPA approval, endorsement, or recommendation. The views expressed in
+this README are those of the authors and do not necessarily represent the views or policies of the US EPA.</p>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="index.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">EPA’s ESAT Documentation</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="docs/modules.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Python API</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#table-of-contents">Table of Contents</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#description">Description</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quick-start">Quick Start</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#documentation">Documentation</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example-code">Example Code</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#background">Background</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#esat-predecessor">ESAT Predecessor</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#features">Features</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#limitations">Limitations</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#notebooks">Notebooks</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#development">Development</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#requirements">Requirements</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#rust-compiling">Rust Compiling</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#creating-docs">Creating Docs</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#building-wheels-and-compiling-rust">Building Wheels and Compiling Rust</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#code-tests">Code Tests</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#community-contributions">Community Contributions</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#disclaimer">Disclaimer</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Deron Smith
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2025, EPA.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
