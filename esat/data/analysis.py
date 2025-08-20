@@ -505,7 +505,8 @@ class ModelAnalysis:
                             cols=1,
                             specs=[[{"secondary_y": True}] for _ in range(num_factors)],
                             shared_xaxes=True,
-                            vertical_spacing=0.01,
+                            shared_yaxes=True,
+                            vertical_spacing=0.02,
                             subplot_titles=[f"Factor {i + 1}" for i in range(num_factors)])
 
         for factor_idx in range(num_factors):
@@ -528,12 +529,54 @@ class ModelAnalysis:
             fig.add_trace(go.Scatter(x=self.dh.features, y=norm_profile, mode='markers', marker=dict(color='red'),
                                      name="% of Features", legendgroup="group2", showlegend=(factor_idx==0)), secondary_y=True, row=factor_idx + 1, col=1)
 
-            fig.update_yaxes(title_text="Conc. of Features", type="log",
+            fig.update_yaxes(title_text="", type="log",
                              range=[0, np.log10(factor_conc_sums).max()], secondary_y=False, row=factor_idx + 1, col=1)
-            fig.update_yaxes(title_text="% of Features", range=[0, 100], secondary_y=True, row=factor_idx + 1, col=1)
+            fig.update_yaxes(title_text="", range=[0, 100], secondary_y=True, row=factor_idx + 1, col=1)
 
-        fig.update_layout(title=f"Factor Profiles - Model {self.selected_model+1}", width=1200, height=600 * num_factors,
-                          hovermode='x unified')
+        # Add subplot titles as annotations
+        annotations = [
+                dict(
+                    text="Conc. of Features",
+                    x=-0.07,  # adjust as needed
+                    y=0.5,
+                    xref="paper", yref="paper",
+                    textangle=-90,
+                    font=dict(size=14),
+                    showarrow=False,
+                    align="center"
+                ),
+                dict(
+                    text="% of Features",
+                    x=1.07,  # adjust as needed
+                    y=0.5,
+                    xref="paper", yref="paper",
+                    textangle=-90,
+                    font=dict(size=14),
+                    showarrow=False,
+                    align="center"
+                )
+            ]
+        for i in range(num_factors):
+            annotations.append(dict(
+                text=f"Factor {i + 1}",
+                x=0.5,
+                y=1 - (i / num_factors),
+                xref="paper",
+                yref="paper",
+                xanchor="center",
+                yanchor="top",
+                showarrow=False,
+                font=dict(size=16)
+            ))
+
+        fig.update_layout(
+            title=f"Factor Profiles - Model {self.selected_model + 1}",
+            width=1200,
+            height=600 * num_factors,
+            hovermode='x unified',
+            annotations=annotations
+        )
+
         if show:
             fig.show()
             return None

@@ -53,6 +53,7 @@ def min_timestep(data: pd.DataFrame):
         resample = f"{int(time_delta.min().seconds / (60 * 60))}h"
     else:
         return "D"
+    return resample
 
 def calculate_factor_correlation(factor1, factor2):
     factor1 = factor1.astype(float)

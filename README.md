@@ -161,7 +161,7 @@ The documentation is created using sphinx and several extensions.
 To create or add new rst files run <i>sphinx-apidoc -o docs esat</i>.
 
 To create, update or modify the existing documentation html, run 
-<i>sphinx-build -M html . docs</i> from the command line at the project root directory running the python environment with the necessary sphinx packages.
+<i>sphinx-build -b html . docs</i> from the command line at the project root directory running the python environment with the necessary sphinx packages.
 
 ### Building Wheels and Compiling Rust
 The ESAT python package and cli are built using setuptools and setuptools-rust, with configuration details defined in pyproject.toml and Cargo.toml. 
