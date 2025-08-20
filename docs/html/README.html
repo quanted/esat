@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Environmental Source Apportionment Toolkit (ESAT) &#8212; Environmental Source Apportionment Toolkit (ESAT) 2024.0.2 documentation</title>
+    <title>Environmental Source Apportionment Toolkit (ESAT) &#8212; Environmental Source Apportionment Toolkit (ESAT) 2025.0.2 documentation</title>
   
   
   
@@ -28,16 +28,16 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
 <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
 
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=a3416100" />
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=eba8b062" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="_static/documentation_options.js?v=1300d73e"></script>
-    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/documentation_options.js?v=b7785327"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'README';</script>
@@ -324,7 +324,7 @@ document.write(`
                   
   <section id="environmental-source-apportionment-toolkit-esat">
 <h1>Environmental Source Apportionment Toolkit (ESAT)<a class="headerlink" href="#environmental-source-apportionment-toolkit-esat" title="Link to this heading">#</a></h1>
-<p>Last Update: 08-15-2024</p>
+<p>Last Update: 04-16-2025</p>
 <section id="table-of-contents">
 <h2>Table of Contents<a class="headerlink" href="#table-of-contents" title="Link to this heading">#</a></h2>
 <ul class="simple">
@@ -367,6 +367,8 @@ processing. The source apportionment algorithms provided in ESAT include two var
 factorization (NMF), both of which have been written in Rust and contained within the python package. A collection of
 data processing and visualization features are included for data and model analytics. The ESAT package includes a
 synthetic data generator and comparison tools to evaluate ESAT model outputs.</p>
+<p>The ESAT python package has been published with the Journal of Open Source Software (JOSS):</p>
+<p><a class="reference external" href="https://doi.org/10.21105/joss.07316"><img alt="DOI" src="https://joss.theoj.org/papers/10.21105/joss.07316/status.svg" /></a></p>
 </section>
 <section id="quick-start">
 <h2>Quick Start<a class="headerlink" href="#quick-start" title="Link to this heading">#</a></h2>
@@ -374,19 +376,23 @@ synthetic data generator and comparison tools to evaluate ESAT model outputs.</p
 specific versions, supporting Mac Intel, Mac M1+, Linux, and Windows.</p>
 <section id="documentation">
 <h3>Documentation<a class="headerlink" href="#documentation" title="Link to this heading">#</a></h3>
-<p>The Python API and CLI documentation can be found at the Github ESAT IO site: <a class="reference external" href="https://quanted.github.io/esat/">https://quanted.github.io/esat/</a></p>
+<p>The Python API and CLI documentation can be found at the GitHub ESAT IO site: <a class="reference external" href="https://quanted.github.io/esat/">https://quanted.github.io/esat/</a></p>
 </section>
 <section id="installation">
 <h3>Installation<a class="headerlink" href="#installation" title="Link to this heading">#</a></h3>
 <p>The ESAT python package contains all compiled code and required dependencies and can be installed using pip</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>esat-VERSION-OS.whl
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>esat
 </pre></div>
 </div>
-<p>where the <i>VERSION</i> is the code version, such as <i>2024.1.0</i>, and <i>OS</i> is operating system targeted
-compiled version, such as <i>cp312-cp312-win_amd64</i>. If an error message appears during installation stating that the
-package is not supported check that the correct OS and python version are being installed for that system.</p>
-<p>When the package becomes available on pypi, the package will be able to be installed with</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>esat
+<p>which will install the latest version that supports and is available for your python version and OS.</p>
+<p>Development versions of ESAT can be found on the GitHub actions page, for logged-in users,
+under the ‘Build and Publish Wheel’ workflow. The latest version of the package will be available as an artifact for
+download in the ‘Artifacts’ section of the completed workflow. There wheel files can be found for specific versions
+of python and supported operating systems.</p>
+<p>If an error message appears during installation stating that the
+package is not supported check that the correct OS and python version are being installed for that system. The python
+wheels can be installed directly using</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>&lt;wheel<span class="w"> </span>file<span class="w"> </span>name&gt;
 </pre></div>
 </div>
 <p>The esat python package is recommended to be installed in its own dedicated python virtual environment or conda environment.</p>
@@ -619,7 +625,7 @@ By Deron Smith
 
   <p class="copyright">
     
-      © Copyright 2024, EPA.
+      © Copyright 2025, EPA.
       <br/>
     
   </p>
