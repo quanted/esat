@@ -42,18 +42,15 @@ def min_timestep(data: pd.DataFrame):
     int
         Minimum timestep.
     """
-    if not isinstance(data.index, pd.DatetimeIndex) or len(data.index) < 2:
-        return "D"
-    time_delta = data.index[1:] - data.index[:-1]
-    min_seconds = time_delta.min().total_seconds()
-    if min_seconds < 1:
-        return "D"
-    elif min_seconds < 60:
-        return f"{int(min_seconds)}s"
-    elif min_seconds < 3600:
-        return f"{int(min_seconds // 60)}min"
-    elif min_seconds < 86400:
-        return f"{int(min_seconds // 3600)}h"
+    time_delta = data.index[1: -1] - data.index[0:-2]
+    if time_delta.min().days >= 1:
+        resample = f"{int(time_delta.min().days)}D"
+    elif time_delta.min().seconds < 60:
+        resample = f"{time_delta.min().seconds}s"
+    elif time_delta.min().seconds < 60 * 60:
+        resample = f"{int(time_delta.min().seconds / 60)}min"
+    elif time_delta.min().seconds > 60 * 60 and time_delta.min().days <= 0:
+        resample = f"{int(time_delta.min().seconds / (60 * 60))}h"
     else:
         return "D"
 
