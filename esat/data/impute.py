@@ -79,6 +79,8 @@ class DataImputer:
         else:
             raise ValueError(f"Unsupported imputation strategy: {strategy}. Supported strategies are 'mean', 'median', "
                              f"'most_frequent', 'knn', and 'iterative'.")
+        # Convert imputed data back to DataFrame
+        return self.imputed_data, self.imputed_uncertainty
 
     def _run_simple_imputer(self, V, U, strategy='mean'):
         """

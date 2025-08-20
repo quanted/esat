@@ -42,6 +42,7 @@ class ModelAnalysis:
         self.model = model
         self.selected_model = selected_model
         self.statistics = None
+        self.residual_metrics = None
         self.V_prime_k = None
         self.V_prime_plot = None
 
@@ -91,21 +92,30 @@ class ModelAnalysis:
         features = self.dh.features
 
         feature_mean = []
+        feature_var = []
+        est_means = []
+        est_vars = []
         feature_rmse = []
-        feature_p_rmse = []
         for column_i in range(V.shape[1]):
             c_mean = round(float(V[:, column_i].mean()), 4)
+            c_var = round(float(V[:, column_i].var()), 4)
+            est_mean = round(float(est_V[:, column_i].mean()), 4)
+            est_var = round(float(est_V[:, column_i].var()), 4)
             c_rmse = round(np.sqrt(np.sum((V[:, column_i] - est_V[:, column_i]) ** 2)) / 14, 4)
-            c_percent = round((c_rmse/c_mean) * 100, 2)
             feature_mean.append(c_mean)
+            feature_var.append(c_var)
+            est_means.append(est_mean)
+            est_vars.append(est_var)
             feature_rmse.append(c_rmse)
-            feature_p_rmse.append(c_percent)
         df = pd.DataFrame(data={
             "Feature": features,
-            "Mean": feature_mean,
+            "Input Mean": feature_mean,
+            "Input Var": feature_var,
+            "Est Mean": est_means,
+            "Est Var": est_vars,
             "RMSE": feature_rmse,
-            "Percentage": feature_p_rmse
         })
+        self.residual_metrics = df
         return df
 
     def calculate_statistics(self, results: np.ndarray = None):
@@ -231,7 +241,7 @@ class ModelAnalysis:
                                      subplot_titles=["Scaled Residuals", None])
 
         residual_fig.add_trace(
-            go.Histogram(x=residuals_data, histnorm='probability'),
+            go.Histogram(x=residuals_data, histnorm='probability', name='Histogram'),
             row=2, col=1
         )
         residual_fig.add_trace(
@@ -251,10 +261,12 @@ class ModelAnalysis:
         )
         if show:
             residual_fig.show()
-
-        residuals_df = pd.DataFrame(residuals_data, index=self.dh.input_data_df.index, columns=[feature])
-        residuals_df = residuals_df[residuals_df[feature].abs() > abs_threshold]
-        return residual_fig, residuals_df
+            return None
+        else:
+            residuals_df = pd.DataFrame(residuals_data, index=self.dh.input_data_df.index, columns=[feature])
+            if abs_threshold != -1:
+                residuals_df = residuals_df[residuals_df[feature].abs() > abs_threshold]
+            return residual_fig, residuals_df
 
     def plot_estimated_observed(self,
                                 feature_idx: int = None,
@@ -276,20 +288,22 @@ class ModelAnalysis:
         if feature_idx is not None:
             if feature_idx < 0 or feature_idx >= len(self.dh.features):
                 logger.info(f"Invalid feature_idx provided, must be between 0 and {len(self.dh.features) - 1}")
-                return
+                return None
             feature = self.dh.features[feature_idx]
         elif feature_name is not None:
             if feature_name not in self.dh.features:
                 logger.info(f"Invalid feature_name provided, must be one of {self.dh.features}")
-                return
+                return None
             feature = feature_name
             feature_idx = self.dh.features.index(feature_name)
         else:
             logger.info("Either feature_idx or feature_name must be provided.")
-            return
+            return None
+        if self.V_prime_plot is None:
+            self.aggregate_factors_for_plotting()
 
         observed_data = self.dh.input_data_plot[feature]
-        predicted_data = self.V_prime_plot[:, feature_idx]
+        predicted_data = self.V_prime_plot.iloc[:, feature_idx]
 
         # Perform regression
         A = np.vstack([observed_data.values, np.ones(len(observed_data))]).T
@@ -315,8 +329,9 @@ class ModelAnalysis:
 
         if show:
             xy_plot.show()
-
-        return xy_plot
+            return None
+        else:
+            return xy_plot
 
     def plot_estimated_timeseries(self,
                                   feature_idx: int = None,
@@ -338,20 +353,23 @@ class ModelAnalysis:
         if feature_idx is not None:
             if feature_idx < 0 or feature_idx >= len(self.dh.features):
                 logger.info(f"Invalid feature_idx provided, must be between 0 and {len(self.dh.features) - 1}")
-                return
+                return None
             feature = self.dh.features[feature_idx]
         elif feature_name is not None:
             if feature_name not in self.dh.features:
                 logger.info(f"Invalid feature_name provided, must be one of {self.dh.features}")
-                return
+                return None
             feature = feature_name
             feature_idx = self.dh.features.index(feature_name)
         else:
             logger.info("Either feature_idx or feature_name must be provided.")
-            return
+            return None
+
+        if self.V_prime_plot is None:
+            self.aggregate_factors_for_plotting()
 
         observed_data = self.dh.input_data_plot[feature].values
-        predicted_data = self.V_prime_plot[:, feature_idx]
+        predicted_data = self.V_prime_plot.iloc[:, feature_idx]
 
         data_df = pd.DataFrame(data={"observed": observed_data, "predicted": predicted_data},
                                index=self.dh.input_data_plot.index)
@@ -369,7 +387,7 @@ class ModelAnalysis:
                                         line=dict(width=1), mode='lines', name="Residuals"), row=2, col=1)
 
         ts_subplot.update_layout(
-            title=f"Estimated Time-series for {feature} - Model {self.selected_model}",
+            title=f"Estimated Time-series for {feature} - Model {self.selected_model+1}",
             width=1200,
             height=800,
             yaxis_title="Concentrations",
@@ -378,8 +396,9 @@ class ModelAnalysis:
 
         if show:
             ts_subplot.show()
-
-        return ts_subplot
+            return None
+        else:
+            return ts_subplot
 
     def plot_factor_profile(self,
                             factor_idx: int,
@@ -404,7 +423,7 @@ class ModelAnalysis:
         #TODO: Manage case where the number of samples is very high and plotting will take a long time.
         if factor_idx > self.model.factors or factor_idx < 1:
             logger.info(f"Invalid factor provided, must be between 1 and {self.model.factors}")
-            return
+            return None
         factor_label = f"Factor {factor_idx}"
         factor_idx_l = factor_idx
         factor_idx = factor_idx - 1
@@ -445,7 +464,7 @@ class ModelAnalysis:
                                   range=[0, np.log10(factor_conc_sums).max()]
                                   )
         profile_plot.update_yaxes(title_text="% of Features", secondary_y=True, row=1, col=1, range=[0, 100])
-        profile_plot.update_layout(title=f"Factor Profile - Model {self.selected_model} - Factor {factor_idx_l}",
+        profile_plot.update_layout(title=f"Factor Profile - Model {self.selected_model+1} - Factor {factor_idx_l}",
                                    width=1200, height=600, hovermode='x unified')
         if show:
             profile_plot.show()
@@ -453,15 +472,17 @@ class ModelAnalysis:
         contr_plot = go.Figure()
         contr_plot.add_trace(go.Scatter(x=data_df.index, y=data_df[factor_label], mode='lines+markers',
                                         name="Normalized Contributions", line=dict(color='blue')))
-        contr_plot.update_layout(title=f"Factor Contributions - Model {self.selected_model} - Factor {factor_idx_l}",
+        contr_plot.update_layout(title=f"Factor Contributions - Model {self.selected_model+1} - Factor {factor_idx_l}",
                                  width=1200, height=600, showlegend=True,
                                  legend=dict(orientation="h", xanchor="right", yanchor="bottom", x=1, y=1.02))
         contr_plot.update_yaxes(title_text="Normalized Contributions")
         if show:
             contr_plot.show()
-        return profile_plot, contr_plot
+            return None
+        else:
+            return profile_plot, contr_plot
 
-    def plot_all_factors(self, factor_list: list = None, H: np.ndarray = None, W: np.ndarray = None):
+    def plot_all_factors(self, factor_list: list = None, H: np.ndarray = None, W: np.ndarray = None, show: bool = True):
         """
         Create a vertical set of subplots for all factor profiles, similar to plot_factor_profile.
 
@@ -511,11 +532,15 @@ class ModelAnalysis:
                              range=[0, np.log10(factor_conc_sums).max()], secondary_y=False, row=factor_idx + 1, col=1)
             fig.update_yaxes(title_text="% of Features", range=[0, 100], secondary_y=True, row=factor_idx + 1, col=1)
 
-        fig.update_layout(title="Factor Profiles - All Factors", width=1200, height=600 * num_factors,
+        fig.update_layout(title=f"Factor Profiles - Model {self.selected_model+1}", width=1200, height=600 * num_factors,
                           hovermode='x unified')
-        fig.show()
+        if show:
+            fig.show()
+            return None
+        else:
+            return fig
 
-    def plot_all_factors_3d(self, H=None, W=None, show: bool = True):
+    def plot_all_factors_3d(self, H=None, W=None, show: bool = True, plot_type: str = "profile"):
         """
         Create a 3D bar plot of the factor profiles and their contributions.
         Parameters
@@ -526,6 +551,8 @@ class ModelAnalysis:
             The factor contribution matrix, if None will use the model's W matrix.
         show : bool
             If True, the plot will be displayed. Default is True.
+        plot_type : str
+            Should be either "profile", "conc", or "both".
 
         Returns
         -------
@@ -609,13 +636,16 @@ class ModelAnalysis:
 
         fig = go.Figure()
 
+        add_button = False
         # Add 3D bar graphs for "Conc. of Features"
-        fig.add_trace(_create_mesh3d(conc_z, "Conc. of Features"))
-
-        # Add 3D bar graphs for "% of Features"
-        fig.add_trace(_create_mesh3d(percent_z, "% of Features"))
-        fig.data[1].visible = False  # Initially hide "% of Features"
-
+        if plot_type.lower() in ["conc", "both"]:
+            fig.add_trace(_create_mesh3d(conc_z, "Conc. of Features"))
+        else:
+            # Add 3D bar graphs for "% of Features"
+            fig.add_trace(_create_mesh3d(percent_z, "% of Features"))
+        if plot_type.lower() == "both":
+            fig.data[1].visible = False  # Initially hide "% of Features"
+            add_button = True
         # Update layout and add buttons for toggling plot types
         fig.update_layout(
             title="3D Factor Profiles",
@@ -649,13 +679,15 @@ class ModelAnalysis:
                                 'scene.zaxis.range': [0, 100]
                             }]
                         )
-                    ]
+                    ] if add_button else None
                 )
             ]
         )
         if show:
             fig.show()
-        return fig
+            return None
+        else:
+            return fig
 
     def plot_factor_fingerprints(self, grouped: bool = False, show: bool = True):
         """
@@ -668,13 +700,14 @@ class ModelAnalysis:
         fig = go.Figure()
         for idx in range(self.model.factors-1, -1, -1):
             fig.add_trace(go.Bar(name=f"Factor {idx+1}", x=self.dh.features, y=normalized_factors_data[idx]))
-            fig.update_layout(title=f"Factor Fingerprints - Model {self.selected_model}",
+            fig.update_layout(title=f"Factor Fingerprints - Model {self.selected_model+1}",
                               width=1200, height=800, barmode='group' if grouped else 'stack',
                               hovermode='x unified')
         fig.update_yaxes(title_text="% Feature Concentration", range=[0, 100])
         if show:
             fig.show()
-        return fig
+        else:
+            return fig
 
 
     def plot_g_space(self,
@@ -710,12 +743,13 @@ class ModelAnalysis:
             x=normalized_factors_contr[:, f1_idx],
             y=normalized_factors_contr[:, f2_idx], mode='markers')
         )
-        fig.update_layout(title=f"G-Space Plot - Model {self.selected_model}", width=800, height=800)
+        fig.update_layout(title=f"G-Space Plot - Model {self.selected_model+1}", width=800, height=800)
         fig.update_yaxes(title_text=f"Factor {factor_2} Contributions (avg=1)")
         fig.update_xaxes(title_text=f"Factor {factor_1} Contributions (avg=1)")
         if show:
             fig.show()
-        return fig
+        else:
+            return fig
 
     def plot_factor_contributions(self,
                                   feature_idx: int,
@@ -758,7 +792,7 @@ class ModelAnalysis:
                 feature_legend[f"Factor {idx_l}"] = f"Factor {idx_l} = {factors_data[idx:, feature_idx]}"
         feature_fig = go.Figure(data=[go.Pie(labels=feature_contr_labels, values=feature_contr_inc,
                                              hoverinfo="label+value", textinfo="percent")])
-        feature_fig.update_layout(title=f"Factor Contributions to Feature: {x_label} - Model {self.selected_model}", width=1200, height=600,
+        feature_fig.update_layout(title=f"Factor Contributions to Feature: {x_label} - Model {self.selected_model+1}", width=1200, height=600,
                                   legend_title_text=f"Factor Contribution > {contribution_threshold}%")
         if show:
             feature_fig.show()
@@ -775,13 +809,14 @@ class ModelAnalysis:
         for factor in factor_labels:
             contr_fig.add_trace(go.Scatter(x=contr_df.index, y=contr_df[factor], mode='lines+markers', name=factor))
         converged = "Converged Model" if self.model.converged else "Unconverged Model"
-        contr_fig.update_layout(title=f"Factor Contributions (avg=1) From Base Model #{self.selected_model} ({converged})",
+        contr_fig.update_layout(title=f"Factor Contributions (avg=1) From Base Model #{self.selected_model+1} ({converged})",
                                 width=1200, height=600, hovermode='x unified',
                                 legend=dict(orientation="h", xanchor="right", yanchor="bottom", x=1, y=1.02))
         contr_fig.update_yaxes(title_text="Normalized Contribution")
         if show:
             contr_fig.show()
-        return feature_fig, contr_fig
+        else:
+            return feature_fig, contr_fig
 
     def plot_factor_composition(self):
         """

@@ -320,11 +320,10 @@ class DataHandler:
             _uncertainty_data[f] = pd.to_numeric(_uncertainty_data[f])
 
         # Ensure no zero values in data or uncertainty
-        if self.drop_nans:
-            _input_nans = _input_data.isna().any(axis=1)
-            _uncertainty_nans = _uncertainty_data.isna().any(axis=1)
-            _input_data = _input_data[~_input_nans | ~_uncertainty_nans]
-            _uncertainty_data = _uncertainty_data[~_input_nans | ~_uncertainty_nans]
+        _input_nans = _input_data.isna().any(axis=1)
+        _uncertainty_nans = _uncertainty_data.isna().any(axis=1)
+        _input_data = _input_data[~_input_nans | ~_uncertainty_nans]
+        _uncertainty_data = _uncertainty_data[~_input_nans | ~_uncertainty_nans]
 
         self.input_data_df = _input_data
         self.uncertainty_data_df = _uncertainty_data
@@ -386,6 +385,11 @@ class DataHandler:
             self.input_data = self._read_data(filepath=self.input_path, index_col=self.index_col)
             self.uncertainty_data = self._read_data(filepath=self.uncertainty_path, index_col=self.index_col)
             self.features = list(self.input_data.columns) if self.features is None else self.features
+
+        # drop rows were all values are NaN, by creating a mask to use on both input and uncertainty
+        nan_rows = self.input_data.isna().all(axis=1) | self.uncertainty_data.isna().all(axis=1)
+        self.input_data = self.input_data[~nan_rows]
+        self.uncertainty_data = self.uncertainty_data[~nan_rows]
 
         self.min_values = self.input_data.min(axis=0)
         self.max_values = self.input_data.max(axis=0)
@@ -571,16 +575,21 @@ class DataHandler:
         x_data = self.input_data_plot[x_label]
         y_data = self.input_data_plot[y_label]
 
-        A = np.vstack([x_data.values, np.ones(len(x_data.values))]).T
-        m, c = np.linalg.lstsq(A, y_data.values, rcond=None)[0]
+        # Filter out NaN and infinite values
+        mask = (~np.isnan(x_data)) & (~np.isnan(y_data)) & np.isfinite(x_data) & np.isfinite(y_data)
+        x_data_clean = x_data[mask]
+        y_data_clean = y_data[mask]
 
-        m1, c1 = np.linalg.lstsq(A, x_data.values, rcond=None)[0]
+        A = np.vstack([x_data_clean.values, np.ones(len(x_data_clean.values))]).T
+        m, c = np.linalg.lstsq(A, y_data_clean.values, rcond=None)[0]
+
+        m1, c1 = np.linalg.lstsq(A, x_data_clean.values, rcond=None)[0]
 
         xy_plot = go.Figure()
         xy_plot.add_trace(
             go.Scatter(
-                x=x_data,
-                y=y_data,
+                x=x_data_clean,
+                y=y_data_clean,
                 mode='markers',
                 name="Data",
                 hovertemplate=(
@@ -588,21 +597,21 @@ class DataHandler:
                     f"<b>{x_label}:</b>" + " %{x}<br>"
                     f"<b>{y_label}:</b>" + " %{y}<extra></extra>"
                 ),
-                customdata=np.array([x_data.index]).T  # Pass index as custom data
+                customdata=np.array([x_data_clean.index]).T  # Pass index as custom data
             )
         )
         xy_plot.add_trace(
             go.Scatter(
-                x=x_data,
-                y=(m * x_data.values + c),
+                x=x_data_clean,
+                y=(m * x_data_clean.values + c),
                 line=dict(color='red', dash='dash', width=1),
                 name='Regression'
             )
         )
         xy_plot.add_trace(
             go.Scatter(
-                x=x_data,
-                y=(m1 * x_data.values + c1),
+                x=x_data_clean,
+                y=(m1 * x_data_clean.values + c1),
                 line=dict(color='blue', width=1),
                 name='One-to-One'
             )
@@ -614,8 +623,8 @@ class DataHandler:
             xaxis_title=f"{x_label}",
             yaxis_title=f"{y_label}",
         )
-        xy_plot.update_xaxes(range=[0, x_data.max() + 0.5])
-        xy_plot.update_yaxes(range=[0, y_data.max() + 0.5])
+        xy_plot.update_xaxes(range=[0, x_data_clean.max() + 0.5])
+        xy_plot.update_yaxes(range=[0, y_data_clean.max() + 0.5])
         if show:
             xy_plot.show()
             return None
@@ -641,10 +650,17 @@ class DataHandler:
                 feature_label = self.input_data_plot.columns[feature_selection]
             else:
                 feature_label = [feature_selection]
+
         data_df = copy.copy(self.input_data_plot)
         data_df.index = pd.to_datetime(data_df.index)
+        data_df = data_df.dropna()
+        data_df.index = pd.to_datetime(data_df.index)
         data_df = data_df.sort_index()
-        data_df = data_df.resample(min_timestep(data_df)).mean()
+
+        freq = min_timestep(data_df)
+        if not freq or freq == "0s":
+            freq = "D"
+        data_df = data_df.resample(freq).mean()
         x = list(data_df.index)
         ts_plot = go.Figure()
         for feature_i in feature_label:

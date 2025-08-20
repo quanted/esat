@@ -62,7 +62,8 @@ class SA:
                  method: str = "ls-nmf",
                  seed: int = 42,
                  parallel: bool = True,
-                 verbose: bool = False
+                 verbose: bool = False,
+                 use_gpu: bool = True,
                  ):
         """
         Constructor method.
@@ -90,6 +91,7 @@ class SA:
         self.init_method = "column_mean"
         self.seed = 42 if seed is None else seed
         self.rng = np.random.default_rng(self.seed)
+        self.use_gpu = use_gpu
 
         self.Qrobust = None
         self.Qtrue = None
@@ -131,10 +133,8 @@ class SA:
                 if self.method == "ls-nmf" and not self.__has_neg:
                     self.optimized_update = esat_rust.ls_nmf
                 else:
-                    if self.parallel:
-                        self.optimized_update = esat_rust.ws_nmf_p
-                    else:
-                        self.optimized_update = esat_rust.ws_nmf
+                    self.optimized_update = esat_rust.ws_nmf
+
             except ModuleNotFoundError:
                 logger.error("Unable to load optimized Rust module, reverting to python code.")
                 self.optimized = False
@@ -398,7 +398,7 @@ class SA:
         if self.optimized:
             t0 = time.time()
             try:
-                self.W, self.H, q, self.converged, self.converge_steps, q_list = self.optimized_update(
+                results_dict = self.optimized_update(
                     self.V.astype(np.float32),
                     self.U.astype(np.float32),
                     self.We.astype(np.float32),
@@ -411,8 +411,15 @@ class SA:
                     model_i,
                     hold_h,
                     delay_h,
-                    progress_callback
-                )[0]
+                    progress_callback,
+                    self.use_gpu
+                )
+                self.W = results_dict['w']
+                self.H = results_dict['h']
+                q = results_dict['q']
+                self.converged = results_dict['converged']
+                self.converge_steps = results_dict['converge_i']
+                q_list = results_dict['q_list']
             except RuntimeError as ex:
                 logger.error(f"Runtime Exception: {ex}")
                 return False
