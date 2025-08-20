@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "esat"
-version = "2025.0.1"
+version = "2025.0.2"
 requires-python = ">=3.10"
 description = "EPA's Environmental Source Apportionment Toolkit python package."
 authors = [
@@ -48,6 +48,7 @@ dependencies = {file = ["requirements.txt"]}
 
 [tool.setuptools-rust]
 profile = "release"
+features = ["gpu"]
 
 [project.scripts]
 esat = "esat.cli.esat_cli:esat_cli"
@@ -57,3 +58,6 @@ target = "esat_rust"
 path = "Cargo.toml"
 binding = "PyO3"
 debug = false
+
+[project.optional-dependencies]
+data = ["scikit-learn"]

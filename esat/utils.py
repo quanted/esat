@@ -52,10 +52,7 @@ def min_timestep(data: pd.DataFrame):
     elif time_delta.min().seconds > 60 * 60 and time_delta.min().days <= 0:
         resample = f"{int(time_delta.min().seconds / (60 * 60))}h"
     else:
-        resample = "D"
-    # logger.info(f"Minimum timestep: {resample}")
-    return resample
-
+        return "D"
 
 def calculate_factor_correlation(factor1, factor2):
     factor1 = factor1.astype(float)

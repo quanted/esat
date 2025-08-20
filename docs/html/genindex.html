@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Index &#8212; Environmental Source Apportionment Toolkit (ESAT) 2024.0.2 documentation</title>
+    <title>Index &#8212; Environmental Source Apportionment Toolkit (ESAT) 2025.0.2 documentation</title>
   
   
   
@@ -27,16 +27,16 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
 <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
 
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=a3416100" />
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/sphinx-book-theme.css?v=eba8b062" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="_static/documentation_options.js?v=1300d73e"></script>
-    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/documentation_options.js?v=b7785327"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'genindex';</script>
@@ -501,9 +501,13 @@ document.write(`
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="docs/esat.rotational.html#esat.rotational.constrained.ConstrainedModel.add_constraint">add_constraint() (esat.rotational.constrained.ConstrainedModel method)</a>
 </li>
+      <li><a href="docs/esat.rotational.html#esat.rotational.constrained.ConstrainedModel.add_expression">add_expression() (esat.rotational.constrained.ConstrainedModel method)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="docs/esat.rotational.html#esat.rotational.constrained.ConstrainedModel.add_expression">add_expression() (esat.rotational.constrained.ConstrainedModel method)</a>
+      <li><a href="docs/esat.data.html#esat.data.analysis.ModelAnalysis.aggregate_factors_for_plotting">aggregate_factors_for_plotting() (esat.data.analysis.ModelAnalysis method)</a>
+</li>
+      <li><a href="docs/esat.data.html#esat.data.datahandler.DataHandler.aggregate_output">aggregate_output() (esat.data.datahandler.DataHandler method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -533,6 +537,8 @@ document.write(`
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="docs/eval.html#eval.factor_comparison.FactorCompare.calculate_correlation">calculate_correlation() (eval.factor_comparison.FactorCompare static method)</a>
 </li>
+      <li><a href="docs/eval.html#eval.factor_comparison.FactorCompareV2.calculate_correlation_matrix">calculate_correlation_matrix() (eval.factor_comparison.FactorCompareV2 method)</a>
+</li>
       <li><a href="docs/esat.html#esat.utils.calculate_factor_correlation">calculate_factor_correlation() (in module esat.utils)</a>
 </li>
       <li><a href="docs/esat.html#esat.metrics.calculate_Q">calculate_Q() (in module esat.metrics)</a>
@@ -553,6 +559,8 @@ document.write(`
 </li>
       <li><a href="docs/esat.data.html#esat.data.test_tools.CompareAnalyzer">CompareAnalyzer (class in esat.data.test_tools)</a>
 </li>
+      <li><a href="docs/esat.model.html#esat.model.batch_sa.configure_logging">configure_logging() (in module esat.model.batch_sa)</a>
+</li>
       <li><a href="docs/esat.rotational.html#esat.rotational.constrained.ConstrainedModel">ConstrainedModel (class in esat.rotational.constrained)</a>
 </li>
       <li><a href="docs/esat.rotational.html#esat.rotational.constrained.Constraint">Constraint (class in esat.rotational.constrained)</a>
@@ -568,6 +576,8 @@ document.write(`
       <li><a href="docs/esat.rotational.html#esat.rotational.constrained.Constraint.describe">describe() (esat.rotational.constrained.Constraint method)</a>
 </li>
       <li><a href="docs/esat.model.html#esat.model.batch_sa.BatchSA.details">details() (esat.model.batch_sa.BatchSA method)</a>
+</li>
+      <li><a href="docs/eval.html#eval.factor_comparison.FactorCompareV2.determine_map">determine_map() (eval.factor_comparison.FactorCompareV2 method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -1183,10 +1193,12 @@ document.write(`
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="docs/eval.html#eval.factor_comparison.FactorCompare">FactorCompare (class in eval.factor_comparison)</a>
 </li>
-      <li><a href="docs/esat.html#esat.estimator.FactorEstimator">FactorEstimator (class in esat.estimator)</a>
+      <li><a href="docs/eval.html#eval.factor_comparison.FactorCompareV2">FactorCompareV2 (class in eval.factor_comparison)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="docs/esat.html#esat.estimator.FactorEstimator">FactorEstimator (class in esat.estimator)</a>
+</li>
       <li><a href="docs/esat.data.html#esat.data.test_tools.CompareAnalyzer.feature_histogram">feature_histogram() (esat.data.test_tools.CompareAnalyzer method)</a>
 </li>
       <li><a href="docs/esat.data.html#esat.data.analysis.ModelAnalysis.features_metrics">features_metrics() (esat.data.analysis.ModelAnalysis method)</a>
@@ -1230,6 +1242,10 @@ document.write(`
       <li><a href="docs/esat.model.html#esat.model.sa.SA.initialize">initialize() (esat.model.sa.SA method)</a>
 </li>
   </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="docs/esat.model.html#esat.model.batch_sa.is_picklable">is_picklable() (in module esat.model.batch_sa)</a>
+</li>
+  </ul></td>
 </tr></table>
 
 <h2 id="L">L</h2>
@@ -1263,6 +1279,8 @@ document.write(`
 </li>
       <li><a href="docs/eval.html#eval.factor_comparison.FactorCompare.load_pmf_output">load_pmf_output() (eval.factor_comparison.FactorCompare static method)</a>
 </li>
+      <li><a href="docs/esat.model.html#esat.model.batch_sa.logging_listener">logging_listener() (in module esat.model.batch_sa)</a>
+</li>
       <li><a href="docs/esat.model.html#esat.model.ls_nmf.LSNMF">LSNMF (class in esat.model.ls_nmf)</a>
 </li>
   </ul></td>
@@ -1274,6 +1292,12 @@ document.write(`
       <li><a href="docs/esat.error.html#esat.error.bootstrap.Bootstrap.map_contributions">map_contributions() (esat.error.bootstrap.Bootstrap method)</a>
 </li>
       <li><a href="docs/esat.error.html#esat.error.bootstrap.Bootstrap.map_factors">map_factors() (esat.error.bootstrap.Bootstrap method)</a>
+</li>
+      <li><a href="docs/esat.html#esat.utils.memory_estimate">memory_estimate() (in module esat.utils)</a>
+</li>
+      <li><a href="docs/esat.data.html#esat.data.datahandler.DataHandler.merge">merge() (esat.data.datahandler.DataHandler method)</a>
+</li>
+      <li><a href="docs/esat.html#esat.utils.min_timestep">min_timestep() (in module esat.utils)</a>
 </li>
       <li><a href="docs/esat.model.html#esat.model.recombinator.mlag">mlag() (in module esat.model.recombinator)</a>
 </li>
@@ -1366,6 +1390,12 @@ document.write(`
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="docs/esat.html#esat.estimator.FactorEstimator.plot">plot() (esat.estimator.FactorEstimator method)</a>
 </li>
+      <li><a href="docs/esat.data.html#esat.data.datahandler.DataHandler.plot_2d_histogram">plot_2d_histogram() (esat.data.datahandler.DataHandler method)</a>
+</li>
+      <li><a href="docs/esat.data.html#esat.data.analysis.ModelAnalysis.plot_all_factors">plot_all_factors() (esat.data.analysis.ModelAnalysis method)</a>
+</li>
+      <li><a href="docs/esat.data.html#esat.data.analysis.ModelAnalysis.plot_all_factors_3d">plot_all_factors_3d() (esat.data.analysis.ModelAnalysis method)</a>
+</li>
       <li><a href="docs/eval.html#eval.simulator.Simulator.plot_comparison">plot_comparison() (eval.simulator.Simulator method)</a>
 </li>
       <li><a href="docs/esat.error.html#esat.error.bootstrap.Bootstrap.plot_contribution">plot_contribution() (esat.error.bootstrap.Bootstrap method)</a>
@@ -1407,6 +1437,8 @@ document.write(`
       <li><a href="docs/esat.data.html#esat.data.analysis.ModelAnalysis.plot_factor_surface">plot_factor_surface() (esat.data.analysis.ModelAnalysis method)</a>
 </li>
       <li><a href="docs/esat.data.html#esat.data.test_tools.CompareAnalyzer.plot_factors">plot_factors() (esat.data.test_tools.CompareAnalyzer method)</a>
+</li>
+      <li><a href="docs/esat.data.html#esat.data.datahandler.DataHandler.plot_feature_correlation_heatmap">plot_feature_correlation_heatmap() (esat.data.datahandler.DataHandler method)</a>
 </li>
       <li><a href="docs/esat.data.html#esat.data.datahandler.DataHandler.plot_feature_data">plot_feature_data() (esat.data.datahandler.DataHandler method)</a>
 </li>
@@ -1452,12 +1484,16 @@ document.write(`
         <li><a href="docs/esat.error.html#esat.error.displacement.Displacement.plot_results">(esat.error.displacement.Displacement method)</a>
 </li>
       </ul></li>
-      <li><a href="docs/esat.error.html#esat.error.error.Error.plot_summary">plot_summary() (esat.error.error.Error method)</a>
-</li>
-      <li><a href="docs/eval.html#eval.simulator.Simulator.plot_synthetic_contributions">plot_synthetic_contributions() (eval.simulator.Simulator method)</a>
+      <li><a href="docs/esat.data.html#esat.data.datahandler.DataHandler.plot_ridgeline">plot_ridgeline() (esat.data.datahandler.DataHandler method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="docs/esat.error.html#esat.error.error.Error.plot_summary">plot_summary() (esat.error.error.Error method)</a>
+</li>
+      <li><a href="docs/esat.data.html#esat.data.datahandler.DataHandler.plot_superimposed_histograms">plot_superimposed_histograms() (esat.data.datahandler.DataHandler method)</a>
+</li>
+      <li><a href="docs/eval.html#eval.simulator.Simulator.plot_synthetic_contributions">plot_synthetic_contributions() (eval.simulator.Simulator method)</a>
+</li>
       <li><a href="docs/esat.data.html#esat.data.analysis.BatchAnalysis.plot_temporal_residuals">plot_temporal_residuals() (esat.data.analysis.BatchAnalysis method)</a>
 </li>
       <li><a href="docs/eval.html#eval.factor_comparison.FactorCompare.print_results">print_results() (eval.factor_comparison.FactorCompare method)</a>
@@ -1609,7 +1645,7 @@ document.write(`
 </li>
       <li><a href="docs/eval.html#eval.simulator.Simulator">Simulator (class in eval.simulator)</a>
 </li>
-      <li><a href="docs/esat.html#esat.utils.solution_bump">solution_bump() (in module esat.utils)</a>
+      <li><a href="docs/esat.data.html#esat.data.datahandler.DataHandler.split_locations">split_locations() (esat.data.datahandler.DataHandler method)</a>
 </li>
       <li><a href="docs/esat.error.html#esat.error.bootstrap.Bootstrap.summary">summary() (esat.error.bootstrap.Bootstrap method)</a>
 
@@ -1708,7 +1744,7 @@ By Deron Smith
 
   <p class="copyright">
     
-      © Copyright 2024, EPA.
+      © Copyright 2025, EPA.
       <br/>
     
   </p>

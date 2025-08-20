@@ -4,10 +4,12 @@ import sys
 import logging
 import time
 import pickle
+import threading
 import numpy as np
 from pathlib import Path
 from tqdm import tqdm
 import multiprocessing as mp
+from logging.handlers import QueueHandler, QueueListener
 from esat.model.sa import SA
 from esat.utils import memory_estimate
 from esat_rust import clear_screen
@@ -87,6 +89,8 @@ class BatchSA:
                  hold_h: bool = False,
                  delay_h: int = -1,
                  verbose: bool = True,
+                 progress_callback: callable = None,
+                 use_gpu: bool = False,
                  ):
         """
         Constructor method.
@@ -111,6 +115,9 @@ class BatchSA:
         self.init_norm = bool(init_norm)
         self.hold_h = hold_h
         self.delay_h = delay_h
+        self.use_gpu = use_gpu
+
+        self.progress_callback = progress_callback if callable(progress_callback) else None
 
         system_options = memory_estimate(self.V.shape[1], self.V.shape[0], self.factors, cores=cores)
         cores = -1 if cores is None else cores
@@ -178,145 +185,208 @@ class BatchSA:
             an error message explaining the reason training ended.
         """
         t0 = time.time()
-        if self.verbose:
-            logger.info(f"Running batch SA models in {f'parallel using {self.cores} cores.' if self.parallel else 'single-core mode.'}")
-        clear_screen()
-        print("\n" * (max(self.models, self.cores) + 1))
-        print("\033[H")
-        sys.stdout.flush()
 
-        if self.parallel:
-            input_parameters = []
-            for i in range(1, self.models+1):
-                _seed = self.rng.integers(low=0, high=1e5)
-                _sa = SA(
-                    factors=self.factors,
-                    method=self.method,
-                    V=self.V,
-                    U=self.U,
-                    seed=_seed,
-                    verbose=False
-                )
-                i_H = self.H
-                if self.H is not None:
-                    self.H = np.array(self.H)
-                    if len(self.H.shape) == 3:
-                        i_H = self.H[i-1]
-                    elif len(self.H.shape) == 2:
+        with mp.Manager() as manager:  # Use Manager to create shared objects
+            log_queue = manager.Queue()
+            progress_queue = manager.Queue() if self.progress_callback else None
+
+            listener = logging_listener(log_queue)  # Start the logging listener in the main process
+
+            try:
+                logger.info("Starting batch training of SA models.")
+                if self.verbose:
+                    logger.info(
+                        f"Running batch SA models in {f'parallel using {self.cores} cores.' if self.parallel else 'single-core mode.'}")
+                clear_screen()
+
+                if not self.progress_callback:
+                    print("\n" * (max(self.models, self.cores) + 1))
+                    print("\033[H")
+                    sys.stdout.flush()
+
+                if self.parallel:
+                    logger.info("Initializing multiprocessing setup.")
+                    progress_listener = None
+                    if self.progress_callback:
+                        progress_listener = threading.Thread(
+                            target=_progress_listener,
+                            args=(progress_queue, self.progress_callback),
+                            daemon=True
+                        )
+                        progress_listener.start()
+                        logger.info("Progress listener thread started.")
+
+                    input_parameters = []
+                    for i in range(1, self.models + 1):
+                        _seed = self.rng.integers(low=0, high=1e5)
+                        _sa = SA(
+                            factors=self.factors,
+                            method=self.method,
+                            V=self.V,
+                            U=self.U,
+                            seed=_seed,
+                            verbose=False,
+                            use_gpu=self.use_gpu
+                        )
                         i_H = self.H
-                i_W = self.W
-                if self.W is not None:
-                    self.W = np.array(self.W)
-                    if len(self.W.shape) == 3:
-                        i_W = self.W[i - 1]
-                    elif len(self.W.shape) == 2:
+                        if self.H is not None:
+                            self.H = np.array(self.H)
+                            if len(self.H.shape) == 3:
+                                i_H = self.H[i - 1]
+                            elif len(self.H.shape) == 2:
+                                i_H = self.H
                         i_W = self.W
-                _sa.initialize(H=i_H, W=i_W,
-                               init_method=self.init_method,
-                               init_norm=self.init_norm)
-                input_parameters.append((_sa, i))
-            pool = mp.Pool(processes=self.cores)
-            results = pool.starmap(self._train_task, input_parameters)
-            pool.close()
-            pool.join()
-            best_model = -1
-            best_q = float("inf")
-            ordered_results = [None for i in range(0, len(results)+1)]
-            for result in results:
-                model_i, _sa = result
-                ordered_results[model_i-1] = _sa
-                _nmf_q = _sa.Qrobust if self.best_robust else _sa.Qtrue
-                if _nmf_q < best_q:
-                    best_q = _nmf_q
-                    best_model = model_i
-            self.results = ordered_results
-        else:
-            self.results = []
-            best_Q = float("inf")
-            best_model = -1
-            for model_i in range(1, self.models+1):
-                t3 = time.time()
-                _seed = self.rng.integers(low=0, high=1e5)
-                _sa = SA(
-                    factors=self.factors,
-                    method=self.method,
-                    V=self.V,
-                    U=self.U,
-                    seed=_seed,
-                    verbose=self.verbose,
-                )
-                _sa.initialize(H=self.H, W=self.W,
-                               init_method=self.init_method,
-                               init_norm=self.init_norm)
-                run = _sa.train(max_iter=self.max_iter, converge_delta=self.converge_delta, converge_n=self.converge_n,
-                                model_i=model_i, update_step=self.update_step, hold_h=self.hold_h)
-                t4 = time.time()
-                t_delta = datetime.timedelta(seconds=t4-t3)
-                if min_limit:
-                    if t_delta.seconds/60 > min_limit:
-                        logger.warning(f"SA model training time exceeded specified runtime limit")
-                        return False, f"Error: Model train time: {t_delta} exceeded runtime limit: {min_limit} min(s)"
-                if run == -1:
-                    logger.error(f"Unable to execute batch run of SA models. Model: {model_i}")
-                    pass
-                _nmf_q = _sa.Qrobust if self.best_robust else _sa.Qtrue
-                if _nmf_q < best_Q:
-                    best_Q = _nmf_q
-                    best_model = model_i
-                self.results.append(_sa)
-        t1 = time.time()
+                        if self.W is not None:
+                            self.W = np.array(self.W)
+                            if len(self.W.shape) == 3:
+                                i_W = self.W[i - 1]
+                            elif len(self.W.shape) == 2:
+                                i_W = self.W
+                        _sa.initialize(H=i_H, W=i_W,
+                                       init_method=self.init_method,
+                                       init_norm=self.init_norm)
+                        input_parameters.append((
+                            _sa, i, progress_queue, log_queue,
+                            self.max_iter, self.converge_delta, self.converge_n,
+                            self.update_step, self.hold_h, self.delay_h, self.progress_callback
+                        ))
+                    logger.info("Input parameters for multiprocessing prepared.")
 
-        clear_screen()
-        print("\n" * (max(self.models, self.cores) + 1))
-        print("\033[H")
-        sys.stdout.flush()
+                    pool = mp.Pool(processes=self.cores)
+                    logger.info("Multiprocessing pool created.")
+                    results = pool.starmap(_train_task, input_parameters)
+                    logger.info("Training tasks completed in multiprocessing pool.")
+                    pool.close()
+                    pool.join()
 
-        self.runtime = round(t1 - t0, 2)
-        best_model = best_model - 1
-        if self.verbose:
-            logger.info("------------------------------------------------ Batch Results ------------------------------------------------")
-            for i, result in enumerate(self.results):
-                if result is None:
-                    continue
-                logger.info(f"Model: {i + 1}, "
-                            f"Q(true): {result.Qtrue:.4f}, "
-                            f"MSE(true): {float(result.Qtrue / self.V.size):.4f}, "
-                            f"Q(robust): {float(result.Qrobust):.4f}, "
-                            f"MSE(robust): {float(result.Qrobust / self.V.size):.4f}, Seed: {result.seed}, "
-                            f"Converged: {result.converged}, Steps: {result.converge_steps}/{self.max_iter}")
+                    if self.progress_callback:
+                        progress_queue.put("DONE")
+                        progress_listener.join()
+                        logger.info("Progress listener thread joined.")
 
-            logger.info(f"Results - Best Model: {best_model+1}, "
-                        f"Q(true): {float(self.results[best_model].Qtrue):.4f}, "
-                        f"MSE(true): {float(self.results[best_model].Qtrue/self.V.size):.4f}, "
-                        f"Q(robust): {float(self.results[best_model].Qrobust):.4f}, "
-                        f"MSE(robust): {float(self.results[best_model].Qrobust/self.V.size):.4f}, "
-                        f"Converged: {self.results[best_model].converged}")
-            logger.info(f"Runtime: {round((t1 - t0) / 60, 2)} min(s)")
-        self.best_model = best_model
-        # results cleanup
-        if self.results[-1] is None:
-            self.results.pop(-1)
-        return True, ""
+                    best_model = -1
+                    best_q = float("inf")
+                    ordered_results = [None for _ in range(len(results) + 1)]
+                    for result in results:
+                        model_i, _sa = result
+                        ordered_results[model_i - 1] = _sa
+                        _nmf_q = _sa.Qrobust if self.best_robust else _sa.Qtrue
+                        if _nmf_q < best_q:
+                            best_q = _nmf_q
+                            best_model = model_i
+                    self.results = ordered_results
+                else:
+                    logger.info("Running models sequentially.")
+                    self.results = []
+                    best_Q = float("inf")
+                    best_model = -1
+                    for model_i in range(1, self.models + 1):
+                        t3 = time.time()
+                        _seed = self.rng.integers(low=0, high=1e5)
+                        _sa = SA(
+                            factors=self.factors,
+                            method=self.method,
+                            V=self.V,
+                            U=self.U,
+                            seed=_seed,
+                            verbose=self.verbose,
+                            use_gpu=self.use_gpu
+                        )
+                        _sa.initialize(H=self.H, W=self.W,
+                                       init_method=self.init_method,
+                                       init_norm=self.init_norm)
+                        logger.info(f"Training model {model_i} with seed {_seed}.")
+                        run = _sa.train(max_iter=self.max_iter, converge_delta=self.converge_delta,
+                                        converge_n=self.converge_n,
+                                        model_i=model_i, update_step=self.update_step, hold_h=self.hold_h,
+                                        progress_callback=self.progress_callback)
+                        t4 = time.time()
+                        t_delta = datetime.timedelta(seconds=t4 - t3)
+                        logger.info(f"Model {model_i} training completed in {t_delta}.")
+                        if min_limit and t_delta.seconds / 60 > min_limit:
+                            logger.warning(f"SA model training time exceeded specified runtime limit.")
+                            return False, f"Error: Model train time: {t_delta} exceeded runtime limit: {min_limit} min(s)"
+                        if run == -1:
+                            logger.error(f"Unable to execute batch run of SA models. Model: {model_i}")
+                            pass
+                        _nmf_q = _sa.Qrobust if self.best_robust else _sa.Qtrue
+                        if _nmf_q < best_Q:
+                            best_Q = _nmf_q
+                            best_model = model_i
+                        self.results.append(_sa)
 
-    def _train_task(self, sa, model_i) -> (int, SA):
+                t1 = time.time()
+                self.runtime = round(t1 - t0, 2)
+                logger.info(f"Batch training completed in {self.runtime} seconds.")
+
+                best_model = best_model - 1
+                if self.verbose:
+                    logger.info(
+                        "------------------------------------------------ Batch Results ------------------------------------------------")
+                    for i, result in enumerate(self.results):
+                        if result is None:
+                            continue
+                        logger.info(f"Model: {i + 1}, "
+                                    f"Q(true): {result.Qtrue:.4f}, "
+                                    f"MSE(true): {float(result.Qtrue / self.V.size):.4f}, "
+                                    f"Q(robust): {float(result.Qrobust):.4f}, "
+                                    f"MSE(robust): {float(result.Qrobust / self.V.size):.4f}, Seed: {result.seed}, "
+                                    f"Converged: {result.converged}, Steps: {result.converge_steps}/{self.max_iter}")
+
+                    logger.info(f"Results - Best Model: {best_model + 1}, "
+                                f"Q(true): {float(self.results[best_model].Qtrue):.4f}, "
+                                f"MSE(true): {float(self.results[best_model].Qtrue / self.V.size):.4f}, "
+                                f"Q(robust): {float(self.results[best_model].Qrobust):.4f}, "
+                                f"MSE(robust): {float(self.results[best_model].Qrobust / self.V.size):.4f}, "
+                                f"Converged: {self.results[best_model].converged}")
+                    logger.info(f"Runtime: {round((t1 - t0) / 60, 2)} min(s)")
+
+                self.best_model = best_model
+                if self.results[-1] is None:
+                    self.results.pop(-1)
+                return True, ""
+            except Exception as e:
+                logger.error(f"An error occurred during training: {e}")
+                return False, str(e)
+            finally:
+                listener.stop()
+
+    def _train_task(self, sa, model_i, progress_queue, log_queue):
         """
-        Parallelized train task.
-
-        Parameters
-        ----------
-        sa : SA
-            Initialized SA object.
-        model_i : int
-            Model id used for batch model referencing.
-
-        Returns
-        -------
-        int, SA
-            The model id and the trained SA object.
-
+        Parallelized train task with logging.
         """
-        sa.train(max_iter=self.max_iter, converge_delta=self.converge_delta, converge_n=self.converge_n,
-                 model_i=model_i, update_step=self.update_step, hold_h=self.hold_h, delay_h=self.delay_h)
+        configure_logging(log_queue)  # Configure logging for the child process
+        logger = logging.getLogger()
+        logger.info(f"Starting SA model {model_i} with seed {sa.seed}")
+
+        def queue_callback(*args):
+            if progress_queue is not None:
+                progress_queue.put(args)
+
+        cb = queue_callback if progress_queue is not None else self.progress_callback
+
+        if progress_queue is not None and not is_picklable(queue_callback):
+            logger.error("queue_callback is not picklable. Progress reporting will not work in multiprocessing.")
+            cb = None
+
+        if progress_queue is None and self.progress_callback and not is_picklable(self.progress_callback):
+            logger.error("progress_callback is not picklable. It will not be used.")
+            cb = None
+
+        if not callable(cb):
+            logger.error("Provided progress callback is not callable. Using default progress callback.")
+            cb = None
+
+        sa.train(
+            max_iter=self.max_iter,
+            converge_delta=self.converge_delta,
+            converge_n=self.converge_n,
+            model_i=model_i,
+            update_step=self.update_step,
+            hold_h=self.hold_h,
+            delay_h=self.delay_h,
+            progress_callback=cb
+        )
         return model_i, sa
 
     def save(self, batch_name: str,
@@ -400,3 +470,79 @@ class BatchSA:
         else:
             logger.error(f"BatchSA load file failed, specified pickle file does not exist. File Path: {file_path}")
             return None
+
+
+def _train_task(sa, model_i, progress_queue, log_queue, max_iter, converge_delta, converge_n, update_step, hold_h, delay_h, progress_callback):
+    configure_logging(log_queue)
+    logger = logging.getLogger()
+    logger.info(f"Starting SA model {model_i} with seed {sa.seed}")
+
+    def queue_callback(*args):
+        if progress_queue is not None:
+            progress_queue.put(args)
+
+    cb = queue_callback if progress_queue is not None else progress_callback
+
+    sa.train(
+        max_iter=max_iter,
+        converge_delta=converge_delta,
+        converge_n=converge_n,
+        model_i=model_i,
+        update_step=update_step,
+        hold_h=hold_h,
+        delay_h=delay_h,
+        progress_callback=cb
+    )
+    return model_i, sa
+
+
+def configure_logging(log_queue):
+    """
+    Configures logging for a child process to send log messages to the log queue.
+
+    Parameters
+    ----------
+    log_queue : multiprocessing.Queue
+        The queue to send log messages to.
+    """
+    queue_handler = QueueHandler(log_queue)
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging.INFO)  # Set the desired logging level
+    root_logger.handlers = []  # Clear existing handlers
+    root_logger.addHandler(queue_handler)
+
+def logging_listener(log_queue):
+    """
+    Sets up a logging listener to handle log messages from a multiprocessing.Queue.
+
+    Parameters
+    ----------
+    log_queue : multiprocessing.Queue
+        The queue to receive log messages from child processes.
+
+    Returns
+    -------
+    QueueListener
+        The logging listener that listens for log messages.
+    """
+    handler = logging.StreamHandler()  # Logs to the console
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S')
+    handler.setFormatter(formatter)
+
+    listener = QueueListener(log_queue, handler)
+    listener.start()
+    return listener
+
+def _progress_listener(queue, callback):
+    while True:
+        msg = queue.get()
+        if msg == "DONE":
+            break
+        callback(*msg)
+
+def is_picklable(obj):
+    try:
+        pickle.dumps(obj)
+        return True
+    except Exception:
+        return False

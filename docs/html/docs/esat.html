@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>esat package &#8212; Environmental Source Apportionment Toolkit (ESAT) 2024.0.2 documentation</title>
+    <title>esat package &#8212; Environmental Source Apportionment Toolkit (ESAT) 2025.0.2 documentation</title>
   
   
   
@@ -28,16 +28,16 @@
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
 
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=a3416100" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=eba8b062" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="../_static/documentation_options.js?v=1300d73e"></script>
-    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/documentation_options.js?v=b7785327"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'docs/esat';</script>
@@ -132,7 +132,7 @@
   
   
   
-    <p class="title logo__title">Environmental Source Apportionment Toolkit (ESAT) 2024.0.2 documentation</p>
+    <p class="title logo__title">Environmental Source Apportionment Toolkit (ESAT) 2025.0.2 documentation</p>
   
 </a></div>
         <div class="sidebar-primary-item">
@@ -330,8 +330,9 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-esat.utils">esat.utils module</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#esat.utils.calculate_factor_correlation"><code class="docutils literal notranslate"><span class="pre">calculate_factor_correlation()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#esat.utils.compare_all_factors"><code class="docutils literal notranslate"><span class="pre">compare_all_factors()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#esat.utils.memory_estimate"><code class="docutils literal notranslate"><span class="pre">memory_estimate()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#esat.utils.min_timestep"><code class="docutils literal notranslate"><span class="pre">min_timestep()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#esat.utils.np_encoder"><code class="docutils literal notranslate"><span class="pre">np_encoder()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#esat.utils.solution_bump"><code class="docutils literal notranslate"><span class="pre">solution_bump()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-esat.estimator">esat.estimator module</a><ul class="nav section-nav flex-column">
@@ -385,8 +386,11 @@ document.write(`
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="esat.data.html#esat.data.analysis.ModelAnalysis"><code class="docutils literal notranslate"><span class="pre">ModelAnalysis</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="esat.data.html#esat.data.analysis.ModelAnalysis.aggregate_factors_for_plotting"><code class="docutils literal notranslate"><span class="pre">ModelAnalysis.aggregate_factors_for_plotting()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="esat.data.html#esat.data.analysis.ModelAnalysis.calculate_statistics"><code class="docutils literal notranslate"><span class="pre">ModelAnalysis.calculate_statistics()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="esat.data.html#esat.data.analysis.ModelAnalysis.features_metrics"><code class="docutils literal notranslate"><span class="pre">ModelAnalysis.features_metrics()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.data.html#esat.data.analysis.ModelAnalysis.plot_all_factors"><code class="docutils literal notranslate"><span class="pre">ModelAnalysis.plot_all_factors()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.data.html#esat.data.analysis.ModelAnalysis.plot_all_factors_3d"><code class="docutils literal notranslate"><span class="pre">ModelAnalysis.plot_all_factors_3d()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="esat.data.html#esat.data.analysis.ModelAnalysis.plot_estimated_observed"><code class="docutils literal notranslate"><span class="pre">ModelAnalysis.plot_estimated_observed()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="esat.data.html#esat.data.analysis.ModelAnalysis.plot_estimated_timeseries"><code class="docutils literal notranslate"><span class="pre">ModelAnalysis.plot_estimated_timeseries()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="esat.data.html#esat.data.analysis.ModelAnalysis.plot_factor_composition"><code class="docutils literal notranslate"><span class="pre">ModelAnalysis.plot_factor_composition()</span></code></a></li>
@@ -402,12 +406,19 @@ document.write(`
 </li>
 <li class="toctree-l2"><a class="reference internal" href="esat.data.html#module-esat.data.datahandler">esat.data.datahandler module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="esat.data.html#esat.data.datahandler.DataHandler"><code class="docutils literal notranslate"><span class="pre">DataHandler</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="esat.data.html#esat.data.datahandler.DataHandler.aggregate_output"><code class="docutils literal notranslate"><span class="pre">DataHandler.aggregate_output()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="esat.data.html#esat.data.datahandler.DataHandler.get_data"><code class="docutils literal notranslate"><span class="pre">DataHandler.get_data()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="esat.data.html#esat.data.datahandler.DataHandler.load_dataframe"><code class="docutils literal notranslate"><span class="pre">DataHandler.load_dataframe()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.data.html#esat.data.datahandler.DataHandler.merge"><code class="docutils literal notranslate"><span class="pre">DataHandler.merge()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.data.html#esat.data.datahandler.DataHandler.plot_2d_histogram"><code class="docutils literal notranslate"><span class="pre">DataHandler.plot_2d_histogram()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="esat.data.html#esat.data.datahandler.DataHandler.plot_data_uncertainty"><code class="docutils literal notranslate"><span class="pre">DataHandler.plot_data_uncertainty()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.data.html#esat.data.datahandler.DataHandler.plot_feature_correlation_heatmap"><code class="docutils literal notranslate"><span class="pre">DataHandler.plot_feature_correlation_heatmap()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="esat.data.html#esat.data.datahandler.DataHandler.plot_feature_data"><code class="docutils literal notranslate"><span class="pre">DataHandler.plot_feature_data()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="esat.data.html#esat.data.datahandler.DataHandler.plot_feature_timeseries"><code class="docutils literal notranslate"><span class="pre">DataHandler.plot_feature_timeseries()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.data.html#esat.data.datahandler.DataHandler.plot_ridgeline"><code class="docutils literal notranslate"><span class="pre">DataHandler.plot_ridgeline()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.data.html#esat.data.datahandler.DataHandler.plot_superimposed_histograms"><code class="docutils literal notranslate"><span class="pre">DataHandler.plot_superimposed_histograms()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="esat.data.html#esat.data.datahandler.DataHandler.set_category"><code class="docutils literal notranslate"><span class="pre">DataHandler.set_category()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="esat.data.html#esat.data.datahandler.DataHandler.split_locations"><code class="docutils literal notranslate"><span class="pre">DataHandler.split_locations()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -495,6 +506,9 @@ document.write(`
 <li class="toctree-l4"><a class="reference internal" href="esat.model.html#esat.model.batch_sa.BatchSA.train"><code class="docutils literal notranslate"><span class="pre">BatchSA.train()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="esat.model.html#esat.model.batch_sa.configure_logging"><code class="docutils literal notranslate"><span class="pre">configure_logging()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="esat.model.html#esat.model.batch_sa.is_picklable"><code class="docutils literal notranslate"><span class="pre">is_picklable()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="esat.model.html#esat.model.batch_sa.logging_listener"><code class="docutils literal notranslate"><span class="pre">logging_listener()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="esat.model.html#module-esat.model.ls_nmf">esat.model.ls_nmf module</a><ul>
@@ -504,7 +518,6 @@ document.write(`
 </li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="esat.model.html#esat-model-optimization-module">esat.model.optimization module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="esat.model.html#module-esat.model.recombinator">esat.model.recombinator module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="esat.model.html#esat.model.recombinator.OptimalBlockLength"><code class="docutils literal notranslate"><span class="pre">OptimalBlockLength</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="esat.model.html#esat.model.recombinator.OptimalBlockLength.b_star_cb"><code class="docutils literal notranslate"><span class="pre">OptimalBlockLength.b_star_cb</span></code></a></li>
@@ -620,6 +633,44 @@ document.write(`
 <dd></dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="esat.utils.memory_estimate">
+<span class="sig-prename descclassname"><span class="pre">esat.utils.</span></span><span class="sig-name descname"><span class="pre">memory_estimate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_samples</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">factors</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cores</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.utils.memory_estimate" title="Link to this definition">#</a></dt>
+<dd><p>Estimate the memory usage of the algorithm.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n_features</strong> – Number of features.</p></li>
+<li><p><strong>n_samples</strong> – Number of samples.</p></li>
+<li><p><strong>factors</strong> – Number of factors.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Estimated memory usage in bytes.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="esat.utils.min_timestep">
+<span class="sig-prename descclassname"><span class="pre">esat.utils.</span></span><span class="sig-name descname"><span class="pre">min_timestep</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">DataFrame</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.utils.min_timestep" title="Link to this definition">#</a></dt>
+<dd><p>Find the minimum timestep in a dataframe.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data</strong> – Dataframe to be searched.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Minimum timestep.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="esat.utils.np_encoder">
 <span class="sig-prename descclassname"><span class="pre">esat.utils.</span></span><span class="sig-name descname"><span class="pre">np_encoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">object</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.utils.np_encoder" title="Link to this definition">#</a></dt>
 <dd><p>Convert any numpy type to a generic type for json serialization.</p>
@@ -636,17 +687,12 @@ document.write(`
 </dl>
 </dd></dl>
 
-<dl class="py function">
-<dt class="sig sig-object py" id="esat.utils.solution_bump">
-<span class="sig-prename descclassname"><span class="pre">esat.utils.</span></span><span class="sig-name descname"><span class="pre">solution_bump</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">profile</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">contribution</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bump_range</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">tuple</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">(0.9,</span> <span class="pre">1.1)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">42</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.utils.solution_bump" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
-
 </section>
 <section id="module-esat.estimator">
 <span id="esat-estimator-module"></span><h2>esat.estimator module<a class="headerlink" href="#module-esat.estimator" title="Link to this heading">#</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="esat.estimator.FactorEstimator">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">esat.estimator.</span></span><span class="sig-name descname"><span class="pre">FactorEstimator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">V</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">U</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">42</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_percent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k_coef</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.estimator.FactorEstimator" title="Link to this definition">#</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">esat.estimator.</span></span><span class="sig-name descname"><span class="pre">FactorEstimator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">V</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">U</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">42</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_percent</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k_coef</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#esat.estimator.FactorEstimator" title="Link to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Factor search uses a Monte Carlo sampling approach for testing different factor counts using cross-validation
 testing. Both a train and a test MSE are calculated for each model in the search. These MSE values are averaged
@@ -770,8 +816,9 @@ converged.</p></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-esat.utils">esat.utils module</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#esat.utils.calculate_factor_correlation"><code class="docutils literal notranslate"><span class="pre">calculate_factor_correlation()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#esat.utils.compare_all_factors"><code class="docutils literal notranslate"><span class="pre">compare_all_factors()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#esat.utils.memory_estimate"><code class="docutils literal notranslate"><span class="pre">memory_estimate()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#esat.utils.min_timestep"><code class="docutils literal notranslate"><span class="pre">min_timestep()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#esat.utils.np_encoder"><code class="docutils literal notranslate"><span class="pre">np_encoder()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#esat.utils.solution_bump"><code class="docutils literal notranslate"><span class="pre">solution_bump()</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#module-esat.estimator">esat.estimator module</a><ul class="nav section-nav flex-column">
@@ -807,7 +854,7 @@ By Deron Smith
 
   <p class="copyright">
     
-      © Copyright 2024, EPA.
+      © Copyright 2025, EPA.
       <br/>
     
   </p>

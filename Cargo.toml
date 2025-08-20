@@ -14,13 +14,15 @@ path = "rust/lib.rs"
 crate-type = ["cdylib"]
 
 [dependencies]
-numpy = "0.20.0"
-nalgebra = {version="0.32.4", features = ["rayon"]}
-ndarray = "0.15.6"
-rayon = "1.9.0"
-pyo3 = "0.20.3"
-indicatif = "0.17"
-console = "0.15.8"
+numpy = "0.25.0"
+nalgebra = "0.33.2"
+ndarray = "0.16.1"
+pyo3 = { version = "0.25.1", features = ["extension-module"] }
+indicatif = "0.18.0"
+console = "0.16.0"
+# GPU support
+candle-core = "0.9.1"
+#candle-core = { version = "0.9.1", features = ["cuda"] }
 
 [features]
 extension-module = ["pyo3/extension-module", "pyo3/generate-import-lib"]
@@ -33,3 +35,5 @@ debug = false
 [profile.release]
 opt-level = 3
 debug = false
+
+
