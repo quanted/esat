@@ -7,7 +7,7 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 import plotly.colors as plotly_colors
-
+from pandas.api.types import is_numeric_dtype
 from scipy.stats import gaussian_kde
 
 from esat.model.recombinator import optimal_block_length
@@ -52,6 +52,12 @@ class DataHandler:
         Load the input and uncertainty data files, used internally for load_dataframe.
     loc_metadata : dict
         Optional dictionary containing metadata about the locations in the dataset, such as latitude and longitude.
+    max_plotting_n : int
+        The maximum number of samples to use for plotting. If the dataset has more samples than this value, the data
+        will be aggregated for plotting. Default = 10000.
+    sheetnames : list
+        A list of sheet names to load from Excel files, the first sheet name is used for the input data and the second
+        for the uncertainty data. Default = None, which will load the first sheet in each file.
     """
     def __init__(self,
                  input_path: str,
@@ -64,6 +70,7 @@ class DataHandler:
                  load: bool = True,
                  loc_metadata: dict = None,
                  max_plotting_n: int = 10000,
+                 sheetnames: list = None
                  ):
         """
         Constructor method.
@@ -72,9 +79,11 @@ class DataHandler:
         self.uncertainty_path = uncertainty_path
         self.error = False
         self.error_list = []
+        self.sheetnames = sheetnames
 
         self.input_data = None
         self.uncertainty_data = None
+        self.non_numeric_data = None
 
         self.input_data_plot = None
         self.uncertainty_data_plot = None
@@ -260,19 +269,27 @@ class DataHandler:
         """
         Check all file paths to make sure they exist.
         """
-        if not os.path.isabs(self.input_path):
-            logger.error(f"Input file path is not absolute: {self.input_path}")
-            # self.input_path = os.path.join(ROOT_DIR, self.input_path)
-        if not os.path.isabs(self.uncertainty_path):
-            logger.error(f"Uncertainty file path is not absolute: {self.uncertainty_path}")
-            # self.uncertainty_path = os.path.join(ROOT_DIR, self.uncertainty_path)
-
+        ext = self.input_path.split(".")[-1]
         if not os.path.exists(self.input_path):
             self.error = True
             self.error_list.append(f"Input file not found at {self.input_path}")
-        if not os.path.exists(self.uncertainty_path):
+        elif not os.path.isabs(self.input_path):
             self.error = True
-            self.error_list.append(f"Uncertainty file not found at {self.uncertainty_path}")
+            self.error_list.append(f"Input file path is not absolute: {self.input_path}")
+            logger.error(f"Input file path is not absolute: {self.input_path}")
+            # self.input_path = os.path.join(ROOT_DIR, self.input_path)
+
+        if ext in ["xls", "xlsx"] and self.sheetnames is not None:
+            if len(self.sheetnames) < 2 and self.uncertainty_path is None:
+                self.error = True
+                self.error_list.append("If a separate uncertainty file is not provided, excel files require at least two sheet names, one for input and one for uncertainty")
+        else:
+            if not os.path.exists(self.uncertainty_path):
+                self.error = True
+                self.error_list.append(f"Uncertainty file not found at {self.uncertainty_path}")
+            elif not os.path.isabs(self.uncertainty_path):
+                logger.error(f"Uncertainty file path is not absolute: {self.uncertainty_path}")
+                # self.uncertainty_path = os.path.join(ROOT_DIR, self.uncertainty_path)
         if self.error:
             logger.error("File Errors: " + ", ".join(self.error_list))
             sys.exit()
@@ -340,7 +357,7 @@ class DataHandler:
         self.uncertainty_data_processed = _uncertainty_data.astype("float32")
         self._determine_optimal_block(input_data=_input_data)
 
-    def _read_data(self, filepath, index_col=None):
+    def _read_data(self, filepath, index_col=None, sheetname=None):
         """
         Read in a data file into a pandas dataframe.
 
@@ -365,9 +382,9 @@ class DataHandler:
                 data = pd.read_csv(filepath, sep=None, engine="python")
         elif ext in ["xls", "xlsx"]:
             if index_col:
-                data = pd.read_excel(filepath, index_col=index_col)
+                data = pd.read_excel(filepath, sheet_name=sheetname, index_col=index_col)
             else:
-                data = pd.read_excel(filepath)
+                data = pd.read_excel(filepath, sheet_name=sheetname)
         else:
             logger.warning(f"Unknown file type provided. Ext: {ext}, file: {filepath}")
             #TODO: Add custom exception for unknown file types.
@@ -382,14 +399,29 @@ class DataHandler:
             logger.warning("Unable to load data because of setup errors.")
             return
         if not existing_data:
-            self.input_data = self._read_data(filepath=self.input_path, index_col=self.index_col)
-            self.uncertainty_data = self._read_data(filepath=self.uncertainty_path, index_col=self.index_col)
+            input_sheet, uncertainty_sheet = None, None
+            input_path, uncertainty_path = self.input_path, self.uncertainty_path
+            if self.sheetnames:
+                input_sheet = self.sheetnames[0]
+                uncertainty_sheet = self.sheetnames[1]
+                uncertainty_path = self.input_path
+            self.input_data = self._read_data(filepath=input_path, index_col=self.index_col, sheetname=input_sheet)
+            self.uncertainty_data = self._read_data(filepath=uncertainty_path, index_col=self.index_col,
+                                                    sheetname=uncertainty_sheet)
             self.features = list(self.input_data.columns) if self.features is None else self.features
 
+        logger.info("Input and uncertainty data loaded successfully")
         # drop rows were all values are NaN, by creating a mask to use on both input and uncertainty
         nan_rows = self.input_data.isna().all(axis=1) | self.uncertainty_data.isna().all(axis=1)
         self.input_data = self.input_data[~nan_rows]
         self.uncertainty_data = self.uncertainty_data[~nan_rows]
+
+        non_numeric_columns = [col for col in self.input_data.columns if not is_numeric_dtype(self.input_data[col])]
+        if len(non_numeric_columns) > 0:
+            logger.info(f"Dropping non-numeric columns: {non_numeric_columns}")
+            self.non_numeric_data = self.input_data[non_numeric_columns]
+            self.input_data = self.input_data.drop(columns=non_numeric_columns)
+            self.uncertainty_data = self.uncertainty_data.drop(columns=non_numeric_columns)
 
         self.min_values = self.input_data.min(axis=0)
         self.max_values = self.input_data.max(axis=0)

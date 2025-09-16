@@ -44,16 +44,23 @@ def min_timestep(data: pd.DataFrame):
     """
     time_delta = data.index[1: -1] - data.index[0:-2]
     if time_delta.min().days >= 1:
-        resample = f"{int(time_delta.min().days)}D"
-    elif time_delta.min().seconds < 60:
-        resample = f"{time_delta.min().seconds}s"
-    elif time_delta.min().seconds < 60 * 60:
-        resample = f"{int(time_delta.min().seconds / 60)}min"
+        resample = "D"
     elif time_delta.min().seconds > 60 * 60 and time_delta.min().days <= 0:
-        resample = f"{int(time_delta.min().seconds / (60 * 60))}h"
+        resample = "1h"
     else:
-        return "D"
+        resample = "D"
     return resample
+    # if time_delta.min().days >= 1:
+    #     resample = f"{int(time_delta.min().days)}D"
+    # elif time_delta.min().seconds < 60:
+    #     resample = f"{time_delta.min().seconds}s"
+    # elif time_delta.min().seconds < 60 * 60:
+    #     resample = f"{int(time_delta.min().seconds / 60)}min"
+    # elif time_delta.min().seconds > 60 * 60 and time_delta.min().days <= 0:
+    #     resample = f"{int(time_delta.min().seconds / (60 * 60))}h"
+    # else:
+    #     return "D"
+    # return resample
 
 def calculate_factor_correlation(factor1, factor2):
     factor1 = factor1.astype(float)
