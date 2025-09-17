@@ -1,5 +1,9 @@
 # Environmental Source Apportionment Toolkit (ESAT)
-Last Update: 04-16-2025
+Last Update: 09-16-2025
+
+<div align="center">
+  <img src="esat-logo.png" alt="ESAT Logo" width="200">
+</div>
 
 ## Table of Contents
  - [Description](#description)
@@ -35,6 +39,9 @@ synthetic data generator and comparison tools to evaluate ESAT model outputs.
 The ESAT python package has been published with the Journal of Open Source Software (JOSS):
 
 [![DOI](https://joss.theoj.org/papers/10.21105/joss.07316/status.svg)](https://doi.org/10.21105/joss.07316)
+
+Desktop application development is underway and the open-source code can be found at:
+https://github.com/quanted/esat-app
 
 ## Quick Start
 
