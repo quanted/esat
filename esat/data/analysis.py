@@ -823,17 +823,27 @@ class ModelAnalysis:
         factors_data = self.model.H
         normalized_factors_data = 100 * (factors_data / factors_data.sum(axis=0))
 
+        colors = px.colors.qualitative.Plotly  # Use Plotly's default color sequence
+        factor_colors = {}
+        for i in range(self.model.factors):
+            factor_colors[f"Factor {i + 1}"] = colors[i % len(colors)]
+
         feature_contr = normalized_factors_data[:, feature_idx]
         feature_contr_inc = []
         feature_contr_labels = []
+        feature_colors = []
         feature_legend = {}
         for idx in range(feature_contr.shape[0]-1, -1, -1):
             idx_l = idx+1
             if feature_contr[idx] > contribution_threshold:
                 feature_contr_inc.append(feature_contr[idx])
-                feature_contr_labels.append(f"Factor {idx_l}")
-                feature_legend[f"Factor {idx_l}"] = f"Factor {idx_l} = {factors_data[idx:, feature_idx]}"
+                factor_label = f"Factor {idx_l}"
+                feature_contr_labels.append(factor_label)
+                feature_colors.append(factor_colors[factor_label])
+                feature_legend[factor_label] = f"Factor {idx_l} = {factors_data[idx:, feature_idx]}"
+
         feature_fig = go.Figure(data=[go.Pie(labels=feature_contr_labels, values=feature_contr_inc,
+                                             marker=dict(colors=feature_colors),
                                              hoverinfo="label+value", textinfo="percent")])
         feature_fig.update_layout(title=f"Factor Contributions to Feature: {x_label} - Model {self.selected_model+1}", width=1200, height=600,
                                   legend_title_text=f"Factor Contribution > {contribution_threshold}%")
@@ -846,11 +856,14 @@ class ModelAnalysis:
         contr_df = pd.DataFrame(normalized_factors_contr, columns=factor_labels)
         contr_df.index = pd.to_datetime(self.dh.input_data_df.index)
         contr_df = contr_df.sort_index()
-        contr_df = contr_df.resample(min_timestep(contr_df)).mean()
+        # contr_df = contr_df.resample(min_timestep(contr_df)).mean()
 
         contr_fig = go.Figure()
         for factor in factor_labels:
-            contr_fig.add_trace(go.Scatter(x=contr_df.index, y=contr_df[factor], mode='lines+markers', name=factor))
+            contr_fig.add_trace(go.Scatter(x=contr_df.index, y=contr_df[factor], mode='lines+markers', name=factor,
+                                           line=dict(color=factor_colors[factor]),
+                                           marker=dict(color=factor_colors[factor])
+                                           ))
         converged = "Converged Model" if self.model.converged else "Unconverged Model"
         contr_fig.update_layout(title=f"Factor Contributions (avg=1) From Base Model #{self.selected_model+1} ({converged})",
                                 width=1200, height=600, hovermode='x unified',
