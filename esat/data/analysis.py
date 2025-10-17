@@ -995,7 +995,7 @@ class BatchAnalysis:
         self.data_handler = data_handler
         self.aggregated_output = {}
 
-    def plot_loss(self, show: bool = True):
+    def plot_loss(self, show: bool = True, max_points: int = 500):
         """
         Plot the loss value for each model in the batch solution as it changes over time.
 
@@ -1006,8 +1006,21 @@ class BatchAnalysis:
         q_fig = go.Figure()
         for i, result in enumerate(self.batch_sa.results):
             if result is not None:
+                x_full = list(range(len(result.q_list)))
+                y_full = result.q_list
+                if len(x_full) > max_points:
+                    indices = np.linspace(0, len(x_full) - 1, max_points, dtype=int)
+                    x = [x_full[idx] for idx in indices]
+                    y = [y_full[idx] for idx in indices]
+                else:
+                    x = x_full
+                    y = y_full
                 q_fig.add_trace(
-                    go.Scatter(x=list(range(len(result.q_list))), y=result.q_list, name=f"Model {i + 1}", mode='lines'))
+                    go.Scatter(
+                        x=x, y=y, name=f"Model {i + 1}", mode='lines',
+                        hovertemplate="Iteration: %{x}<br>Q(True): %{y:.4f}<extra></extra>"
+                    )
+                )
         q_fig.update(layout_title_text=f"Batch Q(True) vs Iterations. Max Iterations: {self.batch_sa.max_iter}")
         q_fig.update_layout(width=1200, height=600, hovermode='x')
         q_fig.update_xaxes(title_text="Iterations")
