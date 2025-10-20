@@ -5,13 +5,16 @@ import numpy as np
 
 from esat.data.datahandler import DataHandler
 
+logger = logging.getLogger(__name__)
+
+sklearn_loaded = False
 try:
     from sklearn.experimental import enable_iterative_imputer
     from sklearn.impute import SimpleImputer, KNNImputer, IterativeImputer
+    sklearn_loaded = True
 except ImportError:
-    sklearn = None
+    logger.error(f"scikit-learn is not installed. Please install it to use the DataImputer class.")
 
-logger = logging.getLogger(__name__)
 
 
 class DataImputer:
@@ -20,13 +23,20 @@ class DataImputer:
 
     This class supports mean, median, most_frequent, KNN, and iterative imputation strategies.
 
-    :param data_handler: An instance of DataHandler containing the dataset to be imputed.
+    :param input_data: The input data array with missing values.
+    :param uncertainty_data: The uncertainty data array with missing values.
     :param random_seed: Random seed for reproducibility (default is 42).
     :param missing_value: Value to be treated as missing (default is np.nan).
     """
-    def __init__(self, data_handler: DataHandler, random_seed: int = 42, missing_value: float = np.nan):
-        self.data_handler = data_handler
+    def __init__(self, input_data: np.ndarray, uncertainty_data: np.ndarray, columns: list = None, index: list = None,
+                 random_seed: int = 42, missing_value: float = np.nan):
+        self.input_data = input_data
+        self.uncertainty_data = uncertainty_data
+
         self.random_seed = random_seed
+
+        self.columns = columns if columns is not None else [f"feature {i}" for i in range(input_data.shape[1])]
+        self.index = index if index is not None else [f"sample {i}" for i in range(input_data.shape[0])]
 
         self.imputation_mask = None
         self.imputed_data = None
@@ -34,9 +44,6 @@ class DataImputer:
 
         self.strategy = None
         self.missing_value = missing_value
-
-        if sklearn is None:
-            raise ImportError("scikit-learn is required for data imputation. Import esat[data] to install it.")
 
     def impute(self, strategy='mean', args: dict = None):
         """
@@ -48,13 +55,10 @@ class DataImputer:
         if strategy not in ['mean', 'median', 'most_frequent', 'knn', 'iterative']:
             raise ValueError(f"Invalid imputation strategy: {strategy}. Choose from 'mean', 'median', 'most_frequent', "
                              f"'knn', or 'iterative'.")
-        if self.data_handler is None:
-            logger.warning("No data to impute. The dataset is empty.")
-            return
         self.strategy = strategy
         logger.info(f"Imputing missing values using strategy: {strategy}")
-        V = self.data_handler.input_data.values
-        U = self.data_handler.uncertainty_data
+        V = self.input_data
+        U = self.uncertainty_data
         if self.missing_value is not None:
             V = np.where(V == self.missing_value, np.nan, V)
             U = np.where(U == self.missing_value, np.nan, U)
@@ -82,7 +86,7 @@ class DataImputer:
         # Convert imputed data back to DataFrame
         return self.imputed_data, self.imputed_uncertainty
 
-    def _run_simple_imputer(self, V, U, strategy='mean'):
+    def _run_simple_imputer(self, V, U, strategy):
         """
         Run the SimpleImputer from scikit-learn on the provided data.
 
@@ -95,8 +99,8 @@ class DataImputer:
         imputer2 = SimpleImputer(strategy=strategy, missing_values=np.nan)
         imputed_data = imputer.fit_transform(V)
         imputed_uncertainty = imputer2.fit_transform(U)
-        self.imputed_data = pd.DataFrame(imputed_data, columns=U.columns, index=U.index)
-        self.imputed_uncertainty = pd.DataFrame(imputed_uncertainty, columns=U.columns, index=U.index)
+        self.imputed_data = pd.DataFrame(imputed_data, columns=self.columns, index=self.index)
+        self.imputed_uncertainty = pd.DataFrame(imputed_uncertainty, columns=self.columns, index=self.index)
         return self.imputed_data, self.imputed_uncertainty
 
     def _run_knn_imputer(self, V, U, n_neighbors=5, weights='uniform'):
@@ -113,8 +117,8 @@ class DataImputer:
         imputer2 = KNNImputer(n_neighbors=n_neighbors, weights=weights, missing_values=np.nan)
         imputed_data = imputer.fit_transform(V)
         imputed_uncertainty = imputer2.fit_transform(U)
-        self.imputed_data = pd.DataFrame(imputed_data, columns=U.columns, index=U.index)
-        self.imputed_uncertainty = pd.DataFrame(imputed_uncertainty, columns=U.columns, index=U.index)
+        self.imputed_data = pd.DataFrame(imputed_data, columns=self.columns, index=self.index)
+        self.imputed_uncertainty = pd.DataFrame(imputed_uncertainty, columns=self.columns, index=self.index)
         return self.imputed_data, self.imputed_uncertainty
 
     def _run_iterative_imputer(self, V, U, max_iter=10, tol=1e-3):
@@ -131,6 +135,6 @@ class DataImputer:
         imputer2 = IterativeImputer(max_iter=max_iter, tol=tol, random_state=self.random_seed, missing_values=np.nan)
         imputed_data = imputer.fit_transform(V)
         imputed_uncertainty = imputer2.fit_transform(U)
-        self.imputed_data = pd.DataFrame(imputed_data, columns=U.columns, index=U.index)
-        self.imputed_uncertainty = pd.DataFrame(imputed_uncertainty, columns=U.columns, index=U.index)
+        self.imputed_data = pd.DataFrame(imputed_data, columns=self.columns, index=self.index)
+        self.imputed_uncertainty = pd.DataFrame(imputed_uncertainty, columns=self.columns, index=self.index)
         return self.imputed_data, self.imputed_uncertainty
