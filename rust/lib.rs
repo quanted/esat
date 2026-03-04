@@ -356,11 +356,16 @@ fn ls_nmf_update_cpu<'py>(
             h_num = new_w.transpose() * &wev;
             h_den = &new_w.transpose() * &new_we.component_mul(&wh);
             new_h = new_h.component_mul(&h_num.component_div(&h_den));
+            // Clamp: guard against NaN/Inf from near-zero denominators when W or H
+            // entries are initialised at 1e-12 (clipped negatives from column_mean init).
+            new_h = new_h.map(|x| if !x.is_finite() || x < 1e-12_f32 { 1e-12_f32 } else { x });
         }
         wh = &new_w * &new_h;
         w_num = &wev * new_h.transpose();
         w_den = &new_we.component_mul(&wh) * &new_h.transpose();
         new_w = new_w.component_mul(&w_num.component_div(&w_den));
+        // Same clamp for W.
+        new_w = new_w.map(|x| if !x.is_finite() || x < 1e-12_f32 { 1e-12_f32 } else { x });
 
         let qtrue = calculate_q_cpu(&v, &u, &new_w, &new_h);
         q = qtrue;
@@ -452,6 +457,11 @@ fn ls_nmf_update_gpu<'py>(
     // Precompute weighted V
     let wev = we.mul(&v)?;
 
+    // Pre-allocate epsilon floor tensors once (avoids per-iteration GPU alloc).
+    let eps_h = Tensor::full(1e-12f64, h.shape(), h.device())?;
+    let eps_w = Tensor::full(1e-12f64, w.shape(), w.device())?;
+    let max_val = Tensor::full(f64::MAX, &[1usize], h.device())?;
+
     for i in 0..max_iter {
         // Update H
         if !hold_h || (delay_h > 0 && i > delay_h) {
@@ -460,6 +470,10 @@ fn ls_nmf_update_gpu<'py>(
             let h_den = w.t()?.matmul(&we.mul(&wh)?)?;
             let h_delta = h_num.div(&h_den)?;
             h = h.mul(&h_delta)?;
+            // Clamp to [eps, MAX].  Tensor::clamp passes NaN through (IEEE 754),
+            // but NaN cannot arise here: the epsilon floor on both W and H from the
+            // previous iteration guarantees strictly positive denominators.
+            h = h.clamp(&eps_h, &max_val)?;
         }
 
         // Update W
@@ -468,6 +482,8 @@ fn ls_nmf_update_gpu<'py>(
         let w_den = we.mul(&wh)?.matmul(&h.t()?)?;
         let w_delta = w_num.div(&w_den)?;
         w = w.mul(&w_delta)?;
+        // Same clamp for W.
+        w = w.clamp(&eps_w, &max_val)?;
 
         let qtrue = calculate_q_gpu(&v, &u, &w, &h)?;
         q = qtrue;
