@@ -457,6 +457,11 @@ fn ls_nmf_update_gpu<'py>(
     // Precompute weighted V
     let wev = we.mul(&v)?;
 
+    // Pre-allocate epsilon floor tensors once (avoids per-iteration GPU alloc).
+    let eps_h = Tensor::full(1e-12f64, h.shape(), h.device())?;
+    let eps_w = Tensor::full(1e-12f64, w.shape(), w.device())?;
+    let max_val = Tensor::full(f64::MAX, &[1usize], h.device())?;
+
     for i in 0..max_iter {
         // Update H
         if !hold_h || (delay_h > 0 && i > delay_h) {
@@ -465,9 +470,10 @@ fn ls_nmf_update_gpu<'py>(
             let h_den = w.t()?.matmul(&we.mul(&wh)?)?;
             let h_delta = h_num.div(&h_den)?;
             h = h.mul(&h_delta)?;
-            // Clamp: guard against NaN/Inf from near-zero denominators.
-            let eps_h = Tensor::full(1e-12f64, h.shape(), h.device())?;
-            h = h.clamp(&eps_h, &Tensor::full(f64::MAX, h.shape(), h.device())?)?;
+            // Clamp to [eps, MAX].  Tensor::clamp passes NaN through (IEEE 754),
+            // but NaN cannot arise here: the epsilon floor on both W and H from the
+            // previous iteration guarantees strictly positive denominators.
+            h = h.clamp(&eps_h, &max_val)?;
         }
 
         // Update W
@@ -477,8 +483,7 @@ fn ls_nmf_update_gpu<'py>(
         let w_delta = w_num.div(&w_den)?;
         w = w.mul(&w_delta)?;
         // Same clamp for W.
-        let eps_w = Tensor::full(1e-12f64, w.shape(), w.device())?;
-        w = w.clamp(&eps_w, &Tensor::full(f64::MAX, w.shape(), w.device())?)?;
+        w = w.clamp(&eps_w, &max_val)?;
 
         let qtrue = calculate_q_gpu(&v, &u, &w, &h)?;
         q = qtrue;
